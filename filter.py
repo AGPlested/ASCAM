@@ -17,7 +17,7 @@ def apply_filter(
 	    from scipy.signal import fftconvolve
 	    filtered_data = fftconvolve(data,filter)
 	elif method == 'convolution':
-	    filtered_data = np.convolve(data,filter)
+	    filtered_data = np.convolve(data,filter,mode='same')
 	else: raise KeyError('Method should be either "convolution" or "fft".')
 
 	return filtered_data
