@@ -5,7 +5,7 @@ __date__ ="$Oct 17, 2011 3:43:48 PM$"
 
 import numpy
 import math
-import binning as b         # for testing only
+# import binning as b         # for testing only
 
 def pink_update (accumulator, pSUM, pA, Nstages):
     """For each new time sample, perform random update to determine 
@@ -236,7 +236,7 @@ def spec_to_noise (spectrum, noise_sd=None, Verbose=False):
         print ('Scaling....')
         ns = norm_spec(spectrum)
         print (ns, len(ns))
-        norm_noise = numpy.fft.irfft(ns)
+        norm_noise = numpy.fft.irfft(ns,len(ns))
         if Verbose: print ('norm_noise:',norm_noise)
         noise_array = norm_noise * len(norm_noise)  #because of numpy fft scaling 
         
