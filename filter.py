@@ -24,7 +24,7 @@ def apply_filter(
 
 def Gaussian(cutoff_frequency):
 	"""This calculates the coefficients for a disrete Gaussian filter
-	as described in equation A10 in ch19BB
+	as described in equation A10 in chapter 19 in the blue book
 	Parameters:
 		cutoff_frequency - should be given in units of samples
 	"""
