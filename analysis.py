@@ -35,16 +35,46 @@ def threshold_crossing(signal, threshold):
 ### shifting basline
 
 
-def baseline(signal, interval, f_s):
+def baseline(signal, fs, intervals):
 	"""
+	Perform baseline correction by offsetting the signal with its mean in the selected intervals
 	Parameters:
 		signal - time series of measurements
-		interval - interval from which to estimate the baseline (in ms)
-		f_s - sampling frequency (in Hz)
+		interval - interval or list of intervals from which to estimate the baseline (in ms)
+		fs - sampling frequency (in Hz)
 	Returns:
 		original signal less the mean over the given interval		
 	"""
-	interval = np.array(interval)/1000*f_s
-	baseline = np.mean(signal[int(interval[0]):int(interval[1])])
-	signal = signal - baseline
+	s = []
+	if type(intervals[0]) is list:
+	    for ival in intervals:
+	        s.extend(signal[ int(ival[0]*fs/1000) : int(ival[-1]*fs/1000) ])
+	elif type(intervals[0]) in (int, float):
+		s = signal[int(intervals[0]*fs/1000):int(intervals[1]*fs/1000)]
+
+	offset = np.mean(s)
+	signal = signal - offset
 	return signal
+
+def poly_baseline(time,signal,fs,intervals, degree = 1):
+    """
+    Fit a polynomial to the baseline in the selected intervals. By default the degree is one which makes this equivalent to a linear regression.
+    Parameters:
+        time [1D array of floats] - time points at which measurements where performed
+        signal [1D array of floats] - measurement values
+        fs [float] - sampling rate (in samples per second)
+        intervals [list] - list of intervals (in ms) that are to be used
+        degree [int] - highest order term to be included in fitting
+    Return:
+        The sloping baseline [1D array of floats]
+        """
+    t = []
+    s = []
+    for ival in intervals:
+        t.extend(time[ int(ival[0]*fs/1000) : int(ival[-1]*fs/1000) ])
+        s.extend(signal[ int(ival[0]*fs/1000) : int(ival[-1]*fs/1000) ])
+    coeffs = np.polyfit(t,s,degree)
+    baseline = np.zeros_like(time)
+    for i in range(degree+1):
+        baseline+=coeffs[i]*time**(degree-i)
+    return signal - baseline
