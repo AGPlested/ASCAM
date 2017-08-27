@@ -1,30 +1,19 @@
 import numpy as np
 
-# def threshold_crossing(signal, threshold):
-# 	"""Basic threshold crossing for single-level channels
-# 	Parameters:
-# 		signal - 1D time series, baseline should be zero
-# 		threshold - value in [0,1], fractioin of the maximum aplitude that should be threshold
-# 	Returns:
-# 		activity = time series containing 1 for open and 0 for closed
-# 		signal_max - maximum value of original signal
-# 	"""
-# 	signal_max = np.max(np.abs(signal))
-# 	thresh_val = threshold*signal_max #actual threshold value
-# 	activity = np.array([1 if x>thresh_val else -1 if x<-thresh_val else 0 for x in signal])
-# 	return activity, signal_max
 def threshold_crossing(signal, threshold):
 	"""Basic threshold crossing for single-level channels
 	Parameters:
 		signal - 1D time series, baseline should be zero
-		threshold - value in [0,1], fractioin of the maximum aplitude that should be threshold
+		threshold - value in [0,1], fractioin of the maximum aplitude that 
+					should be threshold
 	Returns:
 		activity = time series containing 1 for open and 0 for closed
 		signal_max - maximum value of original signal
 	"""
 	signal_max = np.max(np.abs(signal))
 	thresh_val = threshold*signal_max #actual threshold value
-	activity = np.array([1 if x>thresh_val else -1 if x<-thresh_val else 0 for x in signal])
+	activity = np.array(
+			[1 if x>thresh_val else -1 if x<-thresh_val else 0 for x in signal])
 
 	return activity, signal_max
 
@@ -37,10 +26,12 @@ def threshold_crossing(signal, threshold):
 
 def baseline(signal, fs, intervals):
 	"""
-	Perform baseline correction by offsetting the signal with its mean in the selected intervals
+	Perform baseline correction by offsetting the signal with its mean in the 
+	selected intervals
 	Parameters:
 		signal - time series of measurements
-		interval - interval or list of intervals from which to estimate the baseline (in ms)
+		interval - interval or list of intervals from which to estimate the 
+				   baseline (in ms)
 		fs - sampling frequency (in Hz)
 	Returns:
 		original signal less the mean over the given interval		
@@ -58,9 +49,11 @@ def baseline(signal, fs, intervals):
 
 def poly_baseline(time,signal,fs,intervals, degree = 1):
     """
-    Fit a polynomial to the baseline in the selected intervals. By default the degree is one which makes this equivalent to a linear regression.
+    Fit a polynomial to the baseline in the selected intervals. By default the 
+    degree is one which makes this equivalent to a linear regression.
     Parameters:
-        time [1D array of floats] - time points at which measurements where performed
+        time [1D array of floats] - time points at which measurements where 
+        							performed
         signal [1D array of floats] - measurement values
         fs [float] - sampling rate (in samples per second)
         intervals [list] - list of intervals (in ms) that are to be used

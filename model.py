@@ -8,9 +8,12 @@ import copy, os
 cwd = os.getcwd()
 
 class Episode(object):    
-    def __init__(self, names, time, currentTrace, nthEpisode = 0, piezo = None, commandVoltage = None, filter = None, fc = None):
+    def __init__(
+        self, names, time, currentTrace, nthEpisode = 0, piezo = None, 
+        commandVoltage = None, filter = None, fc = None):
         """
-        Episode objects hold all the information about an epoch and should be used to store raw and manipulated data
+        Episode objects hold all the information about an epoch and should be 
+        used to store raw and manipulated data
         
         Parameters:
             time [1D array of floats] - containing time (in seconds)
@@ -58,17 +61,23 @@ class Episode(object):
 
 class Recording(object):
     """
-    Recording objects contain all the information and data of a single patch recording as well as the the processed data.
+    Recording objects contain all the information and data of a single patch 
+    recording as well as the the processed data.
     
     parameters:
     filename [string] - name of the file containing the data
     filepath [string] - path containing the data file
     samplingrate [int] - sampling rate of the recording (samples/second)
-    filetype [string] - specify which kind of file is being loaded, takes 'axo' for axograph files and 'bin' for binary files
-    headerlength [int] - in case of binary files with a header preceeding the data in the file
-    bindtype [numpy type] - in case of binary the data type, should be somemthing like 'np.int16'
+    filetype [string] - specify which kind of file is being loaded, takes 'axo' 
+    for axograph files and 'bin' for binary files
+    headerlength [int] - in case of binary files with a header preceeding the 
+    data in the file
+    bindtype [numpy type] - in case of binary the data type, should be 
+    somemthing like 'np.int16'
     
-    Recording objects load the data into Episode objects which can later be filtered or manipulated in other ways. Presently after each manipulation the newly
+    Recording objects load the data into Episode objects which can later be 
+    filtered or manipulated in other ways. Presently after each manipulation the 
+    newly
     processed data as well as the original data are stored.
     """
     def __init__(self, 
@@ -86,10 +95,10 @@ class Recording(object):
         self.bindtype = bindtype
 
         self.data = {'raw':[]}
-        ### The raw data and all the result of any manipulations will be stored in this dictionary with a key determined by the operations
+        ### The raw data and all the result of any manipulations will be stored 
+        ###in this dictionary with a key determined by the operations
 
         #self.load_data()
-        
         
 #     def lookup_deco(f):
 #         def do_lookup(dataKey, *args, **kwargs):
@@ -101,24 +110,33 @@ class Recording(object):
 #         return do_lookup(dataKey, *args, **kwargs)
         
     def load_data(self):
-        """Load the raw data from binary of axograph file. All parameters are specified in the initialization of th Recording instance."""
+        """Load the raw data from binary of axograph file. All parameters are 
+        specified in the initialization of th Recording instance."""
         if self.filetype == 'axo':
             names, time, current, piezo, voltage = load_axo(self.filename)   
-            self.data['raw'] = self.store_rawdata(names, time, current, piezo=piezo, commandVoltage = voltage)
+            self.data['raw'] = self.store_rawdata(
+                                 names, time, current, piezo=piezo, 
+                                 commandVoltage = voltage)
         elif self.filetype == 'bin':
-            names, time, current = load_binary(self.filename,self.bindtype,self.headerlength,self.samplingRate)
-            self.data['raw'] = self.store_rawdata(names, time, current[np.newaxis])
+            names, time, current = load_binary(
+                                    self.filename,self.bindtype,
+                                    self.headerlength, self.samplingRate)
+            self.data['raw'] = self.store_rawdata(
+                                    names, time, current[np.newaxis])
         else:
             print("Filetype not supported.")
             
-    def store_rawdata(self, names, time, current, piezo = None, commandVoltage = None):
+    def store_rawdata(
+        self, names, time, current, piezo = None, commandVoltage = None):
         """
         Store the raw data in epoch objects
         """
         rawData = []
         for i in range(len(current)):
             if piezo is not None:
-                ep = Episode(names, time, current[i], nthEpisode=i, piezo=piezo[i], commandVoltage=commandVoltage[i])
+                ep = Episode(
+                    names, time, current[i], nthEpisode=i, piezo=piezo[i], 
+                    commandVoltage=commandVoltage[i])
             else:
                 ep = Episode(names, time, current[i], nthEpisode=i)
             rawData.append(ep)
@@ -141,16 +159,22 @@ class Recording(object):
             name = name+str(int(fc))+'Hz'
             self.data[name] = fData
             
-    def baseline_correction(self, dataKey, intervals, method='offset', degree=1):
+    def baseline_correction(
+        self, dataKey, intervals, method='offset', degree=1):
         """
         Do baseline correction on each epoch.
         Parameters:
-            interval - list containing the beginning and end points of the interval from the baseline is to be estimated (in milliseconds)
+            interval - list containing the beginning and end points of the 
+                       interval from the baseline is to be estimated 
+                       (in milliseconds)
             dataKey - string that contains the dictionary key of the data
             method [string] - specify the method, currently supports 
-                'offset' - subtract the average value of the signal over the intervals from the signal
-                'poly' - fit a polynomial of given degree to the selected intervals and subtract it from the signal
-            degree [int] - needed for the 'poly' method, degree of polynomial fitted, default is 1 (linear regression)
+                'offset' - subtract the average value of the signal over the 
+                           intervals from the signal
+                'poly' - fit a polynomial of given degree to the selected 
+                         intervals and subtract it from the signal
+            degree [int] - needed for the 'poly' method, degree of polynomial 
+                           fitted, default is 1 (linear regression)
                 
         """
         try: ###should write a decorator that does this
@@ -159,19 +183,26 @@ class Recording(object):
             print("These data don't exist.")
             pass
         if "_BC" in dataKey:
-            print("Baseline correction has already been performed on these data.")
+            print("Baseline correction has already "
+                  "been performed on these data.")
             pass
         corrected = []
         if method is 'offset':
             for episode in data:
                 correctedEpisode = copy.deepcopy(episode)
-                correctedEpisode.currentTrace = baseline(episode.currentTrace, self.samplingRate, intervals)
+                correctedEpisode.currentTrace = baseline(
+                    episode.currentTrace, 
+                    self.samplingRate, 
+                    intervals)
                 correctedEpisode.baselineCorrected = True
                 corrected.append(correctedEpisode)
         elif method is 'poly':
             for episode in data:
                 correctedEpisode = copy.deepcopy(episode)
-                correctedEpisode.currentTrace = poly_baseline(episode.time, episode.currentTrace, self.samplingRate, intervals, degree=degree)
+                correctedEpisode.currentTrace = poly_baseline(
+                    episode.time, episode.currentTrace, 
+                    self.samplingRate, intervals, 
+                    degree=degree)
                 correctedEpisode.baselineCorrected = True
                 corrected.append(correctedEpisode)
         name = dataKey+"_BC"
@@ -179,7 +210,8 @@ class Recording(object):
     
     def idealization(self, dataKey, threshold = .5):
         if self.filetype is not 'bin':
-            print("Can only idealize single level channels so far. (That means bin files)")
+            print("Can only idealize single level "
+                  "channels so far. (That means bin files)")
             pass
         try:
             data = self.data[dataKey]
@@ -189,10 +221,11 @@ class Recording(object):
         idealized = []
         for episode in data:
             idealizedEpisode = copy.deepcopy(episode)
-            activity, signalmax = threshold_crossing(idealizedEpisode.currentTrace,threshold)
+            activity, signalmax = threshold_crossing(
+                                    idealizedEpisode.currentTrace,threshold)
             idealizedEpisode.currentTrace = activity*signalmax
-            idealizedEpisode.idealized = 'Idealized with simple threshold crossing'
+            (idealizedEpisode.idealized 
+            = 'Idealized with simple threshold crossing')
             idealized.append(idealizedEpisode)
         name = dataKey + '_TC'
         self.data[name] = idealized
-

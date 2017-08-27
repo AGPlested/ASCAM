@@ -2,8 +2,7 @@ import numpy as np
 import subprocess
 
 def load_binary(
-    path,
-	filename,
+    filename,
 	dtype,
 	header_length,
     fs
@@ -13,7 +12,6 @@ def load_binary(
     same bit-length as the numbers in the file and removes 
     the header
     Input:
-        path - string
         filename - string
         dtype - should be a numpy dtype duch as 'np.int16' but without(!) quotes
         header_length - number of words in header (same bitlength as data)
@@ -28,7 +26,7 @@ def load_binary(
     # current = np.vstack([time,current])
     return ["Current (A)"], time, current
 
-def load_axo(path, filename):
+def load_axo(filename):
     """
     Read axograph data by calling a python2 subprocess that uses the 
     axopgraphio module to read it.
@@ -38,7 +36,7 @@ def load_axo(path, filename):
     and their length.
     """
     module_name = 'importing_axo.py'
-    cmd = 'python2 '+module_name+' '+'"'+path+'"'+' '+'"'+filename+'"'
+    cmd = 'python2 '+module_name+' '+'"'+filename+'"'
     p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
     out, err = p.communicate()
     

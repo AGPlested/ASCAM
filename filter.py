@@ -8,10 +8,13 @@ def apply_filter(
 	"""
 	filename must be a string
 	for now datatype should be using numpy types such as 'np.int16'
-	the entire file is read assuming datatype so header length should be specified in words of the same bit length
+	the entire file is read assuming datatype so header length should be 
+	specified in words of the same bit length
 	cutoff_frequency should be supplied in units of sampling rate
-	filter_type does not need to be set until/unless we start using other filters
-	method allows for using scipy fft convolve which might be faster for large data sets
+	filter_type does not need to be set until/unless we start using other 
+	filters
+	method allows for using scipy fft convolve which might be faster for large 
+	data sets
 	"""
 	if method == 'fft':
 	    from scipy.signal import fftconvolve
@@ -41,7 +44,8 @@ def Gaussian(cutoff_frequency):
 	    n = np.int(4*sigma)
 	    non_neg_ind_coefficients = np.zeros(n+1)
 	    for index in range(n+1):
-	        non_neg_ind_coefficients[index] = 1/(np.sqrt(2*np.pi)*sigma)*np.exp(-index**2/(2*sigma**2))
+	        non_neg_ind_coefficients[index] = (1/(np.sqrt(2*np.pi)*sigma)
+	        								  *np.exp(-index**2/(2*sigma**2)))
 	        negative_ind_coeff = non_neg_ind_coefficients[:0:-1]
 	    coefficients = np.hstack((negative_ind_coeff,non_neg_ind_coefficients))
 	else: #light filtering as described in blue book
