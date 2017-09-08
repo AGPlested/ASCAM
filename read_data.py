@@ -4,7 +4,7 @@ import subprocess
 def load_binary(
     filename,
 	dtype,
-	header_length,
+	headerlength,
     fs
 	):
     """Loads data from binary file using the numpy function fromfile,
@@ -18,9 +18,9 @@ def load_binary(
     Output:
         data - 1 x #(samples) numpy array containing the data
         """
-
+    headerlength = int(headerlength)
     current = np.fromfile(filename, dtype=dtype)
-    current = current[header_length:]
+    current = current[headerlength:]
     tend = len(current)/fs*1000
     time = np.linspace(0,tend,len(current))
     # current = np.vstack([time,current])

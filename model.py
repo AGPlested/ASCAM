@@ -89,9 +89,9 @@ class Recording(object):
                  *args,**kwargs):
         
         self.filename = filename
-        self.samplingRate = int(samplingrate)
+        self.samplingRate = int(float(samplingrate))
         self.filetype = filetype
-        self.headerlength = headerlength
+        self.headerlength = int(float(headerlength))
         self.bindtype = bindtype
 
         self.data = {'raw':[]}
@@ -224,8 +224,8 @@ class Recording(object):
             activity, signalmax = threshold_crossing(
                                     idealizedEpisode.currentTrace,threshold)
             idealizedEpisode.currentTrace = activity*signalmax
-            (idealizedEpisode.idealized 
-            = 'Idealized with simple threshold crossing')
+            idealizedEpisode.idealized = (
+            'Idealized with simple threshold crossing')
             idealized.append(idealizedEpisode)
         name = dataKey + '_TC'
         self.data[name] = idealized
