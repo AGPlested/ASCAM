@@ -59,7 +59,7 @@ class Episode(object):
         plt.setp(ax,xlabel='time [ms]')
         plt.show() #not needed with matplotlib inline
 
-class Recording(object):
+class Recording(dict):
     """
     Recording objects contain all the information and data of a single patch 
     recording as well as the the processed data.
@@ -84,7 +84,7 @@ class Recording(object):
                  filename=cwd+'/data/170404 015.axgd',
                  samplingrate=4e4,
                  filetype = 'axo',
-                 headerlength = None,
+                 headerlength = 0,
                  bindtype = None,
                  *args,**kwargs):
         
@@ -94,7 +94,7 @@ class Recording(object):
         self.headerlength = int(float(headerlength))
         self.bindtype = bindtype
 
-        self.data = {'raw':[]}
+        self['raw'] = []
         ### The raw data and all the result of any manipulations will be stored 
         ###in this dictionary with a key determined by the operations
 
@@ -103,7 +103,7 @@ class Recording(object):
 #     def lookup_deco(f):
 #         def do_lookup(dataKey, *args, **kwargs):
 #             try:
-#                 data = self.data[dataKey]
+#                 data = self[dataKey]
 #             except KeyError:
 #                 print("The data you're looking for does not exist")
 #             f(data, *args, **kwargs)
@@ -114,14 +114,14 @@ class Recording(object):
         specified in the initialization of th Recording instance."""
         if self.filetype == 'axo':
             names, time, current, piezo, voltage = load_axo(self.filename)   
-            self.data['raw'] = self.store_rawdata(
+            self['raw'] = self.store_rawdata(
                                  names, time, current, piezo=piezo, 
                                  commandVoltage = voltage)
         elif self.filetype == 'bin':
             names, time, current = load_binary(
                                     self.filename,self.bindtype,
                                     self.headerlength, self.samplingRate)
-            self.data['raw'] = self.store_rawdata(
+            self['raw'] = self.store_rawdata(
                                     names, time, current[np.newaxis])
         else:
             print("Filetype not supported.")
@@ -149,7 +149,7 @@ class Recording(object):
             filterWindow = Gaussian(fcs)
             filter_lag = 0 #int(1/(2*fcs))
             fData = []
-            for episode in self.data['raw']:
+            for episode in self['raw']:
                 filteredTrace = apply_filter(episode.currentTrace, filterWindow)
                 filteredEpisode = copy.deepcopy(episode)
                 filteredEpisode.currentTrace = filteredTrace[filter_lag:] 
@@ -157,7 +157,7 @@ class Recording(object):
                 filteredEpisode.cutoffFrequency = fc
                 fData.append(filteredEpisode)
             name = name+str(int(fc))+'Hz'
-            self.data[name] = fData
+            self[name] = fData
             
     def baseline_correction(
         self, dataKey, intervals, method='offset', degree=1):
@@ -178,7 +178,7 @@ class Recording(object):
                 
         """
         try: ###should write a decorator that does this
-            data = self.data[dataKey]
+            data = self[dataKey]
         except KeyError:
             print("These data don't exist.")
             pass
@@ -206,7 +206,7 @@ class Recording(object):
                 correctedEpisode.baselineCorrected = True
                 corrected.append(correctedEpisode)
         name = dataKey+"_BC"
-        self.data[name] = corrected
+        self[name] = corrected
     
     def idealization(self, dataKey, threshold = .5):
         if self.filetype is not 'bin':
@@ -214,7 +214,7 @@ class Recording(object):
                   "channels so far. (That means bin files)")
             pass
         try:
-            data = self.data[dataKey]
+            data = self[dataKey]
         except KeyError:
             print("These data don't exist.")
             pass
@@ -228,4 +228,4 @@ class Recording(object):
             'Idealized with simple threshold crossing')
             idealized.append(idealizedEpisode)
         name = dataKey + '_TC'
-        self.data[name] = idealized
+        self[name] = idealized
