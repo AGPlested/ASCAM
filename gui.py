@@ -8,6 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
 
+testing = False
 cwd = os.getcwd()
 testing=True
 
@@ -16,14 +17,15 @@ class Main(ttk.Frame):
     Main frame of the GUI for ASCAM.
     All the variables and objects are stored as attributes of this object to
     make refering them uniform.
+    All other widgets will be children of this frame.
     """
-    ###create main frame that will hold all permanent widgets
     def __init__(self, master):
-        #mainframe configuration
         ttk.Frame.__init__(self, master)
         self.master = master
+        #mainwindow configuration
         self.master.protocol('WM_DELETE_WINDOW', quit)
-        self.master.geometry("500x300+500+200")
+        self.master.geometry("768x300+500+200")
+        self.master.title("ASCAM")
         # self.grid(column=0, row=0, sticky=(tk.N, tk.W, tk.E, tk.S))
         # self.columnconfigure(0, weight=1)
         # self.rowconfigure(0, weight=1)
@@ -36,8 +38,10 @@ class Main(ttk.Frame):
         self.path = tk.StringVar()
         self.filetypefull = tk.StringVar()
         self.filetype = tk.StringVar()        
-        #backend interface variable
-        self.recording = None
+        #backend interface variables
+        self.recording = dict()
+        self.datakey = 'raw'
+        self.Nepisode = 0
         ## frame contents
         # command bar
         self.commandbar = Commandframe(self)
@@ -48,9 +52,20 @@ class Main(ttk.Frame):
         # options
         self.options = Options(self)
         # list of episodes
-        self.List = EpisodeList(self, 'nothing yet')
-    def uptdate_list(self, datakey):
-        self.List = EpisodeList(self, datakey)
+        self.List = EpisodeList(self)
+        if testing:
+            # self.recording = model.Recording(cwd+'/data/sim1600.bin', 4e4, 'bin', 3072, np.int16)
+            self.recording = model.Recording()
+            self.recording.load_data()
+            self.uptdate_list()
+            self.update_plot()
+    def update_plot(self):
+        if self.recording:
+            self.plots = Plotframe(self)
+        else:
+            pass
+    def uptdate_list(self):
+        self.List.create_list()
     def quit(self):
         """
         Close all windows and exit the main loop
@@ -66,81 +81,65 @@ class Commandframe(ttk.Frame):
     def __init__(self, parent):
         ttk.Frame.__init__(self, parent)
         self.parent = parent
-        self.grid(columnspan=3, row=1, sticky=(tk.N, tk.W, tk.E))
-        # self.rowconfigure(0, weight=1)
+        self.grid(column=1, row=1, padx=5, pady=5, sticky=(tk.N, tk.W))
         self.create_widgets()
     def create_widgets(self):
         self.loadbutton = ttk.Button(self, text="Load file", command=self.load_dialog)
         self.loadbutton.grid(column=1,row=1,sticky=(tk.N, tk.E))
-        self.plotbutton = ttk.Button(self, text="Plot", command=self.create_plot)
+        self.plotbutton = ttk.Button(self, text="Plot", command=self.parent.update_plot)
         self.plotbutton.grid(column=2,row=1,sticky=(tk.N))
     def load_dialog(self):
         subframe = Loadframe(self.parent)
-    def create_plot(self):
-        if testing:
-            self.parent.recording = model.Recording(cwd+'/data/sim1600.bin', 4e4, 'bin', 3072, np.int16)
-            self.parent.recording.load_data()
-        if self.parent.recording==None:
-            pass
-        else:
-            episode = self.parent.recording.data['raw'][0]
-            self.parent.plots.plot(episode)
         
 class Plotframe(ttk.Frame):
-    """
-    Frame that will contain plots.
-    For now `episode` is the specific episode of which the current trace will be
-    plotted
-    """
     def __init__(self, parent):
         ttk.Frame.__init__(self, parent)
         self.parent = parent
-        self.grid(columnspan=3, row=2, sticky=(tk.W, tk.E))
+        self.grid(columnspan=3, row=2, padx=5, pady=5, sticky=tk.W)
         self.plot()
-    def plot(self, episode=False):
-        fig = plt.figure(figsize=(5,2))
-        if episode:
+    def plot(self):
+        self.fig = plt.figure(1, figsize=(5,2))
+        self.fig.clf() # matplotlib figures are kept in memory unless explicitely cleared!
+        if self.parent.recording:
+            episode = self.parent.recording[self.parent.datakey][self.parent.Nepisode]
             x = episode.time
             y = episode.currentTrace
         else:
             x = [0,1]
             y = [0,0]
         plt.plot(x,y)
-        canvas = FigureCanvasTkAgg(fig, self)
-        canvas.show()
-        canvas.get_tk_widget().pack() #this backend seems to not work with .grid management
-        toolbar = NavigationToolbar2TkAgg(canvas, self)
-        toolbar.update()
-        canvas._tkcanvas.pack()
+        self.canvas = FigureCanvasTkAgg(self.fig, self)
+        self.canvas.show()
+        self.canvas.get_tk_widget().pack() #this backend seems to not work with `.grid` management
+        self.toolbar = NavigationToolbar2TkAgg(self.canvas, self)
+        self.toolbar.update()
+        self.canvas._tkcanvas.pack()
 
 class Options(ttk.Frame):
     """docstring for Options"""
     def __init__(self, parent):
         ttk.Frame.__init__(self, parent)
         self.parent = parent
-        self.grid(row=3, columnspan=3, sticky=(tk.S,tk.W))
-        ttk.Label(self, text="buttons for filtering and the other cool stuff will be").grid()
+        self.grid(row=3, columnspan=3, padx=5, pady=5, sticky=(tk.S,tk.W))
+        ttk.Label(self, text="buttons for filtering and the other cool stuff will be").grid(column=2)
 
 class EpisodeList(ttk.Frame):
     """docstring for EpisodeList"""
-    def __init__(self, parent, datakey):
+    def __init__(self, parent):
         ttk.Frame.__init__(self, parent)
         self.parent = parent
-        self.grid(row=1, rowspan=2,column=4,sticky=(tk.E))
-        # self.create_list(datakey)
-        ttk.Label(self, text="some text").grid()
-        ###################################################################################################################################################
-        
-        ###################################################################################################################################################
-    def create_list(self, datakey):
+        self.grid(row=2,column=4,sticky=(tk.E))
+        # self.create_list()
+    def onselect_plot(self,event):
+        self.parent.Nepisode = int(event.widget.curselection()[0])
+        self.parent.update_plot()
+    def create_list(self):
         self.episodelist = tk.Listbox(self)
-        self.episodelist.grid(rowspan=2,column=10,sticky=tk.W)
+        self.episodelist.grid(row=1,rowspan=3,column=4,sticky=tk.E)
+        self.episodelist.bind('<<ListboxSelect>>', self.onselect_plot)
         if self.parent.recording:
-            for episode in self.parent.recording.data[datakey]:
+            for episode in self.parent.recording[self.parent.datakey]:
                 self.episodelist.insert(tk.END, "episode "+str(episode.nthEpisode))
-        else:
-            for i in range(5):
-                self.episodelist.insert(tk.END, "placeholder")
 
 class Loadframe(tk.Toplevel):
     """ 
@@ -152,7 +151,6 @@ class Loadframe(tk.Toplevel):
         tk.Toplevel.__init__(self,parent)
         self.parent = parent
         self.title("Select file")
-        self.padding="3 3 12 12"
         self.create_widgets()
         self.loadbutton.focus()
 
@@ -174,9 +172,9 @@ class Loadframe(tk.Toplevel):
         self.samplingentry.grid(column=2,row=4)
         ttk.Label(self, text="Samplingrate (Hz):").grid(column=1,row=4,sticky=(tk.W))
         #fifth row - ok button to close and go to next window
-        self.okbutton = ttk.Button(self, text="Ok", command=self.ok_button)
+        self.okbutton = ttk.Button(self, text="Load", command=self.ok_button)
         self.okbutton.grid(column=1, row=5, sticky=(tk.S, tk.W))
-        self.closebutton = ttk.Button(self, text="Quit", command=self.parent.quit)
+        self.closebutton = ttk.Button(self, text="Close", command=self.destroy)
         self.closebutton.grid(column=3, row=5, sticky=(tk.S, tk.E))
 
     def ok_button(self):
@@ -185,6 +183,8 @@ class Loadframe(tk.Toplevel):
         elif self.parent.filetype.get() == 'axo':
             self.parent.recording = model.Recording(self.parent.filenamefull.get(), self.parent.samplingrate.get(), self.parent.filetype.get())
             self.parent.recording.load_data()
+        self.parent.uptdate_list()
+        self.parent.update_plot()
         self.destroy()
 
     def get_file(self):
@@ -225,7 +225,6 @@ class Binaryquery(tk.Toplevel):
         #frame configuration
         tk.Toplevel.__init__(self,parent)
         self.parent = parent
-        self.padding="3 3 12 12"
         self.title("Additional parameters for binary file")
         #initialize content
         self.create_widgets()
@@ -240,13 +239,15 @@ class Binaryquery(tk.Toplevel):
         self.typeentry.grid(column=3,row=2,sticky=(tk.W,tk.S))
         ttk.Label(self, text="Datatype:").grid(column=2,row=2,sticky=tk.S)
         #'ok' and 'cancel button
-        self.okbutton = ttk.Button(self, text="Ok", command=self.ok_button)
+        self.okbutton = ttk.Button(self, text="Load", command=self.ok_button)
         self.okbutton.grid(columnspan=2, row=3, sticky=(tk.S, tk.W))
     def ok_button(self):
         # if self.parent.datatype.get()=='np.int16':
         datatype = np.int16 #this is here because stringvar.get returns a string which numpy doesnt understand
         self.parent.recording = model.Recording(self.parent.filenamefull.get(), self.parent.samplingrate.get(), self.parent.filetype.get(), self.parent.headerlength.get(), datatype)
         self.parent.recording.load_data()
+        self.parent.uptdate_list()
+        self.parent.update_plot()
         self.destroy()
 
 def gui_main():
