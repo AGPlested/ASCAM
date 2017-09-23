@@ -4,14 +4,12 @@ from tkinter.filedialog import askopenfilename
 import matplotlib
 matplotlib.use('TkAgg')
 import model
-import os
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, 
                                                NavigationToolbar2TkAgg
                                                )
-testing = False
-cwd = os.getcwd()
+
 
 class Main(ttk.Frame):
     """
@@ -20,17 +18,25 @@ class Main(ttk.Frame):
     object to make refering them uniform.
     All other widgets will be children of this frame.
     """
+    @classmethod
+    def run(cls):
+        root = tk.Tk()
+        root.geometry("768x300+500+200")
+        root.protocol('WM_DELETE_WINDOW', quit)
+        root.title("ASCAM")
+        root.grid_columnconfigure(0, weight=1)
+        root.grid_rowconfigure(0, weight=1)
+        main = cls(root)
+        root.mainloop()
+
     def __init__(self, master):
         ttk.Frame.__init__(self, master)
         self.master = master
-        #mainwindow configuration
-        self.master.protocol('WM_DELETE_WINDOW', quit)
-        self.master.geometry("768x300+500+200")
-        self.master.title("ASCAM")
-        # self.grid(column=0, row=0, sticky=(tk.N, tk.W, tk.E, tk.S))
-        # self.columnconfigure(0, weight=1)
-        # self.rowconfigure(0, weight=1)
-        #file parameters
+
+        self.grid(column=0, row=0, sticky=(tk.N, tk.W))
+
+        self.grid_rowconfigure(0, weight=1)
+        self.grid_columnconfigure(0,weight=1)
         self.filenamefull = tk.StringVar()
         self.filename = tk.StringVar()
         self.headerlength = tk.StringVar()
@@ -39,42 +45,42 @@ class Main(ttk.Frame):
         self.path = tk.StringVar()
         self.filetypefull = tk.StringVar()
         self.filetype = tk.StringVar()        
-        #backend interface variables
+
         self.recording = dict()
         self.datakey = 'raw'
         self.Nepisode = 0
-        ## frame contents
-        # command bar
-        self.commandbar = Commandframe(self)
-        self.commandbar.grid(column=1,row=1,sticky=(tk.E, tk.N, tk.W),
-                             padx=5, pady=5)
+
+        commandbargridoptions = {'sticky':(tk.N, tk.W), 'padx':5, 
+                                 'pady':5}
+        self.commandbar = Commandframe(self, commandbargridoptions)
+
         self.commandbar.loadbutton.focus()
-        # plot
-        self.plots = Plotframe(self, gridposition=(2,1),
-                               gridspan=(1,3), padx=5, pady=5, 
-                               sticky=())
-        # options
-        self.options = Options(self)
-        self.options.grid(row=3, columnspan=3, padx=5, pady=5, 
+
+        plotframegridoptions = {'row':2,'columnspan':3,'pady':5,
+                                'padx':5}
+        self.plots = Plotframe(self, plotframegridoptions)
+        # self.plots.grid_rowconfigure(0,weight=1)
+
+        self.manipulations = manipulations(self)
+        self.manipulations.grid(row=3, columnspan=3, padx=5, pady=5, 
                           sticky=(tk.S,tk.W))
-        # list of episodes
+
         self.List = EpisodeList(self)
         self.List.grid(row=2,column=4,sticky=(tk.E))
 
-        if testing:
-            if binary:
-                self.recording = model.Recording(
-                                        cwd+'/data/sim1600.bin', 4e4, 
-                                        'bin', 3072, np.int16)
-            elif axo:
-                self.recording = model.Recording()
+        if bintest:
+            self.recording = model.Recording(
+                                    cwd+'/data/sim1600.bin', 4e4, 
+                                    'bin', 3072, np.int16)
+            self.uptdate_list()
+            self.update_plot()
+        elif axotest:
+            self.recording = model.Recording()
             self.uptdate_list()
             self.update_plot()
     def update_plot(self):
         if self.recording:
-            self.plots = Plotframe(self, gridposition=(2,1),
-                                   gridspan=(1,3), padx=5, pady=5, 
-                                   sticky=())
+            self.plots.plot()
         else:
             pass
     def uptdate_list(self):
@@ -83,14 +89,16 @@ class Main(ttk.Frame):
         self.master.destroy()
         self.master.quit()
     
+
 class Commandframe(ttk.Frame):
     """
     This frame will contain all the command buttons such as loading 
     data and plotting
     """
-    def __init__(self, parent):
+    def __init__(self, parent,options):
         ttk.Frame.__init__(self, parent)
         self.parent = parent
+        self.grid(**options)
         self.create_widgets()
     def create_widgets(self):
         self.loadbutton = ttk.Button(self, text="Load file", 
@@ -103,41 +111,50 @@ class Commandframe(ttk.Frame):
     def load_dialog(self):
         subframe = Loadframe(self.parent)
         
+
 class Plotframe(ttk.Frame):
-    def __init__(self, parent, gridposition, gridspan=(1,1), sticky=(),
-                 padx=5, pady=5):
+    def __init__(self, parent, options):
         ttk.Frame.__init__(self, parent)
         self.parent = parent
-        self.grid(row=gridposition[0],column=gridposition[1],
-                  rowspan=gridspan[0],columnspan=gridspan[1],
-                  padx=padx, pady=pady, sticky=sticky)
+        self.grid(**options)
+
+        self.fig = plt.figure(1, figsize=(5,5))
+        self.canvas = FigureCanvasTkAgg(self.fig, self)
+        self.canvas.get_tk_widget().grid(row=0,column=0)
+        self.canvas.show()
+        # self.toolbar = NavigationToolbar2TkAgg(self.canvas, self)
+        # self.toolbar.update()
+        # self.canvas._tkcanvas.pack()
         self.plot()
+
     def plot(self):
-        self.fig = plt.figure(1, figsize=(5,2))
-        self.fig.clf() # matplotlib figures are kept in memory unless 
-                       # explicitely cleared!
         if self.parent.recording:
-            episode = self.parent.recording[self.parent.datakey][
-                                                self.parent.Nepisode]
+            episode = self.parent.recording[
+                            self.parent.datakey][self.parent.Nepisode]
             x = episode.time
-            y = episode.currentTrace
+            y = []
+            y.append(episode.currentTrace)
+            if episode.piezo is not None: 
+                y.append(episode.piezo)
+            if episode.commandVoltage is not None: 
+                y.append(episode.commandVoltage)
         else:
             x = [0,1]
-            y = [0,0]
-        plt.plot(x,y)
-        self.canvas = FigureCanvasTkAgg(self.fig, self)
-        self.canvas.show()
-        self.canvas.get_tk_widget().pack() #this backend seems to not work with `.grid` management
-        self.toolbar = NavigationToolbar2TkAgg(self.canvas, self)
-        self.toolbar.update()
-        self.canvas._tkcanvas.pack()
+            y = [[0,0]]
+        for i, y in enumerate(y):
+            subplot=self.fig.add_subplot(3,1,i+1)
+            subplot.plot(x,y)
+        self.canvas.draw()
+        subplot.clear()
 
-class Options(ttk.Frame):
-    """docstring for Options"""
+
+class manipulations(ttk.Frame):
+    """docstring for Manipulations"""
     def __init__(self, parent):
         ttk.Frame.__init__(self, parent)
         self.parent = parent
-        ttk.Label(self, text="buttons for filtering and the other cool stuff will be here").grid(column=2)
+        ttk.Label(self, text="mode buttons").grid(column=2)
+
 
 class EpisodeList(ttk.Frame):
     """docstring for EpisodeList"""
@@ -217,15 +234,16 @@ class Loadframe(tk.Toplevel):
 
     def ok_button(self):
         if self.parent.filetype.get() == 'bin':
-            binframe = Binaryquery(self.parent)
+            binframe = Binaryquery(self)
+
         elif self.parent.filetype.get() == 'axo':
             self.parent.recording = model.Recording(
                                     self.parent.filenamefull.get(), 
                                     self.parent.samplingrate.get(), 
-                                    self.parent.filetype.get())
-        self.parent.uptdate_list()
-        self.parent.update_plot()
-        self.destroy()
+                                    self.parent.filetype.get()) 
+            self.parent.uptdate_list()
+            self.parent.update_plot()
+            self.destroy()
 
     def get_file(self):
         """
@@ -235,24 +253,27 @@ class Loadframe(tk.Toplevel):
         fn = askopenfilename()
         self.parent.filenamefull.set(fn)
         extension = ''
-        i = 0
+
         N = len(fn)
-        for char in fn[::-1]:
+        for i, char in enumerate(fn[::-1]):
             if char=='.': 
             	period = N-i
             if char=='/':
                 slash = N-i
                 break
-            i+=1
+
         self.parent.filename.set(fn[slash:])
         self.parent.path.set(fn[:slash])
         extension=fn[period:]
+
         if extension == 'bin':
             self.parent.filetype.set('bin')
             self.parent.filetypefull.set('binary')
+
         elif extension == 'axgd':
             self.parent.filetype.set('axo')
             self.parent.filetypefull.set('axograph')
+
         self.samplingentry.focus()
 
 
@@ -264,9 +285,11 @@ class Binaryquery(tk.Toplevel):
     """
     def __init__(self, parent):
         #frame configuration
-        tk.Toplevel.__init__(self,parent)
-        self.parent = parent
+        tk.Toplevel.__init__(self, parent)
+        self.parent = parent.parent
+        self.loadframe = parent
         self.title("Additional parameters for binary file")
+        
         #initialize content
         self.create_widgets()
         self.headerentry.focus()
@@ -306,12 +329,11 @@ class Binaryquery(tk.Toplevel):
                                     datatype)
         self.parent.uptdate_list()
         self.parent.update_plot()
+        self.loadframe.destroy()
         self.destroy()
 
 def gui_main():
-    ### initialize tkinter root window
     root = tk.Tk()
-    ### initialize mainframe
     main = Main(root)
     for child in root.winfo_children(): 
         child.grid_configure(padx=5, pady=5)        
@@ -319,13 +341,15 @@ def gui_main():
 
 if __name__ == '__main__':
     import sys
+    import os
+    cwd = os.getcwd()
     try:
         if sys.argv[1]=='axo':
-            testing=True
-            axo = True
+            axotest = True
+            bintest=False
         elif sys.argv[1]=='bin':
-            testing=True
-            binary=True
+            bintest=True
+            axotest=False
     except IndexError:
         pass
-    gui_main()
+    Main.run()
