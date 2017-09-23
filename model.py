@@ -1,16 +1,16 @@
 import numpy as np
-from read_data import *
-from filter import *
-from analysis import *
-# %matplotlib inline
+import readdata
+import filtering
+import analysis
 import matplotlib.pyplot as plt
-import copy, os
+import copy
+import os
 cwd = os.getcwd()
 
 class Episode(object):    
-    def __init__(
-        self, names, time, currentTrace, nthEpisode = 0, piezo = None, 
-        commandVoltage = None, filter = None, fc = None):
+    def __init__(self, names, time, currentTrace, nthEpisode = 0, piezo = None, 
+                 commandVoltage = None, filtertype = None, fc = None
+                 ):
         """
         Episode objects hold all the information about an epoch and should be 
         used to store raw and manipulated data
@@ -22,7 +22,7 @@ class Episode(object):
             commandVoltage [1D array of floats] - voltage applied to cell
             nthEp [int] - the number of measurements on this cell that came 
                             before this one
-            filter [string] - type of filter used
+            filtertype [string] - type of filter used
             fc [int] - cutoff frequency of the filter in Hz
         """
         self.time = time*1000 #convert from seconds to milliseconds
@@ -31,33 +31,35 @@ class Episode(object):
         self.commandVoltage = commandVoltage
         self.nthEpisode = int(nthEpisode)
         self.names = names
-        self.filterMethod = filter
+        self.filterMethod = filtertype
         self.cutoffFrequency = fc
         self.baselineCorrected = False
-        self.idealized = 'Note idealized'
-    def plot_trace(self):
-        fig = plt.figure(figsize = (20,5))
-        plt.plot(self.time,self.currentTrace)
-        plt.xlabel('time [ms]')
-        plt.ylabel(self.names[0])
-        plt.show()#not needed with matplotlib inline
-    def plot_episode(self, mode='full'):
-        if mode == 'full':
-            n = 3
-            toPlot = [self.currentTrace, self.piezo, self.commandVoltage]
-        elif mode == 'current':
-            print("This does not work yet!")
-#             n = 1
-#             toPlot = [self.currentTrace]
-            pass
-        fig, ax = plt.subplots(n,1,figsize=(20,10),sharex=True)
-        fig.suptitle('episode #%.d'%(self.nthEp+1))
-        end = np.min([len(self.currentTrace),len(self.time)])
-        for i in range(n):
-            ax[i].plot(self.time[:end],toPlot[i][:end])
-            ax[i].set_ylabel(self.names[i])
-        plt.setp(ax,xlabel='time [ms]')
-        plt.show() #not needed with matplotlib inline
+        self.idealized = False
+
+#     def plot_trace(self):
+#         fig = plt.figure(figsize = (20,5))
+#         plt.plot(self.time,self.currentTrace)
+#         plt.xlabel('time [ms]')
+#         plt.ylabel(self.names[0])
+#         plt.show()#not needed with matplotlib inline
+
+#     def plot_episode(self, mode='full'):
+#         if mode == 'full':
+#             n = 3
+#             toPlot = [self.currentTrace, self.piezo, self.commandVoltage]
+#         elif mode == 'current':
+#             print("This does not work yet!")
+# #             n = 1
+# #             toPlot = [self.currentTrace]
+#             pass
+#         fig, ax = plt.subplots(n,1,figsize=(20,10),sharex=True)
+#         fig.suptitle('episode #%.d'%(self.nthEp+1))
+#         end = np.min([len(self.currentTrace),len(self.time)])
+#         for i in range(n):
+#             ax[i].plot(self.time[:end],toPlot[i][:end])
+#             ax[i].set_ylabel(self.names[i])
+#         plt.setp(ax,xlabel='time [ms]')
+#         plt.show() #not needed with matplotlib inline
 
 class Recording(dict):
     """
@@ -86,71 +88,55 @@ class Recording(dict):
                  filetype = 'axo',
                  headerlength = 0,
                  bindtype = None,
-                 *args,**kwargs):
+                 ):
         
         self.filename = filename
-        self.samplingRate = int(float(samplingrate))
+        self.samplingrate = int(float(samplingrate))
         self.filetype = filetype
         self.headerlength = int(float(headerlength))
         self.bindtype = bindtype
-
         self['raw'] = []
-        ### The raw data and all the result of any manipulations will be stored 
-        ###in this dictionary with a key determined by the operations
 
-        #self.load_data()
-        
-#     def lookup_deco(f):
-#         def do_lookup(dataKey, *args, **kwargs):
-#             try:
-#                 data = self[dataKey]
-#             except KeyError:
-#                 print("The data you're looking for does not exist")
-#             f(data, *args, **kwargs)
-#         return do_lookup(dataKey, *args, **kwargs)
-        
+        self.load_data()
+
+
     def load_data(self):
         """Load the raw data from binary of axograph file. All parameters are 
         specified in the initialization of th Recording instance."""
-        if self.filetype == 'axo':
-            names, time, current, piezo, voltage = load_axo(self.filename)   
-            self['raw'] = self.store_rawdata(
-                                 names, time, current, piezo=piezo, 
-                                 commandVoltage = voltage)
-        elif self.filetype == 'bin':
-            names, time, current = load_binary(
-                                    self.filename,self.bindtype,
-                                    self.headerlength, self.samplingRate)
-            self['raw'] = self.store_rawdata(
-                                    names, time, current[np.newaxis])
-        else:
-            print("Filetype not supported.")
-            
-    def store_rawdata(
-        self, names, time, current, piezo = None, commandVoltage = None):
-        """
-        Store the raw data in epoch objects
-        """
-        rawData = []
+        loadedfile = readdata.load(self.filetype, self.filename,
+                                    self.bindtype, self.headerlength, 
+                                    self.samplingrate
+                                    )
+        self.store_rawdata(*loadedfile)
+
+    def store_rawdata(self, names, time, current, piezo = None, 
+                      commandVoltage = None
+                      ):
+        rawdata = []
         for i in range(len(current)):
-            if piezo is not None:
-                ep = Episode(
-                    names, time, current[i], nthEpisode=i, piezo=piezo[i], 
-                    commandVoltage=commandVoltage[i])
+            if piezo is not None: # `piezo not None` differentiates between axograph and bin data
+                ep = Episode(names, time, current[i], nthEpisode=i, 
+                             piezo=piezo[i], commandVoltage=commandVoltage[i]
+                             )
             else:
                 ep = Episode(names, time, current[i], nthEpisode=i)
-            rawData.append(ep)
-        return rawData
+            rawdata.append(ep)
+        self['raw'] = rawdata
             
-    def filter_data(self, fc = 1e3, filter = 'Gaussian'):
-        if filter == 'Gaussian':
+    def filter_data(self, fc = 1e3, filtertype = 'Gaussian', dataKey='raw'):
+        if not self[dataKey]:
+            print("These data do not exist.")
+            pass
+        if filtertype == 'Gaussian':
             name = "G"
-            fcs = fc/self.samplingRate #cutoff frequency in 1/samples
-            filterWindow = Gaussian(fcs)
+            fcs = fc/self.samplingrate #cutoff frequency in 1/samples
+            filterWindow = filtering.gaussian(fcs)
             filter_lag = 0 #int(1/(2*fcs))
             fData = []
-            for episode in self['raw']:
-                filteredTrace = apply_filter(episode.currentTrace, filterWindow)
+            for episode in self[dataKey]:
+                filteredTrace = filtering.applyfilter(episode.currentTrace, 
+                                                      filterWindow
+                                                      )
                 filteredEpisode = copy.deepcopy(episode)
                 filteredEpisode.currentTrace = filteredTrace[filter_lag:] 
                 filteredEpisode.filterMethod = 'Gaussian'
@@ -159,8 +145,9 @@ class Recording(dict):
             name = name+str(int(fc))+'Hz'
             self[name] = fData
             
-    def baseline_correction(
-        self, dataKey, intervals, method='offset', degree=1):
+    def baseline_correction(self, dataKey, intervals, method='poly', 
+                            degree=1
+                            ):
         """
         Do baseline correction on each epoch.
         Parameters:
@@ -177,55 +164,53 @@ class Recording(dict):
                            fitted, default is 1 (linear regression)
                 
         """
-        try: ###should write a decorator that does this
-            data = self[dataKey]
-        except KeyError:
-            print("These data don't exist.")
+        if not self[dataKey]:
+            print("These data do not exist.")
             pass
-        if "_BC" in dataKey:
-            print("Baseline correction has already "
-                  "been performed on these data.")
+        elif "_BC" in dataKey:
             pass
-        corrected = []
-        if method is 'offset':
-            for episode in data:
+
+        newdataKey = dataKey+"_BC"
+        self[newdataKey] = []
+
+        for episode in self[dataKey]:
                 correctedEpisode = copy.deepcopy(episode)
-                correctedEpisode.currentTrace = baseline(
-                    episode.currentTrace, 
-                    self.samplingRate, 
-                    intervals)
+                correctedEpisode.currentTrace = analysis.baseline(
+                                                        episode.time,
+                                                        episode.currentTrace, 
+                                                        self.samplingrate, 
+                                                        intervals, 
+                                                        degree = degree,
+                                                        method = method
+                                                        )
                 correctedEpisode.baselineCorrected = True
-                corrected.append(correctedEpisode)
-        elif method is 'poly':
-            for episode in data:
-                correctedEpisode = copy.deepcopy(episode)
-                correctedEpisode.currentTrace = poly_baseline(
-                    episode.time, episode.currentTrace, 
-                    self.samplingRate, intervals, 
-                    degree=degree)
-                correctedEpisode.baselineCorrected = True
-                corrected.append(correctedEpisode)
-        name = dataKey+"_BC"
-        self[name] = corrected
+                self[newdataKey].append(correctedEpisode)
+
+
     
-    def idealization(self, dataKey, threshold = .5):
+    def idealization(self, dataKey, threshold = 0.5):
         if self.filetype is not 'bin':
             print("Can only idealize single level "
-                  "channels so far. (That means bin files)")
+                  "channels so far. (That means .bin files)")
             pass
-        try:
-            data = self[dataKey]
-        except KeyError:
-            print("These data don't exist.")
+        if not self[dataKey]:
+            print("These data do not exist.")
             pass
         idealized = []
         for episode in data:
             idealizedEpisode = copy.deepcopy(episode)
             activity, signalmax = threshold_crossing(
-                                    idealizedEpisode.currentTrace,threshold)
+                                                idealizedEpisode.currentTrace,
+                                                threshold
+                                                )
             idealizedEpisode.currentTrace = activity*signalmax
             idealizedEpisode.idealized = (
-            'Idealized with simple threshold crossing')
+                                    'Idealized with simple threshold crossing'
+                                    )
             idealized.append(idealizedEpisode)
         name = dataKey + '_TC'
         self[name] = idealized
+
+if __name__ == '__main__':
+    r = Recording()
+    r.load_data()

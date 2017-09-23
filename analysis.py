@@ -71,3 +71,34 @@ def poly_baseline(time,signal,fs,intervals, degree = 1):
     for i in range(degree+1):
         baseline+=coeffs[i]*time**(degree-i)
     return signal - baseline
+
+def combinedbaseline(time,signal,fs,intervals, degree = 1, method = 'poly'):
+    """
+    Perform baseline correction by offsetting the signal with its mean in the 
+    selected intervals
+    Parameters:
+        signal - time series of measurements
+        interval - interval or list of intervals from which to estimate the 
+                   baseline (in ms)
+        fs - sampling frequency (in Hz)
+    Returns:
+        original signal less the mean over the given interval       
+    """
+    t = []
+    s = []
+    if type(intervals[0]) is list:
+        for ival in intervals:
+            t.extend(time[ int(ival[0]*fs/1000) : int(ival[-1]*fs/1000) ])
+            s.extend(signal[ int(ival[0]*fs/1000) : int(ival[-1]*fs/1000) ])
+    elif type(intervals[0]) in (int, float):
+        s = signal[int(intervals[0]*fs/1000):int(intervals[1]*fs/1000)]
+
+    if method == 'offset':
+        offset = np.mean(s)
+        return signal - offset
+    elif method == 'poly':
+        coeffs = np.polyfit(t,s,degree)
+        baseline = np.zeros_like(time)
+        for i in range(degree+1):
+            baseline+=coeffs[i]*time**(degree-i)
+        return signal - baseline

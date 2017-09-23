@@ -56,7 +56,7 @@ class Main(ttk.Frame):
         if testing:
             # self.recording = model.Recording(cwd+'/data/sim1600.bin', 4e4, 'bin', 3072, np.int16)
             self.recording = model.Recording()
-            self.recording.load_data()
+            # self.recording.load_data()
             self.uptdate_list()
             self.update_plot()
     def update_plot(self):
@@ -182,7 +182,7 @@ class Loadframe(tk.Toplevel):
             binframe = Binaryquery(self.parent)
         elif self.parent.filetype.get() == 'axo':
             self.parent.recording = model.Recording(self.parent.filenamefull.get(), self.parent.samplingrate.get(), self.parent.filetype.get())
-            self.parent.recording.load_data()
+            # self.parent.recording.load_data()
         self.parent.uptdate_list()
         self.parent.update_plot()
         self.destroy()
@@ -245,7 +245,7 @@ class Binaryquery(tk.Toplevel):
         # if self.parent.datatype.get()=='np.int16':
         datatype = np.int16 #this is here because stringvar.get returns a string which numpy doesnt understand
         self.parent.recording = model.Recording(self.parent.filenamefull.get(), self.parent.samplingrate.get(), self.parent.filetype.get(), self.parent.headerlength.get(), datatype)
-        self.parent.recording.load_data()
+        # self.parent.recording.load_data()
         self.parent.uptdate_list()
         self.parent.update_plot()
         self.destroy()
