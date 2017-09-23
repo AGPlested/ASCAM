@@ -103,16 +103,15 @@ class Recording(dict):
     def load_data(self):
         """Load the raw data from binary of axograph file. All parameters are 
         specified in the initialization of th Recording instance."""
-        loadedfile = readdata.load(self.filetype, self.filename,
-                                    self.bindtype, self.headerlength, 
-                                    self.samplingrate
-                                    )
+        loadedfile = readdata.load(self.filetype, self.filename, self.bindtype, 
+                                   self.headerlength, self.samplingrate
+                                   )
         self.store_rawdata(*loadedfile)
+
 
     def store_rawdata(self, names, time, current, piezo = None, 
                       commandVoltage = None
                       ):
-        rawdata = []
         for i in range(len(current)):
             if piezo is not None: # `piezo not None` differentiates between axograph and bin data
                 ep = Episode(names, time, current[i], nthEpisode=i, 
@@ -120,19 +119,20 @@ class Recording(dict):
                              )
             else:
                 ep = Episode(names, time, current[i], nthEpisode=i)
-            rawdata.append(ep)
-        self['raw'] = rawdata
+            self['raw'].append(ep)
             
-    def filter_data(self, fc = 1e3, filtertype = 'Gaussian', dataKey='raw'):
+
+    def filter_data(self, filterfreq = 1e3, filtertype = 'Gaussian', dataKey='raw'):
         if not self[dataKey]:
             print("These data do not exist.")
             pass
+
         if filtertype == 'Gaussian':
-            name = "G"
-            fcs = fc/self.samplingrate #cutoff frequency in 1/samples
-            filterWindow = filtering.gaussian(fcs)
-            filter_lag = 0 #int(1/(2*fcs))
-            fData = []
+            frequencyinsamples = filterfreq/self.samplingrate 
+            filterWindow = filtering.gaussian(frequencyinsamples)
+            filter_lag = 0 #int(1/(2*frequencyinsamples))
+            newdataKey = 'G'+str(int(filterfreq))+'Hz'
+            self[newdataKey] = []
             for episode in self[dataKey]:
                 filteredTrace = filtering.applyfilter(episode.currentTrace, 
                                                       filterWindow
@@ -140,14 +140,11 @@ class Recording(dict):
                 filteredEpisode = copy.deepcopy(episode)
                 filteredEpisode.currentTrace = filteredTrace[filter_lag:] 
                 filteredEpisode.filterMethod = 'Gaussian'
-                filteredEpisode.cutoffFrequency = fc
-                fData.append(filteredEpisode)
-            name = name+str(int(fc))+'Hz'
-            self[name] = fData
+                filteredEpisode.cutoffFrequency = filterfreq
+                self[newdataKey].append(filteredEpisode)
+
             
-    def baseline_correction(self, dataKey, intervals, method='poly', 
-                            degree=1
-                            ):
+    def baseline_correction(self, dataKey, intervals, method='poly', degree=1):
         """
         Do baseline correction on each epoch.
         Parameters:
@@ -187,30 +184,27 @@ class Recording(dict):
                 self[newdataKey].append(correctedEpisode)
 
 
-    
     def idealization(self, dataKey, threshold = 0.5):
         if self.filetype is not 'bin':
             print("Can only idealize single level "
                   "channels so far. (That means .bin files)")
             pass
+
         if not self[dataKey]:
             print("These data do not exist.")
             pass
-        idealized = []
-        for episode in data:
+        elif '_TC' in dataKey:
+            pass
+
+        newdataKey = dataKey + '_TC'
+        self[newdataKey] = []
+        for episode in self[dataKey]:
             idealizedEpisode = copy.deepcopy(episode)
             activity, signalmax = threshold_crossing(
                                                 idealizedEpisode.currentTrace,
                                                 threshold
                                                 )
             idealizedEpisode.currentTrace = activity*signalmax
-            idealizedEpisode.idealized = (
-                                    'Idealized with simple threshold crossing'
-                                    )
-            idealized.append(idealizedEpisode)
-        name = dataKey + '_TC'
-        self[name] = idealized
+            idealizedEpisode.idealized = ('Idealized with threshold crossing')
+            self[newdataKey].append(idealizedEpisode)
 
-if __name__ == '__main__':
-    r = Recording()
-    r.load_data()
