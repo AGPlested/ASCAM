@@ -102,6 +102,8 @@ class Plotframe(ttk.Frame):
     def __init__(self, parent):
         ttk.Frame.__init__(self, parent)
         self.parent = parent
+        self.grid(columnspan=3, row=2, padx=5, pady=5, 
+                        sticky=tk.W)
         self.plot()
     def plot(self):
         self.fig = plt.figure(1, figsize=(5,2))

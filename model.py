@@ -120,7 +120,8 @@ class Recording(dict):
                       commandVoltage = None
                       ):
         for i in range(len(current)):
-            if piezo is not None: # `piezo not None` differentiates between axograph and bin data
+            if piezo is not None: # `piezo not None` differentiates 
+                                  #  between axograph and bin data
                 ep = Episode(names, time, current[i], nthEpisode=i, 
                              piezo=piezo[i], 
                              commandVoltage=commandVoltage[i]
