@@ -21,7 +21,7 @@ def data_to_stdout(file, Nepisodes, episodeLength):
 
 def write_to_file(file):
 	data = np.asarray(file.data)
-	with open("likeDHLfordata.txt","wb+") as f:
+	with open("data.txt","wb+") as f:
 		pickle.dump(file.data, f)
 
 	# temporaryfile = open("likeDHLfordata.txt","w+")
