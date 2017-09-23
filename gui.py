@@ -50,9 +50,9 @@ class Main(ttk.Frame):
                              padx=5, pady=5)
         self.commandbar.loadbutton.focus()
         # plot
-        self.plots = Plotframe(self)
-        self.plots.grid(columnspan=3, row=2, padx=5, pady=5, 
-                        sticky=tk.W)
+        self.plots = Plotframe(self, gridposition=(2,1),
+                               gridspan=(1,3), padx=5, pady=5, 
+                               sticky=())
         # options
         self.options = Options(self)
         self.options.grid(row=3, columnspan=3, padx=5, pady=5, 
@@ -62,14 +62,19 @@ class Main(ttk.Frame):
         self.List.grid(row=2,column=4,sticky=(tk.E))
 
         if testing:
-            #self.recording = model.Recording(cwd+'/data/sim1600.bin', 
-                                        # 4e4, 'bin', 3072, np.int16)
-            self.recording = model.Recording()
+            if binary:
+                self.recording = model.Recording(
+                                        cwd+'/data/sim1600.bin', 4e4, 
+                                        'bin', 3072, np.int16)
+            elif axo:
+                self.recording = model.Recording()
             self.uptdate_list()
             self.update_plot()
     def update_plot(self):
         if self.recording:
-            self.plots = Plotframe(self)
+            self.plots = Plotframe(self, gridposition=(2,1),
+                                   gridspan=(1,3), padx=5, pady=5, 
+                                   sticky=())
         else:
             pass
     def uptdate_list(self):
@@ -99,11 +104,13 @@ class Commandframe(ttk.Frame):
         subframe = Loadframe(self.parent)
         
 class Plotframe(ttk.Frame):
-    def __init__(self, parent):
+    def __init__(self, parent, gridposition, gridspan=(1,1), sticky=(),
+                 padx=5, pady=5):
         ttk.Frame.__init__(self, parent)
         self.parent = parent
-        self.grid(columnspan=3, row=2, padx=5, pady=5, 
-                        sticky=tk.W)
+        self.grid(row=gridposition[0],column=gridposition[1],
+                  rowspan=gridspan[0],columnspan=gridspan[1],
+                  padx=padx, pady=pady, sticky=sticky)
         self.plot()
     def plot(self):
         self.fig = plt.figure(1, figsize=(5,2))
@@ -313,8 +320,12 @@ def gui_main():
 if __name__ == '__main__':
     import sys
     try:
-        if sys.argv[1]:
+        if sys.argv[1]=='axo':
             testing=True
+            axo = True
+        elif sys.argv[1]=='bin':
+            testing=True
+            binary=True
     except IndexError:
         pass
     gui_main()
