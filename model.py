@@ -8,20 +8,23 @@ import os
 cwd = os.getcwd()
 
 class Episode(object):    
-    def __init__(self, names, time, currentTrace, nthEpisode = 0, piezo = None, 
-                 commandVoltage = None, filtertype = None, fc = None
+    def __init__(self, names, time, currentTrace, nthEpisode = 0, 
+                 piezo = None, commandVoltage = None, 
+                 filtertype = None, fc = None
                  ):
         """
-        Episode objects hold all the information about an epoch and should be 
-        used to store raw and manipulated data
+        Episode objects hold all the information about an epoch and 
+        should be used to store raw and manipulated data
         
         Parameters:
             time [1D array of floats] - containing time (in seconds)
             currentTrace [1D array of floats] - containing the current trace
-            piezo [1D array of floats] - the voltage applied to the Piezo device
-            commandVoltage [1D array of floats] - voltage applied to cell
-            nthEp [int] - the number of measurements on this cell that came 
-                            before this one
+            piezo [1D array of floats] - the voltage applied to the 
+                                         Piezo device
+            commandVoltage [1D array of floats] - voltage applied to 
+                                                  cell
+            nthEp [int] - the number of measurements on this cell that 
+                          came before this one
             filtertype [string] - type of filter used
             fc [int] - cutoff frequency of the filter in Hz
         """
@@ -63,24 +66,26 @@ class Episode(object):
 
 class Recording(dict):
     """
-    Recording objects contain all the information and data of a single patch 
-    recording as well as the the processed data.
+    Recording objects contain all the information and data of a single
+    patch recording as well as the the processed data.
     
     parameters:
     filename [string] - name of the file containing the data
     filepath [string] - path containing the data file
-    samplingrate [int] - sampling rate of the recording (samples/second)
-    filetype [string] - specify which kind of file is being loaded, takes 'axo' 
-    for axograph files and 'bin' for binary files
-    headerlength [int] - in case of binary files with a header preceeding the 
-    data in the file
+    samplingrate [int] - sampling rate of the recording 
+                         (in units of samples/second)
+    filetype [string] - specify which kind of file is being loaded, 
+                        takes 'axo' for axograph files and 'bin' for 
+                        binary files
+    headerlength [int] - in case of binary files with a header 
+                         preceeding the data in the file
     bindtype [numpy type] - in case of binary the data type, should be 
-    somemthing like 'np.int16'
+                            somemthing like 'np.int16'
     
-    Recording objects load the data into Episode objects which can later be 
-    filtered or manipulated in other ways. Presently after each manipulation the 
-    newly
-    processed data as well as the original data are stored.
+    Recording objects load the data into Episode objects which can 
+    later be filtered or manipulated in other ways. Presently after 
+    each manipulation the newly processed data as well as the original 
+    data are stored.
     """
     def __init__(self, 
                  filename=cwd+'/data/170404 015.axgd',
@@ -101,10 +106,12 @@ class Recording(dict):
 
 
     def load_data(self):
-        """Load the raw data from binary of axograph file. All parameters are 
-        specified in the initialization of th Recording instance."""
-        loadedfile = readdata.load(self.filetype, self.filename, self.bindtype, 
-                                   self.headerlength, self.samplingrate
+        """Load the raw data from binary of axograph file. All 
+        parameters are specified in the initialization of the 
+        Recording instance."""
+        loadedfile = readdata.load(self.filetype, self.filename, 
+                                   self.bindtype, self.headerlength, 
+                                   self.samplingrate
                                    )
         self.store_rawdata(*loadedfile)
 
@@ -115,14 +122,17 @@ class Recording(dict):
         for i in range(len(current)):
             if piezo is not None: # `piezo not None` differentiates between axograph and bin data
                 ep = Episode(names, time, current[i], nthEpisode=i, 
-                             piezo=piezo[i], commandVoltage=commandVoltage[i]
+                             piezo=piezo[i], 
+                             commandVoltage=commandVoltage[i]
                              )
             else:
                 ep = Episode(names, time, current[i], nthEpisode=i)
             self['raw'].append(ep)
             
 
-    def filter_data(self, filterfreq = 1e3, filtertype = 'Gaussian', dataKey='raw'):
+    def filter_data(self, filterfreq = 1e3, filtertype = 'Gaussian', 
+                    dataKey='raw'
+                    ):
         if not self[dataKey]:
             print("These data do not exist.")
             pass
@@ -134,31 +144,39 @@ class Recording(dict):
             newdataKey = 'G'+str(int(filterfreq))+'Hz'
             self[newdataKey] = []
             for episode in self[dataKey]:
-                filteredTrace = filtering.applyfilter(episode.currentTrace, 
-                                                      filterWindow
+                filteredTrace = filtering.applyfilter(
+                                                episode.currentTrace, 
+                                                filterWindow
                                                       )
                 filteredEpisode = copy.deepcopy(episode)
-                filteredEpisode.currentTrace = filteredTrace[filter_lag:] 
+                filteredEpisode.currentTrace = (
+                                            filteredTrace[filter_lag:] 
+                                                )
                 filteredEpisode.filterMethod = 'Gaussian'
                 filteredEpisode.cutoffFrequency = filterfreq
                 self[newdataKey].append(filteredEpisode)
 
             
-    def baseline_correction(self, dataKey, intervals, method='poly', degree=1):
+    def baseline_correction(self, dataKey, intervals, method='poly', 
+                            degree=1
+                            ):
         """
         Do baseline correction on each epoch.
         Parameters:
-            interval - list containing the beginning and end points of the 
-                       interval from the baseline is to be estimated 
-                       (in milliseconds)
-            dataKey - string that contains the dictionary key of the data
+            interval - list containing the beginning and end points of 
+                       the interval from the baseline is to be 
+                       estimated (in milliseconds)
+            dataKey - string that contains the dictionary key of the 
+                      data
             method [string] - specify the method, currently supports 
-                'offset' - subtract the average value of the signal over the 
-                           intervals from the signal
-                'poly' - fit a polynomial of given degree to the selected 
-                         intervals and subtract it from the signal
-            degree [int] - needed for the 'poly' method, degree of polynomial 
-                           fitted, default is 1 (linear regression)
+                'offset' - subtract the average value of the signal 
+                           over the intervals from the signal
+                'poly' - fit a polynomial of given degree to the 
+                         selected intervals and subtract it from the 
+                         signal
+            degree [int] - needed for the 'poly' method, degree of 
+                           polynomial fitted, default is 1 (linear 
+                           regression)
                 
         """
         if not self[dataKey]:
@@ -172,14 +190,13 @@ class Recording(dict):
 
         for episode in self[dataKey]:
                 correctedEpisode = copy.deepcopy(episode)
-                correctedEpisode.currentTrace = analysis.baseline(
-                                                        episode.time,
-                                                        episode.currentTrace, 
-                                                        self.samplingrate, 
-                                                        intervals, 
-                                                        degree = degree,
-                                                        method = method
-                                                        )
+                correctedEpisode.currentTrace = (
+                    analysis.baseline(episode.time,
+                                      episode.currentTrace, 
+                                      self.samplingrate, intervals, 
+                                      degree = degree, method = method
+                                       )
+                                                 )
                 correctedEpisode.baselineCorrected = True
                 self[newdataKey].append(correctedEpisode)
 
@@ -200,11 +217,14 @@ class Recording(dict):
         self[newdataKey] = []
         for episode in self[dataKey]:
             idealizedEpisode = copy.deepcopy(episode)
-            activity, signalmax = threshold_crossing(
-                                                idealizedEpisode.currentTrace,
-                                                threshold
-                                                )
+            activity, signalmax = (
+                threshold_crossing(idealizedEpisode.currentTrace,
+                                   threshold
+                                   )
+                                   )
             idealizedEpisode.currentTrace = activity*signalmax
-            idealizedEpisode.idealized = ('Idealized with threshold crossing')
+            idealizedEpisode.idealized = (
+                                'Idealized with threshold crossing'
+                                          )
             self[newdataKey].append(idealizedEpisode)
 
