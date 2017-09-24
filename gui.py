@@ -7,8 +7,7 @@ import model
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, 
-                                               NavigationToolbar2TkAgg
-                                               )
+                                            NavigationToolbar2TkAgg)
 
 
 class Main(ttk.Frame):
@@ -21,7 +20,7 @@ class Main(ttk.Frame):
     @classmethod
     def run(cls):
         root = tk.Tk()
-        root.geometry("768x300+500+200")
+        root.geometry("768x600+200+200")
         root.protocol('WM_DELETE_WINDOW', quit)
         root.title("ASCAM")
         root.grid_columnconfigure(0, weight=1)
@@ -44,7 +43,7 @@ class Main(ttk.Frame):
         self.samplingrate = tk.StringVar()
         self.path = tk.StringVar()
         self.filetypefull = tk.StringVar()
-        self.filetype = tk.StringVar()        
+        self.filetype = tk.StringVar()
 
         self.recording = dict()
         self.datakey = 'raw'
@@ -63,7 +62,7 @@ class Main(ttk.Frame):
 
         self.manipulations = manipulations(self)
         self.manipulations.grid(row=3, columnspan=3, padx=5, pady=5, 
-                          sticky=(tk.S,tk.W))
+                                sticky=(tk.S,tk.W))
 
         self.List = EpisodeList(self)
         self.List.grid(row=2,column=4,sticky=(tk.E))
@@ -118,34 +117,37 @@ class Plotframe(ttk.Frame):
         self.parent = parent
         self.grid(**options)
 
-        self.fig = plt.figure(1, figsize=(5,5))
+        self.fig = plt.figure(figsize=(5,5))
         self.canvas = FigureCanvasTkAgg(self.fig, self)
         self.canvas.get_tk_widget().grid(row=0,column=0)
         self.canvas.show()
         # self.toolbar = NavigationToolbar2TkAgg(self.canvas, self)
         # self.toolbar.update()
         # self.canvas._tkcanvas.pack()
-        self.plot()
+
 
     def plot(self):
         if self.parent.recording:
             episode = self.parent.recording[
                             self.parent.datakey][self.parent.Nepisode]
             x = episode.time
-            y = []
-            y.append(episode.currentTrace)
+            ys = [episode.currentTrace]
             if episode.piezo is not None: 
-                y.append(episode.piezo)
+                ys.append(episode.piezo)
             if episode.commandVoltage is not None: 
-                y.append(episode.commandVoltage)
+                ys.append(episode.commandVoltage)
         else:
             x = [0,1]
-            y = [[0,0]]
-        for i, y in enumerate(y):
-            subplot=self.fig.add_subplot(3,1,i+1)
-            subplot.plot(x,y)
+            ys = [[0,0],[0,0],[0,0]]
+
+        subplots = []
+        for i, y in enumerate(ys):
+            subplots.append(self.fig.add_subplot(len(ys),1,i+1))
+            plt.plot(x,y)
+
         self.canvas.draw()
-        subplot.clear()
+        for subplot in subplots:
+            subplot.clear()
 
 
 class manipulations(ttk.Frame):
@@ -153,7 +155,41 @@ class manipulations(ttk.Frame):
     def __init__(self, parent):
         ttk.Frame.__init__(self, parent)
         self.parent = parent
-        ttk.Label(self, text="mode buttons").grid(column=2)
+        self.cutoff = tk.StringVar()
+        self.cutoff.set(1000)
+        # ttk.Label(self, text="more buttons").grid(column=2)
+        self.create_widgets()
+
+    def create_widgets(self):
+        self.filterallbutton = ttk.Button(self, text="Filter all", 
+                                     command=(
+                                            lambda: self.filterall(
+                                                        self.cutoff)))
+        self.filterallbutton.grid(column=1,row=1,sticky=())
+
+        self.filterbutton = ttk.Button(self, text="Filter", 
+                                     command=(
+                                            lambda: self.apply_filter(
+                                                        self.cutoff)))
+        self.filterbutton.grid(column=0,row=1,sticky=())
+
+        self.cutoffentry = ttk.Entry(self, width=7, textvariable=(
+                                                        self.cutoff))
+        self.cutoffentry.grid(column=1,row=0)
+        ttk.Label(self, text="Filter cutoff (Hz):").grid(column=0,
+                                                        row=0,
+                                                        sticky=(tk.W))
+       
+    def filterall(self, cutoff):
+        newdatakey = self.parent.recording.filter_data(
+                                    filterfreq=float(cutoff.get()), 
+                                    datakey=self.parent.datakey)
+        self.parent.datakey=newdatakey
+        self.parent.update_plot()
+
+    def apply_filter(self,cutoff):
+
+        pass
 
 
 class EpisodeList(ttk.Frame):
@@ -332,17 +368,13 @@ class Binaryquery(tk.Toplevel):
         self.loadframe.destroy()
         self.destroy()
 
-def gui_main():
-    root = tk.Tk()
-    main = Main(root)
-    for child in root.winfo_children(): 
-        child.grid_configure(padx=5, pady=5)        
-    root.mainloop()
 
 if __name__ == '__main__':
     import sys
     import os
     cwd = os.getcwd()
+    axotest = False
+    bintest=False
     try:
         if sys.argv[1]=='axo':
             axotest = True
