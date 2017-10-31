@@ -1,6 +1,33 @@
 import numpy as np
 
-def threshold_crossing(signal, threshold):
+def threshold_crossing(signal,amplitudes):
+    """
+    Given a signal and amplitudes assign to each point in the signal its closest amplitude value. 
+    Amplitude of 0 is assumed to be present.
+    """
+    if type(amplitudes) in [list, tuple] :
+        amplitudes = list(amplitudes)
+        if not 0 in amplitudes:
+            amplitudes.insert(0,0)
+    elif type(amplitudes) in [int, float]:
+        amplitudes = [0, amplitudes]
+    print(amplitudes)
+    amplitudes = np.sort(amplitudes)
+    print(amplitudes[:-1])
+    thresholds = []
+    for i, amplitude in enumerate(amplitudes[:-1]):
+        threshold = (amplitudes[i+1]-amplitude)/2+amplitude
+        thresholds.append(threshold)
+
+    idealization = np.zeros(len(signal))
+    for i, point in enumerate(signal):
+        for n, threshold in enumerate(thresholds[:-1]):
+            if threshold<point<thresholds[n+1]:
+                idealization[i]=amplitudes[n]
+        
+    return idealization
+
+def single_state_threshold_crossing(signal, threshold):
 	"""Basic threshold crossing for single-level channels
 	Parameters:
 		signal - 1D time series, baseline should be zero
@@ -13,7 +40,7 @@ def threshold_crossing(signal, threshold):
 	signal_max = np.max(np.abs(signal))
 	thresh_val = threshold*signal_max #actual threshold value
 	activity = np.array(
-			[1 if x>thresh_val else -1 if x<-thresh_val else 0 for x in signal])
+	[1 if x>thresh_val else -1 if x<-thresh_val else 0 for x in signal])
 
 	return activity, signal_max
 
@@ -51,95 +78,55 @@ def multilevel_threshold(signal,thetas):
 ### estimating amplitude
 ### least squares quality
 
-def baseline(time,signal,fs,intervals, degree = 1, method = 'poly'):
+def baseline(time,signal,fs,intervals, timeUnit='ms', 
+             degree = 1, method = 'poly'):
     """
     Perform baseline correction by offsetting the signal with its mean
     in the selected intervals
     Parameters:
+        time - 1D array containing times of the measurements in signal
+               units of `timeUnit`
         signal - time series of measurements
-        interval - interval or list of intervals from which to 
+        intervals - interval or list of intervals from which to 
                    estimate the baseline (in ms)
         fs - sampling frequency (in Hz)
+        timeUnit - units of the time vector, 'ms' or 's'
+        method - `baseline` can subtract a fitted polynomial of 
+                 desired degree OR subtract the mean
+        degree - if method is 'poly', the degree of the polynomial
     Returns:
-        original signal less the mean over the given interval       
+        original signal less the fitted baseline     
     """
-    millisecond = 1000
+    if timeUnit == 'ms':
+        timeUnit = 1000
+    elif timeUnit == 's':
+        timeUnit = 1
     t = []
     s = []
     if type(intervals[0]) is list:
         for ival in intervals:
-            t.extend(time[ int(ival[0]*fs/millisecond) 
-                           : int(ival[-1]*fs/millisecond) 
+            t.extend(time[ int(ival[0]*fs/timeUnit) 
+                           : int(ival[-1]*fs/timeUnit) 
                           ])
-            s.extend(signal[ int(ival[0]*fs/millisecond) 
-                             : int(ival[-1]*fs/millisecond) 
+            s.extend(signal[ int(ival[0]*fs/timeUnit) 
+                             : int(ival[-1]*fs/timeUnit) 
                            ])
-    elif type(intervals[0]) in (int, float):
-        t = time[ int(ival[0]*fs/millisecond) 
-                  : int(ival[-1]*fs/millisecond)
+    elif type(intervals[0]) in [int, float]:
+        t = time[ int(intervals[0]*fs/timeUnit) 
+                  : int(intervals[-1]*fs/timeUnit)
                 ]
-        s = signal[int(intervals[0]*fs/millisecond)
-                   : int(intervals[1]*fs/millisecond)
+        s = signal[int(intervals[0]*fs/timeUnit)
+                   : int(intervals[1]*fs/timeUnit)
                   ]
 
     if method == 'offset':
         offset = np.mean(s)
-        return signal - offset
+        output = signal - offset
     elif method == 'poly':
         coeffs = np.polyfit(t,s,degree)
         baseline = np.zeros_like(time)
         for i in range(degree+1):
             baseline+=coeffs[i]*(time**(degree-i))
-        return signal - baseline
-
-
-##### below is the old code from when baseline was two seperate 
-##### functions for offset and poly.
-##### Delete it after new baseline has been tested
-# def baseline(signal, fs, intervals):
-#   """
-#   Perform baseline correction by offsetting the signal with its mean in the 
-#   selected intervals
-#   Parameters:
-#       signal - time series of measurements
-#       interval - interval or list of intervals from which to estimate the 
-#                  baseline (in ms)
-#       fs - sampling frequency (in Hz)
-#   Returns:
-#       original signal less the mean over the given interval       
-#   """
-#   s = []
-#   if type(intervals[0]) is list:
-#       for ival in intervals:
-#           s.extend(signal[ int(ival[0]*fs/1000) : int(ival[-1]*fs/1000) ])
-#   elif type(intervals[0]) in (int, float):
-#       s = signal[int(intervals[0]*fs/1000):int(intervals[1]*fs/1000)]
-
-#   offset = np.mean(s)
-#   signal = signal - offset
-#   return signal
-
-# def poly_baseline(time,signal,fs,intervals, degree = 1):
-#     """
-#     Fit a polynomial to the baseline in the selected intervals. By default the 
-#     degree is one which makes this equivalent to a linear regression.
-#     Parameters:
-#         time [1D array of floats] - time points at which measurements where 
-#                                   performed
-#         signal [1D array of floats] - measurement values
-#         fs [float] - sampling rate (in samples per second)
-#         intervals [list] - list of intervals (in ms) that are to be used
-#         degree [int] - highest order term to be included in fitting
-#     Return:
-#         The sloping baseline [1D array of floats]
-#         """
-#     t = []
-#     s = []
-#     for ival in intervals:
-#         t.extend(time[ int(ival[0]*fs/1000) : int(ival[-1]*fs/1000) ])
-#         s.extend(signal[ int(ival[0]*fs/1000) : int(ival[-1]*fs/1000) ])
-#     coeffs = np.polyfit(t,s,degree)
-#     baseline = np.zeros_like(time)
-#     for i in range(degree+1):
-#         baseline+=coeffs[i]*time**(degree-i)
-#     return signal - baseline
+        output = signal - baseline
+    return output
+    ### maybe add cosine basis functions
