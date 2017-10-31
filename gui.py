@@ -3,12 +3,14 @@ from tkinter import ttk
 from tkinter.filedialog import askopenfilename
 import matplotlib
 matplotlib.use('TkAgg')
-import model
+import model as backend
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, 
                                             NavigationToolbar2TkAgg)
-
+VERBOSE = False
+axotest = False
+bintest = False
 
 class Main(ttk.Frame):
     """
@@ -20,7 +22,7 @@ class Main(ttk.Frame):
     @classmethod
     def run(cls):
         root = tk.Tk()
-        root.geometry("768x600+200+200")
+        # root.geometry("768x600+200+200")
         root.protocol('WM_DELETE_WINDOW', quit)
         root.title("ASCAM")
         root.grid_columnconfigure(0, weight=1)
@@ -32,10 +34,9 @@ class Main(ttk.Frame):
         ttk.Frame.__init__(self, master)
         self.master = master
 
-        self.grid(column=0, row=0, sticky=(tk.N, tk.W))
-
+        self.grid(column=0, row=0, sticky=(tk.N+tk.S+tk.E+tk.W))
         self.grid_rowconfigure(0, weight=1)
-        self.grid_columnconfigure(0,weight=1)
+        self.grid_columnconfigure(0, weight=1)
         self.filenamefull = tk.StringVar()
         self.filename = tk.StringVar()
         self.headerlength = tk.StringVar()
@@ -45,44 +46,68 @@ class Main(ttk.Frame):
         self.filetypefull = tk.StringVar()
         self.filetype = tk.StringVar()
 
-        self.recording = dict()
-        self.datakey = 'raw'
+        self.data = dict()
+        self.datakey = 'raw_'
         self.Nepisode = 0
 
-        commandbargridoptions = {'sticky':(tk.N, tk.W), 'padx':5, 
-                                 'pady':5}
-        self.commandbar = Commandframe(self, commandbargridoptions)
-
+        self.commandbar = Commandframe(self)
+        self.commandbar.grid(row=0,column=0, columnspan=3, padx=5,
+                             pady=5, sticky=tk.N+tk.W)
+        self.commandbar.grid_rowconfigure(0, weight=1)
+        self.commandbar.grid_columnconfigure(0, weight=1)
         self.commandbar.loadbutton.focus()
 
-        plotframegridoptions = {'row':2,'columnspan':3,'pady':5,
-                                'padx':5}
-        self.plots = Plotframe(self, plotframegridoptions)
-        # self.plots.grid_rowconfigure(0,weight=1)
+        self.plots = Plotframe(self)
+        self.plots.grid(row=1, rowspan=3, column=0,columnspan=3, 
+                        padx=5, pady=5, sticky=tk.W)
+        self.plots.grid_rowconfigure(1, weight=1)
+        self.plots.grid_columnconfigure(0, weight=1)
 
-        self.manipulations = manipulations(self)
-        self.manipulations.grid(row=3, columnspan=3, padx=5, pady=5, 
-                                sticky=(tk.S,tk.W))
+        self.manipulations = Manipulations(self)
+        self.manipulations.grid(row=4, column=0, columnspan=3, padx=5, 
+                                pady=5, sticky=(tk.S,tk.W))
+        self.manipulations.grid_columnconfigure(0,weight=1)
+        self.manipulations.grid_rowconfigure(4,weight=1)
 
         self.List = EpisodeList(self)
-        self.List.grid(row=2,column=4,sticky=(tk.E))
+        self.List.grid(row=1, rowspan=3, column=3,sticky=(tk.E))
+        self.List.grid_columnconfigure(3, weight=1)
+        self.List.grid_rowconfigure(1, weight=1)
 
         if bintest:
-            self.recording = model.Recording(
+            if VERBOSE:
+                print('Test mode with binary data')
+            self.data = backend.Model(
                                     cwd+'/data/sim1600.bin', 4e4, 
                                     'bin', 3072, np.int16)
+            self.data['raw_'][0]['trace']=self.data['raw_'][0]['trace'][:9999]
+            self.data['raw_'][0]['time']=self.data['raw_'][0]['time'][:9999]
+            for i in range(1,25):
+                dummyepisode = copy.deepcopy(self.data['raw_'][0])
+                randommultiplier = np.random.random(
+                                    len(dummyepisode['trace']))
+                dummyepisode['trace'] = dummyepisode['trace']*randommultiplier
+                dummyepisode.nthEpisode = i
+                self.data['raw_'].append(dummyepisode)
             self.uptdate_list()
             self.update_plot()
         elif axotest:
-            self.recording = model.Recording()
+            if VERBOSE:
+                print('Test mode with axograph data')
+            self.data = backend.Model()
             self.uptdate_list()
             self.update_plot()
+
     def update_plot(self):
-        if self.recording:
+        if VERBOSE: print('call `update_plot`')
+        if self.data:
+            if VERBOSE: print('`self.data` is `True`')
             self.plots.plot()
         else:
+            if VERBOSE: print('`self.data` is `False`')
             pass
     def uptdate_list(self):
+        if VERBOSE: print('call `uptdate_list`')
         self.List.create_list()
     def quit(self):
         self.master.destroy()
@@ -94,10 +119,9 @@ class Commandframe(ttk.Frame):
     This frame will contain all the command buttons such as loading 
     data and plotting
     """
-    def __init__(self, parent,options):
+    def __init__(self, parent):
         ttk.Frame.__init__(self, parent)
         self.parent = parent
-        self.grid(**options)
         self.create_widgets()
     def create_widgets(self):
         self.loadbutton = ttk.Button(self, text="Load file", 
@@ -112,11 +136,9 @@ class Commandframe(ttk.Frame):
         
 
 class Plotframe(ttk.Frame):
-    def __init__(self, parent, options):
+    def __init__(self, parent):
         ttk.Frame.__init__(self, parent)
         self.parent = parent
-        self.grid(**options)
-
         self.fig = plt.figure(figsize=(5,5))
         self.canvas = FigureCanvasTkAgg(self.fig, self)
         self.canvas.get_tk_widget().grid(row=0,column=0)
@@ -125,18 +147,25 @@ class Plotframe(ttk.Frame):
         # self.toolbar.update()
         # self.canvas._tkcanvas.pack()
 
-
     def plot(self):
-        if self.parent.recording:
-            episode = self.parent.recording[
+        if self.parent.data:
+            if VERBOSE:
+                print('`data` exists, plotting...')
+                print('datakey = '+self.parent.datakey)
+                print('Nepisode = '+str(self.parent.Nepisode))
+            episode = self.parent.data[
                             self.parent.datakey][self.parent.Nepisode]
-            x = episode.time
-            ys = [episode.currentTrace]
-            if episode.piezo is not None: 
-                ys.append(episode.piezo)
-            if episode.commandVoltage is not None: 
-                ys.append(episode.commandVoltage)
+            x = episode['time']
+            ys = [episode['trace']]
+            if episode['piezo'] is not None: 
+                if VERBOSE: print('`piezo` found')
+                ys.append(episode['piezo'])
+            if episode['commandVoltage'] is not None: 
+                if VERBOSE: print('`commandVoltage` found')
+                ys.append(episode['commandVoltage'])
         else:
+            if VERBOSE:
+                print("no data found, plotting dummy")
             x = [0,1]
             ys = [[0,0],[0,0],[0,0]]
 
@@ -150,13 +179,13 @@ class Plotframe(ttk.Frame):
             subplot.clear()
 
 
-class manipulations(ttk.Frame):
+class Manipulations(ttk.Frame):
     """docstring for Manipulations"""
     def __init__(self, parent):
         ttk.Frame.__init__(self, parent)
         self.parent = parent
-        self.cutoff = tk.StringVar()
-        self.cutoff.set(1000)
+        self.cutoffFrequency = tk.StringVar()
+        self.cutoffFrequency.set(1000)
         # ttk.Label(self, text="more buttons").grid(column=2)
         self.create_widgets()
 
@@ -164,31 +193,29 @@ class manipulations(ttk.Frame):
         self.filterallbutton = ttk.Button(self, text="Filter all", 
                                      command=(
                                             lambda: self.filterall(
-                                                        self.cutoff)))
+                                                self.cutoffFrequency)))
         self.filterallbutton.grid(column=1,row=1,sticky=())
 
         self.filterbutton = ttk.Button(self, text="Filter", 
-                                     command=(
-                                            lambda: self.apply_filter(
-                                                        self.cutoff)))
+                                     command=(lambda: self.apply_filter(
+                                                    self.cutoffFrequency)))
         self.filterbutton.grid(column=0,row=1,sticky=())
 
         self.cutoffentry = ttk.Entry(self, width=7, textvariable=(
-                                                        self.cutoff))
+                                                        self.cutoffFrequency))
         self.cutoffentry.grid(column=1,row=0)
-        ttk.Label(self, text="Filter cutoff (Hz):").grid(column=0,
+        ttk.Label(self, text="Filter cutoffFrequency (Hz):").grid(column=0,
                                                         row=0,
                                                         sticky=(tk.W))
        
-    def filterall(self, cutoff):
-        newdatakey = self.parent.recording.filter_data(
-                                    filterfreq=float(cutoff.get()), 
+    def filterall(self, cutoffFrequency):
+        newdatakey = self.parent.data.filter_data(
+                                    filterfreq=float(cutoffFrequency.get()), 
                                     datakey=self.parent.datakey)
         self.parent.datakey=newdatakey
         self.parent.update_plot()
 
-    def apply_filter(self,cutoff):
-
+    def apply_filter(self,cutoffFrequency):
         pass
 
 
@@ -202,13 +229,17 @@ class EpisodeList(ttk.Frame):
         self.parent.Nepisode = int(event.widget.curselection()[0])
         self.parent.update_plot()
     def create_list(self):
-        self.episodelist = tk.Listbox(self)
-        self.episodelist.grid(row=1,column=1,sticky=tk.E)
+        self.Scrollbar = tk.Scrollbar(self, orient=tk.VERTICAL)
+        self.Scrollbar.grid(column=1, sticky=tk.N+tk.S)
+        self.episodelist = tk.Listbox(self, bd=2,
+                                    yscrollcommand=self.Scrollbar.set)
+        self.episodelist.grid(row=0, sticky=tk.E+tk.S+tk.W+tk.N)
         self.episodelist.bind('<<ListboxSelect>>', self.onselect_plot)
-        if self.parent.recording:
-            for episode in self.parent.recording[self.parent.datakey]:
+        if self.parent.data:
+            for episode in self.parent.data[self.parent.datakey]:
                 self.episodelist.insert(tk.END, 
                                 "episode "+str(episode.nthEpisode))
+        self.Scrollbar['command'] = self.episodelist.yview
 
 
 class Loadframe(tk.Toplevel):
@@ -273,7 +304,7 @@ class Loadframe(tk.Toplevel):
             binframe = Binaryquery(self)
 
         elif self.parent.filetype.get() == 'axo':
-            self.parent.recording = model.Recording(
+            self.parent.data = backend.Model(
                                     self.parent.filenamefull.get(), 
                                     self.parent.samplingrate.get(), 
                                     self.parent.filetype.get()) 
@@ -286,21 +317,21 @@ class Loadframe(tk.Toplevel):
         Get data by clicking
         relies on tkinter and gets name and type of the file
         """
-        fn = askopenfilename()
-        self.parent.filenamefull.set(fn)
+        filename = askopenfilename()
+        self.parent.filenamefull.set(filename)
         extension = ''
 
-        N = len(fn)
-        for i, char in enumerate(fn[::-1]):
+        N = len(filename)
+        for i, char in enumerate(filename[::-1]):
             if char=='.': 
-            	period = N-i
+                period = N-i
             if char=='/':
                 slash = N-i
                 break
 
-        self.parent.filename.set(fn[slash:])
-        self.parent.path.set(fn[:slash])
-        extension=fn[period:]
+        self.parent.filename.set(filename[slash:])
+        self.parent.path.set(filename[:slash])
+        extension=filename[period:]
 
         if extension == 'bin':
             self.parent.filetype.set('bin')
@@ -357,7 +388,7 @@ class Binaryquery(tk.Toplevel):
         datatype = np.int16 #this is here because stringvar.get 
                             #returns a string which numpy doesnt 
                             #understand
-        self.parent.recording = model.Recording(
+        self.parent.data = backend.Model(
                                     self.parent.filenamefull.get(), 
                                     self.parent.samplingrate.get(), 
                                     self.parent.filetype.get(), 
@@ -370,18 +401,16 @@ class Binaryquery(tk.Toplevel):
 
 
 if __name__ == '__main__':
-    import sys
-    import os
+    import sys, os, copy
     cwd = os.getcwd()
-    axotest = False
-    bintest=False
     try:
-        if sys.argv[1]=='axo':
+        if 'axo' in sys.argv:
             axotest = True
-            bintest=False
-        elif sys.argv[1]=='bin':
-            bintest=True
-            axotest=False
+        elif 'bin' in sys.argv:
+            bintest = True
+        if 'v' in sys.argv:
+            VERBOSE = True
     except IndexError:
         pass
+
     Main.run()
