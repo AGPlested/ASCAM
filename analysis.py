@@ -11,9 +11,7 @@ def threshold_crossing(signal,amplitudes):
             amplitudes.insert(0,0)
     elif type(amplitudes) in [int, float]:
         amplitudes = [0, amplitudes]
-    print(amplitudes)
     amplitudes = np.sort(amplitudes)
-    print(amplitudes[:-1])
     thresholds = []
     for i, amplitude in enumerate(amplitudes[:-1]):
         threshold = (amplitudes[i+1]-amplitude)/2+amplitude
@@ -24,61 +22,59 @@ def threshold_crossing(signal,amplitudes):
         for n, threshold in enumerate(thresholds[:-1]):
             if threshold<point<thresholds[n+1]:
                 idealization[i]=amplitudes[n]
-        
+                break
     return idealization
 
-def single_state_threshold_crossing(signal, threshold):
-	"""Basic threshold crossing for single-level channels
-	Parameters:
-		signal - 1D time series, baseline should be zero
-		threshold - value in [0,1], fractioin of the maximum aplitude 
-                    that should be threshold
-	Returns:
-		activity = time series containing 1 for open and 0 for closed
-		signal_max - maximum value of original signal
-	"""
-	signal_max = np.max(np.abs(signal))
-	thresh_val = threshold*signal_max #actual threshold value
-	activity = np.array(
-	[1 if x>thresh_val else -1 if x<-thresh_val else 0 for x in signal])
+def residual_sum_squares(x, y):
+    return np.sum((x-y)**2)
 
-	return activity, signal_max
 
-def multilevel_threshold(signal,thetas):
+def multilevel_threshold(signal,thresholds, maxAmplitude = False,
+                         relativeThresholds = True):
     """
-    Idealizes a current trace using a threshold crossing algorithm.
-    
+    performs threshold crossing for given thresholds. value should be 
+    given as fraction of the maximum amplitude of the signal
     Parameters:
         signal [1D array of floats] - the signal to be idealized
         thetas [1D array of floats] - the thresholds seperating the 
                                       different levels
-        
+        maxAmplitude [float] - the number relative to which the 
+                               threshold values are given
+        relativeThresholds [bool] - True is thresholds are relative
+                                    to maxAmplitude or not, if false
+                                    use absolute values for thresholds
     Returns:
         idealization [1D array of floats] - an array of the same 
                                             length as `signal` 
                                             containing the 
                                             idealization of the trace
         signalmax [float] - the maximum amplitude of the signal
-    This method assumes that there are four different conductance 
-    states and that their amplitudes are evenly spaced.
     """
-    thetas = np.sort(thetas)
-    signalmax = np.max(np.abs(signal))
+    if maxAmplitude:
+        signalmax = maxAmplitude
+    else:
+        maxInd = np.argmax(np.abs(signal))
+        signalmax = signal[maxInd]
+
+    thresholds.append(np.inf)
+
+    if relativeThresholds:
+        thresholds = signalmax*np.sort(thresholds)
+    else:
+        thresholds = np.sort(thresholds)
+    N = len(thresholds)
     idealization = np.zeros(len(signal))
-    for i in range(len(signal)):
-        if thetas[0]<np.abs(signal[i])<thetas[1]:
-            idealization[i] = 1/3
-        elif thetas[1]<np.abs(signal[i])<thetas[2]:
-            idealization[i] = 2/3
-        elif thetas[2]<np.abs(signal[i]):
-            idealization[i] = 1
-    return idealization, signalmax
+    
+    for i, point in enumerate(signal):
+        for n, threshold in enumerate(thresholds[:-1]):
+            if np.abs(threshold)<np.abs(point)<=np.abs(thresholds[n+1]):
+                idealization[i]=(n+1)/N
+                break
+    idealization *= signalmax
+    return idealization
 
-### interpolation
-### estimating amplitude
-### least squares quality
 
-def baseline(time,signal,fs,intervals, timeUnit='ms', 
+def baseline_correction(time,signal,fs,intervals, timeUnit='ms', 
              degree = 1, method = 'poly'):
     """
     Perform baseline correction by offsetting the signal with its mean
@@ -129,4 +125,3 @@ def baseline(time,signal,fs,intervals, timeUnit='ms',
             baseline+=coeffs[i]*(time**(degree-i))
         output = signal - baseline
     return output
-    ### maybe add cosine basis functions
