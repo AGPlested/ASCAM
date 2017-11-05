@@ -24,10 +24,7 @@ def threshold_crossing(signal,amplitudes):
                 idealization[i]=amplitudes[n]
                 break
     return idealization
-
-def residual_sum_squares(x, y):
-    return np.sum((x-y)**2)
-
+    
 
 def multilevel_threshold(signal,thresholds, maxAmplitude = False,
                          relativeThresholds = True):
