@@ -35,7 +35,7 @@ class Episode(dict):
         else:
           timeUnitMultiplier = 1
 
-        self.filterFrequency = 0
+        self.filterFrequency = np.inf
         self.baselineCorrected = False
         self.idealized = False
 
@@ -47,12 +47,16 @@ class Episode(dict):
         self.samplingRate = samplingRate
         self.suspiciousSTD = False
 
-    def filter_episode(self, filterFrequency = 1e3):
-        frequencyOnSamples = filterFrequency/self.samplingRate 
-        filterWindow = filtering.gaussian(frequencyOnSamples)
+    def filter_episode(self, filterFrequency = 1e3, 
+                       samplingRate = None, 
+                       method = 'convolution'):
+        if samplingRate is None:
+            samplingRate = self.samplingRate
         filterLag = 0 #int(1/(2*frequencyOnSamples))
-        self['trace'] = filtering.applyfilter(self['trace'], 
-                                                    filterWindow)[filterLag:]
+        self['trace'] = filtering.gaussian_filter(self['trace'], 
+                                                  filterFrequency, 
+                                                  samplingRate, 
+                                                  method)[filterLag:]
         self.filterFrequency = filterFrequency
 
     def baseline_correct_episode(self, intervals, method='poly', degree=1):
@@ -78,14 +82,30 @@ class Episode(dict):
 class Series(list):
     def __init__(self, 
                  samplingRate = 4e4,
-                 filterFrequency = 1e3, 
-                 baselineCorrected = False, 
-                 idealized=False):
-        pass
+                 filterFrequency = False, 
+                 filterMethod = 'convolution',
+                 baselineCorrected = False,
+                 baselineIntervals = False,
+                 baselineMethod = 'poly',
+                 baselineDegree = 1, 
+                 idealized = False):
+        self.samplingRate = samplingRate
+        self.filterFrequency = filterFrequency
+        self.baselineCorrected = baselineCorrected
+        self.idealized = idealized
+
+        if baselineCorrected and intervalsBaseline:
+            self.baseline_correct_all(baselineIntervals, baselineMethod,
+                                      baselineDegree)
+        if filterFrequency:
+            self.filter_all(filterFrequency, samplingRate, method)
     
-    def filter_all(self, filterFrequency = 1e3):
+    def filter_all(self, filterFrequency = 1e3, 
+                   samplingRate = None, method = 'convolution'):
+        if samplingRate is None:
+            samplingRate = self.samplingRate
         for episode in self:
-            episode.filter_episode(filterFrequency)
+            episode.filter_episode(filterFrequency, samplingRate, method)
             
     def baseline_correct_all(self, intervals, method='poly', degree=1):
         for episode in self:
@@ -102,11 +122,11 @@ class Series(list):
 
 class Model(dict):
     def __init__(self, 
-               filename = cwd+'/data/170404 015.axgd',
-               samplingRate = 4e4,
-               filetype = 'axo',
-               headerlength = 0,
-               bindtype = None):
+                 filename = cwd+'/data/170404 015.axgd',
+                 samplingRate = 4e4,
+                 filetype = 'axo',
+                 headerlength = 0,
+                 bindtype = None):
 
         self.filename = filename
         self.samplingRate = int(float(samplingRate))
@@ -166,3 +186,4 @@ class Model(dict):
         else:
             print("Uknown operation!")
         self[newDatakey] = newData
+        self.currentDatakey = newDatakey

@@ -12,9 +12,9 @@ VERBOSE = False
 axotest = False
 bintest = False
 
-class Main(ttk.Frame):
+class GUI(ttk.Frame):
     """
-    Main frame of the GUI for ASCAM.
+    GUI frame of the GUI for ASCAM.
     All the variables and objects are stored as attributes of this 
     object to make refering them uniform.
     All other widgets will be children of this frame.
@@ -27,16 +27,14 @@ class Main(ttk.Frame):
         root.title("ASCAM")
         root.grid_columnconfigure(0, weight=1)
         root.grid_rowconfigure(0, weight=1)
-        main = cls(root)
+        GUI = cls(root)
         root.mainloop()
 
     def __init__(self, master):
         ttk.Frame.__init__(self, master)
         self.master = master
 
-        self.grid(column=0, row=0, sticky=(tk.N+tk.S+tk.E+tk.W))
-        self.grid_rowconfigure(0, weight=1)
-        self.grid_columnconfigure(0, weight=1)
+        
         self.filenamefull = tk.StringVar()
         self.filename = tk.StringVar()
         self.headerlength = tk.StringVar()
@@ -50,31 +48,18 @@ class Main(ttk.Frame):
         self.datakey = 'raw_'
         self.Nepisode = 0
 
-        self.commandbar = Commandframe(self)
-        self.commandbar.grid(row=0,column=0, columnspan=3, padx=5,
-                             pady=5, sticky=tk.N+tk.W)
-        self.commandbar.grid_rowconfigure(0, weight=1)
-        self.commandbar.grid_columnconfigure(0, weight=1)
+        self.create_widgets()
+        self.configure_grid()
+
         self.commandbar.loadbutton.focus()
+        
 
-        self.plots = Plotframe(self)
-        self.plots.grid(row=1, rowspan=3, column=0,columnspan=3, 
-                        padx=5, pady=5, sticky=tk.W)
-        self.plots.grid_rowconfigure(1, weight=1)
-        self.plots.grid_columnconfigure(0, weight=1)
 
-        self.manipulations = Manipulations(self)
-        self.manipulations.grid(row=4, column=0, columnspan=3, padx=5, 
-                                pady=5, sticky=(tk.S,tk.W))
-        self.manipulations.grid_columnconfigure(0,weight=1)
-        self.manipulations.grid_rowconfigure(4,weight=1)
 
-        self.List = EpisodeList(self)
-        self.List.grid(row=1, rowspan=3, column=3,sticky=(tk.E))
-        self.List.grid_columnconfigure(3, weight=1)
-        self.List.grid_rowconfigure(1, weight=1)
 
         if bintest:
+        ### testing mode that uses simulated data, the data is copied and
+        ### multiplied with random numbers to create additional episodes   
             if VERBOSE:
                 print('Test mode with binary data')
             self.data = backend.Model(
@@ -98,6 +83,49 @@ class Main(ttk.Frame):
             self.uptdate_list()
             self.update_plot()
 
+        self.bind("<Configure>", self.resize_plot)
+        ### if this binding is done before the testing check the plot will
+        ### initially be empty
+
+    def resize_plot(self,*args,**kwargs):
+        """
+        Draw the plot again when the window size is changed.
+        """
+        self.update_plot()
+
+    def create_widgets(self):
+        """
+        Create the contents of the main window.
+        """
+        self.commandbar = Commandframe(self)
+        self.plots = Plotframe(self)
+        self.manipulations = Manipulations(self)
+        self.espisodeList = EpisodeList(self)
+
+    def configure_grid(self):
+        """
+        Geometry management of the elements in the main window.
+        """
+        self.grid(column=0, row=0, sticky=tk.N+tk.S+tk.E+tk.W)
+        ### the first argument refer to position in the main window
+        self.grid_rowconfigure(1, weight=1)
+        self.grid_columnconfigure(0, weight=1)
+
+        self.commandbar.grid(row=0,column=0, columnspan=3, padx=5, pady=5, 
+                             sticky=tk.N+tk.W)
+        self.plots.grid(row=1, rowspan=3, column=0,columnspan=3, padx=5, 
+                        pady=5, sticky=tk.W)
+        ### the values in col/rowconfig refer to the position of the elements
+        ### WITHIN the widgets
+        self.plots.grid_rowconfigure(0, weight=1)
+        self.plots.grid_columnconfigure(0, weight=1)          
+        self.manipulations.grid(row=4, column=0, columnspan=3, padx=5, pady=5, 
+                                sticky=tk.S+tk.W)
+        self.espisodeList.grid(row=1, rowspan=3, column=3, sticky=tk.E)
+        for i in range(2):    
+            self.espisodeList.grid_columnconfigure(i, weight=1)
+            self.espisodeList.grid_rowconfigure(i, weight=1)
+
     def update_plot(self):
         if VERBOSE: print('call `update_plot`')
         if self.data:
@@ -108,7 +136,7 @@ class Main(ttk.Frame):
             pass
     def uptdate_list(self):
         if VERBOSE: print('call `uptdate_list`')
-        self.List.create_list()
+        self.espisodeList.create_list()
     def quit(self):
         self.master.destroy()
         self.master.quit()
@@ -127,10 +155,10 @@ class Commandframe(ttk.Frame):
         self.loadbutton = ttk.Button(self, text="Load file", 
                                      command=self.load_dialog
                                      )
-        self.loadbutton.grid(column=1,row=1,sticky=(tk.N, tk.E))
+        self.loadbutton.grid(column=1,row=1,sticky=tk.N+tk.E)
         self.plotbutton = ttk.Button(self, text="Plot", 
                                      command=self.parent.update_plot)
-        self.plotbutton.grid(column=2,row=1,sticky=(tk.N))
+        self.plotbutton.grid(column=2,row=1,sticky=tk.N)
     def load_dialog(self):
         subframe = Loadframe(self.parent)
         
@@ -139,13 +167,14 @@ class Plotframe(ttk.Frame):
     def __init__(self, parent):
         ttk.Frame.__init__(self, parent)
         self.parent = parent
-        self.fig = plt.figure(figsize=(5,5))
+        self.fig = plt.figure(figsize=(10,5))
         self.canvas = FigureCanvasTkAgg(self.fig, self)
         self.canvas.get_tk_widget().grid(row=0,column=0)
         self.canvas.show()
         # self.toolbar = NavigationToolbar2TkAgg(self.canvas, self)
         # self.toolbar.update()
         # self.canvas._tkcanvas.pack()
+
 
     def plot(self):
         if self.parent.data:
@@ -157,12 +186,19 @@ class Plotframe(ttk.Frame):
                             self.parent.datakey][self.parent.Nepisode]
             x = episode['time']
             ys = [episode['trace']]
+            unitCurrent = 'pA'
+            unitTime = 'ms'
+            ylabels = ["Current ["+unitCurrent+"]"]
             if episode['piezo'] is not None: 
                 if VERBOSE: print('`piezo` found')
+                unitPiezoVoltage = 'V'
                 ys.append(episode['piezo'])
+                ylabels.append("Piezo ["+unitPiezoVoltage+']')
             if episode['commandVoltage'] is not None: 
                 if VERBOSE: print('`commandVoltage` found')
                 ys.append(episode['commandVoltage'])
+                unitCommandVoltage = 'V'
+                ylabels.append("Command ["+unitCommandVoltage+']')
         else:
             if VERBOSE:
                 print("no data found, plotting dummy")
@@ -170,9 +206,11 @@ class Plotframe(ttk.Frame):
             ys = [[0,0],[0,0],[0,0]]
 
         subplots = []
-        for i, y in enumerate(ys):
+        for i, (y, ylabel) in enumerate(zip(ys, ylabels)):
+            if VERBOSE: print("calling matplotlib")
             subplots.append(self.fig.add_subplot(len(ys),1,i+1))
             plt.plot(x,y)
+            plt.ylabel(ylabel)
 
         self.canvas.draw()
         for subplot in subplots:
@@ -224,17 +262,18 @@ class EpisodeList(ttk.Frame):
     def __init__(self, parent):
         ttk.Frame.__init__(self, parent)
         self.parent = parent
-        # self.create_list()
+        self.create_list()
     def onselect_plot(self,event):
         self.parent.Nepisode = int(event.widget.curselection()[0])
         self.parent.update_plot()
     def create_list(self):
         self.Scrollbar = tk.Scrollbar(self, orient=tk.VERTICAL)
-        self.Scrollbar.grid(column=1, sticky=tk.N+tk.S)
+        self.Scrollbar.grid(column=1, row=0, rowspan=3, sticky=tk.N+tk.S+tk.E)
         self.episodelist = tk.Listbox(self, bd=2,
                                     yscrollcommand=self.Scrollbar.set)
-        self.episodelist.grid(row=0, sticky=tk.E+tk.S+tk.W+tk.N)
+        self.episodelist.grid(row=0, rowspan=3, sticky=tk.S+tk.W+tk.N)
         self.episodelist.bind('<<ListboxSelect>>', self.onselect_plot)
+        self.episodelist.config(height=30)
         if self.parent.data:
             for episode in self.parent.data[self.parent.datakey]:
                 self.episodelist.insert(tk.END, 
@@ -309,13 +348,12 @@ class Loadframe(tk.Toplevel):
                                     self.parent.samplingrate.get(), 
                                     self.parent.filetype.get()) 
             self.parent.uptdate_list()
-            self.parent.update_plot()
             self.destroy()
 
     def get_file(self):
         """
-        Get data by clicking
-        relies on tkinter and gets name and type of the file
+        Get data by clicking.
+        Relies on tkinter and gets name and type of the file
         """
         filename = askopenfilename()
         self.parent.filenamefull.set(filename)
@@ -388,12 +426,11 @@ class Binaryquery(tk.Toplevel):
         datatype = np.int16 #this is here because stringvar.get 
                             #returns a string which numpy doesnt 
                             #understand
-        self.parent.data = backend.Model(
-                                    self.parent.filenamefull.get(), 
-                                    self.parent.samplingrate.get(), 
-                                    self.parent.filetype.get(), 
-                                    self.parent.headerlength.get(),
-                                    datatype)
+        self.parent.data = backend.Model(self.parent.filenamefull.get(), 
+                                         self.parent.samplingrate.get(), 
+                                         self.parent.filetype.get(), 
+                                         self.parent.headerlength.get(),
+                                         datatype)
         self.parent.uptdate_list()
         self.parent.update_plot()
         self.loadframe.destroy()
@@ -413,4 +450,4 @@ if __name__ == '__main__':
     except IndexError:
         pass
 
-    Main.run()
+    GUI.run()

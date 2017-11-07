@@ -9,7 +9,8 @@ def load_file(filename):
 
 def data_to_stdout(file, Nepisodes, episodeLength):
 	"""
-	This prints the data to `stdout` which can be read by the subprocess module in python3.
+	This prints the data to `stdout` which can be read by the 
+	subprocess module in python3.
 	"""
 	print(Nepisodes)
 	print(episodeLength)

@@ -1,8 +1,7 @@
 import numpy as np
-from scipy.signal import gaussian
 
-def applyfilter(
-	data,
+def apply_filter(
+	signal,
 	window,
 	method = 'convolution'):
 	"""
@@ -10,38 +9,33 @@ def applyfilter(
 	for now datatype should be using numpy types such as 'np.int16'
 	the entire file is read assuming datatype so header length should 
 	be specified in words of the same bit length
-	cutoff_frequency should be supplied in units of sampling rate
+	filterFrequency should be supplied in units of sampling rate
 	filter_type does not need to be set until/unless we start using 
 	other filters
 	method allows for using scipy fft convolve which might be faster 
-	for large data sets
+	for large signal sets
 	"""
 	if method == 'fft':
 	    from scipy.signal import fftconvolve
-	    filtered_data = fftconvolve(data, window)
+	    output = fftconvolve(signal, window)
 	elif method == 'convolution':
-	    filtered_data = np.convolve(data, window)
+	    output = np.convolve(signal, window)
 	else: raise KeyError(
 					'Method should be either "convolution" or "fft".')
 
-	return filtered_data
+	return output
 
-def gaussian(cutoff_frequency):
+def gaussian_window(filterFrequency, samplingRate = 4e4):
 	"""This calculates the coefficients for a disrete Gaussian filter
 	as described in equation A10 in chapter 19 in the blue book
 	Parameters:
-		cutoff_frequency - should be given in units of samples
+		filterFrequency - should be given in units Hz
+		samplingRate - units of Hz
 	"""
-	sigma = .1325/cutoff_frequency
-	# M = np.int(8*sigma)
-	# we might want to use the scipy Gaussian filter 
-	#since scipy probably has a better implementation, 
-	#however it does not do the light filtering described
-	#in the blue book, i.e. when the cutoff frequency is too high
-	#scipy will not filter at all compared to the light filtering
-	#using the neighbours
+	filterFrequency /= samplingRate
+	sigma = .1325/filterFrequency
 
-	if sigma >= .62: #normal filtering
+	if sigma >= .62: # filter as normal
 	    n = np.int(4*sigma)
 	    non_neg_ind_coefficients = np.zeros(n+1)
 	    for index in range(n+1):
@@ -52,10 +46,16 @@ def gaussian(cutoff_frequency):
 	        negative_ind_coeff = non_neg_ind_coefficients[:0:-1]
 	    coefficients = np.hstack((negative_ind_coeff,
 	    						  non_neg_ind_coefficients))
-	else: #light filtering as described in blue book
+	else: # light filtering as described in blue book
 		coefficients = np.zeros(3)
 		coefficients[0] = sigma*sigma/2
 		coefficients[1] = 1 - 2*coefficients[0]
 		coefficients[2] = coefficients[0]
 
 	return coefficients
+
+def gaussian_filter(signal, filterFrequency, samplingRate = 4e4,
+				    method='convolution'):
+	window = gaussian_window(filterFrequency, samplingRate)
+	output = apply_filter(signal, window, method)
+	return output
