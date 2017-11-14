@@ -8,13 +8,14 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, 
                                             NavigationToolbar2TkAgg)
+import copy
 VERBOSE = False
 axotest = False
 bintest = False
 
-class GUI(ttk.Frame):
+class MainWindow(ttk.Frame):
     """
-    GUI frame of the GUI for ASCAM.
+    MainWindow frame of the MainWindow for ASCAM.
     All the variables and objects are stored as attributes of this 
     object to make refering them uniform.
     All other widgets will be children of this frame.
@@ -22,12 +23,11 @@ class GUI(ttk.Frame):
     @classmethod
     def run(cls):
         root = tk.Tk()
-        # root.geometry("768x600+200+200")
         root.protocol('WM_DELETE_WINDOW', quit)
         root.title("ASCAM")
         root.grid_columnconfigure(0, weight=1)
         root.grid_rowconfigure(0, weight=1)
-        GUI = cls(root)
+        mainWindow = cls(root)
         root.mainloop()
 
     def __init__(self, master):
@@ -54,12 +54,9 @@ class GUI(ttk.Frame):
         self.commandbar.loadbutton.focus()
         
 
-
-
-
         if bintest:
-        ### testing mode that uses simulated data, the data is copied and
-        ### multiplied with random numbers to create additional episodes   
+        ## testing mode that uses simulated data, the data is copied and
+        ## multiplied with random numbers to create additional episodes   
             if VERBOSE:
                 print('Test mode with binary data')
             self.data = backend.Model(
@@ -84,12 +81,15 @@ class GUI(ttk.Frame):
             self.update_plot()
 
         self.bind("<Configure>", self.resize_plot)
-        ### if this binding is done before the testing check the plot will
-        ### initially be empty
+        ## if this binding is done before the testing check the plot will
+        ## initially be empty
 
     def resize_plot(self,*args,**kwargs):
         """
         Draw the plot again when the window size is changed.
+        This method is needed because the tkinter bind function passes
+        passes arguments to the method it calls.
+        currently only works when size is smaller than the initial size
         """
         self.update_plot()
 
@@ -105,28 +105,37 @@ class GUI(ttk.Frame):
     def configure_grid(self):
         """
         Geometry management of the elements in the main window.
+        Has to be called after `create_widgets`.
         """
+        ##### `grid` options for the main window
         self.grid(column=0, row=0, sticky=tk.N+tk.S+tk.E+tk.W)
-        ### the first argument refer to position in the main window
+        ## the first argument refer to position in the main window
         self.grid_rowconfigure(1, weight=1)
         self.grid_columnconfigure(0, weight=1)
 
+        ##### `grid` options for the contents of the main window
         self.commandbar.grid(row=0,column=0, columnspan=3, padx=5, pady=5, 
                              sticky=tk.N+tk.W)
         self.plots.grid(row=1, rowspan=3, column=0,columnspan=3, padx=5, 
-                        pady=5, sticky=tk.W)
-        ### the values in col/rowconfig refer to the position of the elements
-        ### WITHIN the widgets
+                       pady=5, sticky=tk.W)
+        ## the values in col/rowconfig refer to the position of the elements
+        ## WITHIN the widgets
         self.plots.grid_rowconfigure(0, weight=1)
         self.plots.grid_columnconfigure(0, weight=1)          
         self.manipulations.grid(row=4, column=0, columnspan=3, padx=5, pady=5, 
                                 sticky=tk.S+tk.W)
         self.espisodeList.grid(row=1, rowspan=3, column=3, sticky=tk.E)
         for i in range(2):    
+            ## since we want both the List and the scrollbar to resize we loop
+            ## over all rows columns occupied in `episodeList`
             self.espisodeList.grid_columnconfigure(i, weight=1)
             self.espisodeList.grid_rowconfigure(i, weight=1)
 
     def update_plot(self):
+        """
+        If data has been loaded this method will call the `plot` method of the
+        plot widget.
+        """
         if VERBOSE: print('call `update_plot`')
         if self.data:
             if VERBOSE: print('`self.data` is `True`')
@@ -135,9 +144,17 @@ class GUI(ttk.Frame):
             if VERBOSE: print('`self.data` is `False`')
             pass
     def uptdate_list(self):
+        """
+        Update the list of episodes by creating a new `Listbox` widgets in the
+        `episodeList` frame.
+        """
         if VERBOSE: print('call `uptdate_list`')
         self.espisodeList.create_list()
     def quit(self):
+        """
+        Call both `destroy` and `quit` to close the window and exit the 
+        mainloop.
+        """
         self.master.destroy()
         self.master.quit()
     
@@ -152,22 +169,31 @@ class Commandframe(ttk.Frame):
         self.parent = parent
         self.create_widgets()
     def create_widgets(self):
+        """
+        Creates all the buttons for the command bar and places them on the
+        grid.
+        """
         self.loadbutton = ttk.Button(self, text="Load file", 
-                                     command=self.load_dialog
-                                     )
-        self.loadbutton.grid(column=1,row=1,sticky=tk.N+tk.E)
+                                     command=self.load_dialog)
+        self.loadbutton.grid(column=0,row=0,sticky=tk.N+tk.E)
+
         self.plotbutton = ttk.Button(self, text="Plot", 
                                      command=self.parent.update_plot)
-        self.plotbutton.grid(column=2,row=1,sticky=tk.N)
+        self.plotbutton.grid(column=1,row=0,sticky=tk.N)
     def load_dialog(self):
         subframe = Loadframe(self.parent)
         
 
 class Plotframe(ttk.Frame):
+    """
+    Frame that holds the plots.
+    """
     def __init__(self, parent):
         ttk.Frame.__init__(self, parent)
         self.parent = parent
         self.fig = plt.figure(figsize=(10,5))
+        ## not sure about the `figsize`, a more general option of setting the
+        ## size might be better
         self.canvas = FigureCanvasTkAgg(self.fig, self)
         self.canvas.get_tk_widget().grid(row=0,column=0)
         self.canvas.show()
@@ -178,6 +204,7 @@ class Plotframe(ttk.Frame):
 
     def plot(self):
         if self.parent.data:
+        ## If there is no data yet we just plot a line.
             if VERBOSE:
                 print('`data` exists, plotting...')
                 print('datakey = '+self.parent.datakey)
@@ -213,8 +240,10 @@ class Plotframe(ttk.Frame):
             plt.ylabel(ylabel)
 
         self.canvas.draw()
-        for subplot in subplots:
-            subplot.clear()
+        for plot in subplots:
+            plot.clear()
+            ## if this is not done matplotlib will save every plot and the
+            ## program will run out of memory
 
 
 class Manipulations(ttk.Frame):
@@ -228,32 +257,32 @@ class Manipulations(ttk.Frame):
         self.create_widgets()
 
     def create_widgets(self):
-        self.filterallbutton = ttk.Button(self, text="Filter all", 
+        self.filterAllButton = ttk.Button(self, text="Filter all", 
                                      command=(
-                                            lambda: self.filterall(
+                                            lambda: self.filter_all_episodes(
                                                 self.cutoffFrequency)))
-        self.filterallbutton.grid(column=1,row=1,sticky=())
+        self.filterAllButton.grid(column=1,row=1,sticky=())
 
-        self.filterbutton = ttk.Button(self, text="Filter", 
-                                     command=(lambda: self.apply_filter(
+        self.filterButton = ttk.Button(self, text="Filter", 
+                                     command=(lambda: self.filter_currentepisode(
                                                     self.cutoffFrequency)))
-        self.filterbutton.grid(column=0,row=1,sticky=())
+        self.filterButton.grid(column=0,row=1,sticky=())
 
-        self.cutoffentry = ttk.Entry(self, width=7, textvariable=(
+        self.cutoffEntry = ttk.Entry(self, width=7, textvariable=(
                                                         self.cutoffFrequency))
-        self.cutoffentry.grid(column=1,row=0)
+        self.cutoffEntry.grid(column=1,row=0)
         ttk.Label(self, text="Filter cutoffFrequency (Hz):").grid(column=0,
                                                         row=0,
                                                         sticky=(tk.W))
        
-    def filterall(self, cutoffFrequency):
+    def filter_all_episodes(self, cutoffFrequency):
         newdatakey = self.parent.data.filter_data(
                                     filterfreq=float(cutoffFrequency.get()), 
                                     datakey=self.parent.datakey)
         self.parent.datakey=newdatakey
         self.parent.update_plot()
 
-    def apply_filter(self,cutoffFrequency):
+    def filter_currentepisode(self,cutoffFrequency):
         pass
 
 
@@ -267,18 +296,18 @@ class EpisodeList(ttk.Frame):
         self.parent.Nepisode = int(event.widget.curselection()[0])
         self.parent.update_plot()
     def create_list(self):
-        self.Scrollbar = tk.Scrollbar(self, orient=tk.VERTICAL)
-        self.Scrollbar.grid(column=1, row=0, rowspan=3, sticky=tk.N+tk.S+tk.E)
-        self.episodelist = tk.Listbox(self, bd=2,
-                                    yscrollcommand=self.Scrollbar.set)
-        self.episodelist.grid(row=0, rowspan=3, sticky=tk.S+tk.W+tk.N)
-        self.episodelist.bind('<<ListboxSelect>>', self.onselect_plot)
-        self.episodelist.config(height=30)
+        self.scrollbar = tk.Scrollbar(self, orient=tk.VERTICAL)
+        self.scrollbar.grid(column=1, row=0, rowspan=3, sticky=tk.N+tk.S+tk.E)
+        self.episodeList = tk.Listbox(self, bd=2,
+                                    yscrollcommand=self.scrollbar.set)
+        self.episodeList.grid(row=0, rowspan=3, sticky=tk.S+tk.W+tk.N)
+        self.episodeList.bind('<<ListboxSelect>>', self.onselect_plot)
+        self.episodeList.config(height=30)
         if self.parent.data:
             for episode in self.parent.data[self.parent.datakey]:
-                self.episodelist.insert(tk.END, 
+                self.episodeList.insert(tk.END, 
                                 "episode "+str(episode.nthEpisode))
-        self.Scrollbar['command'] = self.episodelist.yview
+        self.scrollbar['command'] = self.episodeList.yview
 
 
 class Loadframe(tk.Toplevel):
@@ -318,7 +347,6 @@ class Loadframe(tk.Toplevel):
                                                sticky = tk.W)
         ttk.Label(self, textvariable=self.parent.filetypefull).grid(
                                 column=2, row=3, sticky=(tk.W, tk.E))
-        ###### lets see if this way of line splitting works
         
         #fourth row - enter sampling rate
         self.samplingentry = ttk.Entry(self, width=7, 
@@ -389,18 +417,18 @@ class Binaryquery(tk.Toplevel):
     (should be given as numpy type, such as "np.int16")
     """
     def __init__(self, parent):
-        #frame configuration
+        ##### frame configuration
         tk.Toplevel.__init__(self, parent)
         self.parent = parent.parent
         self.loadframe = parent
         self.title("Additional parameters for binary file")
         
-        #initialize content
+        ##### initialize content
         self.create_widgets()
         self.headerentry.focus()
 
     def create_widgets(self):
-        # #entry field for headerlength
+        ##### entry field for headerlength
         self.headerentry = ttk.Entry(self, width=7, 
                                 textvariable=self.parent.headerlength)
         self.headerentry.grid(column=3,row=1,sticky=(tk.W,tk.N))
@@ -408,7 +436,7 @@ class Binaryquery(tk.Toplevel):
         ttk.Label(self, text="Headerlength:").grid(column=2,row=1,
                                                    sticky=(tk.N))
         
-        #entry field for filetype
+        ##### entry field for filetype
         self.typeentry = ttk.Entry(self, width=7, 
                                    textvariable=self.parent.datatype)
         self.typeentry.grid(column=3,row=2,sticky=(tk.W,tk.S))
@@ -416,7 +444,7 @@ class Binaryquery(tk.Toplevel):
         ttk.Label(self, text="Datatype:").grid(column=2,row=2,
                                                sticky=tk.S)
         
-        #'ok' and 'cancel button
+        ##### 'ok' and 'cancel button
         self.okbutton = ttk.Button(self, text="Load", 
                                    command=self.ok_button)
         self.okbutton.grid(columnspan=2, row=3, sticky=(tk.S, tk.W))
@@ -436,9 +464,9 @@ class Binaryquery(tk.Toplevel):
         self.loadframe.destroy()
         self.destroy()
 
-
 if __name__ == '__main__':
     import sys, os, copy
+
     cwd = os.getcwd()
     try:
         if 'axo' in sys.argv:
@@ -449,5 +477,4 @@ if __name__ == '__main__':
             VERBOSE = True
     except IndexError:
         pass
-
-    GUI.run()
+    MainWindow.run()
