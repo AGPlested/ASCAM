@@ -94,9 +94,15 @@ class Series(list):
         self.baselineCorrected = baselineCorrected
         self.idealized = idealized
 
-        if baselineCorrected and intervalsBaseline:
-            self.baseline_correct_all(baselineIntervals, baselineMethod,
-                                      baselineDegree)
+        if baselineCorrected:
+            if intervalsBaseline:
+                self.baseline_correct_all(intervals = baselineIntervals, 
+                                          method =baselineMethod,
+                                          degree = baselineDegree)
+            else:
+                print('baselineCorrected was set to true but no intervals '
+                       +'were provided')
+                pass
         if filterFrequency:
             self.filter_all(filterFrequency, samplingRate, method)
     
@@ -154,12 +160,21 @@ class Model(dict):
                 self['raw_'].append(Episode(time, current[i], nthEpisode=i,
                                             samplingRate = self.samplingRate))
     
-    def call_operation(self, operation, *args):
+
+    def change_datakey(self,newDatakey):
         """
+        Changes the `currentDatakey` attribute to `newDatakey`. Used from 
+        switching between different Series (i.e. stages of processing).
+        """
+        self.currentDatakey = newDatakey
+
+    def call_operation(self, operation, *args, **kwargs):
+        """
+        Calls an operation to be performed on the data.
         Valid operations:
-        BC_ - baseline correction
-        FILTER_ - filter
-        TC_ - threshold crossing
+        'BC_' - baseline correction
+        'FILTER_' - filter
+        'TC_' - threshold crossing
         """
         if self.currentDatakey == 'raw_':
             newDatakey = operation
@@ -168,14 +183,14 @@ class Model(dict):
         if self.check_operation(newDatakey, operation, *args):
             self.apply_operation(newDatakey, operation, *args)
 
-    def check_operation(self, newDatakey, operation, *args):
+    def check_operation(self, newDatakey, operation, *args, **kwargs):
         # if operation in self.keys():
         #     print("This operation has already been performed")
         #     return False
         # else:
         return True
 
-    def apply_operation(self, newDatakey, operation, *args):
+    def apply_operation(self, newDatakey, operation, *args, **kwargs):
         newData = copy.deepcopy(self[self.currentDatakey])
         if operation == 'BC_':
             newData.baseline_correct_all(*args)
