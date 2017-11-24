@@ -1,0 +1,77 @@
+added a scrollbar to the list of episode
+
+tried resizing using the `grid_rowconfigure` method, not very succesful, only resized the plot in horizontal direction, nothing else
+
+----------------------------------------------------------------------
+
+changed the model to the new structure `Model>Series>Episode` to have better management, Model is a dict whose values are the Series which are lists containing episodes
+filtering, baselining and all other manipulations that can be applied to a single episode are now episode methods, the series object has methods to apply each operation to all episodes in the series
+
+modified the GUI code to work with the new model and hopefully be more general
+started adding VERBOSE option for gui
+
+------------------------------------------------------------------------
+
+fixed a small problem in `analysis.baseline`, now properly accepts single intervals, and added support for time vectors in different units of seconds
+
+wrote `threshold_crossing` which takes a signal and an arbitrary number of amplitudes and idealizes the signal to those amplitudes by assigning to each point of the signal the closest amplitude
+
+--------------------------------------------------------------------------
+
+removed `single_state_threshold_crossing` because crossing in two direction is not needed
+
+added another `multilevel_threshold` that does threshold crossing for given thresholds rather than amplitudes, can take any number of thresholds and will idealize to linear spaced fraction of maximum amplitude
+this function can also take absolute values for the thresholds
+
+new filter function so only one function call from the model is required
+
+started working on making series execute instruction when they are initialized
+
+----------------------------------------------------------------------------
+
+plot now resizes better, episode list also resizes and starts bigger
+
+---------------------------------------------------------------------------
+
+fixed it so that plot is again drawn when data is first loaded (was empty)
+
+problem: plot seems to draw twice on first loading, creating an orange plot lying over the normal blue one
+-fixed
+
+episodeList now displays empty when program starts
+
+------------------------------------------------------------------------------
+
+started all-point histogram code
+
+-----------------------------------------------------------------------------
+
+working on support for `.mat` files
+
+cannot load axograph data on another linux machine (don't know why)
+
+
+NEXT: 
+loading data from matlab file
+creating all points histogram
+connect filter button to filter function
+
+
+TO DO: 
+    - make the unit of current, voltage etc. a parameter in episode objects with default pA and mV
+    - make something for sorting episodes
+    - add a histogram to the side of the plot
+    - implement gaussian mixture model for fitting the histogram
+    - add a better toolbar to the plot
+    - add units/labels to plots
+    - fix resizing
+    - interpolation in threshold crossing
+    - amplitude estimation in threshold crossing
+    - different basis functions for baseline corrention (e.g. cosine)
+
+
+from discussion with jelena and sebastian:
+all point histogram
+-include time interval selection (either manual or automatic to piezo at maximum amplitude)
+
+remove command voltage plot, add display avg and std of command voltage, or display warning if command voltage std is >1% of average
