@@ -46,18 +46,39 @@ started all-point histogram code
 
 -----------------------------------------------------------------------------
 
-working on support for `.mat` files
+can use `.mat` files, these should work easier on all systems since they do not
+require python2, also much faster loading
+will keep axograph support for now
 
 cannot load axograph data on another linux machine (don't know why)
 
+loading data now also plots the first episode
 
-NEXT: 
-loading data from matlab file
+do we need the command voltage plot or not? - include option to plot it
+
+what is different about the `170922 004 Copy Export.mat` file?
+it cannot be loaded with scipy.io.loadmat
+-problem was that it has more than 1000 episodes which are considered to be different variables 
+in the matlab file and are named by 3-digit columns numbers
+
+-------------------------------------------------------------------------------
+
+fixed the matlab file loading using `varmats_from_mat`
+
+-------------------------------------------------------------------------------
+
+started a plotting module that
+contains functions to create an all point histogram and to select data based
+on piezo activity
+
+NEXT:
+make command and piezo voltage in reading data optional
 creating all points histogram
 connect filter button to filter function
+episode selection - include a 'select all button'/ some kind of inversion between selecting to keep or to discard
 
 
-TO DO: 
+TO DO:
     - make the unit of current, voltage etc. a parameter in episode objects with default pA and mV
     - make something for sorting episodes
     - add a histogram to the side of the plot
@@ -68,6 +89,7 @@ TO DO:
     - interpolation in threshold crossing
     - amplitude estimation in threshold crossing
     - different basis functions for baseline corrention (e.g. cosine)
+    - move plotting to a seperate module so that gui.py only ever uses `plt.show(x)`
 
 
 from discussion with jelena and sebastian:

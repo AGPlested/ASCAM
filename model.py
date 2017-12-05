@@ -7,25 +7,25 @@ import copy
 import os
 cwd = os.getcwd()
 
-class Episode(dict):    
-    def __init__(self, time, trace, nthEpisode = 0, 
-                 piezo = None, commandVoltage = None, 
-                 filterType = None, fc = None, 
+class Episode(dict):
+    def __init__(self, time, trace, nthEpisode = 0,
+                 piezo = None, commandVoltage = None,
+                 filterType = None, fc = None,
                  samplingRate = 4e4,
                  timeInputUnit = 'seconds'):
         """
-        Episode objects hold all the information about an epoch and 
+        Episode objects hold all the information about an epoch and
         should be used to store raw and manipulated data
-        
+
         Parameters:
             time [1D array of floats] - containing time (in seconds)
-            trace [1D array of floats] - containing the current 
+            trace [1D array of floats] - containing the current
                                                 trace
-            piezo [1D array of floats] - the voltage applied to the 
+            piezo [1D array of floats] - the voltage applied to the
                                          Piezo device
-            commandVoltage [1D array of floats] - voltage applied to 
+            commandVoltage [1D array of floats] - voltage applied to
                                                   cell
-            nthEp [int] - the number of measurements on this cell that 
+            nthEp [int] - the number of measurements on this cell that
                           came before this one
             filterType [string] - type of filter used
             fc [int] - cutoff frequency of the filter in Hz
@@ -47,22 +47,22 @@ class Episode(dict):
         self.samplingRate = samplingRate
         self.suspiciousSTD = False
 
-    def filter_episode(self, filterFrequency = 1e3, 
-                       samplingRate = None, 
+    def filter_episode(self, filterFrequency = 1e3,
+                       samplingRate = None,
                        method = 'convolution'):
         if samplingRate is None:
             samplingRate = self.samplingRate
         filterLag = 0 #int(1/(2*frequencyOnSamples))
-        self['trace'] = filtering.gaussian_filter(self['trace'], 
-                                                  filterFrequency, 
-                                                  samplingRate, 
+        self['trace'] = filtering.gaussian_filter(self['trace'],
+                                                  filterFrequency,
+                                                  samplingRate,
                                                   method)[filterLag:]
         self.filterFrequency = filterFrequency
 
     def baseline_correct_episode(self, intervals, method='poly', degree=1):
-        self['trace'] = analysis.baseline_correction(self['time'], 
-                                            self['trace'], self.samplingRate, 
-                                            intervals, degree = degree, 
+        self['trace'] = analysis.baseline_correction(self['time'],
+                                            self['trace'], self.samplingRate,
+                                            intervals, degree = degree,
                                             method = method)
         self.baselineCorrected = True
 
@@ -80,14 +80,14 @@ class Episode(dict):
 
 
 class Series(list):
-    def __init__(self, 
+    def __init__(self,
                  samplingRate = 4e4,
-                 filterFrequency = False, 
+                 filterFrequency = False,
                  filterMethod = 'convolution',
                  baselineCorrected = False,
                  baselineIntervals = False,
                  baselineMethod = 'poly',
-                 baselineDegree = 1, 
+                 baselineDegree = 1,
                  idealized = False):
         self.samplingRate = samplingRate
         self.filterFrequency = filterFrequency
@@ -96,7 +96,7 @@ class Series(list):
 
         if baselineCorrected:
             if intervalsBaseline:
-                self.baseline_correct_all(intervals = baselineIntervals, 
+                self.baseline_correct_all(intervals = baselineIntervals,
                                           method =baselineMethod,
                                           degree = baselineDegree)
             else:
@@ -104,15 +104,15 @@ class Series(list):
                        +'were provided')
                 pass
         if filterFrequency:
-            self.filter_all(filterFrequency, samplingRate, method)
-    
-    def filter_all(self, filterFrequency = 1e3, 
-                   samplingRate = None, method = 'convolution'):
+            self.filter_all(filterFrequency, samplingRate)
+
+    def filter_all(self, filterFrequency = 1e3,
+                   samplingRate = None):
         if samplingRate is None:
             samplingRate = self.samplingRate
         for episode in self:
-            episode.filter_episode(filterFrequency, samplingRate, method)
-            
+            episode.filter_episode(filterFrequency, samplingRate)
+
     def baseline_correct_all(self, intervals, method='poly', degree=1):
         for episode in self:
             episode.baseline_correct_episode(intervals, method, degree)
@@ -127,10 +127,10 @@ class Series(list):
 
 
 class Model(dict):
-    def __init__(self, 
-                 filename = cwd+'/data/170404 015.axgd',
+    def __init__(self,
+                 filename = cwd+'/data/171025 020 Copy Export.mat',
                  samplingRate = 4e4,
-                 filetype = 'axo',
+                 filetype = 'mat',
                  headerlength = 0,
                  bindtype = None):
 
@@ -145,28 +145,27 @@ class Model(dict):
         self.currentEpisode = 0
 
     def load_data(self):
-        loadedfile = readdata.load(self.filetype, self.filename, 
-                               self.bindtype, self.headerlength, 
+        """
+        Load the data in the file at `self.filename`.
+        Accepts `.mat`, `.axgd` and `.bin` files.
+        (`.bin` files are for simulated data only at the moment.)
+        the `names` variable is not necessary and only included because `.axgd`
+        files include them. (`.mat` do too but with useless formatting)
+        """
+        loadedfile = readdata.load(self.filetype, self.filename,
+                               self.bindtype, self.headerlength,
                                self.samplingRate)
-        if self.filetype == 'axo':
-            names, time, current, piezo, voltage = loadedfile
+        if self.filetype == 'axo' or self.filetype == 'mat':
+            names, time, current, piezo, commandVoltage = loadedfile
             for i in range(len(current)):
-                self['raw_'].append(Episode(time, current[i], nthEpisode=i, 
-                             piezo=piezo[i], commandVoltage=voltage[i], 
+                self['raw_'].append(Episode(time, current[i], nthEpisode=i,
+                             piezo=piezo[i], commandVoltage=commandVoltage[i],
                              samplingRate = self.samplingRate))
         elif self.filetype == 'bin': #this here because the data we simulate is in binary format
-            names, time, current = loadedfile
+            names, time, current = loadedfilef
             for i in range(len(current)):
                 self['raw_'].append(Episode(time, current[i], nthEpisode=i,
                                             samplingRate = self.samplingRate))
-    
-
-    def change_datakey(self,newDatakey):
-        """
-        Changes the `currentDatakey` attribute to `newDatakey`. Used from 
-        switching between different Series (i.e. stages of processing).
-        """
-        self.currentDatakey = newDatakey
 
     def call_operation(self, operation, *args, **kwargs):
         """

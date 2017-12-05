@@ -2,8 +2,7 @@ import numpy as np
 
 def apply_filter(
 	signal,
-	window,
-	method = 'convolution'):
+	window,*args,**kwargs):
 	"""
 	filename must be a string
 	for now datatype should be using numpy types such as 'np.int16'
@@ -15,13 +14,15 @@ def apply_filter(
 	method allows for using scipy fft convolve which might be faster 
 	for large signal sets
 	"""
-	if method == 'fft':
-	    from scipy.signal import fftconvolve
-	    output = fftconvolve(signal, window, mode='same')
-	elif method == 'convolution':
-	    output = np.convolve(signal, window, mode='same')
-	else: raise KeyError(
-					'Method should be either "convolution" or "fft".')
+
+	# pad with constant values to reduce boundary effects and keep
+	# original length of array
+	padLength = int((len(window)-1)/2) # `len(window)` is always odd
+	leftPad = np.ones(padLength)*signal[0]
+	rightPad = np.ones(padLength)*signal[-1]
+	signal = signal.flatten()
+	signal = np.hstack((leftPad,signal,rightPad))
+	output = np.convolve(signal, window, mode='valid')
 
 	return output
 
