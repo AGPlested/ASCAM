@@ -149,23 +149,38 @@ class Model(dict):
         Load the data in the file at `self.filename`.
         Accepts `.mat`, `.axgd` and `.bin` files.
         (`.bin` files are for simulated data only at the moment.)
-        the `names` variable is not necessary and only included because `.axgd`
-        files include them. (`.mat` do too but with useless formatting)
         """
-        loadedfile = readdata.load(self.filetype, self.filename,
+        names, *loaded_data = readdata.load(self.filetype, self.filename,
                                self.bindtype, self.headerlength,
                                self.samplingRate)
-        if self.filetype == 'axo' or self.filetype == 'mat':
-            names, time, current, piezo, commandVoltage = loadedfile
+        ### The `if` accounts for the presence or absence of
+        ### piezo and command voltage in the data being loaded
+        if 'Piezo [V]' in names and 'Command Voltage [V]' in names:
+            time, current, piezo, commandVoltage = loaded_data
             for i in range(len(current)):
                 self['raw_'].append(Episode(time, current[i], nthEpisode=i,
                              piezo=piezo[i], commandVoltage=commandVoltage[i],
                              samplingRate = self.samplingRate))
-        elif self.filetype == 'bin': #this here because the data we simulate is in binary format
-            names, time, current = loadedfilef
+
+        elif 'Piezo [V]' in names:
+            time, current, piezo, _ = loaded_data
             for i in range(len(current)):
                 self['raw_'].append(Episode(time, current[i], nthEpisode=i,
-                                            samplingRate = self.samplingRate))
+                             piezo=piezo[i], samplingRate = self.samplingRate))
+
+        elif 'Command Voltage [V]' in names:
+            time, current, _, commandVoltage = loaded_data
+            for i in range(len(current)):
+                self['raw_'].append(Episode(time, current[i], nthEpisode=i,
+                             commandVoltage=commandVoltage[i], 
+                             samplingRate = self.samplingRate))
+        else:
+            time, current = loaded_data
+            for i in range(len(current)):
+                self['raw_'].append(Episode(time, current[i], nthEpisode=i,
+                             samplingRate = self.samplingRate))
+
+
 
     def call_operation(self, operation, *args, **kwargs):
         """

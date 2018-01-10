@@ -21,13 +21,11 @@ def load_matlab(filename):
     current = []
     commandVoltage = []
     piezo = []
-    names = ['time [ms]']
+    names = ['Time [ms]']
     
     # we use varmats to split up the file into seperate mat files, one for each variable
     # this is necessary for files containing a lot of data (i.e. more that 1000 episode)
-    # because the variable names contain column 3-digit column numbers
-    # if it turns out that this increases loading times even for small files significantly
-    # we should look into including a condition so that it is only used when truly needed
+    # because the variable names contain 3-digit column numbers
     varmats = varmats_from_mat(open(filename, 'rb'))
     
     for variable in varmats:
@@ -67,7 +65,9 @@ def load_binary(filename, dtype, headerlength, fs):
     current = current[headerlength:]
     tend = len(current)/fs*1000
     time = np.linspace(0,tend,len(current))
-    return ["Current (A)"], time, current[np.newaxis]
+    names = ["Time [ms]", "Current [A]"]
+    current = current[np.newaxis]
+    return names, time, current
 
 def load_axo(filename):
     """
@@ -103,6 +103,15 @@ def load_axo(filename):
     for i in np.arange(outputindex,outputindex+Nepisodes):
         names.append(output[i])
         outputindex += 1
+    names_to_output = []
+    if 'Time (s)' in names:
+        names_to_output.append('Time [s]')
+    if 'Ipatch (A)' in names:
+        names_to_output.append('Current [A]')
+    if 'Piezo Com (V)' in names:
+        names_to_output.append('Piezo [V]')
+    if '10Vm (V)' in names:
+        names_to_output.append('Command Voltage [V]')
 
     data = np.zeros((Nepisodes,measurement_len))
     for i in range(Nepisodes):
@@ -113,7 +122,8 @@ def load_axo(filename):
     current = data[1::3]
     piezo = data[2::3]
     commandVoltage = data[3::3]
-    return names, time, current, piezo, commandVoltage
+
+    return names_to_output, time, current, piezo, commandVoltage
 
 def load(filetype, filename, dtype=None, headerlength=None, fs=None):
     if filetype == 'axo':

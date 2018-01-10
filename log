@@ -71,29 +71,37 @@ started a plotting module that
 contains functions to create an all point histogram and to select data based
 on piezo activity
 
-NEXT:
-make command and piezo voltage in reading data optional
-creating all points histogram
-connect filter button to filter function
-episode selection - include a 'select all button'/ some kind of inversion between selecting to keep or to discard
+-------------------------------------------------------------------------------
 
+command and piezo voltage are no longer required in matlab files and axograph files
+
+--------------------------------------------------------------------------------
+
+there is now a dropdown menu that shows as entries all the datakeys that exist
+selecting a new key through this menu will change the episode list and the histogram
+and plots
+what still needs to be added is a function that updates the current selection,
+i.e. what is displayed by the menu, when an operation such as filtering is carried out.
+to this end it might be useful to replace the attribute `datakey` of the main gui class
+with a stringvar that can be traced to update everything that should change all at once
+
+---------------------------------------------------------------------------------
+
+NEXT:
+more work on the dropdown menu
+episode selection - include a 'select all button'/ some kind of inversion between selecting to keep or to discard
+change the histogram to a histogram of the current episode and display the all-point histogram 
+transparantly in the background
+finish baseline button
 
 TO DO:
     - make the unit of current, voltage etc. a parameter in episode objects with default pA and mV
-    - make something for sorting episodes
-    - add a histogram to the side of the plot
     - implement gaussian mixture model for fitting the histogram
     - add a better toolbar to the plot
     - add units/labels to plots
-    - fix resizing
     - interpolation in threshold crossing
     - amplitude estimation in threshold crossing
     - different basis functions for baseline corrention (e.g. cosine)
     - move plotting to a seperate module so that gui.py only ever uses `plt.show(x)`
-
-
-from discussion with jelena and sebastian:
-all point histogram
--include time interval selection (either manual or automatic to piezo at maximum amplitude)
-
-remove command voltage plot, add display avg and std of command voltage, or display warning if command voltage std is >1% of average
+    - a menu for selecting the time frame for the histgram
+    - remove command voltage plot, add display avg and std of command voltage, or display warning if command voltage std is >1% of average

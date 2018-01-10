@@ -14,6 +14,7 @@ VERBOSE = False
 axotest = False
 bintest = False
 mattest = False
+
 class GUI(ttk.Frame):
     """
     GUI frame of the GUI for ASCAM.
@@ -87,13 +88,13 @@ class GUI(ttk.Frame):
             if VERBOSE:
                 print('Test mode with matlab data.')
             self.data = backend.Model(
-                                filename = 'data/171025 020 Copy Export.mat',
+                                filename = 'data/171025 025 Copy Export.mat',
                                 filetype='mat')
             self.uptdate_list()
             self.draw()
 
         self.bind("<Configure>", self.resize_plot)
-        # this line calls update plot when it is run
+        # this line calls `resize_plot` when it is run
 
 
     def resize_plot(self,*args,**kwargs):
@@ -164,9 +165,22 @@ class GUI(ttk.Frame):
             if VERBOSE: print('Cannot draw histogram, `self.data` is `False`')
             pass
     def uptdate_list(self):
-        if VERBOSE: print('call `uptdate_list`')
+        if VERBOSE: print('calling `uptdate_list`')
+        self.uptdate_episodelist()
+        self.uptdate_listmenu()
+        ### for now `update_list` will update both the list and the dropdown
+        ### menu, in case they need to be uncoupled use the two functions below
+
+    def uptdate_episodelist(self):
+        if VERBOSE: print('calling `uptdate_episodelist`')
         self.espisodeList.create_list()
+
+    def uptdate_listmenu(self):
+        if VERBOSE: print('calling `uptdate_listmenu`')
+        self.espisodeList.create_dropdownmenu()
+
     def quit(self):
+        if VERBOSE: print('exiting ASCAM')
         self.master.destroy()
         self.master.quit()
 
@@ -258,8 +272,6 @@ class Plotframe(ttk.Frame):
                 unitPiezoVoltage = 'V'
                 ys.append(episode['piezo'])
                 ylabels.append("Piezo ["+unitPiezoVoltage+']')
-            ## commented out the below code as command voltage is not
-            ## interesting to plot
             if episode['commandVoltage'] is not None:
                 if VERBOSE: print('`commandVoltage` found')
                 ys.append(episode['commandVoltage'])
@@ -424,25 +436,75 @@ class EpisodeList(ttk.Frame):
     def __init__(self, parent):
         ttk.Frame.__init__(self, parent)
         self.parent = parent
+
+        ### create the variable tracking the current selection, `currentSeries`
+        ### and assign it to call the function `selection_change` when it is
+        ### changed
+        self.currentSeries = tk.StringVar()
+        self.currentSeries.set(self.parent.datakey)
+        self.currentSeries.trace("w", self.selection_change)
+
         self.create_list()
+        self.create_dropdownmenu()
+
     def onselect_plot(self,event):
+        """
+        When a new episode is selected by clicking or with arrow keys get the
+        change the number of the current episode and update the plots
+        """
+        if VERBOSE: print("selected new episode in list")
         self.parent.Nepisode = int(event.widget.curselection()[0])
         self.parent.update_plot()
+
     def create_list(self):
+        """
+        create the list of episodes and a scroll bar
+        scroll bar is created first because episodelist references it
+        the last line of scrollbar references episodelist so it has to come
+        after the creating of episodelist
+        """
+        if VERBOSE: print("creating scrollbar")
         self.Scrollbar = tk.Scrollbar(self, orient=tk.VERTICAL)
-        self.Scrollbar.grid(column=1, row=1, rowspan=3, sticky=tk.N+tk.S+tk.E)
+        self.Scrollbar.grid(column=1, row=1, rowspan=3, sticky=tk.N+tk.S+tk.E)   
+        
+        if VERBOSE: print("creating episodelist")
         self.episodelist = tk.Listbox(self, bd=2,
                                     yscrollcommand=self.Scrollbar.set)
-        self.episodelist.grid(row=0, rowspan=3, sticky=tk.S+tk.W+tk.N)
+        self.episodelist.grid(row=1, rowspan=3, sticky=tk.S+tk.W+tk.N)
         self.episodelist.bind('<<ListboxSelect>>', self.onselect_plot)
         self.episodelist.config(height=30)
         if self.parent.data:
+            if VERBOSE: print("found data to fill list with")
             for episode in self.parent.data[self.parent.datakey]:
                 self.episodelist.insert(tk.END,
                                 "episode #"+str(episode.nthEpisode))
+
         self.Scrollbar['command'] = self.episodelist.yview
-    # def create_menu(self):
-        
+
+    def create_dropdownmenu(self):
+        """
+        create the dropdown menu that is a list of the available series
+        """
+        if  VERBOSE: print("creating dropdown menu")
+        if self.parent.data:
+            if VERBOSE: print("found data")
+            listOptions = self.parent.data.keys()
+        else:
+            listOptions = ['']
+        self.menu = tk.OptionMenu(self, self.currentSeries, *listOptions)
+        self.menu.grid(row=0,column=0,columnspan=2,sticky=tk.N)
+
+    def selection_change(self, *args):
+        """
+        when the `currentSeries` variable changes this function will be called
+        it needs the `*args` arguments because tkinter passes some arguments
+        to it (we currently dont need those)
+        """
+        if VERBOSE: print(self.currentSeries.get()+' selected')
+        self.parent.datakey = self.currentSeries.get()
+        self.parent.uptdate_episodelist()
+        self.parent.draw()
+
 class Loadframe(tk.Toplevel):
     """
     Temporary frame that gets the file and information about it.
@@ -453,10 +515,15 @@ class Loadframe(tk.Toplevel):
         tk.Toplevel.__init__(self,parent)
         self.parent = parent
         self.title("Select file")
+        self.reset_entryFields()
         self.create_widgets()
         self.loadbutton.focus()
 
-        #reset the file variables every time a load dialog is created
+    def reset_entryFields(self):
+        """
+        Set all the string variables to empty string so if data is loaded two 
+        times the old values are not shown in the new window.
+        """
         self.parent.filetype.set('')
         self.parent.filename.set('')
         self.parent.samplingrate.set('')
