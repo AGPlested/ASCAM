@@ -58,8 +58,7 @@ do we need the command voltage plot or not? - include option to plot it
 
 what is different about the `170922 004 Copy Export.mat` file?
 it cannot be loaded with scipy.io.loadmat
--problem was that it has more than 1000 episodes which are considered to be different variables 
-in the matlab file and are named by 3-digit columns numbers
+-problem was that it has more than 1000 episodes which are considered to be different variables in the matlab file and are named by 3-digit columns numbers
 
 -------------------------------------------------------------------------------
 
@@ -67,9 +66,7 @@ fixed the matlab file loading using `varmats_from_mat`
 
 -------------------------------------------------------------------------------
 
-started a plotting module that
-contains functions to create an all point histogram and to select data based
-on piezo activity
+started a plotting module that contains functions to create an all point histogram and to select data based on piezo activity
 
 -------------------------------------------------------------------------------
 
@@ -77,24 +74,45 @@ command and piezo voltage are no longer required in matlab files and axograph fi
 
 --------------------------------------------------------------------------------
 
-there is now a dropdown menu that shows as entries all the datakeys that exist
-selecting a new key through this menu will change the episode list and the histogram
-and plots
-what still needs to be added is a function that updates the current selection,
-i.e. what is displayed by the menu, when an operation such as filtering is carried out.
+there is now a dropdown menu that shows as entries all the datakeys that exist selecting a new key through this menu will change the episode list and the histogram and plots
+
+what still needs to be added is a function that updates the current selection, i.e. what is displayed by the menu, when an operation such as filtering is carried out.
 to this end it might be useful to replace the attribute `datakey` of the main gui class
 with a stringvar that can be traced to update everything that should change all at once
 
 ---------------------------------------------------------------------------------
 
+`GUI.datakey` is now a `tk.StringVar` and is traced in order to make selection of different series easier
+
+`Series` objects now take argument data which works the same as the argument of standard `list()` objects, loading data is now done using list comprehension to build the series object
+
+----------------------------------------------------------------------------------
+
+`series` methods no longer change the episodes in the current series but instead return a new series containing the changed data
+
+the `call_operation` method of `Model` now directly calls the operation if `check_operation` returns true
+it also return a boolean value which the GUI uses to determine whether or not the plots and list should be updated
+
+`check_operation` checks if the name of the operate (e.g. FILTER or BC) is contained in the current datakey and only returns true if not. this means a series cannot be filtered twice, even at different frequencies
+
+datakeys now contain all the information e.g. "FILTER_1000.0" instead of only the operation
+
+histogram now also resizes when window is resized, also removed the `figsize` kwarg from the plt.figure call for the histogram
+
+
+ISSUES:
+    - when switching series through the dropdown menu or by clicking the filter button the selected episode is no longer highlighted in the list
+    - in the same situations as above the command voltage is drawn with y ranging to 3000
+
 NEXT:
-more work on the dropdown menu
 episode selection - include a 'select all button'/ some kind of inversion between selecting to keep or to discard
 change the histogram to a histogram of the current episode and display the all-point histogram 
 transparantly in the background
 finish baseline button
 
 TO DO:
+    - give the series in the dropdown menu shorter names
+    - add `reconstruct` method to `series` that takes the input values of attributes and performs the corresponding operations 
     - make the unit of current, voltage etc. a parameter in episode objects with default pA and mV
     - implement gaussian mixture model for fitting the histogram
     - add a better toolbar to the plot

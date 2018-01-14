@@ -80,60 +80,72 @@ class Episode(dict):
 
 
 class Series(list):
-    def __init__(self,
-                 samplingRate = 4e4,
-                 filterFrequency = False,
-                 filterMethod = 'convolution',
-                 baselineCorrected = False,
-                 baselineIntervals = False,
-                 baselineMethod = 'poly',
-                 baselineDegree = 1,
-                 idealized = False):
+    def __init__(self, data = [], samplingRate = 4e4, filterFrequency = False,         
+                 baselineCorrected = False, baselineIntervals = False,
+                 baselineMethod = 'poly', baselineDegree = 1, 
+                 idealized = False, reconstruct = False):
+        """
+        `Series` are lists of episodes which also store relevant parameters
+        about the recording and operations that have been performed on the 
+        data.
+
+        The `reconstruct` input is a placeholder
+        """
+
+        list.__init__(self,data)
         self.samplingRate = samplingRate
         self.filterFrequency = filterFrequency
         self.baselineCorrected = baselineCorrected
+        self.baselineIntervals = baselineIntervals
+        self.baselineMethod = baselineMethod
+        self.baselineDegree = baselineDegree
         self.idealized = idealized
-
-        if baselineCorrected:
-            if intervalsBaseline:
-                self.baseline_correct_all(intervals = baselineIntervals,
-                                          method =baselineMethod,
-                                          degree = baselineDegree)
-            else:
-                print('baselineCorrected was set to true but no intervals '
-                       +'were provided')
-                pass
-        if filterFrequency:
-            self.filter_all(filterFrequency, samplingRate)
-
-    def filter_all(self, filterFrequency = 1e3,
-                   samplingRate = None):
-        if samplingRate is None:
-            samplingRate = self.samplingRate
-        for episode in self:
-            episode.filter_episode(filterFrequency, samplingRate)
+ 
+    def filter_all(self, filterFrequency = 1e3):
+        """
+        Return a Series object in which all episodes are the filtered version
+        of episodes in `self`
+        """
+        output = copy.deepcopy(self)
+        for episode in output:
+            episode.filter_episode(filterFrequency, self.samplingRate)
+        return output
 
     def baseline_correct_all(self, intervals, method='poly', degree=1):
-        for episode in self:
-            episode.baseline_correct_episode(intervals, method, degree)
+        """
+        Return a `Series` object in which the episodes stored in `self` are
+        baseline corrected with the given parameters
+        """
+        output = copy.deepcopy(self)
+        for episode in output:
+            output.append(episode.baseline_correct_episode(intervals, method, 
+                                                           degree))
+        return output
 
     def idealize_all(self, thresholds):
-        for episode in self:
+        """
+        Return `Series` object containing the idealization of the episodes
+        in `self`
+        """
+        output = copy.deepcopy(self)
+        for episode in output:
             episode.idealize(thresholds)
+        return output
 
     def check_standarddeviation_all(self, stdthreshold = 5e-13):
+        """
+        Check the standard deviation of the each episode in `self` against the
+        given threshold value
+        """
         for episode in self:
             episode.check_standarddeviation(stdthreshold)
 
 
-class Model(dict):
-    def __init__(self,
-                 filename = cwd+'/data/171025 020 Copy Export.mat',
-                 samplingRate = 4e4,
-                 filetype = 'mat',
-                 headerlength = 0,
-                 bindtype = None):
 
+class Model(dict):
+    def __init__(self, filename = cwd+'/data/171025 020 Copy Export.mat', 
+                 samplingRate = 4e4, filetype = 'mat', headerlength = 0,
+                 bindtype = None):
         self.filename = filename
         self.samplingRate = int(float(samplingRate))
         self.filetype = filetype
@@ -155,64 +167,84 @@ class Model(dict):
                                self.samplingRate)
         ### The `if` accounts for the presence or absence of
         ### piezo and command voltage in the data being loaded
+
         if 'Piezo [V]' in names and 'Command Voltage [V]' in names:
-            time, current, piezo, commandVoltage = loaded_data
-            for i in range(len(current)):
-                self['raw_'].append(Episode(time, current[i], nthEpisode=i,
-                             piezo=piezo[i], commandVoltage=commandVoltage[i],
-                             samplingRate = self.samplingRate))
+            time = loaded_data[0]
+            self['raw_'] = Series([Episode(time, trace, nthEpisode=i, 
+                                            piezo=pTrace, 
+                                            commandVoltage=cVtrace, 
+                                            samplingRate = self.samplingRate)
+                                    for i, (trace, pTrace, cVtrace) 
+                                    in enumerate(zip(*loaded_data[1:]))])
 
         elif 'Piezo [V]' in names:
             time, current, piezo, _ = loaded_data
-            for i in range(len(current)):
-                self['raw_'].append(Episode(time, current[i], nthEpisode=i,
-                             piezo=piezo[i], samplingRate = self.samplingRate))
+            self['raw_'] = Series([Episode(time, current[i], nthEpisode=i, 
+                                            piezo=piezo[i], 
+                                            samplingRate = self.samplingRate)
+                                    for i in range(len(current))])
 
         elif 'Command Voltage [V]' in names:
             time, current, _, commandVoltage = loaded_data
-            for i in range(len(current)):
-                self['raw_'].append(Episode(time, current[i], nthEpisode=i,
-                             commandVoltage=commandVoltage[i], 
-                             samplingRate = self.samplingRate))
+            self['raw_'] = Series([Episode(time, current[i], nthEpisode=i, 
+                                            commandVoltage=commandVoltage[i], 
+                                            samplingRate = self.samplingRate)
+                                    for i in range(len(current))])
+
         else:
-            time, current = loaded_data
-            for i in range(len(current)):
-                self['raw_'].append(Episode(time, current[i], nthEpisode=i,
-                             samplingRate = self.samplingRate))
+            time, current, _, _ = loaded_data
+            self['raw_'] = Series([Episode(time, current[i], nthEpisode=i, 
+                                            samplingRate = self.samplingRate)
+                                    for i in range(len(current))])
 
-
-
-    def call_operation(self, operation, *args, **kwargs):
+    def call_operation(self, operation, *args):
         """
         Calls an operation to be performed on the data.
         Valid operations:
         'BC_' - baseline correction
         'FILTER_' - filter
         'TC_' - threshold crossing
+
+        returns TRUE if the operation was called FALSE if not
         """
-        if self.currentDatakey == 'raw_':
-            newDatakey = operation
-        else:
-            newDatakey = self.currentDatakey+operation
-        if self.check_operation(newDatakey, operation, *args):
-            self.apply_operation(newDatakey, operation, *args)
+        valid = self.check_operation(operation)
+        if valid:
+            newDatakey = operation+str(*args)+'_'
+            if operation == 'FILTER_':
+                self[newDatakey] = self[self.currentDatakey].filter_all(*args)
+            elif operation == 'BC_':
+                self[newDatakey] = (
+                        self[self.currentDatakey].baseline_correct_all(*args,
+                                                                    **kwargs))
+            else:
+                print("Uknown operation!")
+            self.currentDatakey = newDatakey
+        return valid
 
-    def check_operation(self, newDatakey, operation, *args, **kwargs):
-        # if operation in self.keys():
-        #     print("This operation has already been performed")
-        #     return False
-        # else:
-        return True
-
-    def apply_operation(self, newDatakey, operation, *args, **kwargs):
-        newData = copy.deepcopy(self[self.currentDatakey])
-        if operation == 'BC_':
-            newData.baseline_correct_all(*args)
-        elif operation == 'FILTER_':
-            newData.filter_all(*args)
-        elif operation == 'TC_':
-            newData.idealization(*args)
+    def check_operation(self, operation):
+        """
+        Check if the requested operatioin is valid, i.e. if it has not already
+        been applied to the current series.
+        The check is to see if the series has been filter or baselined. It
+        does not compare the filter frequency so filtering twice at different
+        frequencies is currently forbidden.
+        """
+        if operation in self.currentDatakey:
+            print(operation+" has already been performed on this series.")
+            print('Current series is '+self.currentDatakey)
+            return False
         else:
-            print("Uknown operation!")
-        self[newDatakey] = newData
-        self.currentDatakey = newDatakey
+            return True
+
+    # def apply_operation(self, newDatakey, operation, *args, **kwargs):
+    #     newData = copy.deepcopy(self[self.currentDatakey])
+    #     if operation == 'BC_':
+    #         newData.baseline_correct_all(*args)
+    #     elif operation == 'FILTER_':
+    #         newData.filter_all(*args)
+    #     elif operation == 'TC_':
+    #         newData.idealization(*args)
+    #     else:
+    #         print("Uknown operation!")
+    #     self[newDatakey] = newData
+    #     self.currentDatakey = newDatakey

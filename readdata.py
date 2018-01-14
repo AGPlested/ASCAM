@@ -47,7 +47,8 @@ def load_matlab(filename):
     return names, time, current, piezo, commandVoltage
 
 def load_binary(filename, dtype, headerlength, fs):
-    """Loads data from binary file using the numpy function fromfile,
+    """
+    Loads data from binary file using the numpy function fromfile,
     it assumes that the words in the header are of the
     same bit-length as the numbers in the file and removes
     the header
@@ -59,7 +60,7 @@ def load_binary(filename, dtype, headerlength, fs):
                         data)
     Output:
         data - 1 x #(samples) numpy array containing the data
-        """
+    """
     headerlength = int(headerlength)
     current = np.fromfile(filename, dtype=dtype)
     current = current[headerlength:]
@@ -67,7 +68,8 @@ def load_binary(filename, dtype, headerlength, fs):
     time = np.linspace(0,tend,len(current))
     names = ["Time [ms]", "Current [A]"]
     current = current[np.newaxis]
-    return names, time, current
+    piezo = commandVoltage = []
+    return names, time, current, piezo, commandVoltage
 
 def load_axo(filename):
     """

@@ -49,7 +49,8 @@ class GUI(ttk.Frame):
         # dictionary for the data
         self.data = dict()
         # datakey of the current displayed data
-        self.datakey = 'raw_'
+        self.datakey = tk.StringVar()
+        self.datakey.set('raw_')
         # episode number of the currently displayed episode
         self.Nepisode = 0
 
@@ -89,21 +90,21 @@ class GUI(ttk.Frame):
                 print('Test mode with matlab data.')
             self.data = backend.Model(
                                 filename = 'data/171025 025 Copy Export.mat',
-                                filetype='mat')
+                                filetype = 'mat')
             self.uptdate_list()
             self.draw()
 
-        self.bind("<Configure>", self.resize_plot)
+        self.bind("<Configure>", self.draw)
         # this line calls `resize_plot` when it is run
 
 
-    def resize_plot(self,*args,**kwargs):
-        """
-        Draw the plot again when the window size is changed.
-
-        """
-        if VERBOSE: print('Resizing plot')
-        self.update_plot()
+    # def resize_plot(self,*args,**kwargs):
+    #     """
+    #     Draw the plot again when the window size is changed.
+    #     This is a seperat
+    #     """
+    #     if VERBOSE: print('Resizing plot')
+    #     self.update_plot()
 
     def create_widgets(self):
         """
@@ -141,8 +142,10 @@ class GUI(ttk.Frame):
 
         self.histogramFrame.grid(row=0,column=4,rowspan=3,columnspan=3,
                                     sticky=tk.E)
+        self.histogramFrame.grid_rowconfigure(0, weight=1)
+        self.histogramFrame.grid_columnconfigure(0, weight=1)
 
-    def draw(self):
+    def draw(self,*args,**kwargs):
         """
         Draw all the plots anew.
         """
@@ -194,11 +197,12 @@ class Commandframe(ttk.Frame):
         ttk.Frame.__init__(self, parent)
         self.parent = parent
         self.create_widgets()
+
     def create_widgets(self):
         self.loadbutton = ttk.Button(self, text="Load file",
-                                     command=self.load_dialog
-                                     )
+                                     command=self.load_dialog)
         self.loadbutton.grid(column=1,row=1,sticky=tk.N+tk.E)
+
         self.plotbutton = ttk.Button(self, text="Plot",
                                      command=self.parent.update_plot)
         self.plotbutton.grid(column=2,row=1,sticky=tk.N)
@@ -217,16 +221,16 @@ class HistogramFrame(ttk.Frame):
     def __init__(self, parent):
         ttk.Frame.__init__(self, parent)
         self.parent = parent
-        self.fig = plt.figure(1, figsize=(8,5))
+        self.fig = plt.figure(1)
         canvasHist = FigureCanvasTkAgg(self.fig, self)
         canvasHist.show()
         canvasHist.get_tk_widget().grid(row=0,column=0)
         self.canvas = canvasHist
 
-
-    def draw_histogram(self, active = True, deviation = .05, bins = 200, **kwargs):
+    def draw_histogram(self, active = True, deviation = .05, bins = 200, 
+                        **kwargs):
         if VERBOSE: print("`draw_histogram`")
-        series = self.parent.data[self.parent.datakey]
+        series = self.parent.data[self.parent.datakey.get()]
         time = series[0]['time']
         piezo_list = [episode['piezo'] for episode in series ]
         trace_list = [episode['trace'] for episode in series ]
@@ -258,10 +262,10 @@ class Plotframe(ttk.Frame):
         if self.parent.data:
             if VERBOSE:
                 print('`data` exists, plotting...')
-                print('datakey = '+self.parent.datakey)
+                print('datakey = '+self.parent.datakey.get())
                 print('Nepisode = '+str(self.parent.Nepisode))
             episode = self.parent.data[
-                            self.parent.datakey][self.parent.Nepisode]
+                            self.parent.datakey.get()][self.parent.Nepisode]
             x = episode['time']
             ys = [episode['trace']]
             unitCurrent = 'pA'
@@ -284,10 +288,14 @@ class Plotframe(ttk.Frame):
 
         self.subplots = []
         for i, (y, ylabel) in enumerate(zip(ys, ylabels)):
-            if VERBOSE: print("calling matplotlib")
+            if VERBOSE: 
+                print("calling matplotlib")
+                print('plotting '+ylabel)
             self.subplots.append(self.fig.add_subplot(len(ys),1,i+1))
             plt.plot(x,y)
             plt.ylabel(ylabel)
+            plt.margins(y=.1)
+
         self.canvas.draw()
         for subplot in self.subplots:
             subplot.clear()
@@ -308,38 +316,38 @@ class Manipulations(ttk.Frame):
                                      command=self.filter_series)
         self.filterallbutton.grid(column=1,row=0,sticky=())
 
-        self.filterbutton = ttk.Button(self, text="Filter",
-                                                    command=self.apply_filter)
-        self.filterbutton.grid(column=0,row=0,sticky=())
+        # self.filterbutton = ttk.Button(self, text="Filter",
+        #                                           command=self.apply_filter)
+        # self.filterbutton.grid(column=0,row=0,sticky=())
 
         self.cutoffentry = ttk.Entry(self, width=7, textvariable=(
                                                         self.cutoffFrequency))
         self.cutoffentry.grid(column=1,row=1)
-        ttk.Label(self, text="Filter Frequency (Hz):").grid(column=0,
-                                                        row=1,
-                                                        sticky=(tk.W))
+        ttk.Label(self, text="Filter Frequency (Hz):").grid(column=0, row=1,
+                                                            sticky=(tk.W))
+
         self.baselineButton = ttk.Button(self,text='baseline',
                                         command=self.baseline_correct_frame)
         self.baselineButton.grid(row = 0, column=2,columnspan=2)
 
         self.piezoCheckbutton = ttk.Checkbutton(self, text='Use Piezo', 
-                            variable = self.piezoSelection)
+                                               variable = self.piezoSelection)
         self.piezoCheckbutton.grid(row=1, column=2, sticky=tk.W+tk.N)
 
         self.intervalCheckbutton = ttk.Checkbutton(self, text='Use Intervals', 
-                            variable = (not self.piezoSelection))
+                                    variable = (not self.piezoSelection))
         self.intervalCheckbutton.grid(row=1, column=3, sticky=tk.E+tk.N)
 
     def filter_series(self):
         if VERBOSE: print('going to filter all episodes')
         #convert textvar to float
         cutoffFrequency = float(self.cutoffFrequency.get())
-        self.parent.data.call_operation('FILTER_',cutoffFrequency)
-        if VERBOSE: print('called operation')
-        self.parent.datakey=self.parent.data.currentDatakey
-        if VERBOSE: print('updating list and plots')
-        self.parent.uptdate_list()
-        self.parent.draw()
+        if self.parent.data.call_operation('FILTER_',cutoffFrequency):
+            if VERBOSE: print('called operation succesfully')
+            self.parent.datakey.set(self.parent.data.currentDatakey)
+            if VERBOSE: print('updating list and plots')
+            self.parent.uptdate_list()
+            self.parent.draw()
 
     def baseline_correct_frame(self):
         if VERBOSE: 
@@ -347,8 +355,8 @@ class Manipulations(ttk.Frame):
             print('piezoSelection is ',self.piezoSelection)
         subframe = BaselineFrame(self)
 
-    def apply_filter(self):
-        pass
+    # def apply_filter(self):
+    #     pass
 
 class BaselineFrame(tk.Toplevel):
     """
@@ -395,13 +403,11 @@ class BaselineFrame(tk.Toplevel):
         ttk.Entry(self,width=7,textvariable=self.percentDeviation)
         pass
 
-
     def create_interval_widgets(self):
         """
         Create widgets for specifying intervals to the select the time points.
         """
         pass
-
 
         # # first row - filename and button for choosing file
         # ttk.Label(self, text='File:').grid(column=1, row=1,
@@ -440,10 +446,7 @@ class EpisodeList(ttk.Frame):
         ### create the variable tracking the current selection, `currentSeries`
         ### and assign it to call the function `selection_change` when it is
         ### changed
-        self.currentSeries = tk.StringVar()
-        self.currentSeries.set(self.parent.datakey)
-        self.currentSeries.trace("w", self.selection_change)
-
+        self.parent.datakey.trace("w", self.selection_change)
         self.create_list()
         self.create_dropdownmenu()
 
@@ -475,7 +478,7 @@ class EpisodeList(ttk.Frame):
         self.episodelist.config(height=30)
         if self.parent.data:
             if VERBOSE: print("found data to fill list with")
-            for episode in self.parent.data[self.parent.datakey]:
+            for episode in self.parent.data[self.parent.datakey.get()]:
                 self.episodelist.insert(tk.END,
                                 "episode #"+str(episode.nthEpisode))
 
@@ -491,7 +494,7 @@ class EpisodeList(ttk.Frame):
             listOptions = self.parent.data.keys()
         else:
             listOptions = ['']
-        self.menu = tk.OptionMenu(self, self.currentSeries, *listOptions)
+        self.menu = tk.OptionMenu(self, self.parent.datakey, *listOptions)
         self.menu.grid(row=0,column=0,columnspan=2,sticky=tk.N)
 
     def selection_change(self, *args):
@@ -500,8 +503,7 @@ class EpisodeList(ttk.Frame):
         it needs the `*args` arguments because tkinter passes some arguments
         to it (we currently dont need those)
         """
-        if VERBOSE: print(self.currentSeries.get()+' selected')
-        self.parent.datakey = self.currentSeries.get()
+        if VERBOSE: print(self.parent.datakey.get()+' selected')
         self.parent.uptdate_episodelist()
         self.parent.draw()
 
@@ -576,7 +578,7 @@ class Loadframe(tk.Toplevel):
                                     self.parent.filenamefull.get(),
                                     self.parent.samplingrate.get(),
                                     self.parent.filetype.get())
-            self.parent.datakey = self.parent.data.currentDatakey
+            self.parent.datakey.set(self.parent.data.currentDatakey)
             self.parent.uptdate_list()
             self.parent.draw()
             self.destroy()
