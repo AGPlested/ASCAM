@@ -82,7 +82,7 @@ def histogram(time, piezos, traces, active = True, deviation=.05, n_bins = 200,
         trace_list.append(trace)
     trace_list = np.asarray(trace_list)
     piezo_list = np.asarray(piezo_list)
-    hist, bins = create_histogram(trace_list, n_bins)
+    hist, bins = create_histogram(trace_list, n_bins, density)
     center = (bins[:-1] + bins[1:]) / 2
     width = (bins[1] - bins[0])
     # plot = plt.bar(center, hist, width=width, **kwargs)

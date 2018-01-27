@@ -50,6 +50,7 @@ class GUI(ttk.Frame):
 
         ### parameters for the histogram
         self.hist_number_bins = tk.StringVar()
+        self.hist_number_bins.set(100)
         self.hist_density = tk.IntVar()
         self.hist_density.set(0)
 
@@ -114,7 +115,7 @@ class GUI(ttk.Frame):
                                 filename = 'data/171025 025 Copy Export.mat',
                                 filetype = 'mat')
             self.uptdate_list()
-            self.draw_all()
+            self.update_plots()
 
     def create_widgets(self):
         """
@@ -223,8 +224,8 @@ class Commandframe(ttk.Frame):
     """
     This frame will contain all the command buttons such as loading
     data and plotting
+    Creating the tk.Toplevel pop ups could be done with lambda functions
     """
-    ##### Creating the tk.Toplevel pop ups could be done with lambda functions
     def __init__(self, parent):
         ttk.Frame.__init__(self, parent)
         self.parent = parent
@@ -235,13 +236,9 @@ class Commandframe(ttk.Frame):
                                      command=self.load_dialog)
         self.loadbutton.grid(column=0,row=0,sticky=tk.N+tk.E)
 
-        self.plotbutton = ttk.Button(self, text="Plot",
-                                     command=self.parent.update_plots)
-        self.plotbutton.grid(column=1,row=0,sticky=tk.N)
-
         self.histbutton = ttk.Button(self, text="Histogram",
-                                     command=self.parent.draw_histogram)
-        self.histbutton.grid(column=2,row=0,sticky=tk.N)
+                                     command=self.histogram_config)
+        self.histbutton.grid(column=1,row=0,sticky=tk.N)
 
     def load_dialog(self):
         Loadframe(self.parent)
@@ -254,12 +251,27 @@ class HistogramConfiguration(tk.Toplevel):
     A pop up dialog in which the setting of the histogram can be configured
     """
     def __init__(self, parent):
-        ttk.Frame.__init__(self, parent)
+        tk.Toplevel.__init__(self, parent)
         self.parent = parent
         self.create_widgets()
 
     def create_widgets(self):
-        
+        ttk.Label(self, text="Number of bins").grid(row=0, column=0)
+        ttk.Entry(self,textvariable=self.parent.hist_number_bins, width=7).\
+                                                       grid(row = 0, column=1)
+
+        ttk.Label(self, text="Plot as density").grid(row=1, column=0)
+        ttk.Checkbutton(self, variable=self.parent.hist_density).grid(row=1,
+                                                                     column=1)
+        ttk.Button(self, text="OK", command=self.ok_button).grid(row=3,
+                                                                 columnspan=2)
+
+    def ok_button(self):
+        """
+        redraw the histogram (with new settings) and close the dialog
+        """
+        self.parent.draw_histogram()
+        self.destroy()
 
 class HistogramFrame(ttk.Frame):
     """
@@ -274,8 +286,7 @@ class HistogramFrame(ttk.Frame):
         canvasHist.get_tk_widget().grid(row=0,column=0)
         self.canvas = canvasHist
 
-    def draw_histogram(self, active = True, deviation = .05, n_bins = 100,
-                       density = False, **kwargs):
+    def draw_histogram(self, active = True, deviation = .05, **kwargs):
         """
         draw a histogram of the current episode and a transparent all point hist
         in the background
@@ -291,7 +302,13 @@ class HistogramFrame(ttk.Frame):
             n_bins [int] - number of bins to be used in the histogram
             density [boolean] - if true the histogram is scaled to sum to one
         """
-        if VERBOSE: print("`draw_histogram`")
+        if VERBOSE: print("drawing histogram")
+        n_bins = self.parent.hist_number_bins.get()
+        if n_bins: n_bins=int(n_bins)
+        if VERBOSE: print("number of bins ="+str(n_bins))
+        density = bool(self.parent.hist_density.get())
+        if VERBOSE: print("density is ", density)
+
         if self.parent.data.filename:
             ### get data
             series = self.parent.data[self.parent.datakey.get()]
@@ -355,19 +372,15 @@ class Plotframe(ttk.Frame):
                             self.parent.datakey.get()][self.parent.Nepisode]
             x = episode['time']
             ys = [episode['trace']]
-            unitCurrent = 'pA'
-            unitTime = 'ms'
-            ylabels = ["Current ["+unitCurrent+"]"]
+            ylabels = ["Current ["+self.parent.data.currentUnit+"]"]
             if episode['piezo'] is not None:
                 if VERBOSE: print('`piezo` found')
-                unitPiezoVoltage = 'V'
                 ys.append(episode['piezo'])
-                ylabels.append("Piezo ["+unitPiezoVoltage+']')
+                ylabels.append("Piezo ["+self.parent.data.piezoUnit+']')
             if episode['commandVoltage'] is not None:
                 if VERBOSE: print('`commandVoltage` found')
                 ys.append(episode['commandVoltage'])
-                unitCommandVoltage = 'V'
-                ylabels.append("Command ["+unitCommandVoltage+']')
+                ylabels.append("Command ["+self.parent.data.commandUnit+']')
         else:
             if VERBOSE: print("no data found, plotting dummy")
             x = [0,1]
@@ -384,7 +397,7 @@ class Plotframe(ttk.Frame):
             plt.ylabel(ylabel)
             if "Command" in ylabel:
                 plt.margins(y=1)
-
+        plt.xlabel("Time ["+self.parent.data.timeUnit+"]")
         self.canvas.draw()
         for subplot in self.subplots:
             subplot.clear()
@@ -403,13 +416,9 @@ class Manipulations(ttk.Frame):
         self.create_widgets()
 
     def create_widgets(self):
-        self.filterallbutton = ttk.Button(self, text="Filter all",
+        self.filterallbutton = ttk.Button(self, text="Filter",
                                      command=self.filter_series)
         self.filterallbutton.grid(column=1,row=0,sticky=())
-
-        # self.filterbutton = ttk.Button(self, text="Filter",
-        #                                           command=self.apply_filter)
-        # self.filterbutton.grid(column=0,row=0,sticky=())
 
         self.cutoffentry = ttk.Entry(self, width=7, textvariable=(
                                                         self.cutoffFrequency))
@@ -446,7 +455,7 @@ class Manipulations(ttk.Frame):
         if VERBOSE: 
             print('Opening the baseline corrention frame.')
             print('piezoSelection is ',self.piezoSelection)
-        subframe = BaselineFrame(self)
+        BaselineFrame(self)
 
 class BaselineFrame(tk.Toplevel):
     """

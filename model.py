@@ -30,17 +30,12 @@ class Episode(dict):
             filterType [string] - type of filter used
             fc [int] - cutoff frequency of the filter in Hz
         """
-        if timeInputUnit is 'seconds':
-          timeUnitMultiplier = 1000
-        else:
-          timeUnitMultiplier = 1
 
-        # initialize attributes
         self.filterFrequency = np.inf
         self.baselineCorrected = False
         self.idealized = False
 
-        self['time'] = time*timeUnitMultiplier
+        self['time'] = time
         self['trace'] = trace
         self['piezo'] = piezo
         self['commandVoltage'] = commandVoltage
@@ -143,16 +138,28 @@ class Series(list):
 class Recording(dict):
     def __init__(self, filename = '', 
                  samplingRate = 0, filetype = '', headerlength = 0,
-                 bindtype = None):
+                 bindtype = None, timeUnit = 'ms', piezoUnit = 'V',
+                 commandUnit = 'V', currentUnit = 'pA'):
+        ### parameters for loading the data
         self.filename = filename
-        self.samplingRate = int(float(samplingRate))
         self.filetype = filetype
         self.headerlength = int(float(headerlength))
         self.bindtype = bindtype
+
+        ### attributes of the data
+        self.samplingRate = int(float(samplingRate))
+        self.timeUnit = timeUnit
+        self.commandUnit = commandUnit
+        self.currentUnit = currentUnit
+        self.piezoUnit = piezoUnit
+
+        ### attributes for storing and managing the data
         self['raw_'] = Series()
-        if filename: self.load_data()
         self.currentDatakey = 'raw_'
         self.currentEpisode = 0
+
+        if filename: self.load_data()
+
         
         self.lists = {'all': range(len(self['raw_']))}
         ## `lists` is a dictionary storing the names of lists created by the

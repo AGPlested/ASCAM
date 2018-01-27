@@ -126,8 +126,11 @@ the issues with the command voltage plot seems to have resolved itself while i w
 
 when the episode list is create the current episode is now automatically selected, this means that the current episode will also stay selected if the series is switched
 
+added a dialog to open a window with which to change the `density` flag for the histogram and the number of bins 
+
 
 ISSUES:
+
 
 NEXT:
     -finish baseline button
@@ -147,3 +150,19 @@ TO DO:
     - a menu for selecting the time frame for the histgram
     - remove command voltage plot, add display avg and std of command voltage, or display warning if command voltage std is >1% of average
     - add option to adjust histogram bin widths
+
+weird issues:
+    - There is a warning when first clicking an episode (i.e. 2nd time the plots are drawn)
+    "
+    /home/dpenguin/anaconda3/lib/python3.6/site-packages/matplotlib/cbook/deprecation.py:106: MatplotlibDeprecationWarning: Adding an axes using the same arguments as a previous axes currently reuses the earlier instance.  In a future version, a new instance will always be created and returned.  Meanwhile, this warning can be suppressed, and the future behavior ensured, by passing a unique label to each axes instance.
+    warnings.warn(message, mplDeprecation, stacklevel=1)
+    "
+    it does not seem to matter, everything works fine. This so far only happend on my desktop 
+    - when the episodelist widget is in focus clicking anywhere outside the ASCAM window the following error is displayed
+    "Traceback (most recent call last):
+      File "/home/dpenguin/anaconda3/lib/python3.6/tkinter/__init__.py", line 1699, in __call__
+        return self.func(*args)
+      File "gui.py", line 673, in onselect_plot
+        self.parent.Nepisode = int(event.widget.curselection()[0])
+    IndexError: tuple index out of range
+    "
