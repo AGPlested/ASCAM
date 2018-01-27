@@ -99,18 +99,41 @@ datakeys now contain all the information e.g. "FILTER_1000.0" instead of only th
 
 histogram now also resizes when window is resized, also removed the `figsize` kwarg from the plt.figure call for the histogram
 
+-------------------------------------------------------------------------------------
+
+added checkboxes to select names lists of episodes and a button to add a checkcbox
+
+there was a problem with the checkbuttons where clicking one woulld affect the ones in the list and one of the two for the baseline selection. could fix it by making the checkbutton variable a `tk.IntVar` instead of the python boolean it used to be
+
+model.Model class has been renamed to model.Recording
+
+the lists of episodes are now stored in a dict attribute of the current Recording object
+new lists can be added and episodes can be added to/removed from them by pressing a key that can be chosen by the user
+
+-------------------------------------------------------------------------------------
+
+changed the margins on the plot of the command voltage to 1
+
+added drawing of histograms of single episodes
+it seems like the issue behind the scale of command voltage plot is somehow related to the drawing of the histogram. it used to only happen when switching series, now it happens always, the common factor is that the histogram has always draw before
+
+the histogram frame now shows both the all point histogram and the histogram of a single episode,
+there are several possibilities how the histogram could be drawn though. one is as counts, this is not great since a single episode of course has a much smaller count that the all point hist; two would be to scale the single episode hist, this might be the best option in terms of visual appeal but has the problem that such scaling would be thrown off by chaging number of episodes; three would be to convert both to densities, this has the problem that the all point histogram almost disappears and that every time it is drawn the scaling changes dependent on the distribution of the current episode
+
+the issues with the command voltage plot seems to have resolved itself while i was cleaning up the histogram code
+
+---------------------------------------------------------------------------------------
+
+when the episode list is create the current episode is now automatically selected, this means that the current episode will also stay selected if the series is switched
+
 
 ISSUES:
-    - when switching series through the dropdown menu or by clicking the filter button the selected episode is no longer highlighted in the list
-    - in the same situations as above the command voltage is drawn with y ranging to 3000
 
 NEXT:
-episode selection - include a 'select all button'/ some kind of inversion between selecting to keep or to discard
-change the histogram to a histogram of the current episode and display the all-point histogram 
-transparantly in the background
-finish baseline button
+    -finish baseline button
 
 TO DO:
+    - if filter button is pressed but data has already been filtered switch to the fitlered series
     - give the series in the dropdown menu shorter names
     - add `reconstruct` method to `series` that takes the input values of attributes and performs the corresponding operations 
     - make the unit of current, voltage etc. a parameter in episode objects with default pA and mV
@@ -123,3 +146,4 @@ TO DO:
     - move plotting to a seperate module so that gui.py only ever uses `plt.show(x)`
     - a menu for selecting the time frame for the histgram
     - remove command voltage plot, add display avg and std of command voltage, or display warning if command voltage std is >1% of average
+    - add option to adjust histogram bin widths

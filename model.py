@@ -35,6 +35,7 @@ class Episode(dict):
         else:
           timeUnitMultiplier = 1
 
+        # initialize attributes
         self.filterFrequency = np.inf
         self.baselineCorrected = False
         self.idealized = False
@@ -77,7 +78,6 @@ class Episode(dict):
         tracestd = np.std(self['trace'][times])
         if tracestd>stdthreshold:
             self.suspiciousSTD = True
-
 
 class Series(list):
     def __init__(self, data = [], samplingRate = 4e4, filterFrequency = False,         
@@ -140,11 +140,9 @@ class Series(list):
         for episode in self:
             episode.check_standarddeviation(stdthreshold)
 
-
-
-class Model(dict):
-    def __init__(self, filename = cwd+'/data/171025 020 Copy Export.mat', 
-                 samplingRate = 4e4, filetype = 'mat', headerlength = 0,
+class Recording(dict):
+    def __init__(self, filename = '', 
+                 samplingRate = 0, filetype = '', headerlength = 0,
                  bindtype = None):
         self.filename = filename
         self.samplingRate = int(float(samplingRate))
@@ -152,9 +150,14 @@ class Model(dict):
         self.headerlength = int(float(headerlength))
         self.bindtype = bindtype
         self['raw_'] = Series()
-        self.load_data()
+        if filename: self.load_data()
         self.currentDatakey = 'raw_'
         self.currentEpisode = 0
+        
+        self.lists = {'all': range(len(self['raw_']))}
+        ## `lists` is a dictionary storing the names of lists created by the
+        ## user and the corresponding indices
+        self.currentList = 'all'
 
     def load_data(self):
         """
@@ -236,15 +239,4 @@ class Model(dict):
         else:
             return True
 
-    # def apply_operation(self, newDatakey, operation, *args, **kwargs):
-    #     newData = copy.deepcopy(self[self.currentDatakey])
-    #     if operation == 'BC_':
-    #         newData.baseline_correct_all(*args)
-    #     elif operation == 'FILTER_':
-    #         newData.filter_all(*args)
-    #     elif operation == 'TC_':
-    #         newData.idealization(*args)
-    #     else:
-    #         print("Uknown operation!")
-    #     self[newDatakey] = newData
-    #     self.currentDatakey = newDatakey
+            

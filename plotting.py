@@ -35,7 +35,7 @@ def piezo_selection(time, piezo, trace, active = True, deviation = 0.05):
     trace = trace[indices] 
     return time, piezo, trace
 
-def create_histogram(traces, bins):
+def create_histogram(data, n_bins, density=False):
     """
     Create a histogram of the values in `traces`. Keyword arguments for
     `np.histogram` can be given as kwargs here.
@@ -44,12 +44,12 @@ def create_histogram(traces, bins):
                                histogram.
         **kwargs - Keyword arguments for the `numpy.histogram` function
     """
-    traces = traces.flatten()
-    hist, bins = np.histogram(traces, bins)
+    data = data.flatten()
+    hist, bins = np.histogram(data, n_bins, density=density)
     return hist, bins
 
-def all_point_histogram(time, piezos, traces, active = True, 
-                        deviation=.05, bins = 200, **kwargs):
+def histogram(time, piezos, traces, active = True, deviation=.05, n_bins = 200, 
+              density=False, **kwargs):
     """
     Creates an all-point-histogram of selected values in trace. The values
     are selected based on whether or not the piezo device is active.
@@ -63,6 +63,7 @@ def all_point_histogram(time, piezos, traces, active = True,
         deviation [float] - Deviation, as a percentage, from the maximum
                             piezo voltage or threshold below which voltage
                             should be.
+        density [boolean] - if true the histogram is scaled to sum to one
         **kwargs - Keyword arguments for the `pyplot.bar` function.
     Returns:
         plot - Object containing the plot, can be shows by pyplot.`show()`
@@ -81,8 +82,8 @@ def all_point_histogram(time, piezos, traces, active = True,
         trace_list.append(trace)
     trace_list = np.asarray(trace_list)
     piezo_list = np.asarray(piezo_list)
-    hist, bins = create_histogram(trace_list, bins)
+    hist, bins = create_histogram(trace_list, n_bins)
     center = (bins[:-1] + bins[1:]) / 2
     width = (bins[1] - bins[0])
-    plot = plt.bar(center, hist, width=width, **kwargs)
-    return hist, bins, time_selection, piezo_list, trace_list
+    # plot = plt.bar(center, hist, width=width, **kwargs)
+    return hist, bins, center, width
