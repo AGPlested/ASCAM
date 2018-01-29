@@ -128,12 +128,40 @@ when the episode list is create the current episode is now automatically selecte
 
 added a dialog to open a window with which to change the `density` flag for the histogram and the number of bins 
 
+-------------------------------------------------------------------------------------------
+
+testing loading of files using the matlab version of the file: 171025 020
+results:
+171025 020_I: (only current data)
+    the histogram is not drawn because it relies on the piezo voltage to decide which points should be included in the histogram
+    filtering still works as does the display of the episode
+
+171025 020_I_U-patch: (current and command voltage data)
+    the same behaviour as with only current data
+
+171025 020_I_U-piezo: (current and piezo voltage)
+    everything works as it should
+
+to fix them:
+    - include a condition in drawing the histogram so that it only uses piezo when piezo is present and otherwise uses everything
+
+added a `try, finally` statement to the ok button of the loading dialouge as would otherwise not be closed if the histogram function did not run
+
+-----------------------------------------------------------------------------------------------
+
+added the `tools` module to keep utility functions that do not belong anywhere else such as functions for extracting parts of a signal specified by time intervals of by activity of the piezo device and a function that parses strings into a list of lists of floats
+
+can now specify intervals to use for histogram
+
+
 
 ISSUES:
-
+    - plot not using correct time axis!
 
 NEXT:
-    -finish baseline button
+    - finish baseline button
+    - in the histogram option dialog include the choice of piezo selection vs manual interval selection
+    - add an entry field where the unit of time in the data can be specified
 
 TO DO:
     - if filter button is pressed but data has already been filtered switch to the fitlered series
@@ -150,6 +178,7 @@ TO DO:
     - a menu for selecting the time frame for the histgram
     - remove command voltage plot, add display avg and std of command voltage, or display warning if command voltage std is >1% of average
     - add option to adjust histogram bin widths
+    - look at resizing again
 
 weird issues:
     - There is a warning when first clicking an episode (i.e. 2nd time the plots are drawn)

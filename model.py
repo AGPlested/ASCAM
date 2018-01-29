@@ -12,7 +12,7 @@ class Episode(dict):
                  piezo = None, commandVoltage = None,
                  filterType = None, fc = None,
                  samplingRate = 4e4,
-                 timeInputUnit = 'seconds'):
+                 timeInputUnit = 'ms'):
         """
         Episode objects hold all the information about an epoch and
         should be used to store raw and manipulated data
@@ -30,12 +30,15 @@ class Episode(dict):
             filterType [string] - type of filter used
             fc [int] - cutoff frequency of the filter in Hz
         """
+        time_unit_multiplier = 1
+        if timeInputUnit == 'ms':
+            time_unit_multiplier = 1000
 
         self.filterFrequency = np.inf
         self.baselineCorrected = False
         self.idealized = False
 
-        self['time'] = time
+        self['time'] = time*time_unit_multiplier
         self['trace'] = trace
         self['piezo'] = piezo
         self['commandVoltage'] = commandVoltage

@@ -1,8 +1,10 @@
 import numpy as np
+from tools import interval_selection
 
 def threshold_crossing(signal,amplitudes):
     """
-    Given a signal and amplitudes assign to each point in the signal its closest amplitude value. 
+    Given a signal and amplitudes assign to each point in the signal its 
+    closest amplitude value. 
     Amplitude of 0 is assumed to be present.
     """
     if type(amplitudes) in [list, tuple] :
@@ -90,27 +92,7 @@ def baseline_correction(time,signal,fs,intervals, timeUnit='ms',
     Returns:
         original signal less the fitted baseline     
     """
-    if timeUnit == 'ms':
-        timeUnit = 1000
-    elif timeUnit == 's':
-        timeUnit = 1
-    t = []
-    s = []
-    if type(intervals[0]) is list:
-        for ival in intervals:
-            t.extend(time[ int(ival[0]*fs/timeUnit) 
-                           : int(ival[-1]*fs/timeUnit) 
-                          ])
-            s.extend(signal[ int(ival[0]*fs/timeUnit) 
-                             : int(ival[-1]*fs/timeUnit) 
-                           ])
-    elif type(intervals[0]) in [int, float]:
-        t = time[ int(intervals[0]*fs/timeUnit) 
-                  : int(intervals[-1]*fs/timeUnit)
-                ]
-        s = signal[int(intervals[0]*fs/timeUnit)
-                   : int(intervals[1]*fs/timeUnit)
-                  ]
+    _, signal = interval_selection(time, signal, intervals, fs, timeUnit)
 
     if method == 'offset':
         offset = np.mean(s)

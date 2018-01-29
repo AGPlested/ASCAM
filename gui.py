@@ -9,8 +9,9 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg,
                                             NavigationToolbar2TkAgg)
 import plotting
-import time
+from tools import stringList_parser
 
+### parameters for testing and verbose about
 VERBOSE = False
 axotest = False
 bintest = False
@@ -53,6 +54,21 @@ class GUI(ttk.Frame):
         self.hist_number_bins.set(100)
         self.hist_density = tk.IntVar()
         self.hist_density.set(0)
+        self.hist_piezoSelection = tk.IntVar()
+        self.hist_piezoSelection.set(0)
+        self.hist_piezo_active = tk.IntVar()
+        self.hist_piezo_active.set(1)
+        self.hist_piezo_deviation = tk.StringVar()
+        self.hist_piezo_deviation.set(0.05)
+        self.hist_intervalSelection = tk.IntVar()
+        self.hist_intervalSelection.set(0)
+        self.hist_interval_entry = tk.StringVar()
+        self.hist_interval_entry.set('')
+        self.hist_intervals = []
+
+        ### trace selection methods to be mutually exclusive
+        self.hist_piezoSelection.trace("w",self.hist_piezo_NotInterval)
+        self.hist_intervalSelection.trace("w",self.hist_interval_NotPiezo)
 
         ### parameters of the data
         self.samplingrate = tk.StringVar()
@@ -82,6 +98,10 @@ class GUI(ttk.Frame):
         # this line calls `draw` when it is run
 
     def load_for_testing(self):
+        """
+        this function is called if the program is called with arguments "mat",
+        "bin" or 'axo' and 
+        """
         if bintest:
         ### testing mode that uses simulated data, the data is copied and
         ### multiplied with random numbers to create additional episodes
@@ -99,23 +119,20 @@ class GUI(ttk.Frame):
                 dummyepisode['trace'] = dummyepisode['trace']*randommultiplier
                 dummyepisode.nthEpisode = i
                 self.data['raw_'].append(dummyepisode)
-            self.uptdate_list()
-            self.update_plots()
         elif axotest:
             if VERBOSE:
                 print('Test mode with axograph data')
             self.data = backend.Recording(filename = 'data/170404 015.axgd',
                                         filetype = 'axo')
-            self.uptdate_list()
-            # self.update_plot()
         elif mattest:
             if VERBOSE:
                 print('Test mode with matlab data.')
             self.data = backend.Recording(
                                 filename = 'data/171025 025 Copy Export.mat',
                                 filetype = 'mat')
-            self.uptdate_list()
-            self.update_plots()
+        self.samplingrate.set('4e4')
+        self.uptdate_list()
+        self.update_plots()
 
     def create_widgets(self):
         """
@@ -215,6 +232,29 @@ class GUI(ttk.Frame):
         if VERBOSE: print('calling `uptdate_listmenu`')
         self.episodeList.create_dropdownmenu()
 
+    def hist_interval_NotPiezo(self,*args):
+        """
+        If interval selection for histogram is turned on turn off the piezo
+        selection
+        """
+        if self.hist_intervalSelection.get() == 1:
+            self.hist_piezoSelection.set(0)
+
+    def hist_piezo_NotInterval(self,*args):
+        """
+        If piezo selection for histogram is turned on turn off interval 
+        selection
+        """
+        if self.hist_piezoSelection.get() == 1:
+            self.hist_intervalSelection.set(0)
+
+    def parse_hist_interval_entry(self,*args):
+        """
+        Convert the string that is entered in the config menu into a list of
+        intervals that can be used for the histogram
+        """
+        self.hist_intervals=stringList_parser(self.hist_interval_entry.get())
+
     def quit(self):
         if VERBOSE: print('exiting ASCAM')
         self.master.destroy()
@@ -253,24 +293,63 @@ class HistogramConfiguration(tk.Toplevel):
     def __init__(self, parent):
         tk.Toplevel.__init__(self, parent)
         self.parent = parent
+        self.title("Histogram Options")
         self.create_widgets()
 
     def create_widgets(self):
-        ttk.Label(self, text="Number of bins").grid(row=0, column=0)
+        ### general options
+        ttk.Label(self, text="Number of bins").grid(row=0, column=2)
         ttk.Entry(self,textvariable=self.parent.hist_number_bins, width=7).\
-                                                       grid(row = 0, column=1)
+                                                       grid(row = 0, column=3)
 
-        ttk.Label(self, text="Plot as density").grid(row=1, column=0)
+        ttk.Label(self, text="Plot as density").grid(row=1, column=1)
         ttk.Checkbutton(self, variable=self.parent.hist_density).grid(row=1,
+                                                                     column=3)
+
+        ### piezo selection options
+        ttk.Label(self, text="Select using piezo voltage").grid(row=2, 
+                                                                column=0)
+        ttk.Checkbutton(self, variable=self.parent.hist_piezoSelection).\
+                                                                grid(row=2,
                                                                      column=1)
-        ttk.Button(self, text="OK", command=self.ok_button).grid(row=3,
+
+        ttk.Label(self, text="Active/Inactive").grid(row=3, column=0)
+        ttk.Checkbutton(self, variable=self.parent.hist_piezo_active).\
+                                                                grid(row=3,
+                                                                     column=1)
+ 
+        ttk.Label(self, text="deviation from max/min").grid(row=4, column=0)
+        ttk.Entry(self,textvariable=self.parent.hist_piezo_deviation, 
+                  width=7).grid(row = 4, column=1)    
+
+        ### interval selection options
+        ttk.Label(self, text="Use intervals").grid(row=2, column=3)
+        ttk.Checkbutton(self, variable=self.parent.hist_intervalSelection).\
+                                                                grid(row=2,
+                                                                     column=4)
+        ttk.Label(self, text="Intervals").grid(row=3, column=3)
+        ttk.Entry(self,textvariable=self.parent.hist_interval_entry, 
+                  width=7).grid(row = 3, column=4) 
+        
+
+        ### ok and close
+        ttk.Button(self, text="OK", command=self.ok_button).grid(row=5,
+                                                                 columnspan=2)
+        ttk.Button(self, text="Cancel", command=self.destroy).grid(row=5,
+                                                                  column=3,
                                                                  columnspan=2)
 
     def ok_button(self):
         """
         redraw the histogram (with new settings) and close the dialog
         """
-        self.parent.draw_histogram()
+        try:
+            self.parent.parse_hist_interval_entry()
+        except: pass
+        try: 
+            self.parent.draw_histogram()
+        except: pass
+
         self.destroy()
 
 class HistogramFrame(ttk.Frame):
@@ -280,36 +359,38 @@ class HistogramFrame(ttk.Frame):
     def __init__(self, parent):
         ttk.Frame.__init__(self, parent)
         self.parent = parent
-        self.fig = plt.figure(1)
+        self.fig = plt.figure(1,figsize=(6,5))
         canvasHist = FigureCanvasTkAgg(self.fig, self)
         canvasHist.show()
         canvasHist.get_tk_widget().grid(row=0,column=0)
         self.canvas = canvasHist
 
-    def draw_histogram(self, active = True, deviation = .05, **kwargs):
+    def draw_histogram(self, **kwargs):
         """
         draw a histogram of the current episode and a transparent all point hist
         in the background
-        by default this uses the piezo voltage to determine which time points are
-        included in the histogram
-        Parameters:
-            active [boolean] - If true return time points at which piezo 
-                               voltage is within `deviation` percent of the 
-                               maximum piezo voltage.
-            deviation [float] - Deviation, as a percentage, from the maximum
-                                piezo voltage or threshold below which voltage
-                                should be.
-            n_bins [int] - number of bins to be used in the histogram
-            density [boolean] - if true the histogram is scaled to sum to one
         """
         if VERBOSE: print("drawing histogram")
-        n_bins = self.parent.hist_number_bins.get()
-        if n_bins: n_bins=int(n_bins)
-        if VERBOSE: print("number of bins ="+str(n_bins))
+
+        ### get histogram parameters
+        n_bins = int(float(self.parent.hist_number_bins.get()))
         density = bool(self.parent.hist_density.get())
-        if VERBOSE: print("density is ", density)
+        piezoSelection = bool(self.parent.hist_piezoSelection.get())
+        active = bool(self.parent.hist_piezo_active.get())
+        deviation = float(self.parent.hist_piezo_deviation.get())
+        fs = float(self.parent.samplingrate.get())
+        intervals = self.parent.hist_intervals
+
+
+        if VERBOSE: 
+            print("number of bins ="+str(n_bins))
+            print("density is", density)
+            print("piezoSelection is", piezoSelection)
+            print("active is", active)
+            print("deviation="+str(deviation))
 
         if self.parent.data.filename:
+            if VERBOSE: print("found data")
             ### get data
             series = self.parent.data[self.parent.datakey.get()]
             time = series[0]['time']
@@ -318,20 +399,32 @@ class HistogramFrame(ttk.Frame):
             ### because the histogram function expects a list
             single_piezo = [series[self.parent.Nepisode]['piezo']]
             single_trace = [series[self.parent.Nepisode]['trace']]
+
             ### get the bins and their values or the current episode
             hist_single = plotting.histogram(time, single_piezo, single_trace, 
-                                             active, deviation, n_bins,
-                                             density, **kwargs)
+                                             active = active,
+                                             piezoSelection = piezoSelection, 
+                                             deviation = deviation, 
+                                             n_bins = n_bins,
+                                             density = density, 
+                                             intervals = intervals,
+                                             samplingRate = fs,
+                                             **kwargs)
             (heights_single,bins_single, 
              center_single, width_single) = hist_single
 
-
             ### get a list of all the currents and all the traces
-            all_piezo = [episode['piezo'] for episode in series ]
+            all_piezos = [episode['piezo'] for episode in series ]
             all_traces = [episode['trace'] for episode in series ]
             ### get the bins and their values for all episodes
-            hist_all = plotting.histogram(time, all_piezo, all_traces, active, 
-                                          deviation, n_bins, density, 
+            hist_all = plotting.histogram(time, all_piezos, all_traces, 
+                                          active = active,
+                                          piezoSelection = piezoSelection, 
+                                          deviation=deviation, 
+                                          n_bins = n_bins,
+                                          density = density, 
+                                          intervals = intervals,
+                                          samplingRate = fs,
                                           **kwargs)
             heights_all, bins_all, center_all, width_all = hist_all
 
@@ -794,14 +887,16 @@ class Loadframe(tk.Toplevel):
 
         elif (self.parent.filetype.get() == 'axo'
               or self.parent.filetype.get() == 'mat'):
-            self.parent.data = backend.Recording(
-                                    self.parent.filenamefull.get(),
-                                    self.parent.samplingrate.get(),
-                                    self.parent.filetype.get())
-            self.parent.datakey.set(self.parent.data.currentDatakey)
-            self.parent.uptdate_list()
-            self.parent.update_plots()
-            self.destroy()
+            try:
+                self.parent.data = backend.Recording(
+                                        self.parent.filenamefull.get(),
+                                        self.parent.samplingrate.get(),
+                                        self.parent.filetype.get())
+                self.parent.datakey.set(self.parent.data.currentDatakey)
+                self.parent.uptdate_list()
+                self.parent.update_plots()
+            finally:
+                self.destroy()
 
     def get_file(self):
         """
