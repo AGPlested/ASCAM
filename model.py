@@ -98,6 +98,12 @@ class Series(list):
         self.baselineMethod = baselineMethod
         self.baselineDegree = baselineDegree
         self.idealized = idealized
+
+    def get_min(self,name):
+        return np.min([np.min(episode[name]) for episode in self])
+
+    def get_max(self,name):
+        return np.max([np.max(episode[name]) for episode in self])
  
     def filter_all(self, filterFrequency = 1e3):
         """

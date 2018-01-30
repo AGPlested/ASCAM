@@ -476,6 +476,15 @@ class Plotframe(ttk.Frame):
             ys = [[0,0],[0,0],[0,0]]
             ylabels = ['','','']
 
+        ### get max and min values of trace and command voltage of current
+        ### series to set axis
+        min_A = self.parent.data[self.parent.datakey.get()].get_min('trace')
+        max_A = self.parent.data[self.parent.datakey.get()].get_max('trace')
+        min_V = self.parent.data[self.parent.datakey.get()].get_min(
+                                                            'commandVoltage')
+        max_V = self.parent.data[self.parent.datakey.get()].get_max(
+                                                            'commandVoltage')
+
         self.subplots = []
         for i, (y, ylabel) in enumerate(zip(ys, ylabels)):
             if VERBOSE: 
@@ -484,7 +493,11 @@ class Plotframe(ttk.Frame):
             self.subplots.append(self.fig.add_subplot(len(ys),1,i+1))
             plt.plot(x,y)
             plt.ylabel(ylabel)
-            if "Command" in ylabel:
+            if "Current" in ylabel:
+                plt.ylim([min_A,max_A])
+                plt.margins(y=1)
+            elif "Command" in ylabel:
+                plt.ylim([min_V,max_V])
                 plt.margins(y=1)
         plt.xlabel("Time ["+self.parent.data.timeUnit+"]")
         self.canvas.draw()
