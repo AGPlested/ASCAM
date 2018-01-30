@@ -640,7 +640,7 @@ class ListSelection(ttk.Frame):
         self.create_button()
         self.create_checkbox('All')
 
-        self.colors = ['red', 'green', 'yellow']
+        self.colors = ['blue', 'red', 'green', 'yellow']
         self.colorind = 0
         ## until color selection is added we use these three colors to color
         ## the episodes
@@ -681,7 +681,7 @@ class ListSelection(ttk.Frame):
             ### multiple were entered
             key=key.lower()
             key=key[0]
-            def color_episode(*args,**kwargs):
+            def color_episode(*args, **kwargs):
                 if not (self.parent.Nepisode in self.parent.data.lists[name]):
                     self.parent.episodeList.episodelist.itemconfig(
                                             self.parent.Nepisode,
@@ -693,9 +693,9 @@ class ListSelection(ttk.Frame):
                                                         bg='white')
                     self.parent.data.lists[name].remove(self.parent.Nepisode)
 
+            # self.parent.listAssignFunctions.append(color_episode)
+            self.parent.bind_all(key,color_episode)
             self.colorind+=1
-            self.parent.listAssignFunctions.append(color_episode)
-            self.parent.bind_all(key,self.parent.listAssignFunctions[-1])
 
     def create_button(self):
         """

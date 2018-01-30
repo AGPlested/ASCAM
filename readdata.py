@@ -64,8 +64,8 @@ def load_binary(filename, dtype, headerlength, fs):
     headerlength = int(headerlength)
     current = np.fromfile(filename, dtype=dtype)
     current = current[headerlength:]
-    tend = len(current)/fs*1000
-    time = np.linspace(0,tend,len(current))
+    t_end = len(current)/fs*1000
+    time = np.linspace(0,t_end,len(current))
     names = ["Time [ms]", "Current [A]"]
     current = current[np.newaxis]
     piezo = commandVoltage = []
@@ -95,7 +95,7 @@ def load_axo(filename):
     for result in results:
         output.append(result.decode("utf-8"))
 
-    outputindex = 0
+    outputindex = 1
     Nepisodes = int(output[outputindex])
     outputindex += 1
     measurement_len = int(output[outputindex])
