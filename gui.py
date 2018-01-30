@@ -86,10 +86,6 @@ class GUI(ttk.Frame):
 
         self.commandbar.loadbutton.focus()
 
-        self.listAssignFunctions = []
-        ## this list will hold all the functions that are created to assign
-        ## episodes to particular lists
-
         self.load_for_testing()
         ## if testing arguments have been given data will be loaded when the 
         ## program starts
@@ -640,7 +636,8 @@ class ListSelection(ttk.Frame):
         self.create_button()
         self.create_checkbox('All')
 
-        self.colors = ['blue', 'red', 'green', 'yellow']
+        ## for some reason the first element is skipped 
+        self.colors = ['', 'red', 'green', 'yellow']
         self.colorind = 0
         ## until color selection is added we use these three colors to color
         ## the episodes
@@ -692,8 +689,6 @@ class ListSelection(ttk.Frame):
                                                         self.parent.Nepisode,
                                                         bg='white')
                     self.parent.data.lists[name].remove(self.parent.Nepisode)
-
-            # self.parent.listAssignFunctions.append(color_episode)
             self.parent.bind_all(key,color_episode)
             self.colorind+=1
 
