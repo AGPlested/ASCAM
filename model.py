@@ -148,7 +148,7 @@ class Recording(dict):
     def __init__(self, filename = '', 
                  samplingRate = 0, filetype = '', headerlength = 0,
                  bindtype = None, timeUnit = 'ms', piezoUnit = 'V',
-                 commandUnit = 'V', currentUnit = 'pA'):
+                 commandUnit = 'V', currentUnit = 'A'):
         ### parameters for loading the data
         self.filename = filename
         self.filetype = filetype

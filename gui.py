@@ -81,8 +81,10 @@ class GUI(ttk.Frame):
         # episode number of the currently displayed episode
         self.Nepisode = 0
 
-        ### names of lists and currently selected list
-        self.list_names = ['all']
+        ### parameters for lists
+        ### store the names of lists and corresponding colors and the 
+        ### currently selected lists
+        self.list_names = {'all':'white'}
         self.current_lists = ['all']
 
         self.create_widgets()
@@ -255,6 +257,19 @@ class GUI(ttk.Frame):
         """
         self.hist_intervals=stringList_parser(self.hist_interval_entry.get())
 
+    def get_episodes_in_lists(self):
+        """
+        return an array of the indices of all the episodes in the currently
+        selected lists
+        """
+        indices = []
+        for listname in self.current_lists:
+            indices.extend(self.data.lists[listname])
+        ### remove duplicate indices
+        indices = np.array(list(set(indices)))
+        indices = indices.flatten()
+        return indices
+
     def quit(self):
         if VERBOSE: print('exiting ASCAM')
         self.master.destroy()
@@ -417,11 +432,10 @@ class HistogramFrame(ttk.Frame):
             all_piezos = [episode['piezo'] for episode in series ]
             all_traces = [episode['trace'] for episode in series ]
             
-            ### filter episodes through list
-            indices = []
-            for listname in self.parent.current_lists:
-                indices.append(self.parent.data.lists[listname])
-            indices = list(set(indices))
+            ### get the indices of currently selected lists
+            indices = self.parent.get_episodes_in_lists()
+
+            ### get corresponding piezos and traces
             all_piezos = [all_piezos[i] for i in indices]
             all_traces = [all_traces[i] for i in indices]
 
@@ -662,7 +676,7 @@ class ListSelection(ttk.Frame):
         ## the variables they refer to, `dict['name']=(button,var)`
         
         self.create_button()
-        self.create_checkbox('All')
+        self.create_checkbox('all')
 
         ## for some reason the first element is skipped 
         self.colors = ['', 'red', 'green', 'yellow']
@@ -670,7 +684,7 @@ class ListSelection(ttk.Frame):
         ## until color selection is added we use these three colors to color
         ## the episodes
 
-    def create_checkbox(self, name, key=False): 
+    def create_checkbox(self, name, key=''): 
         """
         Create another checkbutton for a new selection of episodes and add 
         them to the buttons dict.
@@ -687,8 +701,11 @@ class ListSelection(ttk.Frame):
 
         ### create a checkbox and a variable for it
         variable = tk.IntVar()
-        if not key: variable.set(1) ### start with 'all' selected
-        button = ttk.Checkbutton(self, text=name, variable=variable)
+        if name=='all':
+            variable.set(1) ### start with 'all' selected
+        else:
+            variable.set(0)
+        button = ttk.Checkbutton(self, text=key+' '+name, variable=variable)
         button.pack()
 
         ### store button and variable in dict
@@ -697,6 +714,7 @@ class ListSelection(ttk.Frame):
         ### create new 'add' button underneath the checkbox
         self.create_button()
 
+        ### create a new list of indices if the list is new
         if not name in self.parent.data.lists.keys():
             self.parent.data.lists[name] = []
 
@@ -718,7 +736,21 @@ class ListSelection(ttk.Frame):
                                                         bg='white')
                     self.parent.data.lists[name].remove(self.parent.Nepisode)
             self.parent.bind_all(key,color_episode)
+
+            self.parent.list_names[name] = self.colors[self.colorind]
+            print(self.parent.list_names)
             self.colorind+=1
+
+        ### trace the variable to add/removoe the corresponding list to/from  
+        ### the list of current lists, also update the histogram to immediatly
+        ### show the change
+        def trace_variable(*args):
+            if name in self.parent.current_lists:
+                self.parent.current_lists.remove(name)
+            else: 
+                self.parent.current_lists.append(name)
+            self.parent.draw_histogram()
+        variable.trace("w",trace_variable)
 
     def create_button(self):
         """
@@ -815,6 +847,17 @@ class EpisodeList(ttk.Frame):
             for episode in self.parent.data[self.parent.datakey.get()]:
                 self.episodelist.insert(tk.END, "episode #"
                                                 +str(episode.nthEpisode))
+        ### color all episodes according to their list membership
+            ### start from second element because white is default bg color
+            for name in list(self.parent.list_names.keys())[1:]:
+                print(name)
+                for index in self.parent.data.lists[name]:
+                    print(index)
+                    print(self.parent.list_names[name])
+                    self.episodelist.itemconfig(self.parent.Nepisode,
+                                          {'bg':self.parent.list_names[name]})
+
+
         ### assign the scrollbar its function
         self.Scrollbar['command'] = self.episodelist.yview
         self.episodelist.selection_set(self.parent.Nepisode)
