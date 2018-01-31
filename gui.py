@@ -736,8 +736,8 @@ class ListSelection(ttk.Frame):
                                                         bg='white')
                     self.parent.data.lists[name].remove(self.parent.Nepisode)
             self.parent.bind_all(key,color_episode)
-
-            self.parent.list_names[name] = self.colors[self.colorind]
+            print(self.colors[self.colorind+1])
+            self.parent.list_names[name] = self.colors[self.colorind+1]
             print(self.parent.list_names)
             self.colorind+=1
 
@@ -850,11 +850,8 @@ class EpisodeList(ttk.Frame):
         ### color all episodes according to their list membership
             ### start from second element because white is default bg color
             for name in list(self.parent.list_names.keys())[1:]:
-                print(name)
                 for index in self.parent.data.lists[name]:
-                    print(index)
-                    print(self.parent.list_names[name])
-                    self.episodelist.itemconfig(self.parent.Nepisode,
+                    self.episodelist.itemconfig(index,
                                           {'bg':self.parent.list_names[name]})
 
 
