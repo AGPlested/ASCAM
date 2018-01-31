@@ -679,7 +679,7 @@ class ListSelection(ttk.Frame):
         self.create_checkbox('all')
 
         ## for some reason the first element is skipped 
-        self.colors = ['', 'red', 'green', 'yellow']
+        self.colors = ['red', 'green', 'yellow']
         self.colorind = 0
         ## until color selection is added we use these three colors to color
         ## the episodes
@@ -724,11 +724,12 @@ class ListSelection(ttk.Frame):
             ### multiple were entered
             key=key.lower()
             key=key[0]
+            color = self.colors[self.colorind]
             def color_episode(*args, **kwargs):
                 if not (self.parent.Nepisode in self.parent.data.lists[name]):
                     self.parent.episodeList.episodelist.itemconfig(
                                             self.parent.Nepisode,
-                                            {'bg':self.colors[self.colorind]})
+                                            {'bg':color})
                     self.parent.data.lists[name].append(self.parent.Nepisode)
                 else:
                     self.parent.episodeList.episodelist.itemconfig(
@@ -736,9 +737,7 @@ class ListSelection(ttk.Frame):
                                                         bg='white')
                     self.parent.data.lists[name].remove(self.parent.Nepisode)
             self.parent.bind_all(key,color_episode)
-            print(self.colors[self.colorind+1])
-            self.parent.list_names[name] = self.colors[self.colorind+1]
-            print(self.parent.list_names)
+            self.parent.list_names[name] = color
             self.colorind+=1
 
         ### trace the variable to add/removoe the corresponding list to/from  
