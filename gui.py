@@ -81,6 +81,10 @@ class GUI(ttk.Frame):
         # episode number of the currently displayed episode
         self.Nepisode = 0
 
+        ### names of lists and currently selected list
+        self.list_names = ['all']
+        self.current_lists = ['all']
+
         self.create_widgets()
         self.configure_grid()
 
@@ -412,6 +416,15 @@ class HistogramFrame(ttk.Frame):
             ### get a list of all the currents and all the traces
             all_piezos = [episode['piezo'] for episode in series ]
             all_traces = [episode['trace'] for episode in series ]
+            
+            ### filter episodes through list
+            indices = []
+            for listname in self.parent.current_lists:
+                indices.append(self.parent.data.lists[listname])
+            indices = list(set(indices))
+            all_piezos = [all_piezos[i] for i in indices]
+            all_traces = [all_traces[i] for i in indices]
+
             ### get the bins and their values for all episodes
             hist_all = plotting.histogram(time, all_piezos, all_traces, 
                                           active = active,
@@ -478,31 +491,33 @@ class Plotframe(ttk.Frame):
 
         ### get max and min values of trace and command voltage of current
         ### series to set axis
-        min_A = self.parent.data[self.parent.datakey.get()].get_min('trace')
-        max_A = self.parent.data[self.parent.datakey.get()].get_max('trace')
-        min_V = self.parent.data[self.parent.datakey.get()].get_min(
-                                                            'commandVoltage')
-        max_V = self.parent.data[self.parent.datakey.get()].get_max(
-                                                            'commandVoltage')
-
-        self.subplots = []
-        for i, (y, ylabel) in enumerate(zip(ys, ylabels)):
-            if VERBOSE: 
-                print("calling matplotlib")
-                print('plotting '+ylabel)
-            self.subplots.append(self.fig.add_subplot(len(ys),1,i+1))
-            plt.plot(x,y)
-            plt.ylabel(ylabel)
-            if "Current" in ylabel:
-                plt.ylim([min_A,max_A])
-                plt.margins(y=1)
-            elif "Command" in ylabel:
-                plt.ylim([min_V,max_V])
-                plt.margins(y=1)
-        plt.xlabel("Time ["+self.parent.data.timeUnit+"]")
-        self.canvas.draw()
-        for subplot in self.subplots:
-            subplot.clear()
+        try:
+            min_A = self.parent.data[self.parent.datakey.get()].get_min('trace')
+            max_A = self.parent.data[self.parent.datakey.get()].get_max('trace')
+            min_V = self.parent.data[self.parent.datakey.get()].get_min(
+                                                                'commandVoltage')
+            max_V = self.parent.data[self.parent.datakey.get()].get_max(
+                                                                'commandVoltage')
+        except: pass
+        finally:
+            self.subplots = []
+            for i, (y, ylabel) in enumerate(zip(ys, ylabels)):
+                if VERBOSE:
+                    print("calling matplotlib")
+                    print('plotting '+ylabel)
+                self.subplots.append(self.fig.add_subplot(len(ys),1,i+1))
+                plt.plot(x,y)
+                plt.ylabel(ylabel)
+                if "Current" in ylabel:
+                    plt.ylim([min_A,max_A])
+                    plt.margins(y=1)
+                elif "Command" in ylabel:
+                    plt.ylim([min_V,max_V])
+                    plt.margins(y=1)
+            plt.xlabel("Time ["+self.parent.data.timeUnit+"]")
+            self.canvas.draw()
+            for subplot in self.subplots:
+                subplot.clear()
 
 class Manipulations(ttk.Frame):
     """docstring for Manipulations"""

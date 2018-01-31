@@ -159,6 +159,8 @@ ISSUES:
     - plot not using correct time axis!
 
 NEXT:
+    - color episodes according to list when switching series
+    - make histogram show only currently selected list
     - finish baseline button
     - in the histogram option dialog include the choice of piezo selection vs manual interval selection
     - add an entry field where the unit of time in the data can be specified
