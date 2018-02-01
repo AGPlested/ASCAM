@@ -161,41 +161,51 @@ list colors are now kept to some degree when series are switched. however since 
 
 ------------------------------------------------------------------------------------------------
 
+baseline function now available
+
+no longer creating dummy plots if no data is loaded as this was unnecessary and might have caused issues when loading data that did not have 3 curves to plot
+
+if no lists are selected the histogram of the selected episode is still displayed
+
+-----------------------------------------------------------------------------------------------
+
 ISSUES:
     - if a key is bound to list assignment pressing that key at any time will cause assignment, e.g. even when creating a new list and typing its name
 
-single episode hist shoudl stay when no lists are selected
+Notes last meeting:
+    label histogram axes
 
-label histogram axes
+    fit histogram?
 
-fit histogram?
+    for piezo voltage simousltaneously show both inactive and active
 
-for piezo voltage simousltaneously show both inactive and active
+    add option whether or not to show single episode hist
 
-add option whether or not to show single episode hist
+    move hist options from frame to above the hist plot
 
-move hist options from frame to above the hist plot
+    remove x-axis on all but lowest plot
 
-remove x-axis on all but lowest plot
+    give more space to current plot
 
-give more space to current plot
+    give option to only display average potential
 
-give option to only display average potential
+    hotkey for zooming in y-scale of current
+    zooming general?
 
-hotkey for zooming in y-scale of current
+    save in folder with time stamp
+    log file (VERBOSE option and also a short form)
+    we want to be able to reconstruct every step
+    to save are lists as mat files
 
-save in folder with time stamp
-log file (VERBOSE option and also a short form)
-we want to be able to reconstruct every step
-
-table output in QUB??
+    table output in QUB??
 
 NEXT:
     - change episode list membership indicator from background color to something else (maybe checkmark after all or colored dots)
-    - finish baseline button
-    - add an entry field where the unit of time in the data can be specified
+    - abstract the histogram creation out of the current function to make plotting multiple histograms more concise
 
 TO DO:
+    - add an entry field where the unit of time in the data can be specified
+    - replace baselinemethod option with dropdown
     - make a class of mutually exclusive checkbox buttons
     - if filter button is pressed but data has already been filtered switch to the fitlered series
     - give the series in the dropdown menu shorter names
