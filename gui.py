@@ -84,8 +84,8 @@ class GUI(ttk.Frame):
         ### parameters for lists
         ### store the names of lists and corresponding colors and the 
         ### currently selected lists
-        self.list_names = {'all':'white'}
-        self.current_lists = ['all']
+        # self.list_names = {'all':'white'}
+        # self.data.current_lists = ['all']
 
         self.create_widgets()
         self.configure_grid()
@@ -263,8 +263,8 @@ class GUI(ttk.Frame):
         selected lists
         """
         indices = []
-        for listname in self.current_lists:
-            indices.extend(self.data.lists[listname])
+        for listname in self.data.current_lists:
+            indices.extend(self.data.lists[listname][0])
         ### remove duplicate indices
         indices = np.array(list(set(indices)))
         indices = indices.flatten()
@@ -359,7 +359,8 @@ class HistogramConfiguration(tk.Toplevel):
         redraw the histogram (with new settings) and close the dialog
         """
         try:
-            self.parent.parse_hist_interval_entry()
+            self.parent.hist_intervals=stringList_parser(
+                                        self.parent.hist_interval_entry.get())
         except: pass
         try: 
             self.parent.draw_histogram()
@@ -404,6 +405,9 @@ class HistogramFrame(ttk.Frame):
             print("active is", active)
             print("deviation="+str(deviation))
 
+        ### create the plot object so we can delete it later
+        plot = self.fig.add_subplot(111)
+
         if self.parent.data.filename:
             if VERBOSE: print("found data")
             ### get data
@@ -428,35 +432,35 @@ class HistogramFrame(ttk.Frame):
             (heights_single,bins_single, 
              center_single, width_single) = hist_single
 
-            ### get a list of all the currents and all the traces
-            all_piezos = [episode['piezo'] for episode in series ]
-            all_traces = [episode['trace'] for episode in series ]
-            
-            ### get the indices of currently selected lists
-            indices = self.parent.get_episodes_in_lists()
+            if self.parent.data.current_lists:
+                ### get a list of all the currents and all the traces
+                all_piezos = [episode['piezo'] for episode in series ]
+                all_traces = [episode['trace'] for episode in series ]
+                
+                ### get the indices of currently selected lists
+                indices = self.parent.get_episodes_in_lists()
 
-            ### get corresponding piezos and traces
-            all_piezos = [all_piezos[i] for i in indices]
-            all_traces = [all_traces[i] for i in indices]
+                ### get corresponding piezos and traces
+                all_piezos = [all_piezos[i] for i in indices]
+                all_traces = [all_traces[i] for i in indices]
 
-            ### get the bins and their values for all episodes
-            hist_all = plotting.histogram(time, all_piezos, all_traces, 
-                                          active = active,
-                                          piezoSelection = piezoSelection, 
-                                          deviation=deviation, 
-                                          n_bins = n_bins,
-                                          density = density, 
-                                          intervals = intervals,
-                                          samplingRate = fs,
-                                          **kwargs)
-            heights_all, bins_all, center_all, width_all = hist_all
+                ### get the bins and their values for all episodes
+                hist_all = plotting.histogram(time, all_piezos, all_traces, 
+                                              active = active,
+                                              piezoSelection = piezoSelection, 
+                                              deviation=deviation, 
+                                              n_bins = n_bins,
+                                              density = density, 
+                                              intervals = intervals,
+                                              samplingRate = fs,
+                                              **kwargs)
+                heights_all, bins_all, center_all, width_all = hist_all
 
 
-            ### create the plot object so we can delete it later
-            plot = self.fig.add_subplot(111)
-            ### draw bar graphs of the histogram values
-            plot.bar(center_all, heights_all, width = width_all, alpha=.2, 
-                     color='b')
+                ### draw bar graphs of the histogram values over all episodes
+                plot.bar(center_all, heights_all, width = width_all, alpha=.2, 
+                         color='b')
+            ### histogram of single episode
             plot.bar(center_single, heights_single, width = width_single, 
                      alpha=1)
 
@@ -497,41 +501,38 @@ class Plotframe(ttk.Frame):
                 if VERBOSE: print('`commandVoltage` found')
                 ys.append(episode['commandVoltage'])
                 ylabels.append("Command ["+self.parent.data.commandUnit+']')
-        else:
-            if VERBOSE: print("no data found, plotting dummy")
-            x = [0,1]
-            ys = [[0,0],[0,0],[0,0]]
-            ylabels = ['','','']
 
-        ### get max and min values of trace and command voltage of current
-        ### series to set axis
-        try:
-            min_A = self.parent.data[self.parent.datakey.get()].get_min('trace')
-            max_A = self.parent.data[self.parent.datakey.get()].get_max('trace')
-            min_V = self.parent.data[self.parent.datakey.get()].get_min(
-                                                                'commandVoltage')
-            max_V = self.parent.data[self.parent.datakey.get()].get_max(
-                                                                'commandVoltage')
-        except: pass
-        finally:
-            self.subplots = []
-            for i, (y, ylabel) in enumerate(zip(ys, ylabels)):
-                if VERBOSE:
-                    print("calling matplotlib")
-                    print('plotting '+ylabel)
-                self.subplots.append(self.fig.add_subplot(len(ys),1,i+1))
-                plt.plot(x,y)
-                plt.ylabel(ylabel)
-                if "Current" in ylabel:
-                    plt.ylim([min_A,max_A])
-                    plt.margins(y=1)
-                elif "Command" in ylabel:
-                    plt.ylim([min_V,max_V])
-                    plt.margins(y=1)
-            plt.xlabel("Time ["+self.parent.data.timeUnit+"]")
-            self.canvas.draw()
-            for subplot in self.subplots:
-                subplot.clear()
+            ### get max and min values of trace and command voltage of current
+            ### series to set axis
+            try:
+                min_A = self.parent.data[self.parent.datakey.get()].get_min(
+                                                                      'trace')
+                max_A = self.parent.data[self.parent.datakey.get()].get_max(
+                                                                      'trace')
+                min_V = self.parent.data[self.parent.datakey.get()].get_min(
+                                                             'commandVoltage')
+                max_V = self.parent.data[self.parent.datakey.get()].get_max(
+                                                             'commandVoltage')
+            except: pass
+            finally:
+                self.subplots = []
+                for i, (y, ylabel) in enumerate(zip(ys, ylabels)):
+                    if VERBOSE:
+                        print("calling matplotlib")
+                        print('plotting '+ylabel)
+                    self.subplots.append(self.fig.add_subplot(len(ys),1,i+1))
+                    plt.plot(x,y)
+                    plt.ylabel(ylabel)
+                    if "Current" in ylabel:
+                        plt.ylim([min_A,max_A])
+                        plt.margins(y=1)
+                    elif "Command" in ylabel:
+                        plt.ylim([min_V,max_V])
+                        plt.margins(y=1)
+                plt.xlabel("Time ["+self.parent.data.timeUnit+"]")
+                self.canvas.draw()
+                for subplot in self.subplots:
+                    subplot.clear()
 
 class Manipulations(ttk.Frame):
     """docstring for Manipulations"""
@@ -540,10 +541,6 @@ class Manipulations(ttk.Frame):
         self.parent = parent
         self.cutoffFrequency = tk.StringVar()
         self.cutoffFrequency.set(1000)
-        self.piezoSelection = tk.IntVar()
-        self.piezoSelection.set(1)
-        self.intervalSelection = tk.IntVar()
-        self.intervalSelection.set(0)
         self.create_widgets()
 
     def create_widgets(self):
@@ -561,14 +558,6 @@ class Manipulations(ttk.Frame):
                                         command=self.baseline_correct_frame)
         self.baselineButton.grid(row = 0, column=2,columnspan=2)
 
-        self.piezoCheckbutton = ttk.Checkbutton(self, text='Use Piezo', 
-                                               variable = self.piezoSelection)
-        self.piezoCheckbutton.grid(row=1, column=2, sticky=tk.W+tk.N)
-
-        self.intervalCheckbutton = ttk.Checkbutton(self, text='Use Intervals', 
-                                    variable = self.intervalSelection)
-        self.intervalCheckbutton.grid(row=1, column=3, sticky=tk.E+tk.N)
-
     def filter_series(self):
         if VERBOSE: print('going to filter all episodes')
         #convert textvar to float
@@ -585,7 +574,6 @@ class Manipulations(ttk.Frame):
     def baseline_correct_frame(self):
         if VERBOSE: 
             print('Opening the baseline corrention frame.')
-            print('piezoSelection is ',self.piezoSelection)
         BaselineFrame(self)
 
 class BaselineFrame(tk.Toplevel):
@@ -598,74 +586,129 @@ class BaselineFrame(tk.Toplevel):
         self.parent = parent
         self.title("Baseline correction.")
 
-        self.baselineMethod = tk.StringVar()
-        self.baselineMethod.set('poly')
-        self.baselineDegree = tk.StringVar()
-        self.baselineDegree.set(1)
+        ### variables to choose the method
+        self.piezoSelection = tk.IntVar()
+        self.piezoSelection.set(1)
+        self.intervalSelection = tk.IntVar()
+        self.intervalSelection.set(0)
 
-        if self.parent.piezoSelection:
-            self.percentDeviation = tk.StringVar()
-            self.percentDeviation.set(.05)
-            self.create_piezo_widgets()
-        else:
-            self.create_interval_widgets()
+        ### piezo and interval selection should be mutually exclusive
+        self.piezoSelection.trace("w",self.piezo_NotInterval)
+        self.intervalSelection.trace("w",self.interval_NotPiezo)
+
+        ### parameters of the baseline procedure
+        self.method = tk.StringVar()
+        self.method.set('poly')
+        self.degree = tk.StringVar()
+        self.degree.set(1)
+
+        ### parameters for piezo selection
+        self.deviation = tk.StringVar()
+        self.deviation.set(.05)
+        self.piezo_active = tk.IntVar()
+        self.piezo_active.set(0)
+
+        ### parameters for interval selection
+        self.interval_entry = tk.StringVar()
+        self.interval_entry.set('')
+        self.intervals = []
+        self.time_unit = tk.StringVar()
+        self.time_unit.set('ms')
+
         self.create_widgets()
-
 
     def create_widgets(self):
         """
         Creates all widgets that apply to both modes.
         """
-        ttk.Label(self,text='method').grid(column=0,row=1)
-        ttk.Entry(self,width=7,textvariable=self.baselineMethod).grid(
-                                                            column=2,row = 1)
 
-        ttk.Label(self,text='degree').grid(column=0,row=1)
-        ttk.Entry(self,width=8,textvariable=self.baselineDegree)
-        pass
+        ### general options
 
-    def create_piezo_widgets(self):
+        ttk.Label(self,text='method').grid(column=1,row=0)
+        ############## create dropdown menu
+        ttk.Entry(self,width=7,textvariable=self.method).grid(
+                                                            column=2,row = 0)
+
+        ttk.Label(self,text='degree').grid(column=1,row=1)
+        ttk.Entry(self,width=8,textvariable=self.degree).grid(row = 1,
+                                                                column = 2)
+
+
+
+        ### piezo selection options
+        ttk.Label(self, text="Select using piezo voltage").grid(row=2, 
+                                                                column=0)
+        ttk.Checkbutton(self, variable=self.piezoSelection). grid(row=2,
+                                                                  column=1)
+
+        ttk.Label(self, text="Active/Inactive").grid(row=3, column=0)
+        ttk.Checkbutton(self, variable=self.piezo_active).grid(row=3,column=1)
+ 
+        ttk.Label(self, text="deviation from max/min").grid(row=4, column=0)
+        ttk.Entry(self,textvariable=self.deviation, 
+                  width=7).grid(row = 4, column=1)    
+
+        ### interval selection options
+        ttk.Label(self, text="Use intervals").grid(row=2, column=3)
+        ttk.Checkbutton(self, variable=self.intervalSelection).grid(row=2,
+                                                                    column=4)
+        ttk.Label(self, text="Intervals").grid(row=3, column=3)
+        ttk.Entry(self,textvariable=self.interval_entry,width=7).grid(row = 3, 
+                                                                     column=4) 
+        
+
+        ### ok and close
+        ttk.Button(self, text="OK", command=self.ok_button).grid(row=5,
+                                                                 columnspan=2)
+        ttk.Button(self, text="Cancel", command=self.destroy).grid(row=5,
+                                                                  column=3,
+                                                                 columnspan=2)
+
+    def ok_button(self):
         """
-        Create widgets for the piezo selection of time points.
+        redraw the histogram (with new settings) and close the dialog
         """
-        ttk.Label(self, text='% deviation:').grid(column=0, row=0,
-                                           sticky = (tk.N, tk.W))
-        ttk.Entry(self,width=7,textvariable=self.percentDeviation)
-        pass
+        if VERBOSE: print('going to baseline all episodes')
+        try:
+            self.intervals=stringList_parser(self.interval_entry.get())
+        except: pass
 
-    def create_interval_widgets(self):
+        deviation = float(self.deviation.get())
+
+        if self.parent.parent.data.call_operation('BC', method = self.method.get(), 
+                                           degree = int(self.degree.get()),
+                                           intervals = self.intervals,
+                                           timeUnit = self.time_unit,
+                                           intervalSelection = (
+                                                self.intervalSelection.get()),
+                                           piezoSelection = (
+                                                self.piezoSelection.get()),
+                                           active = self.piezo_active.get(),
+                                           deviation = deviation
+                                           ):
+            if VERBOSE: print('called operation succesfully')
+            self.parent.parent.datakey.set(
+                                       self.parent.parent.data.currentDatakey)
+            if VERBOSE: print('updating list and plots')
+            self.parent.parent.uptdate_list()
+            self.parent.parent.update_plots()
+        ## here we should also have that if the operation has been performed
+        ## the selection switches to that operation
+        self.destroy()
+
+    def interval_NotPiezo(self,*args):
         """
-        Create widgets for specifying intervals to the select the time points.
+        If interval selection is turned on turn off the piezo selection
         """
-        pass
+        if self.intervalSelection.get() == 1:
+            self.piezoSelection.set(0)
 
-        # # first row - filename and button for choosing file
-        # ttk.Label(self, text='File:').grid(column=1, row=1,
-        #                                    sticky = (tk.N, tk.W))
-
-        # filenamelabel = ttk.Label(self,
-        #                           textvariable=self.parent.filename)
-        # filenamelabel.grid(column=2, row=1, sticky=tk.N)
-
-        # self.loadbutton = ttk.Button(self, text='Select file',
-        #                              command=self.get_file)
-        # self.loadbutton.grid(column = 3, row = 1, sticky=(tk.N, tk.E))
-
-        # #second row - show filepath
-        # ttk.Label(self, text='Path:').grid(column=1, row=2,
-        #                                    sticky = tk.W)
-        # ttk.Label(self, textvariable=self.parent.path).grid(column=2,
-        #           row=2)
-
-        # #third row - show filetype
-        # ttk.Label(self, text='Filetype:').grid(column=1, row=3,
-        #                                        sticky = tk.W)
-        # ttk.Label(self, textvariable=self.parent.filetypefull).grid(
-        #                         column=2, row=3, sticky=(tk.W, tk.E))
-    # def apply_correction(self):
-    #     if VERBOSE: print('applying baseline correction')
-    #     baselineDegree = int(self.baselineDegree.get())
-    #     self.parent.data.call_operation('BC_',)
+    def piezo_NotInterval(self,*args):
+        """
+        If piezo selection is turned on turn off interval 
+        """
+        if self.piezoSelection.get() == 1:
+            self.intervalSelection.set(0)
 
 class ListSelection(ttk.Frame):
     def __init__(self, parent):
@@ -679,12 +722,12 @@ class ListSelection(ttk.Frame):
         self.create_checkbox('all')
 
         ## for some reason the first element is skipped 
-        self.colors = ['red', 'green', 'yellow']
+        self.colors = ['red', 'green', 'yellow', 'purple', 'orange']
         self.colorind = 0
         ## until color selection is added we use these three colors to color
         ## the episodes
 
-    def create_checkbox(self, name, key=''): 
+    def create_checkbox(self, name, key=''):
         """
         Create another checkbutton for a new selection of episodes and add 
         them to the buttons dict.
@@ -716,7 +759,7 @@ class ListSelection(ttk.Frame):
 
         ### create a new list of indices if the list is new
         if not name in self.parent.data.lists.keys():
-            self.parent.data.lists[name] = []
+            self.parent.data.lists[name] = [[],'']
 
         ### create function to color episode on keypress and add to list
         if key:
@@ -737,17 +780,17 @@ class ListSelection(ttk.Frame):
                                                         bg='white')
                     self.parent.data.lists[name].remove(self.parent.Nepisode)
             self.parent.bind_all(key,color_episode)
-            self.parent.list_names[name] = color
+            self.parent.data.lists[name][1] = color
             self.colorind+=1
 
         ### trace the variable to add/removoe the corresponding list to/from  
         ### the list of current lists, also update the histogram to immediatly
         ### show the change
         def trace_variable(*args):
-            if name in self.parent.current_lists:
-                self.parent.current_lists.remove(name)
+            if name in self.parent.data.current_lists:
+                self.parent.data.current_lists.remove(name)
             else: 
-                self.parent.current_lists.append(name)
+                self.parent.data.current_lists.append(name)
             self.parent.draw_histogram()
         variable.trace("w",trace_variable)
 
@@ -848,10 +891,10 @@ class EpisodeList(ttk.Frame):
                                                 +str(episode.nthEpisode))
         ### color all episodes according to their list membership
             ### start from second element because white is default bg color
-            for name in list(self.parent.list_names.keys())[1:]:
-                for index in self.parent.data.lists[name]:
+            for name in list(self.parent.data.lists.keys())[1:]:
+                for index in self.parent.data.lists[name][0]:
                     self.episodelist.itemconfig(index,
-                                          {'bg':self.parent.list_names[name]})
+                                    {'bg':self.parent.data.lists[name][1]})
 
 
         ### assign the scrollbar its function

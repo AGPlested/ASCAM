@@ -58,11 +58,24 @@ class Episode(dict):
                                                   method)[filterLag:]
         self.filterFrequency = filterFrequency
 
-    def baseline_correct_episode(self, intervals, method='poly', degree=1):
-        self['trace'] = analysis.baseline_correction(self['time'],
-                                            self['trace'], self.samplingRate,
-                                            intervals, degree = degree,
-                                            method = method)
+    def baseline_correct_episode(self, intervals, method = 'poly', degree = 1,
+                                 timeUnit = 'ms', intervalSelection = False,
+                                 piezoSelection = False, active = False,
+                                 deviation = 0.05):
+        self['trace'] = analysis.baseline_correction(time = self['time'],
+                                                     signal = self['trace'], 
+                                                     fs = self.samplingRate,
+                                                     intervals = intervals, 
+                                                     degree = degree,
+                                                     method = method,
+                                                     timeUnit = timeUnit,
+                                                     intervalSelection = (
+                                                           intervalSelection),
+                                                     piezo = self['piezo'],
+                                                     piezoSelection = (
+                                                              piezoSelection),
+                                                     active = active,
+                                                     deviation = deviation)
         self.baselineCorrected = True
 
     def idealize(self, thresholds):
@@ -89,7 +102,6 @@ class Series(list):
 
         The `reconstruct` input is a placeholder
         """
-
         list.__init__(self,data)
         self.samplingRate = samplingRate
         self.filterFrequency = filterFrequency
@@ -115,15 +127,26 @@ class Series(list):
             episode.filter_episode(filterFrequency, self.samplingRate)
         return output
 
-    def baseline_correct_all(self, intervals, method='poly', degree=1):
+    def baseline_correct_all(self, intervals, method = 'poly', degree = 1,
+                                 timeUnit = 'ms', intervalSelection = False,
+                                 piezoSelection = False, active = False,
+                                 deviation = 0.05):
         """
         Return a `Series` object in which the episodes stored in `self` are
         baseline corrected with the given parameters
         """
         output = copy.deepcopy(self)
         for episode in output:
-            output.append(episode.baseline_correct_episode(intervals, method, 
-                                                           degree))
+            episode.baseline_correct_episode(degree = degree,
+                                             intervals = intervals, 
+                                             method = method,
+                                             timeUnit = timeUnit,
+                                             intervalSelection = (
+                                                   intervalSelection),
+                                             piezoSelection = (
+                                                      piezoSelection),
+                                             active = active,
+                                             deviation = deviation)
         return output
 
     def idealize_all(self, thresholds):
@@ -167,13 +190,14 @@ class Recording(dict):
         self.currentDatakey = 'raw_'
         self.currentEpisode = 0
 
+        ### if a file is specified load it
         if filename: self.load_data()
 
-        
-        self.lists = {'all': range(len(self['raw_']))}
-        ## `lists` is a dictionary storing the names of lists created by the
-        ## user and the corresponding indices
-        self.currentList = 'all'
+        ### variables for user created lists of episodes
+        ### `lists` stores the indices of the episodes in the list and their 
+        ### color under their name
+        self.lists = {'all': [range(len(self['raw_'])), 'white']}
+        self.current_lists = ['all']
 
     def load_data(self):
         """
@@ -216,7 +240,7 @@ class Recording(dict):
                                             samplingRate = self.samplingRate)
                                     for i in range(len(current))])
 
-    def call_operation(self, operation, *args):
+    def call_operation(self, operation, *args, **kwargs):
         """
         Calls an operation to be performed on the data.
         Valid operations:

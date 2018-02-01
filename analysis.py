@@ -1,5 +1,5 @@
 import numpy as np
-from tools import interval_selection
+from tools import interval_selection, piezo_selection
 
 def threshold_crossing(signal,amplitudes):
     """
@@ -73,8 +73,10 @@ def multilevel_threshold(signal,thresholds, maxAmplitude = False,
     return idealization
 
 
-def baseline_correction(time,signal,fs,intervals, timeUnit='ms', 
-             degree = 1, method = 'poly'):
+def baseline_correction(time, signal, fs, intervals = None, timeUnit = 'ms', 
+                        degree = 1, method = 'poly',intervalSelection = False,
+                        piezo = None, piezoSelection = False, active = False,
+                        deviation = 0.05):
     """
     Perform baseline correction by offsetting the signal with its mean
     in the selected intervals
@@ -92,7 +94,10 @@ def baseline_correction(time,signal,fs,intervals, timeUnit='ms',
     Returns:
         original signal less the fitted baseline     
     """
-    _, signal = interval_selection(time, signal, intervals, fs, timeUnit)
+    if intervalSelection:
+        t, s = interval_selection(time, signal, intervals, fs, timeUnit)
+    elif piezoSelection:
+        t, _, s = piezo_selection(time, piezo, signal, active, deviation)
 
     if method == 'offset':
         offset = np.mean(s)
@@ -103,4 +108,7 @@ def baseline_correction(time,signal,fs,intervals, timeUnit='ms',
         for i in range(degree+1):
             baseline+=coeffs[i]*(time**(degree-i))
         output = signal - baseline
+    print("baseline_correction output:")
+    print("shape :", output.shape)
+    print('\t', output)
     return output

@@ -159,8 +159,36 @@ histogram will now only show episodes of currently selected lists
 
 list colors are now kept to some degree when series are switched. however since each episode can have only one color the color of the most recently created series is used
 
+------------------------------------------------------------------------------------------------
 
 ISSUES:
+    - if a key is bound to list assignment pressing that key at any time will cause assignment, e.g. even when creating a new list and typing its name
+
+single episode hist shoudl stay when no lists are selected
+
+label histogram axes
+
+fit histogram?
+
+for piezo voltage simousltaneously show both inactive and active
+
+add option whether or not to show single episode hist
+
+move hist options from frame to above the hist plot
+
+remove x-axis on all but lowest plot
+
+give more space to current plot
+
+give option to only display average potential
+
+hotkey for zooming in y-scale of current
+
+save in folder with time stamp
+log file (VERBOSE option and also a short form)
+we want to be able to reconstruct every step
+
+table output in QUB??
 
 NEXT:
     - change episode list membership indicator from background color to something else (maybe checkmark after all or colored dots)
@@ -168,6 +196,7 @@ NEXT:
     - add an entry field where the unit of time in the data can be specified
 
 TO DO:
+    - make a class of mutually exclusive checkbox buttons
     - if filter button is pressed but data has already been filtered switch to the fitlered series
     - give the series in the dropdown menu shorter names
     - add `reconstruct` method to `series` that takes the input values of attributes and performs the corresponding operations 
