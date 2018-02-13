@@ -70,6 +70,12 @@ class GUI(ttk.Frame):
         self.hist_piezoSelection.trace("w",self.hist_piezo_NotInterval)
         self.hist_intervalSelection.trace("w",self.hist_interval_NotPiezo)
 
+        ### parameters for the plots
+        self.plot_show_piezo = tk.IntVar()
+        self.plot_show_piezo.set(1)
+        self.plot_show_command = tk.IntVar()
+        self.plot_show_command.set(1)
+
         ### parameters of the data
         self.samplingrate = tk.StringVar()
 
@@ -80,12 +86,6 @@ class GUI(ttk.Frame):
         self.datakey.set('raw_')
         # episode number of the currently displayed episode
         self.Nepisode = 0
-
-        ### parameters for lists
-        ### store the names of lists and corresponding colors and the 
-        ### currently selected lists
-        # self.list_names = {'all':'white'}
-        # self.data.current_lists = ['all']
 
         self.create_widgets()
         self.configure_grid()
@@ -146,6 +146,8 @@ class GUI(ttk.Frame):
         self.manipulations = Manipulations(self)
         self.episodeList = EpisodeList(self)
         self.listSelection = ListSelection(self)
+        self.histogramOptions = HistogramConfiguration(self)
+        # self.plotOptions = PlotOptions(self)
 
     def configure_grid(self):
         """
@@ -161,11 +163,16 @@ class GUI(ttk.Frame):
         self.grid_columnconfigure(0, weight=1)
 
         ##### First row 
-        self.commandbar.grid(row=0, column=0, columnspan=3, padx=5, pady=5,
+        self.commandbar.grid(row=0, column=0, padx=5, pady=5,
                              sticky=tk.N+tk.W)
+
+        # self.plotOptions.grid(row=0, column=1, padx=(0,800), pady=5)
 
         self.listSelection.grid(row=0, column=3, rowspan=2, padx=5, pady=5,
                                 sticky=tk.N)
+
+        self.histogramOptions.grid(row=0, column=4, columnspan=3)
+
 
         ##### Second row
         self.plots.grid(row=1, column=0, rowspan=3, columnspan=3, padx=5,
@@ -291,72 +298,60 @@ class Commandframe(ttk.Frame):
                                      command=self.load_dialog)
         self.loadbutton.grid(column=0,row=0,sticky=tk.N+tk.E)
 
-        self.histbutton = ttk.Button(self, text="Histogram",
-                                     command=self.histogram_config)
-        self.histbutton.grid(column=1,row=0,sticky=tk.N)
-
     def load_dialog(self):
         Loadframe(self.parent)
 
-    def histogram_config(self):
-        HistogramConfiguration(self.parent)
-
-class HistogramConfiguration(tk.Toplevel):
+class HistogramConfiguration(ttk.Frame):
     """
-    A pop up dialog in which the setting of the histogram can be configured
+    A frame in which the setting of the histogram can be configured
     """
     def __init__(self, parent):
-        tk.Toplevel.__init__(self, parent)
+        ttk.Frame.__init__(self, parent)
         self.parent = parent
-        self.title("Histogram Options")
         self.create_widgets()
 
     def create_widgets(self):
         ### general options
-        ttk.Label(self, text="Number of bins").grid(row=0, column=2)
+        ttk.Label(self, text="Number of bins").grid(row=0, column=0)
         ttk.Entry(self,textvariable=self.parent.hist_number_bins, width=7).\
-                                                       grid(row = 0, column=3)
+                                                       grid(row = 0, column=1)
 
-        ttk.Label(self, text="Plot as density").grid(row=1, column=1)
-        ttk.Checkbutton(self, variable=self.parent.hist_density).grid(row=1,
-                                                                     column=3)
+        ttk.Label(self, text="Plot as density").grid(row=0, column=3)
+        ttk.Checkbutton(self, variable=self.parent.hist_density).grid(row=0,
+                                                                     column=4)
 
         ### piezo selection options
-        ttk.Label(self, text="Select using piezo voltage").grid(row=2, 
+        ttk.Label(self, text="Select using piezo voltage").grid(row=1, 
                                                                 column=0)
         ttk.Checkbutton(self, variable=self.parent.hist_piezoSelection).\
-                                                                grid(row=2,
+                                                                grid(row=1,
                                                                      column=1)
 
-        ttk.Label(self, text="Active/Inactive").grid(row=3, column=0)
+        ttk.Label(self, text="Active/Inactive").grid(row=2, column=0)
         ttk.Checkbutton(self, variable=self.parent.hist_piezo_active).\
-                                                                grid(row=3,
+                                                                grid(row=2,
                                                                      column=1)
  
-        ttk.Label(self, text="deviation from max/min").grid(row=4, column=0)
+        ttk.Label(self, text="deviation from max/min").grid(row=3, column=0)
         ttk.Entry(self,textvariable=self.parent.hist_piezo_deviation, 
-                  width=7).grid(row = 4, column=1)    
+                  width=7).grid(row = 3, column=1)    
 
         ### interval selection options
-        ttk.Label(self, text="Use intervals").grid(row=2, column=3)
+        ttk.Label(self, text="Use intervals").grid(row=1, column=3)
         ttk.Checkbutton(self, variable=self.parent.hist_intervalSelection).\
-                                                                grid(row=2,
+                                                                grid(row=1,
                                                                      column=4)
-        ttk.Label(self, text="Intervals").grid(row=3, column=3)
+        ttk.Label(self, text="Intervals").grid(row=2, column=3)
         ttk.Entry(self,textvariable=self.parent.hist_interval_entry, 
-                  width=7).grid(row = 3, column=4) 
-        
+                  width=7).grid(row = 2, column=4) 
 
-        ### ok and close
-        ttk.Button(self, text="OK", command=self.ok_button).grid(row=5,
-                                                                 columnspan=2)
-        ttk.Button(self, text="Cancel", command=self.destroy).grid(row=5,
-                                                                  column=3,
+        ### draw button
+        ttk.Button(self, text="Draw", command=self.draw_histogram).grid(row=5,
                                                                  columnspan=2)
 
-    def ok_button(self):
+    def draw_histogram(self):
         """
-        redraw the histogram (with new settings) and close the dialog
+        redraw the histogram (with new settings)
         """
         try:
             self.parent.hist_intervals=stringList_parser(
@@ -365,8 +360,6 @@ class HistogramConfiguration(tk.Toplevel):
         try: 
             self.parent.draw_histogram()
         except: pass
-
-        self.destroy()
 
 class HistogramFrame(ttk.Frame):
     """
@@ -468,6 +461,25 @@ class HistogramFrame(ttk.Frame):
             ### cluttering memory
             self.canvas.draw()
             plot.clear()
+
+class PlotOptions(ttk.Frame):
+    """
+    A frame in which the setting of the histogram can be configured
+    """
+    def __init__(self, parent):
+        ttk.Frame.__init__(self, parent)
+        self.parent = parent
+        self.create_widgets()
+
+    def create_widgets(self):
+        ttk.Label(self, text="Piezo voltage").grid(row=0, column=0)
+        ttk.Checkbutton(self, variable=self.parent.plot_show_piezo).grid(
+                                                                        row=0,
+                                                                     column=1)
+        ttk.Label(self, text="Command voltage").grid(row=1, column=0)
+        ttk.Checkbutton(self, variable=self.parent.plot_show_command).grid(
+                                                                        row=1,
+                                                                     column=1)        
 
 class Plotframe(ttk.Frame):
     def __init__(self, parent):
@@ -573,7 +585,7 @@ class Manipulations(ttk.Frame):
 
     def baseline_correct_frame(self):
         if VERBOSE: 
-            print('Opening the baseline corrention frame.')
+            print('Opening the baseline correction frame.')
         BaselineFrame(self)
 
 class BaselineFrame(tk.Toplevel):
@@ -675,7 +687,7 @@ class BaselineFrame(tk.Toplevel):
 
         deviation = float(self.deviation.get())
 
-        if self.parent.parent.data.call_operation('BC', method = self.method.get(), 
+        if self.parent.parent.data.call_operation('BC_', method = self.method.get(), 
                                            degree = int(self.degree.get()),
                                            intervals = self.intervals,
                                            timeUnit = self.time_unit,

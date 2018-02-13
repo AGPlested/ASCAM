@@ -169,6 +169,9 @@ if no lists are selected the histogram of the selected episode is still displaye
 
 -----------------------------------------------------------------------------------------------
 
+
+
+
 ISSUES:
     - if a key is bound to list assignment pressing that key at any time will cause assignment, e.g. even when creating a new list and typing its name
 

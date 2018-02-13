@@ -5,14 +5,13 @@ import analysis
 import matplotlib.pyplot as plt
 import copy
 import os
+from tools import piezo_selection
 cwd = os.getcwd()
 
 class Episode(dict):
-    def __init__(self, time, trace, nthEpisode = 0,
-                 piezo = None, commandVoltage = None,
-                 filterType = None, fc = None,
-                 samplingRate = 4e4,
-                 timeInputUnit = 'ms'):
+    def __init__(self, time, trace, nthEpisode = 0, piezo = None, 
+                 commandVoltage = None, filterType = None, fc = None,
+                 samplingRate = 4e4, timeInputUnit = 'ms'):
         """
         Episode objects hold all the information about an epoch and
         should be used to store raw and manipulated data
@@ -46,13 +45,12 @@ class Episode(dict):
         self.samplingRate = samplingRate
         self.suspiciousSTD = False
 
-    def filter_episode(self, filterFrequency = 1e3,
-                       samplingRate = None,
+    def filter_episode(self, filterFrequency = 1e3, samplingRate = None,
                        method = 'convolution'):
         if samplingRate is None:
             samplingRate = self.samplingRate
         filterLag = 0 #int(1/(2*frequencyOnSamples))
-        self['trace'] = filtering.gaussian_filter(self['trace'],
+        self['trace'] = filtering.gaussian_filter(self['trace'], 
                                                   filterFrequency,
                                                   samplingRate,
                                                   method)[filterLag:]
@@ -84,11 +82,26 @@ class Episode(dict):
         self.idealized = True
 
     def check_standarddeviation_all(self, stdthreshold = 5e-13):
-        piezomax = np.max(np.abs(self['piezo']))
-        times = self['piezo']<piezomax/100
-        tracestd = np.std(self['trace'][times])
+        """
+        check the standard deviation of the episode against a reference value
+        """
+        _, _, trace = piezo_selection(self['time'], self['piezo'], 
+                                      self['trace'], active = False,
+                                      deviation = 0.01)
+        tracestd = np.std(trace)
         if tracestd>stdthreshold:
             self.suspiciousSTD = True
+
+    def get_piezo_stats(self):
+        """
+        Get the mean and standard deviation of the piezo voltage of the 
+        episode
+        """
+        try:
+            mean = np.mean(self['piezo'])
+            std = np.std(self['piezo'])
+        except: pass
+        return mean, std
 
 class Series(list):
     def __init__(self, data = [], samplingRate = 4e4, filterFrequency = False,         
@@ -146,7 +159,7 @@ class Series(list):
                                              piezoSelection = (
                                                       piezoSelection),
                                              active = active,
-                                             deviation = deviation)
+                                             deviation = deviation) 
         return output
 
     def idealize_all(self, thresholds):
