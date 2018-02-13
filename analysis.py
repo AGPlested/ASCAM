@@ -108,7 +108,7 @@ def baseline_correction(time, signal, fs, intervals = None, timeUnit = 'ms',
         for i in range(degree+1):
             baseline+=coeffs[i]*(time**(degree-i))
         output = signal - baseline
-    print("baseline_correction output:")
-    print("shape :", output.shape)
-    print('\t', output)
+    # print("baseline_correction output:")
+    # print("shape :", output.shape)
+    # print('\t', output)
     return output

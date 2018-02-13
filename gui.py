@@ -947,25 +947,31 @@ class Loadframe(tk.Toplevel):
         tk.Toplevel.__init__(self,parent)
         self.parent = parent
         self.title("Select file")
-        self.reset_entryFields()
+        self.create_entryFields()
         self.create_widgets()
         self.loadbutton.focus()
 
-    def reset_entryFields(self):
+    def create_entryFields(self):
         """
-        Set all the string variables to empty string so if data is loaded two 
-        times the old values are not shown in the new window.
+        create the variables that hold all the entries of the load dialog
         """
-        self.parent.filetype.set('')
-        self.parent.filename.set('')
-        self.parent.samplingrate.set('')
-        self.parent.path.set('')
+        self.filenamefull = tk.StringVar()
+        self.filetypefull = tk.StringVar()
+        self.filetype = tk.StringVar()
+        self.filename = tk.StringVar()
+        self.samplingrate = tk.StringVar()
+        self.path = tk.StringVar()
+
+        self.filetype.set('')
+        self.filename.set('')
+        self.samplingrate.set('')
+        self.path.set('')
 
     def create_widgets(self):
         # first row - filename and button for choosing file
         ttk.Label(self, text='File:').grid(column=1,row=1,sticky=(tk.N, tk.W))
 
-        filenamelabel = ttk.Label(self, textvariable=self.parent.filename)
+        filenamelabel = ttk.Label(self, textvariable=self.filename)
         filenamelabel.grid(column=2, row=1, sticky=tk.N)
 
         self.loadbutton = ttk.Button(self, text='Select file', 
@@ -974,17 +980,17 @@ class Loadframe(tk.Toplevel):
 
         #second row - show filepath
         ttk.Label(self, text='Path:').grid(column=1, row=2, sticky = tk.W)
-        ttk.Label(self, textvariable=self.parent.path).grid(column=2, row=2)
+        ttk.Label(self, textvariable=self.path).grid(column=2, row=2)
 
         #third row - show filetype
         ttk.Label(self, text='Filetype:').grid(column=1, row=3, sticky = tk.W)
-        ttk.Label(self, textvariable=self.parent.filetypefull).grid(column=2, 
+        ttk.Label(self, textvariable=self.filetypefull).grid(column=2, 
                                                    row=3, sticky=(tk.W, tk.E))
         ###### lets see if this way of line splitting works
 
         #fourth row - enter sampling rate
         self.samplingentry = ttk.Entry(self, width=7,
-                                       textvariable=self.parent.samplingrate)
+                                       textvariable=self.samplingrate)
         self.samplingentry.grid(column=2,row=4)
         ttk.Label(self, text="Samplingrate (Hz):").grid(column=1,
                                                         row=4, sticky=(tk.W))
@@ -999,16 +1005,21 @@ class Loadframe(tk.Toplevel):
         self.closebutton.grid(column=3, row=5, sticky=(tk.S, tk.E))
 
     def load_button(self):
-        if self.parent.filetype.get() == 'bin':
+        if self.filetype.get() == 'bin':
             binframe = Binaryquery(self)
 
-        elif (self.parent.filetype.get() == 'axo'
-              or self.parent.filetype.get() == 'mat'):
+        elif (self.filetype.get() == 'axo'
+              or self.filetype.get() == 'mat'):
             try:
-                self.parent.data = backend.Recording(
-                                        self.parent.filenamefull.get(),
-                                        self.parent.samplingrate.get(),
-                                        self.parent.filetype.get())
+                ### move variables to parent if data loaded succesfully
+                self.parent.filetype.set(self.filetype.get())
+                self.parent.filename.set(self.filename.get())
+                self.parent.samplingrate.set(self.samplingrate.get())
+                self.parent.path.set(self.path.get())
+
+                self.parent.data = backend.Recording(self.filenamefull.get(),
+                                                     self.samplingrate.get(),
+                                                     self.filetype.get())
                 self.parent.datakey.set(self.parent.data.currentDatakey)
                 self.parent.uptdate_list()
                 self.parent.update_plots()
@@ -1021,7 +1032,7 @@ class Loadframe(tk.Toplevel):
         Relies on tkinter and gets name and type of the file
         """
         filename = askopenfilename()
-        self.parent.filenamefull.set(filename)
+        self.filenamefull.set(filename)
         extension = ''
 
         N = len(filename)
@@ -1034,21 +1045,24 @@ class Loadframe(tk.Toplevel):
                 slash = N-i
                 break
 
-        self.parent.filename.set(filename[slash:])
-        self.parent.path.set(filename[:slash])
+        self.filename.set(filename[slash:])
+        self.path.set(filename[:slash])
         extension=filename[period:]
 
         if extension == 'bin':
-            self.parent.filetype.set('bin')
-            self.parent.filetypefull.set('binary')
+            if VERBOSE: print("found '.bin' extension")
+            self.filetype.set('bin')
+            self.filetypefull.set('binary')
 
         elif extension == 'axgd':
-            self.parent.filetype.set('axo')
-            self.parent.filetypefull.set('axograph')
+            if VERBOSE: print("found '.axgd' extension")
+            self.filetype.set('axo')
+            self.filetypefull.set('axograph')
 
         elif extension == 'mat':
-            self.parent.filetype.set('mat')
-            self.parent.filetypefull.set('matlab')
+            if VERBOSE: print("found '.mat' extension")
+            self.filetype.set('mat')
+            self.filetypefull.set('matlab')
 
         self.samplingentry.focus()
 
