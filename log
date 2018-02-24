@@ -169,7 +169,13 @@ if no lists are selected the histogram of the selected episode is still displaye
 
 -----------------------------------------------------------------------------------------------
 
+histogram settings are now located above the histogram rather than in a seperate dialog
 
+-----------------------------------------------------------------------------------------------
+
+fixed a bug, opening the load dialog would cause filter and baseline to fail because it reset the samplingrate variable upon dialog creation
+
+---------------------------------------------------------------------------------------------- 
 
 
 ISSUES:
@@ -180,13 +186,9 @@ Notes last meeting:
 
     fit histogram?
 
-    for piezo voltage simousltaneously show both inactive and active
+    for piezo voltage simousltaneously show both inactive and active in histogram
 
     add option whether or not to show single episode hist
-
-    move hist options from frame to above the hist plot
-
-    remove x-axis on all but lowest plot
 
     give more space to current plot
 
@@ -205,8 +207,10 @@ Notes last meeting:
 NEXT:
     - change episode list membership indicator from background color to something else (maybe checkmark after all or colored dots)
     - abstract the histogram creation out of the current function to make plotting multiple histograms more concise
+    - review plot axis (improve bounds, display x axis ticks only on bottom plot)
 
 TO DO:
+    - add button to call `check_standard_deviation` and color a list of episodes accordingly, maybe dialog to ask to which list to add it if there are already lists
     - add an entry field where the unit of time in the data can be specified
     - replace baselinemethod option with dropdown
     - make a class of mutually exclusive checkbox buttons

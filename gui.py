@@ -147,7 +147,7 @@ class GUI(ttk.Frame):
         self.episodeList = EpisodeList(self)
         self.listSelection = ListSelection(self)
         self.histogramOptions = HistogramConfiguration(self)
-        # self.plotOptions = PlotOptions(self)
+        self.plotOptions = PlotOptions(self)
 
     def configure_grid(self):
         """
@@ -166,7 +166,7 @@ class GUI(ttk.Frame):
         self.commandbar.grid(row=0, column=0, padx=5, pady=5,
                              sticky=tk.N+tk.W)
 
-        # self.plotOptions.grid(row=0, column=1, padx=(0,800), pady=5)
+        self.plotOptions.grid(row=0, column=1, padx=(0,800), pady=5)
 
         self.listSelection.grid(row=0, column=3, rowspan=2, padx=5, pady=5,
                                 sticky=tk.N)
@@ -493,7 +493,6 @@ class Plotframe(ttk.Frame):
         # self.toolbar = NavigationToolbar2TkAgg(self.canvas, self)
         # self.toolbar.update()
         # self.canvas._tkcanvas.pack()
-
     def plot(self):
         if self.parent.data.filename:
             if VERBOSE:
@@ -502,7 +501,7 @@ class Plotframe(ttk.Frame):
                 print('Nepisode = '+str(self.parent.Nepisode))
             episode = self.parent.data[
                             self.parent.datakey.get()][self.parent.Nepisode]
-            x = episode['time']
+            time = episode['time']
             ys = [episode['trace']]
             ylabels = ["Current ["+self.parent.data.currentUnit+"]"]
             if episode['piezo'] is not None:
@@ -521,6 +520,8 @@ class Plotframe(ttk.Frame):
                                                                       'trace')
                 max_A = self.parent.data[self.parent.datakey.get()].get_max(
                                                                       'trace')
+            except: pass
+            try:
                 min_V = self.parent.data[self.parent.datakey.get()].get_min(
                                                              'commandVoltage')
                 max_V = self.parent.data[self.parent.datakey.get()].get_max(
@@ -532,16 +533,16 @@ class Plotframe(ttk.Frame):
                     if VERBOSE:
                         print("calling matplotlib")
                         print('plotting '+ylabel)
-                    self.subplots.append(self.fig.add_subplot(len(ys),1,i+1))
-                    plt.plot(x,y)
-                    plt.ylabel(ylabel)
                     if "Current" in ylabel:
-                        plt.ylim([min_A,max_A])
-                        plt.margins(y=1)
+                        ybounds = [min_A,max_A]
                     elif "Command" in ylabel:
-                        plt.ylim([min_V,max_V])
-                        plt.margins(y=1)
-                plt.xlabel("Time ["+self.parent.data.timeUnit+"]")
+                        ybounds = [min_V,max_V]
+                    else:
+                        ybounds = []
+                    ax = plt.subplot(len(ys),1,i+1)
+                    plotting.plotTrace(ax,time,y,ylabel,ybounds)
+                    self.subplots.append(ax)
+                ax.xlabel("Time ["+self.parent.data.timeUnit+"]")
                 self.canvas.draw()
                 for subplot in self.subplots:
                     subplot.clear()

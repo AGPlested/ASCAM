@@ -70,3 +70,15 @@ def histogram(time, piezos, traces, active = True, piezoSelection=True,
     width = (bins[1] - bins[0])
 
     return hist, bins, center, width
+
+def plotTrace(ax, time, trace, ylabel, ybounds = []):
+    """
+    ybounds [tuple or list] (y_min, y_max)
+    ax = matplotlib axes object
+    """
+
+    ax.plot(time,trace)
+    ax.set_ylabel(ylabel)
+    if ybounds:
+        ax.set_ylim(ybounds)
+    pass
