@@ -177,22 +177,31 @@ fixed a bug, opening the load dialog would cause filter and baseline to fail bec
 
 ---------------------------------------------------------------------------------------------- 
 
+will assume that piezo/command exist for any episode if they exist for every episode, as a result of this checking for their existence can be moved from the plot frame to the plot options frame. the plot frame will only check if it is supposed to plot them if they exist
+
+reworked episode plotting function to allow for plotting only one or two traces with checkbox
+
+-----------------------------------------------------------------------------------------------
+
+plot axis fixed
+
+added variable that is true if data is present
+
+added `update_all` method to gui main window
+
+episode key "commandVoltage" finally changed to "command" 
+
+more plotting stuff
+
+----------------------------------------------------------̄-------------------------------------
+
+
 
 ISSUES:
     - if a key is bound to list assignment pressing that key at any time will cause assignment, e.g. even when creating a new list and typing its name
 
 Notes last meeting:
-    label histogram axes
-
-    fit histogram?
-
     for piezo voltage simousltaneously show both inactive and active in histogram
-
-    add option whether or not to show single episode hist
-
-    give more space to current plot
-
-    give option to only display average potential
 
     hotkey for zooming in y-scale of current
     zooming general?
@@ -202,14 +211,15 @@ Notes last meeting:
     we want to be able to reconstruct every step
     to save are lists as mat files
 
-    table output in QUB??
 
 NEXT:
     - change episode list membership indicator from background color to something else (maybe checkmark after all or colored dots)
     - abstract the histogram creation out of the current function to make plotting multiple histograms more concise
-    - review plot axis (improve bounds, display x axis ticks only on bottom plot)
+    - create a gui attribute that is TRUE is data is loaded and false otherwise
+
 
 TO DO:
+    - move file type detection into `model` module
     - add button to call `check_standard_deviation` and color a list of episodes accordingly, maybe dialog to ask to which list to add it if there are already lists
     - add an entry field where the unit of time in the data can be specified
     - replace baselinemethod option with dropdown
@@ -220,14 +230,11 @@ TO DO:
     - make the unit of current, voltage etc. a parameter in episode objects with default pA and mV
     - implement gaussian mixture model for fitting the histogram
     - add a better toolbar to the plot
-    - add units/labels to plots
     - interpolation in threshold crossing
     - amplitude estimation in threshold crossing
     - different basis functions for baseline corrention (e.g. cosine)
     - move plotting to a seperate module so that gui.py only ever uses `plt.show(x)`
-    - a menu for selecting the time frame for the histgram
     - remove command voltage plot, add display avg and std of command voltage, or display warning if command voltage std is >1% of average
-    - add option to adjust histogram bin widths
     - look at resizing again
 
 weird issues:

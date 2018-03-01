@@ -10,7 +10,7 @@ cwd = os.getcwd()
 
 class Episode(dict):
     def __init__(self, time, trace, nthEpisode = 0, piezo = None, 
-                 commandVoltage = None, filterType = None, fc = None,
+                 command = None, filterType = None, fc = None,
                  samplingRate = 4e4, timeInputUnit = 'ms'):
         """
         Episode objects hold all the information about an epoch and
@@ -22,7 +22,7 @@ class Episode(dict):
                                                 trace
             piezo [1D array of floats] - the voltage applied to the
                                          Piezo device
-            commandVoltage [1D array of floats] - voltage applied to
+            command [1D array of floats] - voltage applied to
                                                   cell
             nthEp [int] - the number of measurements on this cell that
                           came before this one
@@ -40,7 +40,7 @@ class Episode(dict):
         self['time'] = time*time_unit_multiplier
         self['trace'] = trace
         self['piezo'] = piezo
-        self['commandVoltage'] = commandVoltage
+        self['command'] = command
         self.nthEpisode = int(nthEpisode)
         self.samplingRate = samplingRate
         self.suspiciousSTD = False
@@ -92,14 +92,14 @@ class Episode(dict):
         if tracestd>stdthreshold:
             self.suspiciousSTD = True
 
-    def get_piezo_stats(self):
+    def get_command_stats(self):
         """
-        Get the mean and standard deviation of the piezo voltage of the 
+        Get the mean and standard deviation of the command voltage of the 
         episode
         """
         try:
-            mean = np.mean(self['piezo'])
-            std = np.std(self['piezo'])
+            mean = np.mean(self['command'])
+            std = np.std(self['command'])
         except: pass
         return mean, std
 
@@ -228,7 +228,7 @@ class Recording(dict):
             time = loaded_data[0]
             self['raw_'] = Series([Episode(time, trace, nthEpisode=i, 
                                             piezo=pTrace, 
-                                            commandVoltage=cVtrace, 
+                                            command=cVtrace, 
                                             samplingRate = self.samplingRate)
                                     for i, (trace, pTrace, cVtrace) 
                                     in enumerate(zip(*loaded_data[1:]))])
@@ -241,9 +241,9 @@ class Recording(dict):
                                     for i in range(len(current))])
 
         elif 'Command Voltage [V]' in names:
-            time, current, _, commandVoltage = loaded_data
+            time, current, _, command = loaded_data
             self['raw_'] = Series([Episode(time, current[i], nthEpisode=i, 
-                                            commandVoltage=commandVoltage[i], 
+                                            command=command[i], 
                                             samplingRate = self.samplingRate)
                                     for i in range(len(current))])
 
@@ -272,6 +272,8 @@ class Recording(dict):
                 self[newDatakey] = (
                         self[self.currentDatakey].baseline_correct_all(*args,
                                                                     **kwargs))
+            elif operation == 'TC_':
+                self[newDatakey]=self[self.currentDatakey].idealize_all(*args)
             else:
                 print("Uknown operation!")
             self.currentDatakey = newDatakey

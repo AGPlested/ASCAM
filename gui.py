@@ -8,6 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg,
                                             NavigationToolbar2TkAgg)
+from matplotlib import gridspec as gs
 import plotting
 from tools import stringList_parser
 
@@ -48,6 +49,7 @@ class GUI(ttk.Frame):
         self.path = tk.StringVar()
         self.filetypefull = tk.StringVar()
         self.filetype = tk.StringVar()
+        self.data_loaded = False
 
         ### parameters for the histogram
         self.hist_number_bins = tk.StringVar()
@@ -65,16 +67,21 @@ class GUI(ttk.Frame):
         self.hist_interval_entry = tk.StringVar()
         self.hist_interval_entry.set('')
         self.hist_intervals = []
+        self.hist_single_ep = tk.IntVar()
+        self.hist_single_ep.set(1)
+        self.hist_single_ep.trace("w",self.draw_histogram)
 
         ### trace selection methods to be mutually exclusive
         self.hist_piezoSelection.trace("w",self.hist_piezo_NotInterval)
         self.hist_intervalSelection.trace("w",self.hist_interval_NotPiezo)
 
         ### parameters for the plots
-        self.plot_show_piezo = tk.IntVar()
-        self.plot_show_piezo.set(1)
-        self.plot_show_command = tk.IntVar()
-        self.plot_show_command.set(1)
+        self.show_piezo = tk.IntVar()
+        self.show_piezo.set(0)
+        self.show_piezo.trace("w", self.plot_episode)
+        self.show_command = tk.IntVar()
+        self.show_command.set(0)
+        self.show_command.trace("w", self.plot_episode)
 
         ### parameters of the data
         self.samplingrate = tk.StringVar()
@@ -130,11 +137,20 @@ class GUI(ttk.Frame):
             if VERBOSE:
                 print('Test mode with matlab data.')
             self.data = backend.Recording(
-                                filename = 'data/171025 025 Copy Export.mat',
+                                filename = 'data/171124 013 Copy Export.mat',
                                 filetype = 'mat')
         self.samplingrate.set('4e4')
-        self.uptdate_list()
+        self.data_loaded = True
+        self.update_all()
+
+    def update_all(self, *args):
+        """
+        Use to update all data dependent widgets in the main window
+        """
+        self.update_list()
+        self.plotOptions.create_widgets()
         self.update_plots()
+        self.displayFrame.create_widgets()
 
     def create_widgets(self):
         """
@@ -148,6 +164,7 @@ class GUI(ttk.Frame):
         self.listSelection = ListSelection(self)
         self.histogramOptions = HistogramConfiguration(self)
         self.plotOptions = PlotOptions(self)
+        self.displayFrame = Displayframe(self)
 
     def configure_grid(self):
         """
@@ -166,7 +183,9 @@ class GUI(ttk.Frame):
         self.commandbar.grid(row=0, column=0, padx=5, pady=5,
                              sticky=tk.N+tk.W)
 
-        self.plotOptions.grid(row=0, column=1, padx=(0,800), pady=5)
+        self.plotOptions.grid(row=0, column=1,padx=5,pady=5,sticky=tk.N+tk.W)
+
+        self.displayFrame.grid(row=0, column=2, padx=5, sticky=tk.S)
 
         self.listSelection.grid(row=0, column=3, rowspan=2, padx=5, pady=5,
                                 sticky=tk.N)
@@ -196,18 +215,19 @@ class GUI(ttk.Frame):
         self.manipulations.grid(row=4, column=0, columnspan=3, padx=5, pady=5,
                                 sticky=tk.S+tk.W)
 
-    def plot_episode(self):
+    def plot_episode(self, *args):
         """
         Plot the current episode
         """
         if self.data:
             if VERBOSE: print('Calling `plot`, `self.data` is `True`')
             self.plots.plot()
+            self.plots.toolbar.update()
         else:
             if VERBOSE: print('Cannot plot, `self.data` is `False`')
             pass
 
-    def draw_histogram(self):
+    def draw_histogram(self, *args):
         """
         draw a histogram of the current episode
         """
@@ -225,20 +245,21 @@ class GUI(ttk.Frame):
         if VERBOSE: print("updating plots")
         self.plot_episode()
         self.draw_histogram()
+        self.displayFrame.create_widgets()
 
-    def uptdate_list(self):
-        if VERBOSE: print('calling `uptdate_list`')
-        self.uptdate_episodelist()
-        self.uptdate_listmenu()
+    def update_list(self):
+        if VERBOSE: print('calling `update_list`')
+        self.update_episodelist()
+        self.update_listmenu()
         ### for now `update_list` will update both the list and the dropdown
         ### menu, in case they need to be uncoupled use the two functions below
 
-    def uptdate_episodelist(self):
-        if VERBOSE: print('calling `uptdate_episodelist`')
+    def update_episodelist(self):
+        if VERBOSE: print('calling `update_episodelist`')
         self.episodeList.create_list()
 
-    def uptdate_listmenu(self):
-        if VERBOSE: print('calling `uptdate_listmenu`')
+    def update_listmenu(self):
+        if VERBOSE: print('calling `update_listmenu`')
         self.episodeList.create_dropdownmenu()
 
     def hist_interval_NotPiezo(self,*args):
@@ -281,6 +302,29 @@ class GUI(ttk.Frame):
         if VERBOSE: print('exiting ASCAM')
         self.master.destroy()
         self.master.quit()
+
+class Displayframe(ttk.Frame):
+    """
+    This frame is used to display information.
+    Currently this means only the mean and standard deviation of the command 
+    voltage.
+    """
+    def __init__(self, parent):
+        ttk.Frame.__init__(self, parent)
+        self.parent = parent
+        self.create_widgets()
+
+    def create_widgets(self):
+        if self.parent.data_loaded:
+            datakey = self.parent.datakey.get()
+            episode = self.parent.data[datakey][self.parent.Nepisode]
+            if episode['command'] is not None:
+                mean, std = episode.get_command_stats()
+                command_stats ="Command Voltage = "
+                command_stats+="{:2f} +/- {:2f}".format(mean,std)
+                command_stats+=self.parent.data.commandUnit
+                ttk.Label(self, text=command_stats).grid(row=0, column=0)
+        else: pass
 
 class Commandframe(ttk.Frame):
     """
@@ -348,6 +392,12 @@ class HistogramConfiguration(ttk.Frame):
         ### draw button
         ttk.Button(self, text="Draw", command=self.draw_histogram).grid(row=5,
                                                                  columnspan=2)
+        
+        ### checkbox for single histogram
+        ttk.Label(self, text="Show single episode").grid(row=5, column=3)
+        ttk.Checkbutton(self, variable=self.parent.hist_single_ep).\
+                                                                grid(row=5,
+                                                                     column=4)
 
     def draw_histogram(self):
         """
@@ -453,9 +503,16 @@ class HistogramFrame(ttk.Frame):
                 ### draw bar graphs of the histogram values over all episodes
                 plot.bar(center_all, heights_all, width = width_all, alpha=.2, 
                          color='b')
+                plot.set_xlabel("Current ["+self.parent.data.currentUnit+']')
+                if self.parent.hist_density.get()==1:
+                    plot.set_ylabel("Relative frequency")
+                elif self.parent.hist_density.get()==0:
+                    plot.set_ylabel("Count")
+
             ### histogram of single episode
-            plot.bar(center_single, heights_single, width = width_single, 
-                     alpha=1)
+            if self.parent.hist_single_ep.get()==1:
+                plot.bar(center_single, heights_single, width = width_single, 
+                         alpha=1)
 
             ### draw the histogram and clear the plot object to avoid
             ### cluttering memory
@@ -469,83 +526,131 @@ class PlotOptions(ttk.Frame):
     def __init__(self, parent):
         ttk.Frame.__init__(self, parent)
         self.parent = parent
+
         self.create_widgets()
+        if VERBOSE: print("creating plotOptions")
 
     def create_widgets(self):
-        ttk.Label(self, text="Piezo voltage").grid(row=0, column=0)
-        ttk.Checkbutton(self, variable=self.parent.plot_show_piezo).grid(
+        """
+        If piezo/command voltage data exists create widgets to toggle their
+        displey in the plots
+        """
+        if self.parent.data_loaded:
+            datakey = self.parent.datakey.get()
+            episode = self.parent.data[datakey][self.parent.Nepisode]
+            if episode['piezo'] is not None:
+                ttk.Label(self, text="Piezo voltage").grid(row=0, column=0)
+                ttk.Checkbutton(self, variable=self.parent.show_piezo).grid(
                                                                         row=0,
                                                                      column=1)
-        ttk.Label(self, text="Command voltage").grid(row=1, column=0)
-        ttk.Checkbutton(self, variable=self.parent.plot_show_command).grid(
+                # if piezo exists, default is to plot it
+                self.parent.show_piezo.set(1)
+
+            if self.parent.data[datakey][0]['command'] is not None:
+                ttk.Label(self, text="Command voltage").grid(row=1, column=0)
+                ttk.Checkbutton(self, variable=self.parent.show_command).grid(
                                                                         row=1,
                                                                      column=1)        
+                # if command exists default is to not plot it
+                self.parent.show_command.set(0)
+        else: pass
+
+# class NavigationToolbar(NavigationToolbar2TkAgg):
+#     # only display the buttons we need
+
+#     toolitems = [t for t in NavigationToolbar2TkAgg.toolitems if
+#                  t in ['Zoom']
 
 class Plotframe(ttk.Frame):
     def __init__(self, parent):
         ttk.Frame.__init__(self, parent)
         self.parent = parent
-        self.fig = plt.figure(2, figsize=(10,5))
-        canvasPlot = FigureCanvasTkAgg(self.fig, self)
+        self.fig = plt.figure(figsize=(10,5))
+
+        
+        
+        canvasPlot = FigureCanvasTkAgg(self.fig, master=self)
         canvasPlot.show()
-        canvasPlot.get_tk_widget().grid(row=0,column=0)
-        self.canvas = canvasPlot
-        # self.toolbar = NavigationToolbar2TkAgg(self.canvas, self)
-        # self.toolbar.update()
-        # self.canvas._tkcanvas.pack()
+        canvasPlot.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+        self.canvas = canvasPlot    
+        self.toolbar = NavigationToolbar2TkAgg(self.canvas, self)
+        self.toolbar.update()
+        self.canvas._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+
     def plot(self):
+        datakey = self.parent.datakey.get()
         if self.parent.data.filename:
+            # get data to plot
+            episode = self.parent.data[datakey][self.parent.Nepisode]
+           
+            # decide how many plots there will be
+            num_plots = (1 + self.parent.show_command.get() 
+                          + self.parent.show_piezo.get())
+            n_plot = 1 #counter for plots
+            
+            # plot grid to make current plot bigger
+            pgs = gs.GridSpec(num_plots+1,1)
+
             if VERBOSE:
                 print('`data` exists, plotting...')
-                print('datakey = '+self.parent.datakey.get())
+                print('datakey = '+datakey)
                 print('Nepisode = '+str(self.parent.Nepisode))
-            episode = self.parent.data[
-                            self.parent.datakey.get()][self.parent.Nepisode]
+            
             time = episode['time']
-            ys = [episode['trace']]
-            ylabels = ["Current ["+self.parent.data.currentUnit+"]"]
-            if episode['piezo'] is not None:
-                if VERBOSE: print('`piezo` found')
-                ys.append(episode['piezo'])
-                ylabels.append("Piezo ["+self.parent.data.piezoUnit+']')
-            if episode['commandVoltage'] is not None:
-                if VERBOSE: print('`commandVoltage` found')
-                ys.append(episode['commandVoltage'])
-                ylabels.append("Command ["+self.parent.data.commandUnit+']')
+            
+            #get axis bounds        
+            min_A = self.parent.data[datakey].get_min('trace')
+            max_A = self.parent.data[datakey].get_max('trace')
 
-            ### get max and min values of trace and command voltage of current
-            ### series to set axis
-            try:
-                min_A = self.parent.data[self.parent.datakey.get()].get_min(
-                                                                      'trace')
-                max_A = self.parent.data[self.parent.datakey.get()].get_max(
-                                                                      'trace')
-            except: pass
-            try:
-                min_V = self.parent.data[self.parent.datakey.get()].get_min(
-                                                             'commandVoltage')
-                max_V = self.parent.data[self.parent.datakey.get()].get_max(
-                                                             'commandVoltage')
-            except: pass
-            finally:
-                self.subplots = []
-                for i, (y, ylabel) in enumerate(zip(ys, ylabels)):
-                    if VERBOSE:
-                        print("calling matplotlib")
-                        print('plotting '+ylabel)
-                    if "Current" in ylabel:
-                        ybounds = [min_A,max_A]
-                    elif "Command" in ylabel:
-                        ybounds = [min_V,max_V]
-                    else:
-                        ybounds = []
-                    ax = plt.subplot(len(ys),1,i+1)
-                    plotting.plotTrace(ax,time,y,ylabel,ybounds)
-                    self.subplots.append(ax)
-                ax.xlabel("Time ["+self.parent.data.timeUnit+"]")
-                self.canvas.draw()
-                for subplot in self.subplots:
-                    subplot.clear()
+            # plot the current trace
+            current_plot = self.fig.add_subplot(pgs[:2,:])
+            plotting.plotTrace(
+                        ax = current_plot,
+                        time = time,
+                        trace = episode['trace'],
+                        ylabel = "Current ["+self.parent.data.currentUnit+"]",
+                        ybounds = (min_A, max_A))
+            n_plot += 1 #move to next plot
+
+            self.subplots = [current_plot]
+
+            # plot the piezo 
+            if self.parent.show_piezo.get():
+                if VERBOSE: print('will plot piezo voltage')
+                piezo_plot = self.fig.add_subplot(pgs[n_plot,:])
+                plotting.plotTrace(
+                        ax = piezo_plot,
+                        time = time,
+                        trace = episode['piezo'],
+                        ylabel = "Piezo ["+self.parent.data.piezoUnit+']',
+                        ybounds = [])
+                n_plot += 1
+                self.subplots.append(piezo_plot)
+            # plot command voltage
+            if self.parent.show_command.get():
+                if VERBOSE: print('will plot command voltage')
+                try: #get axis bounds
+                    min_V = self.parent.data[datakey].get_min('command')
+                    max_V = self.parent.data[datakey].get_max('command')
+                except: pass
+                command_plot = self.fig.add_subplot(pgs[n_plot,:])
+                plotting.plotTrace(
+                        ax = command_plot,
+                        time = time,
+                        trace = episode['command'],
+                        ylabel = "Command ["+self.parent.data.commandUnit+']',
+                        ybounds = [min_V,max_V])
+                n_plot += 1
+                self.subplots.append(command_plot)
+
+            ## configure x-axis
+            for plot in self.subplots[:-1]:
+                plot.set_xticklabels([]) #turn off numbering on upper plots
+            # label only the last axis
+            self.subplots[-1].set_xlabel("Time ["+self.parent.data.timeUnit+"]")
+            
+            self.canvas.draw() # draw plots
+            plt.clf() #clear figure from memory
 
 class Manipulations(ttk.Frame):
     """docstring for Manipulations"""
@@ -579,7 +684,7 @@ class Manipulations(ttk.Frame):
             if VERBOSE: print('called operation succesfully')
             self.parent.datakey.set(self.parent.data.currentDatakey)
             if VERBOSE: print('updating list and plots')
-            self.parent.uptdate_list()
+            self.parent.update_list()
             self.parent.update_plots()
         ## here we should also have that if the operation has been performed
         ## the selection switches to that operation
@@ -703,7 +808,7 @@ class BaselineFrame(tk.Toplevel):
             self.parent.parent.datakey.set(
                                        self.parent.parent.data.currentDatakey)
             if VERBOSE: print('updating list and plots')
-            self.parent.parent.uptdate_list()
+            self.parent.parent.update_list()
             self.parent.parent.update_plots()
         ## here we should also have that if the operation has been performed
         ## the selection switches to that operation
@@ -935,7 +1040,7 @@ class EpisodeList(ttk.Frame):
         to it (we currently dont need those)
         """
         if VERBOSE: print(self.parent.datakey.get()+' selected')
-        self.parent.uptdate_episodelist()
+        self.parent.update_episodelist()
         self.parent.update_plots()
 
 class Loadframe(tk.Toplevel):
@@ -1022,8 +1127,8 @@ class Loadframe(tk.Toplevel):
                                                      self.samplingrate.get(),
                                                      self.filetype.get())
                 self.parent.datakey.set(self.parent.data.currentDatakey)
-                self.parent.uptdate_list()
-                self.parent.update_plots()
+                self.parent.data_loaded = True
+                self.parent.update_all()
             finally:
                 self.destroy()
 
@@ -1116,8 +1221,7 @@ class Binaryquery(tk.Toplevel):
                                          self.parent.filetype.get(),
                                          self.parent.headerlength.get(),
                                          datatype)
-        self.parent.uptdate_list()
-        self.parent.update_plots()
+        self.parent.update_all()
         self.loadframe.destroy()
         self.destroy()
 
