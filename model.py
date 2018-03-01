@@ -209,7 +209,7 @@ class Recording(dict):
         ### variables for user created lists of episodes
         ### `lists` stores the indices of the episodes in the list and their 
         ### color under their name
-        self.lists = {'all': [range(len(self['raw_'])), 'white']}
+        self.lists = {'all': [list(range(len(self['raw_']))), 'white']}
         self.current_lists = ['all']
 
     def load_data(self):

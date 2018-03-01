@@ -195,10 +195,16 @@ more plotting stuff
 
 ----------------------------------------------------------̄-------------------------------------
 
+selection lists now work properly again
+
+
+
 
 
 ISSUES:
     - if a key is bound to list assignment pressing that key at any time will cause assignment, e.g. even when creating a new list and typing its name
+    - does not update histogram after a new file is loaded when there was
+    - does not plot all episode histogram if only list is selected
 
 Notes last meeting:
     for piezo voltage simousltaneously show both inactive and active in histogram
@@ -213,6 +219,15 @@ Notes last meeting:
 
 
 NEXT:
+
+    - toolbar
+    - saving, one way to save everything
+    - one way to save only episodes in lists
+    - write a verbose log file
+    - make axis range configurable
+    - histogram on the side of plot
+    - all episode histogram as line
+    - display file name in gui
     - change episode list membership indicator from background color to something else (maybe checkmark after all or colored dots)
     - abstract the histogram creation out of the current function to make plotting multiple histograms more concise
     - create a gui attribute that is TRUE is data is loaded and false otherwise
