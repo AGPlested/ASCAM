@@ -99,7 +99,8 @@ class GUI(ttk.Frame):
 
         self.commandbar.loadbutton.focus()
 
-        self.load_for_testing()
+        if bintest or axotest or mattest:
+            self.load_for_testing()
         ## if testing arguments have been given data will be loaded when the 
         ## program starts
 
@@ -537,6 +538,9 @@ class PlotOptions(ttk.Frame):
         """
         if self.parent.data_loaded:
             datakey = self.parent.datakey.get()
+            print(datakey)
+            print(self.parent.Nepisode)
+            print(len(self.parent.data[datakey]))
             episode = self.parent.data[datakey][self.parent.Nepisode]
             if episode['piezo'] is not None:
                 ttk.Label(self, text="Piezo voltage").grid(row=0, column=0)
