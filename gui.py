@@ -388,9 +388,9 @@ class Commandframe(ttk.Frame):
                                      command=self.load_dialog)
         self.loadbutton.grid(column=0,row=0,sticky=tk.N+tk.E)
 
-        # self.savebutton = ttk.Button(self, text="Save data",
-        #                              command=self.save_dialog)
-        # self.savebutton.grid(column=1,row=0,sticky=tk.N)
+        self.savebutton = ttk.Button(self, text="Save data",
+                                     command=self.save_dialog)
+        self.savebutton.grid(column=1,row=0,sticky=tk.N)
 
     def load_dialog(self):
         Loadframe(self.parent)
