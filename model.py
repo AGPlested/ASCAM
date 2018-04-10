@@ -1,5 +1,6 @@
 import numpy as np
 import readdata
+import savedata
 import filtering
 import analysis
 import matplotlib.pyplot as plt
@@ -140,7 +141,7 @@ class Series(list):
             episode.filter_episode(filterFrequency, self.samplingRate)
         return output
 
-    def baseline_correct_all(self, intervals, method = 'poly', degree = 1,
+    def baseline_correct_all(self, intervals = [], method = 'poly', degree = 1,
                                  timeUnit = 'ms', intervalSelection = False,
                                  piezoSelection = False, active = False,
                                  deviation = 0.05):
@@ -253,6 +254,21 @@ class Recording(dict):
                                             samplingRate = self.samplingRate)
                                     for i in range(len(current))])
 
+    def save_data(self,filename,dirname='./',filetype='mat', 
+                  save_piezo=True,save_command=True):
+        """
+        Save the data
+        """
+        if filetype=='mat':
+            return savedata.save_matlab(filename=filename,
+                                         dirname=dirname,
+                                         filetype=filetype,
+                                         save_piezo=save_piezo,
+                                         save_command=save_command)
+        else:
+            print('Can only save as ".mat"!')
+            return False
+
     def call_operation(self, operation, *args, **kwargs):
         """
         Calls an operation to be performed on the data.
@@ -265,7 +281,14 @@ class Recording(dict):
         """
         valid = self.check_operation(operation)
         if valid:
-            newDatakey = operation+str(*args)+'_'
+            # create new datakey
+            if self.currentDatakey == 'raw_':
+                #if its the first operation drop the 'raw-'
+                newDatakey = operation+str(*args)+'_'
+            else:
+                #if operations have been done before combine the names
+                newDatakey = self.currentDatakey+operation+str(*args)+'_'
+
             if operation == 'FILTER_':
                 self[newDatakey] = self[self.currentDatakey].filter_all(*args)
             elif operation == 'BC_':

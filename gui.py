@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
-from tkinter.filedialog import askopenfilename
+from tkinter.filedialog import askopenfilename, asksaveasfilename, askdirectory
 import matplotlib
 matplotlib.use('TkAgg')
 import model as backend
@@ -285,21 +285,21 @@ class GUI(ttk.Frame):
         Convert the string that is entered in the config menu into a list of
         intervals that can be used for the histogram
         """
-
-    def hist_interval_NotPiezo(self,*args):
-        """
-        If interval selection for histogram is turned on turn off the piezo
-        selection
-        """
-        if self.hist_intervalSelection.get() == 1:
-            self.hist_piezoSelection.set(0)
-
-    def hist_piezo_NotInterval(self,*args):
-        """
-        If piezo selection for histogram is turned on turn off interval 
-        selection
-        """
-        self.hist_intervals=stringList_parser(self.hist_interval_entry.get())
+    #
+    # def hist_interval_NotPiezo(self,*args):
+    #     """
+    #     If interval selection for histogram is turned on turn off the piezo
+    #     selection
+    #     """
+    #     if self.hist_intervalSelection.get() == 1:
+    #         self.hist_piezoSelection.set(0)
+    #
+    # def hist_piezo_NotInterval(self,*args):
+    #     """
+    #     If piezo selection for histogram is turned on turn off interval
+    #     selection
+    #     """
+    #     self.hist_intervals=stringList_parser(self.hist_interval_entry.get())
 
     def get_episodes_in_lists(self):
         """
@@ -388,8 +388,61 @@ class Commandframe(ttk.Frame):
                                      command=self.load_dialog)
         self.loadbutton.grid(column=0,row=0,sticky=tk.N+tk.E)
 
+        self.savebutton = ttk.Button(self, text="Save data",
+                                     command=self.save_dialog)
+        self.savebutton.grid(column=1,row=0,sticky=tk.N)
+
     def load_dialog(self):
         Loadframe(self.parent)
+
+    def save_dialog(self):
+        SaveFrame(self.parent)
+
+class SaveFrame(tk.Toplevel):
+    """docstring for SaveFrame"""
+    def __init__(self, parent):
+        if VERBOSE: print("initializing SaveFrame")
+
+        tk.Toplevel.__init__(self,parent)
+        self.parent = parent
+        self.title("Save data")
+        self.create_entryFields()
+        self.create_widgets()
+        # self.loadbutton.focus()
+
+    def create_entryFields(self):
+        self.filename = tk.StringVar()
+        self.dirname = tk.StringVar()
+        self.filetype = tk.StringVar()
+        self.filetype.set('mat')
+        self.save_piezo = tk.IntVar()
+        self.save_command = tk.IntVar()
+
+    def create_widgets(self):
+        ttk.Label(self, text="Filetype:").grid(row=0,column=0)
+        ttk.Entry(self,width=5,textvariable=self.filetype).grid(column=2)
+
+        ttk.Label(self, text="Save piezo data").grid(row=1,column=0)
+        ttk.Checkbutton(self,variable=self.save_piezo).grid(row=1,column=2)
+        
+        ttk.Label(self, text="Save command voltage data").grid(row=2,column=0)
+        ttk.Checkbutton(self,variable=self.save_piezo).grid(row=2,column=2)
+
+        ttk.Label(self, text='Filename:').grid(row=3,column=0)
+        ttk.Entry(self,width=10,textvariable=self.filename).grid(row=3,column=2)
+
+        ttk.Label(self, text='Folder:').grid(row=4,column=0)
+        ttk.Button(self,text="Select",command=self.select_button).grid(row=4,column=2)
+
+        ttk.Button(self,text="Save"command=select_button).grid(row=5,column=0)
+        ttk.Button(self,text='Cancel')
+
+
+    def select_button(self):
+        filename = askdirectory()
+        print(filename)
+
+
 
 class HistogramConfiguration(ttk.Frame):
     """
@@ -410,7 +463,7 @@ class HistogramConfiguration(ttk.Frame):
         ttk.Checkbutton(self, variable=self.parent.hist_density).grid(row=0,
                                                                      column=4)
 
-        ### piezo selection options
+        # piezo selection options
         ttk.Label(self, text="Select using piezo voltage").grid(row=1, 
                                                                 column=0)
         ttk.Checkbutton(self, variable=self.parent.hist_piezoSelection).\

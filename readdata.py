@@ -25,18 +25,21 @@ def load_matlab(filename):
     
     # we use varmats to split up the file into seperate mat files, one for each variable
     # this is necessary for files containing a lot of data (i.e. more that 1000 episode)
-    # because the variable names contain 3-digit column numbers
+    # because the variable names are 3-digit column numbers (so they loop
+    # back around after 1000))
     varmats = varmats_from_mat(open(filename, 'rb'))
     
     for variable in varmats:
         value = scipy_loadmat(variable[1])[variable[0]]
-        if 'Ipatch' in variable[0]:
+        # the first possibility is the name in files we get, the second
+        # comes from the ASCAM data structure 
+        if 'Ipatch' in variable[0] or 'trace' in variable[0]:
             current.append(value.flatten())
-        elif '10Vm' in variable[0]:
+        elif '10Vm' in variable[0] or 'command' in variable[0]:
             commandVoltage.append(value.flatten())
-        elif 'Piezo' in variable[0]:
+        elif 'Piezo' in variable[0] or 'piezo' in variable[0]:
             piezo.append(value.flatten())
-        elif 'Time' in variable[0]:
+        elif 'Time' in variable[0] or 'time' in variable[0]:
             time = value.flatten()
     if current:
         names.append('Current [A]')

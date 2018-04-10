@@ -98,6 +98,9 @@ def baseline_correction(time, signal, fs, intervals = None, timeUnit = 'ms',
         t, s = interval_selection(time, signal, intervals, fs, timeUnit)
     elif piezoSelection:
         t, _, s = piezo_selection(time, piezo, signal, active, deviation)
+    else:
+        t = time
+        s = signal
 
     if method == 'offset':
         offset = np.mean(s)
