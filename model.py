@@ -261,7 +261,7 @@ class Recording(dict):
         """
         return_status = False
         if filetype=='mat':
-            savedata.save_matlab(data=self,  
+            savedata.save_matlab(data=self,
                                  filename=filename,
                                  save_piezo=save_piezo,
                                  save_command=save_command)
