@@ -1,3 +1,6 @@
+from scipy import io
+import os
+
 def save_matlab(data, filename='', save_piezo=True,
                 save_command=True):
     """
