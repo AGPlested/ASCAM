@@ -12,7 +12,7 @@ from matplotlib import gridspec as gs
 import plotting
 from tools import stringList_parser
 
-### parameters for testing and verbose about
+### parameters for testing and verbose output
 VERBOSE = False
 axotest = False
 bintest = False
@@ -285,21 +285,6 @@ class GUI(ttk.Frame):
         Convert the string that is entered in the config menu into a list of
         intervals that can be used for the histogram
         """
-    #
-    # def hist_interval_NotPiezo(self,*args):
-    #     """
-    #     If interval selection for histogram is turned on turn off the piezo
-    #     selection
-    #     """
-    #     if self.hist_intervalSelection.get() == 1:
-    #         self.hist_piezoSelection.set(0)
-    #
-    # def hist_piezo_NotInterval(self,*args):
-    #     """
-    #     If piezo selection for histogram is turned on turn off interval
-    #     selection
-    #     """
-    #     self.hist_intervals=stringList_parser(self.hist_interval_entry.get())
 
     def get_episodes_in_lists(self):
         """
@@ -412,7 +397,7 @@ class SaveFrame(tk.Toplevel):
 
     def create_entryFields(self):
         self.filename = tk.StringVar()
-        self.dirname = tk.StringVar()
+        # self.dirname = tk.StringVar()
         self.filetype = tk.StringVar()
         self.filetype.set('mat')
         self.save_piezo = tk.IntVar()
@@ -420,28 +405,37 @@ class SaveFrame(tk.Toplevel):
 
     def create_widgets(self):
         ttk.Label(self, text="Filetype:").grid(row=0,column=0)
-        ttk.Entry(self,width=5,textvariable=self.filetype).grid(column=2)
+        ttk.Entry(self,width=5,textvariable=self.filetype).grid(row=0,column=2)
 
         ttk.Label(self, text="Save piezo data").grid(row=1,column=0)
         ttk.Checkbutton(self,variable=self.save_piezo).grid(row=1,column=2)
 
         ttk.Label(self, text="Save command voltage data").grid(row=2,column=0)
-        ttk.Checkbutton(self,variable=self.save_piezo).grid(row=2,column=2)
+        ttk.Checkbutton(self,variable=self.save_command).grid(row=2,column=2)
 
-        ttk.Label(self, text='Filename:').grid(row=3,column=0)
-        ttk.Entry(self,width=10,textvariable=self.filename).grid(row=3,column=2)
+        ttk.Button(self,text="Select File",command=self.select_button
+                    ).grid(row=3,column=1)
 
-        ttk.Label(self, text='Folder:').grid(row=4,column=0)
-        ttk.Button(self,text="Select",command=self.select_button).grid(row=4,
-                                                                       column=2)
+        ttk.Label(self, text='Filename:').grid(row=4,column=0)
+        ttk.Label(self, textvariable=self.filename).grid(row=4,column=2)
 
-        ttk.Button(self,text="Save",command=select_button).grid(row=5,column=0)
-        ttk.Button(self,text='Cancel')
 
+        ttk.Button(self,text="Save",command=self.save_button
+                    ).grid(row=6,column=0)
+        ttk.Button(self,text='Cancel',command=self.destroy
+                    ).grid(row=6, column=2)
 
     def select_button(self):
-        filename = askdirectory()
-        print(filename)
+        self.filename.set(asksaveasfilename())
+        if VERBOSE: print("selected filename: '"+self.filename.get()+"'")
+
+    def save_button(self):
+        if VERBOSE: print("Calling save_data method")
+        self.parent.data.save_data(filename = self.filename.get(),
+                                   filetype = self.filetype.get(),
+                                   save_piezo = bool(self.save_piezo.get()),
+                                   save_command = bool(self.save_command.get()))
+        self.destroy()
 
 class HistogramConfiguration(ttk.Frame):
     """
