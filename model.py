@@ -10,7 +10,7 @@ from tools import piezo_selection
 cwd = os.getcwd()
 
 class Episode(dict):
-    def __init__(self, time, trace, nthEpisode = 0, piezo = None, 
+    def __init__(self, time, trace, nthEpisode = 0, piezo = None,
                  command = None, filterType = None, fc = None,
                  samplingRate = 4e4, timeInputUnit = 'ms'):
         """
@@ -51,7 +51,7 @@ class Episode(dict):
         if samplingRate is None:
             samplingRate = self.samplingRate
         filterLag = 0 #int(1/(2*frequencyOnSamples))
-        self['trace'] = filtering.gaussian_filter(self['trace'], 
+        self['trace'] = filtering.gaussian_filter(self['trace'],
                                                   filterFrequency,
                                                   samplingRate,
                                                   method)[filterLag:]
@@ -62,9 +62,9 @@ class Episode(dict):
                                  piezoSelection = False, active = False,
                                  deviation = 0.05):
         self['trace'] = analysis.baseline_correction(time = self['time'],
-                                                     signal = self['trace'], 
+                                                     signal = self['trace'],
                                                      fs = self.samplingRate,
-                                                     intervals = intervals, 
+                                                     intervals = intervals,
                                                      degree = degree,
                                                      method = method,
                                                      timeUnit = timeUnit,
@@ -86,7 +86,7 @@ class Episode(dict):
         """
         check the standard deviation of the episode against a reference value
         """
-        _, _, trace = piezo_selection(self['time'], self['piezo'], 
+        _, _, trace = piezo_selection(self['time'], self['piezo'],
                                       self['trace'], active = False,
                                       deviation = 0.01)
         tracestd = np.std(trace)
@@ -95,7 +95,7 @@ class Episode(dict):
 
     def get_command_stats(self):
         """
-        Get the mean and standard deviation of the command voltage of the 
+        Get the mean and standard deviation of the command voltage of the
         episode
         """
         try:
@@ -105,13 +105,13 @@ class Episode(dict):
         return mean, std
 
 class Series(list):
-    def __init__(self, data = [], samplingRate = 4e4, filterFrequency = False,         
+    def __init__(self, data = [], samplingRate = 4e4, filterFrequency = False,
                  baselineCorrected = False, baselineIntervals = False,
-                 baselineMethod = 'poly', baselineDegree = 1, 
+                 baselineMethod = 'poly', baselineDegree = 1,
                  idealized = False, reconstruct = False):
         """
         `Series` are lists of episodes which also store relevant parameters
-        about the recording and operations that have been performed on the 
+        about the recording and operations that have been performed on the
         data.
 
         The `reconstruct` input is a placeholder
@@ -130,7 +130,7 @@ class Series(list):
 
     def get_max(self,name):
         return np.max([np.max(episode[name]) for episode in self])
- 
+
     def filter_all(self, filterFrequency = 1e3):
         """
         Return a Series object in which all episodes are the filtered version
@@ -152,7 +152,7 @@ class Series(list):
         output = copy.deepcopy(self)
         for episode in output:
             episode.baseline_correct_episode(degree = degree,
-                                             intervals = intervals, 
+                                             intervals = intervals,
                                              method = method,
                                              timeUnit = timeUnit,
                                              intervalSelection = (
@@ -160,7 +160,7 @@ class Series(list):
                                              piezoSelection = (
                                                       piezoSelection),
                                              active = active,
-                                             deviation = deviation) 
+                                             deviation = deviation)
         return output
 
     def idealize_all(self, thresholds):
@@ -182,7 +182,7 @@ class Series(list):
             episode.check_standarddeviation(stdthreshold)
 
 class Recording(dict):
-    def __init__(self, filename = '', 
+    def __init__(self, filename = '',
                  samplingRate = 0, filetype = '', headerlength = 0,
                  bindtype = None, timeUnit = 'ms', piezoUnit = 'V',
                  commandUnit = 'V', currentUnit = 'A'):
@@ -208,7 +208,7 @@ class Recording(dict):
         if filename: self.load_data()
 
         ### variables for user created lists of episodes
-        ### `lists` stores the indices of the episodes in the list and their 
+        ### `lists` stores the indices of the episodes in the list and their
         ### color under their name
         self.lists = {'all': [list(range(len(self['raw_']))), 'white']}
         self.current_lists = ['all']
@@ -227,47 +227,47 @@ class Recording(dict):
 
         if 'Piezo [V]' in names and 'Command Voltage [V]' in names:
             time = loaded_data[0]
-            self['raw_'] = Series([Episode(time, trace, nthEpisode=i, 
-                                            piezo=pTrace, 
-                                            command=cVtrace, 
+            self['raw_'] = Series([Episode(time, trace, nthEpisode=i,
+                                            piezo=pTrace,
+                                            command=cVtrace,
                                             samplingRate = self.samplingRate)
-                                    for i, (trace, pTrace, cVtrace) 
+                                    for i, (trace, pTrace, cVtrace)
                                     in enumerate(zip(*loaded_data[1:]))])
 
         elif 'Piezo [V]' in names:
             time, current, piezo, _ = loaded_data
-            self['raw_'] = Series([Episode(time, current[i], nthEpisode=i, 
-                                            piezo=piezo[i], 
+            self['raw_'] = Series([Episode(time, current[i], nthEpisode=i,
+                                            piezo=piezo[i],
                                             samplingRate = self.samplingRate)
                                     for i in range(len(current))])
 
         elif 'Command Voltage [V]' in names:
             time, current, _, command = loaded_data
-            self['raw_'] = Series([Episode(time, current[i], nthEpisode=i, 
-                                            command=command[i], 
+            self['raw_'] = Series([Episode(time, current[i], nthEpisode=i,
+                                            command=command[i],
                                             samplingRate = self.samplingRate)
                                     for i in range(len(current))])
 
         else:
             time, current, _, _ = loaded_data
-            self['raw_'] = Series([Episode(time, current[i], nthEpisode=i, 
+            self['raw_'] = Series([Episode(time, current[i], nthEpisode=i,
                                             samplingRate = self.samplingRate)
                                     for i in range(len(current))])
 
-    def save_data(self,filename,dirname='./',filetype='mat', 
+    def save_data(self,filename,dirname='./',filetype='mat',
                   save_piezo=True,save_command=True):
         """
         Save the data
         """
+        return_status = False
         if filetype=='mat':
-            return savedata.save_matlab(filename=filename,
-                                         dirname=dirname,
-                                         filetype=filetype,
-                                         save_piezo=save_piezo,
-                                         save_command=save_command)
+            savedata.save_matlab(data=self,  
+                                 filename=filename,
+                                 save_piezo=save_piezo,
+                                 save_command=save_command)
         else:
             print('Can only save as ".mat"!')
-            return False
+        return return_status
 
     def call_operation(self, operation, *args, **kwargs):
         """
@@ -316,5 +316,3 @@ class Recording(dict):
             return False
         else:
             return True
-
-            
