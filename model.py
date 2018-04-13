@@ -213,21 +213,36 @@ class Recording(dict):
         self.lists = {'all': [list(range(len(self['raw_']))), 'white']}
         self.current_lists = ['all']
 
-    def load_data(self):
+
+    # def load_data(self):
+    #     if os.path.isdir(self.filename):
+    #
+    #
+    #     elif os.path.isfile(self.filename):
+    #         self.load_series(filename = self.filename,
+    #                          filetype = self.filetype,
+    #                          bindtype = self.bindtype,
+    #                          headerlength = self.headerlength,
+    #                          samplingRate = self.samplingRate)
+
+    def load_data(self, datakey = 'raw_', filename = None, filetype = None,
+                    bindtype = None, headerlength = None, samplingRate = None
+                    ):
         """
-        Load the data in the file at `self.filename`.
+        Load the data in the file at `filename`.
         Accepts `.mat`, `.axgd` and `.bin` files.
         (`.bin` files are for simulated data only at the moment.)
         """
-        names, *loaded_data = readdata.load(self.filetype, self.filename,
-                               self.bindtype, self.headerlength,
-                               self.samplingRate)
-        ### The `if` accounts for the presence or absence of
-        ### piezo and command voltage in the data being loaded
-
+        names, *loaded_data = readdata.load(filetype, filename, bindtype,
+                                            headerlength, samplingRate)
+        # detec datakey from filename:
+        # datakey_dict = {'raw':'raw_',FILTER}
+        # if
+        # The `if` accounts for the presence or absence of
+        # piezo and command voltage in the data being loaded
         if 'Piezo [V]' in names and 'Command Voltage [V]' in names:
             time = loaded_data[0]
-            self['raw_'] = Series([Episode(time, trace, nthEpisode=i,
+            self[datakey] = Series([Episode(time, trace, nthEpisode=i,
                                             piezo=pTrace,
                                             command=cVtrace,
                                             samplingRate = self.samplingRate)
@@ -236,21 +251,21 @@ class Recording(dict):
 
         elif 'Piezo [V]' in names:
             time, current, piezo, _ = loaded_data
-            self['raw_'] = Series([Episode(time, current[i], nthEpisode=i,
+            self[datakey] = Series([Episode(time, current[i], nthEpisode=i,
                                             piezo=piezo[i],
                                             samplingRate = self.samplingRate)
                                     for i in range(len(current))])
 
         elif 'Command Voltage [V]' in names:
             time, current, _, command = loaded_data
-            self['raw_'] = Series([Episode(time, current[i], nthEpisode=i,
+            self[datakey] = Series([Episode(time, current[i], nthEpisode=i,
                                             command=command[i],
                                             samplingRate = self.samplingRate)
                                     for i in range(len(current))])
 
         else:
             time, current, _, _ = loaded_data
-            self['raw_'] = Series([Episode(time, current[i], nthEpisode=i,
+            self[datakey] = Series([Episode(time, current[i], nthEpisode=i,
                                             samplingRate = self.samplingRate)
                                     for i in range(len(current))])
 

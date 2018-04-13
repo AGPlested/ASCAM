@@ -2,6 +2,7 @@ import numpy as np
 import subprocess
 from scipy.io import loadmat as scipy_loadmat
 from scipy.io.matlab.mio5 import varmats_from_mat
+import os
 
 def load_matlab(filename):
     """
@@ -13,20 +14,21 @@ def load_matlab(filename):
         time [1D array] - times of measurement
         current [list of 1D arrays] - the current recorded from the patch
         piezo [list of 1D arrays] - voltage of the piezo pipette
-        commandVoltage [list of 1D arrays] - command voltage applied to the patch
-    Because the data we have comes with strange dictionary keys (i.e. including column numbers
-    and hex values) the function loops over the keys to extract current, command voltatge,
-    piezo voltage and time.
+        commandVoltage [list of 1D arrays] - command voltage applied to the
+                                            patch
+    Because the data we have comes with strange dictionary keys (i.e.
+    including column numbers and hex values) the function loops over the keys
+    to extract current, command voltatge, piezo voltage and time.
     """
     current = []
     commandVoltage = []
     piezo = []
     names = ['Time [ms]']
 
-    # we use varmats to split up the file into seperate mat files, one for each variable
-    # this is necessary for files containing a lot of data (i.e. more that 1000 episode)
-    # because the variable names are 3-digit column numbers (so they loop
-    # back around after 1000))
+    # we use varmats to split up the file into seperate mat files, one for
+    # each variable this is necessary for files containing a lot of data
+    # (i.e. more that 1000 episode) because the variable names are 3-digit
+    # column numbers (so they loop back around after 1000))
     varmats = varmats_from_mat(open(filename, 'rb'))
 
     for variable in varmats:
@@ -130,23 +132,31 @@ def load_axo(filename):
 
     return names_to_output, time, current, piezo, commandVoltage
 
-def load(filename,filetype=False dtype=None, headerlength=None, fs=None):
+def detect_filetype(filename):
+    """
+    detect the type of file from the extension
+    works by walking through the filename in reverse order and considering
+    the filetype to be whatever comes before the first '.' it encounters
+    """
+    N = len(filename)
+    for i, char in enumerate(filename[::-1]):
+        # loop over the full filename (which includes directory) backwards
+        # to extract the extension and name of the file
+        if char=='.':
+            period = N-i
+            break
+    filetype = filename[period:]
+    if filetype=='axgd': filetype = 'axo'
+    return filetype
+
+def load(filename, filetype=False, dtype=None, headerlength=None, fs=None):
     """
     get data form a file
     if filetype is not given automatically detects it from the
     extension
     """
     if not filetype:
-        #detect the type of file from the extension
-        N = len(filename)
-        for i, char in enumerate(filename[::-1]):
-            # loop over the full filename (which includes directory) backwards
-            # to extract the extension and name of the file
-            if char=='.':
-                period = N-i
-                break
-        filetype = filename[period:]
-        if filetype=='axgd': filetype = 'axo'
+        filetype = detect_filetype(filename)
 
     if filetype == 'axo':
         return load_axo(filename)
