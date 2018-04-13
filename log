@@ -126,7 +126,7 @@ the issues with the command voltage plot seems to have resolved itself while i w
 
 when the episode list is create the current episode is now automatically selected, this means that the current episode will also stay selected if the series is switched
 
-added a dialog to open a window with which to change the `density` flag for the histogram and the number of bins 
+added a dialog to open a window with which to change the `density` flag for the histogram and the number of bins
 
 -------------------------------------------------------------------------------------------
 
@@ -175,7 +175,7 @@ histogram settings are now located above the histogram rather than in a seperate
 
 fixed a bug, opening the load dialog would cause filter and baseline to fail because it reset the samplingrate variable upon dialog creation
 
----------------------------------------------------------------------------------------------- 
+----------------------------------------------------------------------------------------------
 
 will assume that piezo/command exist for any episode if they exist for every episode, as a result of this checking for their existence can be moved from the plot frame to the plot options frame. the plot frame will only check if it is supposed to plot them if they exist
 
@@ -189,7 +189,7 @@ added variable that is true if data is present
 
 added `update_all` method to gui main window
 
-episode key "commandVoltage" finally changed to "command" 
+episode key "commandVoltage" finally changed to "command"
 
 more plotting stuff
 
@@ -222,6 +222,8 @@ Notes last meeting:
 
 NEXT:
 
+    - refactor gui.py and model.py into smaller modules and spread the whole
+    thing over directories
     - toolbar
     - saving, one way to save everything
     - one way to save only episodes in lists
@@ -243,7 +245,7 @@ TO DO:
     - make a class of mutually exclusive checkbox buttons
     - if filter button is pressed but data has already been filtered switch to the fitlered series
     - give the series in the dropdown menu shorter names
-    - add `reconstruct` method to `series` that takes the input values of attributes and performs the corresponding operations 
+    - add `reconstruct` method to `series` that takes the input values of attributes and performs the corresponding operations
     - make the unit of current, voltage etc. a parameter in episode objects with default pA and mV
     - implement gaussian mixture model for fitting the histogram
     - add a better toolbar to the plot
@@ -260,7 +262,7 @@ weird issues:
     anaconda3/lib/python3.6/site-packages/matplotlib/cbook/deprecation.py:106: MatplotlibDeprecationWarning: Adding an axes using the same arguments as a previous axes currently reuses the earlier instance.  In a future version, a new instance will always be created and returned.  Meanwhile, this warning can be suppressed, and the future behavior ensured, by passing a unique label to each axes instance.
     warnings.warn(message, mplDeprecation, stacklevel=1)
     "
-    it does not seem to matter, everything works fine. This so far only happend on my desktop 
+    it does not seem to matter, everything works fine. This so far only happend on my desktop
     - when the episodelist widget is in focus clicking anywhere outside the ASCAM window the following error is displayed
     "Traceback (most recent call last):
       File "anaconda3/lib/python3.6/tkinter/__init__.py", line 1699, in __call__
