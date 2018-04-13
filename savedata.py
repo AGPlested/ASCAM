@@ -16,10 +16,24 @@ def save_metadata(data, filename):
         recording_metadata[key] = dict()
         for i, episode in enumerate(data[key]):
             recording_metadata[key][str(i)]=episode.__dict__
-    json.dump(recording_metadata,filename)
+    with open(filename,'w') as save_file:
+        json.dump(recording_metadata,save_file)
 
 def save_data(data, filename='', filetype = 'mat', save_piezo=True,
              save_command=True):
+    """
+    save the data stored in a recording opject to the desired filetype
+    (can only save as matlab file at the moment) and store the attributes
+    that are not saved in a json file
+    Parameter:
+        data - recording object
+        filename - path ending with the desired name of the file
+        filetype - filetype of the save
+        save_piezo - whether or not to save data about piezo voltage
+        save_command - whether to save data about command voltage
+    Returns:
+        True if file was succesfully saved
+    """
     return_status = False
     # if no filename is specified we use the name of the file that was loaded
     if not filename:
@@ -69,7 +83,7 @@ def save_data(data, filename='', filetype = 'mat', save_piezo=True,
                                      save_command = save_command)
     else:
         print('Can only save as ".mat"!')
-
+        
     return return_status
 
 def save_matlab(data, filepath='', save_piezo=True,
@@ -92,7 +106,7 @@ def save_matlab(data, filepath='', save_piezo=True,
     return_status = False
     # save each series seperatly
     for datakey, series in data.items():
-        file_to_save = filepath'_'+datakey+'.mat'
+        file_to_save = filepath+'_'+datakey+'.mat'
         #dictionary for saving a series to matlab
         savedict = {}
         savedict['time'] = series[0]['time']

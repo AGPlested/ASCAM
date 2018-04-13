@@ -275,13 +275,6 @@ class Recording(dict):
                                            filetype = filetype,
                                            save_piezo=save_piezo,
                                            save_command=save_command)
-        # if filetype=='mat':
-        #     savedata.save_matlab(data=self,
-        #                          filename=filename,
-        #                          save_piezo=save_piezo,
-        #                          save_command=save_command)
-        # else:
-        #     print('Can only save as ".mat"!')
         return return_status
 
     def call_operation(self, operation, *args, **kwargs):
