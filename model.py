@@ -51,10 +51,12 @@ class Episode(dict):
         if samplingRate is None:
             samplingRate = self.samplingRate
         filterLag = 0 #int(1/(2*frequencyOnSamples))
-        self['trace'] = filtering.gaussian_filter(self['trace'],
-                                                  filterFrequency,
-                                                  samplingRate,
-                                                  method)[filterLag:]
+        self['trace'] = filtering.gaussian_filter(
+                                            signal = self['trace'],
+                                            filterFrequency = filterFrequency,
+                                            samplingRate = samplingRate,
+                                            method = method
+                                            )[filterLag:]
         self.filterFrequency = filterFrequency
 
     def baseline_correct_episode(self, intervals, method = 'poly', degree = 1,
@@ -105,7 +107,7 @@ class Episode(dict):
         return mean, std
 
 class Series(list):
-    def __init__(self, data = [], samplingRate = 4e4, filterFrequency = False,
+    def __init__(self, data = [],
                  baselineCorrected = False, baselineIntervals = False,
                  baselineMethod = 'poly', baselineDegree = 1,
                  idealized = False, reconstruct = False):
@@ -117,13 +119,6 @@ class Series(list):
         The `reconstruct` input is a placeholder
         """
         list.__init__(self,data)
-        self.samplingRate = samplingRate
-        self.filterFrequency = filterFrequency
-        self.baselineCorrected = baselineCorrected
-        self.baselineIntervals = baselineIntervals
-        self.baselineMethod = baselineMethod
-        self.baselineDegree = baselineDegree
-        self.idealized = idealized
 
     def get_min(self,name):
         return np.min([np.min(episode[name]) for episode in self])
@@ -138,7 +133,7 @@ class Series(list):
         """
         output = copy.deepcopy(self)
         for episode in output:
-            episode.filter_episode(filterFrequency, self.samplingRate)
+            episode.filter_episode(filterFrequency, episode.samplingRate)
         return output
 
     def baseline_correct_all(self, intervals = [], method = 'poly', degree = 1,
