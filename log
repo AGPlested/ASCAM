@@ -1,26 +1,36 @@
 added a scrollbar to the list of episode
 
-tried resizing using the `grid_rowconfigure` method, not very succesful, only resized the plot in horizontal direction, nothing else
+tried resizing using the `grid_rowconfigure` method, not very succesful, only
+resized the plot in horizontal direction, nothing else
 
 ----------------------------------------------------------------------
 
-changed the model to the new structure `Model>Series>Episode` to have better management, Model is a dict whose values are the Series which are lists containing episodes
-filtering, baselining and all other manipulations that can be applied to a single episode are now episode methods, the series object has methods to apply each operation to all episodes in the series
+changed the model to the new structure `Model>Series>Episode` to have better
+management, Model is a dict whose values are the Series which are lists
+containing episodes filtering, baselining and all other manipulations that can
+be applied to a single episode are now episode methods, the series object has
+methods to apply each operation to all episodes in the series
 
 modified the GUI code to work with the new model and hopefully be more general
 started adding VERBOSE option for gui
 
 ------------------------------------------------------------------------
 
-fixed a small problem in `analysis.baseline`, now properly accepts single intervals, and added support for time vectors in different units of seconds
+fixed a small problem in `analysis.baseline`, now properly accepts single
+intervals, and added support for time vectors in different units of seconds
 
-wrote `threshold_crossing` which takes a signal and an arbitrary number of amplitudes and idealizes the signal to those amplitudes by assigning to each point of the signal the closest amplitude
+wrote `threshold_crossing` which takes a signal and an arbitrary number of
+amplitudes and idealizes the signal to those amplitudes by assigning to each
+point of the signal the closest amplitude
 
 --------------------------------------------------------------------------
 
-removed `single_state_threshold_crossing` because crossing in two direction is not needed
+removed `single_state_threshold_crossing` because crossing in two direction is
+not needed
 
-added another `multilevel_threshold` that does threshold crossing for given thresholds rather than amplitudes, can take any number of thresholds and will idealize to linear spaced fraction of maximum amplitude
+added another `multilevel_threshold` that does threshold crossing for given
+thresholds rather than amplitudes, can take any number of thresholds and will
+idealize to linear spaced fraction of maximum amplitude
 this function can also take absolute values for the thresholds
 
 new filter function so only one function call from the model is required
@@ -35,7 +45,8 @@ plot now resizes better, episode list also resizes and starts bigger
 
 fixed it so that plot is again drawn when data is first loaded (was empty)
 
-problem: plot seems to draw twice on first loading, creating an orange plot lying over the normal blue one
+problem: plot seems to draw twice on first loading, creating an orange plot
+lying over the normal blue one
 -fixed
 
 episodeList now displays empty when program starts
@@ -58,7 +69,8 @@ do we need the command voltage plot or not? - include option to plot it
 
 what is different about the `170922 004 Copy Export.mat` file?
 it cannot be loaded with scipy.io.loadmat
--problem was that it has more than 1000 episodes which are considered to be different variables in the matlab file and are named by 3-digit columns numbers
+-problem was that it has more than 1000 episodes which are considered to be
+different variables in the matlab file and are named by 3-digit columns numbers
 
 -------------------------------------------------------------------------------
 
@@ -66,74 +78,114 @@ fixed the matlab file loading using `varmats_from_mat`
 
 -------------------------------------------------------------------------------
 
-started a plotting module that contains functions to create an all point histogram and to select data based on piezo activity
+started a plotting module that contains functions to create an all point
+histogram and to select data based on piezo activity
 
 -------------------------------------------------------------------------------
 
-command and piezo voltage are no longer required in matlab files and axograph files
+command and piezo voltage are no longer required in matlab files and axograph
+files
 
 --------------------------------------------------------------------------------
 
-there is now a dropdown menu that shows as entries all the datakeys that exist selecting a new key through this menu will change the episode list and the histogram and plots
+there is now a dropdown menu that shows as entries all the datakeys that exist
+selecting a new key through this menu will change the episode list and the
+histogram and plots
 
-what still needs to be added is a function that updates the current selection, i.e. what is displayed by the menu, when an operation such as filtering is carried out.
-to this end it might be useful to replace the attribute `datakey` of the main gui class
-with a stringvar that can be traced to update everything that should change all at once
+what still needs to be added is a function that updates the current selection,
+i.e. what is displayed by the menu, when an operation such as filtering is
+carried out.
+to this end it might be useful to replace the attribute `datakey` of the main
+gui class
+with a stringvar that can be traced to update everything that should change all
+at once
 
----------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
-`GUI.datakey` is now a `tk.StringVar` and is traced in order to make selection of different series easier
+`GUI.datakey` is now a `tk.StringVar` and is traced in order to make selection
+of different series easier
 
-`Series` objects now take argument data which works the same as the argument of standard `list()` objects, loading data is now done using list comprehension to build the series object
+`Series` objects now take argument data which works the same as the argument of
+standard `list()` objects, loading data is now done using list comprehension to
+build the series object
 
-----------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
-`series` methods no longer change the episodes in the current series but instead return a new series containing the changed data
+`series` methods no longer change the episodes in the current series but instead
+return a new series containing the changed data
 
-the `call_operation` method of `Model` now directly calls the operation if `check_operation` returns true
-it also return a boolean value which the GUI uses to determine whether or not the plots and list should be updated
+the `call_operation` method of `Model` now directly calls the operation if
+`check_operation` returns true
+it also return a boolean value which the GUI uses to determine whether or not
+the plots and list should be updated
 
-`check_operation` checks if the name of the operate (e.g. FILTER or BC) is contained in the current datakey and only returns true if not. this means a series cannot be filtered twice, even at different frequencies
+`check_operation` checks if the name of the operate (e.g. FILTER or BC) is
+contained in the current datakey and only returns true if not. this means a
+series cannot be filtered twice, even at different frequencies
 
-datakeys now contain all the information e.g. "FILTER_1000.0" instead of only the operation
+datakeys now contain all the information e.g. "FILTER_1000.0" instead of only
+the operation
 
-histogram now also resizes when window is resized, also removed the `figsize` kwarg from the plt.figure call for the histogram
+histogram now also resizes when window is resized, also removed the `figsize`
+kwarg from the plt.figure call for the histogram
 
--------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
-added checkboxes to select names lists of episodes and a button to add a checkcbox
+added checkboxes to select names lists of episodes and a button to add a
+checkbox
 
-there was a problem with the checkbuttons where clicking one woulld affect the ones in the list and one of the two for the baseline selection. could fix it by making the checkbutton variable a `tk.IntVar` instead of the python boolean it used to be
+there was a problem with the checkbuttons where clicking one woulld affect the
+ones in the list and one of the two for the baseline selection. could fix it by
+making the checkbutton variable a `tk.IntVar` instead of the python boolean it
+used to be
 
 model.Model class has been renamed to model.Recording
 
-the lists of episodes are now stored in a dict attribute of the current Recording object
-new lists can be added and episodes can be added to/removed from them by pressing a key that can be chosen by the user
+the lists of episodes are now stored in a dict attribute of the current
+Recording object
+new lists can be added and episodes can be added to/removed from them by
+pressing a key that can be chosen by the user
 
--------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 changed the margins on the plot of the command voltage to 1
 
 added drawing of histograms of single episodes
-it seems like the issue behind the scale of command voltage plot is somehow related to the drawing of the histogram. it used to only happen when switching series, now it happens always, the common factor is that the histogram has always draw before
+it seems like the issue behind the scale of command voltage plot is somehow
+related to the drawing of the histogram. it used to only happen when switching
+series, now it happens always, the common factor is that the histogram has
+always draw before
 
-the histogram frame now shows both the all point histogram and the histogram of a single episode,
-there are several possibilities how the histogram could be drawn though. one is as counts, this is not great since a single episode of course has a much smaller count that the all point hist; two would be to scale the single episode hist, this might be the best option in terms of visual appeal but has the problem that such scaling would be thrown off by chaging number of episodes; three would be to convert both to densities, this has the problem that the all point histogram almost disappears and that every time it is drawn the scaling changes dependent on the distribution of the current episode
+the histogram frame now shows both the all point histogram and the histogram of
+a single episode,
+there are several possibilities how the histogram could be drawn though. one is
+as counts, this is not great since a single episode of course has a much
+smaller count that the all point hist; two would be to scale the single episode
+hist, this might be the best option in terms of visual appeal but has the
+problem that such scaling would be thrown off by chaging number of episodes;
+three would be to convert both to densities, this has the problem that the all
+point histogram almost disappears and that every time it is drawn the scaling
+changes dependent on the distribution of the current episode
 
-the issues with the command voltage plot seems to have resolved itself while i was cleaning up the histogram code
+the issues with the command voltage plot seems to have resolved itself while i
+was cleaning up the histogram code
 
----------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
-when the episode list is create the current episode is now automatically selected, this means that the current episode will also stay selected if the series is switched
+when the episode list is create the current episode is now automatically
+selected, this means that the current episode will also stay selected if the
+series is switched
 
-added a dialog to open a window with which to change the `density` flag for the histogram and the number of bins
+added a dialog to open a window with which to change the `density` flag for the
+histogram and the number of bins
 
--------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 testing loading of files using the matlab version of the file: 171025 020
 results:
 171025 020_I: (only current data)
-    the histogram is not drawn because it relies on the piezo voltage to decide which points should be included in the histogram
+    the histogram is not drawn because it relies on the piezo voltage to decide
+    which points should be included in the histogram
     filtering still works as does the display of the episode
 
 171025 020_I_U-patch: (current and command voltage data)
@@ -143,45 +195,60 @@ results:
     everything works as it should
 
 to fix them:
-    - include a condition in drawing the histogram so that it only uses piezo when piezo is present and otherwise uses everything
+    - include a condition in drawing the histogram so that it only uses piezo
+    when piezo is present and otherwise uses everything
 
-added a `try, finally` statement to the ok button of the loading dialouge as would otherwise not be closed if the histogram function did not run
+added a `try, finally` statement to the ok button of the loading dialouge as
+would otherwise not be closed if the histogram function did not run
 
------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
-added the `tools` module to keep utility functions that do not belong anywhere else such as functions for extracting parts of a signal specified by time intervals of by activity of the piezo device and a function that parses strings into a list of lists of floats
+added the `tools` module to keep utility functions that do not belong anywhere
+else such as functions for extracting parts of a signal specified by time
+intervals of by activity of the piezo device and a function that parses strings
+into a list of lists of floats
 
 can now specify intervals to use for histogram
 
--------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 histogram will now only show episodes of currently selected lists
 
-list colors are now kept to some degree when series are switched. however since each episode can have only one color the color of the most recently created series is used
+list colors are now kept to some degree when series are switched. however since
+each episode can have only one color the color of the most recently created
+series is used
 
-------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 baseline function now available
 
-no longer creating dummy plots if no data is loaded as this was unnecessary and might have caused issues when loading data that did not have 3 curves to plot
+no longer creating dummy plots if no data is loaded as this was unnecessary and
+might have caused issues when loading data that did not have 3 curves to plot
 
-if no lists are selected the histogram of the selected episode is still displayed
+if no lists are selected the histogram of the selected episode is still
+displayed
 
------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
-histogram settings are now located above the histogram rather than in a seperate dialog
+histogram settings are now located above the histogram rather than in a separate
+dialog
 
------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
-fixed a bug, opening the load dialog would cause filter and baseline to fail because it reset the samplingrate variable upon dialog creation
+fixed a bug, opening the load dialog would cause filter and baseline to fail
+because it reset the samplingrate variable upon dialog creation
 
-----------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
-will assume that piezo/command exist for any episode if they exist for every episode, as a result of this checking for their existence can be moved from the plot frame to the plot options frame. the plot frame will only check if it is supposed to plot them if they exist
+will assume that piezo/command exist for any episode if they exist for every
+episode, as a result of this checking for their existence can be moved from the
+plot frame to the plot options frame. the plot frame will only check if it is
+supposed to plot them if they exist
 
-reworked episode plotting function to allow for plotting only one or two traces with checkbox
+reworked episode plotting function to allow for plotting only one or two traces
+with checkbox
 
------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 plot axis fixed
 
@@ -193,23 +260,25 @@ episode key "commandVoltage" finally changed to "command"
 
 more plotting stuff
 
-------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 selection lists now work properly again
 
------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 in `load_matlab` added `or` clauses for loading data saved by ASCAM
 
 
 
 ISSUES:
-    - if a key is bound to list assignment pressing that key at any time will cause assignment, e.g. even when creating a new list and typing its name
+    - if a key is bound to list assignment pressing that key at any time will
+    cause assignment, e.g. even when creating a new list and typing its name
     - does not update histogram after a new file is loaded when there was
     - does not plot all episode histogram if only list is selected
 
 Notes last meeting:
-    for piezo voltage simousltaneously show both inactive and active in histogram
+    for piezo voltage simultaneously show both inactive and active in
+    histogram
 
     hotkey for zooming in y-scale of current
     zooming general?
@@ -232,38 +301,55 @@ NEXT:
     - histogram on the side of plot
     - all episode histogram as line
     - display file name in gui
-    - change episode list membership indicator from background color to something else (maybe checkmark after all or colored dots)
-    - abstract the histogram creation out of the current function to make plotting multiple histograms more concise
+    - change episode list membership indicator from background color to
+    something else (maybe checkmark after all or colored dots)
+    - abstract the histogram creation out of the current function to make
+    plotting multiple histograms more concise
     - create a gui attribute that is TRUE is data is loaded and false otherwise
 
 
 TO DO:
     - move file type detection into `model` module
-    - add button to call `check_standard_deviation` and color a list of episodes accordingly, maybe dialog to ask to which list to add it if there are already lists
+    - add button to call `check_standard_deviation` and color a list of
+    episodes accordingly, maybe dialog to ask to which list to add it if there
+    are already lists
     - add an entry field where the unit of time in the data can be specified
     - replace baselinemethod option with dropdown
     - make a class of mutually exclusive checkbox buttons
-    - if filter button is pressed but data has already been filtered switch to the fitlered series
+    - if filter button is pressed but data has already been filtered switch to
+    the fitlered series
     - give the series in the dropdown menu shorter names
-    - add `reconstruct` method to `series` that takes the input values of attributes and performs the corresponding operations
-    - make the unit of current, voltage etc. a parameter in episode objects with default pA and mV
+    - add `reconstruct` method to `series` that takes the input values of
+    attributes and performs the corresponding operations
+    - make the unit of current, voltage etc. a parameter in episode objects
+     with default pA and mV
     - implement gaussian mixture model for fitting the histogram
     - add a better toolbar to the plot
     - interpolation in threshold crossing
     - amplitude estimation in threshold crossing
     - different basis functions for baseline corrention (e.g. cosine)
-    - move plotting to a seperate module so that gui.py only ever uses `plt.show(x)`
-    - remove command voltage plot, add display avg and std of command voltage, or display warning if command voltage std is >1% of average
+    - move plotting to a seperate module so that gui.py only ever uses
+    `plt.show(x)`
+    - remove command voltage plot, add display avg and std of command voltage,
+    or display warning if command voltage std is >1% of average
     - look at resizing again
 
 weird issues:
-    - There is a warning when first clicking an episode (i.e. 2nd time the plots are drawn)
+    - There is a warning when first clicking an episode (i.e. 2nd time the
+    plots are drawn)
     "
-    anaconda3/lib/python3.6/site-packages/matplotlib/cbook/deprecation.py:106: MatplotlibDeprecationWarning: Adding an axes using the same arguments as a previous axes currently reuses the earlier instance.  In a future version, a new instance will always be created and returned.  Meanwhile, this warning can be suppressed, and the future behavior ensured, by passing a unique label to each axes instance.
+    anaconda3/lib/python3.6/site-packages/matplotlib/cbook/deprecation.py:106:
+    MatplotlibDeprecationWarning: Adding an axes using the same arguments as a
+    previous axes currently reuses the earlier instance.  In a future version,
+    a new instance will always be created and returned.  Meanwhile, this
+    warning can be suppressed, and the future behavior ensured, by passing a
+    unique label to each axes instance.
     warnings.warn(message, mplDeprecation, stacklevel=1)
     "
-    it does not seem to matter, everything works fine. This so far only happend on my desktop
-    - when the episodelist widget is in focus clicking anywhere outside the ASCAM window the following error is displayed
+    it does not seem to matter, everything works fine. This so far only happend
+    on my desktop
+    - when the episodelist widget is in focus clicking anywhere outside the
+    ASCAM window the following error is displayed
     "Traceback (most recent call last):
       File "anaconda3/lib/python3.6/tkinter/__init__.py", line 1699, in __call__
         return self.func(*args)
