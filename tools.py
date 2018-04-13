@@ -1,11 +1,28 @@
 import numpy as np
 
+def detect_filetype(filename):
+    """
+    detect the type of file from the extension
+    works by walking through the filename in reverse order and considering
+    the filetype to be whatever comes before the first '.' it encounters
+    """
+    N = len(filename)
+    for i, char in enumerate(filename[::-1]):
+        # loop over the full filename (which includes directory) backwards
+        # to extract the extension and name of the file
+        if char=='.':
+            period = N-i
+            break
+    filetype = filename[period:]
+    if filetype=='axgd': filetype = 'axo'
+    return filetype
+
 def piezo_selection(time, piezo, trace, active = True, deviation = 0.05):
     """
     Selects part of the episode based on the Piezo voltage.
     The selection is done by choosing extracting the data from those time
     points where the value of the piezo voltage is either within a certain
-    range (percentage wise) of the maximum or below a certain percentage 
+    range (percentage wise) of the maximum or below a certain percentage
     of the maximum.
     Works in relative terms, i.e. it does not matter if piezo voltage is
     positive or negative. Only works for blocks of the same amplitude.
@@ -13,8 +30,8 @@ def piezo_selection(time, piezo, trace, active = True, deviation = 0.05):
         time [1D array of floats] - Vector containing the time points.
         piezo [1D array of floats] - Vector of piezo voltages.
         trace [1D array of floats] - Vector of current trace.
-        active [boolean] - If true return time points at which piezo 
-                           voltage is within `deviation` percent of the 
+        active [boolean] - If true return time points at which piezo
+                           voltage is within `deviation` percent of the
                            maximum piezo voltage.
         deviation [float] - Deviation, as a percentage, from the maximum
                             piezo voltage or threshold below which voltage
@@ -31,7 +48,7 @@ def piezo_selection(time, piezo, trace, active = True, deviation = 0.05):
         indices = np.where(np.abs(piezo)/maxPiezo<deviation)
     time = time[indices]
     piezo = piezo[indices]
-    trace = trace[indices] 
+    trace = trace[indices]
     return time, piezo, trace
 
 def interval_selection(time, signal, intervals, fs, timeUnit):
@@ -46,9 +63,9 @@ def interval_selection(time, signal, intervals, fs, timeUnit):
     signal_out = []
     if type(intervals[0]) is list:
         for ival in intervals:
-            time_out.extend(time[ int(ival[0]*fs/timeUnit) 
+            time_out.extend(time[ int(ival[0]*fs/timeUnit)
                            : int(ival[-1]*fs/timeUnit) ])
-            signal_out.extend(signal[ int(ival[0]*fs/timeUnit) 
+            signal_out.extend(signal[ int(ival[0]*fs/timeUnit)
                              : int(ival[-1]*fs/timeUnit)])
     elif type(intervals[0]) in [int, float]:
         time_out = time[ int(intervals[0]*fs/timeUnit)
