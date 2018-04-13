@@ -3,11 +3,9 @@ import readdata
 import savedata
 import filtering
 import analysis
-import matplotlib.pyplot as plt
 import copy
 import os
-from tools import piezo_selection
-cwd = os.getcwd()
+from tools import piezo_selection, detect_filetype
 
 class Episode(dict):
     def __init__(self, time, trace, nthEpisode = 0, piezo = None,
@@ -219,6 +217,31 @@ class Recording(dict):
                              headerlength = self.headerlength,
                              samplingRate = self.samplingRate,
                              datakey = 'raw_')
+        elif os.path.isdir(self.filename):
+            if not self.filename.endswith('/'):
+                self.filename+='/'
+            # loop once to find the json file and extract the datakeys
+            for file in os.listdir(self.filename):
+                if file.endswith('json'):
+                    metadata, series_metadata = readdata.read_metadata(
+                    self.filename+file)
+                    break
+                # recreate recording attributes
+                self.__dict__ = metadata
+
+            # loop again to find the data and load it
+            for file in os.listdir(self.filename):
+                for datakey in series_metadata.keys():
+                    if datakey in file:
+                        self.load_series(
+                                    filename = self.filename+file,
+                                    filetype = metadata['filetype'],
+                                    dtype = metadata['dtype'],
+                                    headerlength = metadata['headerlength'],
+                                    samplingRate = metadata['samplingRate'],
+                                    datakey=datakey)
+                        for episode, attributes in zip(self[datakey],series_metadata[datakey].values()):
+                            episode.__dict__ = attributes
 
     def load_series(self, filename, filetype, dtype, headerlength,
                     samplingRate, datakey):
