@@ -1,23 +1,24 @@
 from scipy import io
 import os
+import json
 
-def save_matlab(data, filename='', save_piezo=True,
-                save_command=True):
+def save_metadata(data, filename):
     """
-    Save the series stored in a recording object in matlab files in a directory.
-    Parameters:
-    data - `Recording` object
-    filename [string] - name for the directory and the files this should be only
-                        the NAME OF THE FILE, not the path and it should not
-                        contain problematic characters like '/' etc
-    dirname [string] - name of the directory
-    save_piezo [bool] - should save the piezo data
-    save_command [bool] - what about the command voltage data
+    save the metadata associated with a recording object in a json file
+    saves:
+        - attributes and values of recording object
+        - datakeys of all series
+        - attributes of all episodes
+    """
+    recording_metadata = data.__dict__
+    recording_metadata['datakeys'] = list(data.keys())
+    for key in data:
+        recording_metadata[key] = dict()
+        for i, episode in enumerate(data[key]):
+            recording_metadata[key][str(i)]=episode.__dict__
+    json.dump(recording_metadata,filename)
 
-    Returns:
-    True if successfully saved
-    False if a directory with the given name already exists
-    """
+def save_data():
     return_status = False
     # if no filename is specified we use the name of the file that was loaded
     if not filename:
@@ -53,34 +54,55 @@ def save_matlab(data, filename='', save_piezo=True,
     except OSError:
         # mkdir cannot create a directory if it already exists
         # if this happens do not save anything
-        print("""A directory by that name already exists, make sure everything went well.""")
-    finally:
-        # save each series seperatly
-        for datakey, series in data.items():
-            file_to_save = dirname+'/'+filename+'_'+datakey+'.mat'
-            #dictionary for saving a series to matlab
-            savedict = {}
-            savedict['time'] = series[0]['time']
-            # need this to add leading zeros to episode number in filename
-            no_episodes = len(series)
-            fill_length = len(str(no_episodes))
-            #fill savedict
-            for episode in series:
-                for name, value in episode.items():
-                    # the if statements skip the items that do not need to be
-                    # saved
-                    if name == 'time':
-                        continue
-                    elif name == 'piezo' and not save_piezo:
-                        continue
-                    elif name == 'command' and not save_command:
-                        continue
-                    else:
-                    # add data to dictionary
-                        n = str(episode.nthEpisode)
-                        n = n.zfill(fill_length)
-                        savedict[name+n] = value
-            #save to file
-            io.savemat(file_to_save,savedict)
-            return_status = True
+        print("""A directory by that name already exists,
+                make sure everything went well.""")
+    filepath = dirname+'/'+filename
+
+    return return_status
+
+def save_matlab(data, filepath='', save_piezo=True,
+                save_command=True):
+    """
+    Save the series stored in a recording object in matlab files in a directory.
+    Parameters:
+    data - `Recording` object
+    filename [string] - name for the directory and the files this should be only
+                        the NAME OF THE FILE, not the path and it should not
+                        contain problematic characters like '/' etc
+    dirname [string] - name of the directory
+    save_piezo [bool] - should save the piezo data
+    save_command [bool] - what about the command voltage data
+
+    Returns:
+    True if successfully saved
+    """
+    return_status = False
+    # save each series seperatly
+    for datakey, series in data.items():
+        file_to_save = filepath'_'+datakey+'.mat'
+        #dictionary for saving a series to matlab
+        savedict = {}
+        savedict['time'] = series[0]['time']
+        # need this to add leading zeros to episode number in filename
+        no_episodes = len(series)
+        fill_length = len(str(no_episodes))
+        #fill savedict
+        for episode in series:
+            for name, value in episode.items():
+                # the if statements skip the items that do not need to be
+                # saved
+                if name == 'time':
+                    continue
+                elif name == 'piezo' and not save_piezo:
+                    continue
+                elif name == 'command' and not save_command:
+                    continue
+                else:
+                # add data to dictionary
+                    n = str(episode.nthEpisode)
+                    n = n.zfill(fill_length)
+                    savedict[name+n] = value
+        #save to file
+        io.savemat(file_to_save,savedict)
+        return_status = True
     return return_status
