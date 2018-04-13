@@ -18,13 +18,15 @@ def save_metadata(data, filename):
             recording_metadata[key][str(i)]=episode.__dict__
     json.dump(recording_metadata,filename)
 
-def save_data():
+def save_data(data, filename='', filetype = 'mat', save_piezo=True,
+             save_command=True):
     return_status = False
     # if no filename is specified we use the name of the file that was loaded
     if not filename:
         filename = './'+data.filename+'_SAVE'
 
-    # this next bit of code is supposed to
+    # this next bit of code is supposed to extract the path and the names
+    # of the file
     N = len(filename)
     period = False
     slash = False
@@ -36,9 +38,9 @@ def save_data():
         if char=='/':
             slash = N-i
             break
-    # this if statement seperates the variable `filename` into the full path in `dirname`
-    # and keeps everything after the last slash except the extension to name the
-    # actual saved files in the directory
+    # this if statement seperates the variable `filename` into the full path
+    # in `dirname` and keeps everything after the last slash except the
+    # extension to name the actual saved files in the directory
     if period and slash:
         dirname = filename[:period-1]
         filename = filename[slash:period-1]
@@ -58,17 +60,28 @@ def save_data():
                 make sure everything went well.""")
     filepath = dirname+'/'+filename
 
+    save_metadata(data,filepath+'_attributes.json')
+    # save the actual data
+    if filetype == 'mat':
+        return_status =  save_matlab(data = data,
+                                     filepath = filepath,
+                                     save_piezo = save_piezo,
+                                     save_command = save_command)
+    else:
+        print('Can only save as ".mat"!')
+
     return return_status
 
 def save_matlab(data, filepath='', save_piezo=True,
                 save_command=True):
     """
-    Save the series stored in a recording object in matlab files in a directory.
+    Save the series stored in a recording object in matlab files in a
+    directory.
     Parameters:
     data - `Recording` object
-    filename [string] - name for the directory and the files this should be only
-                        the NAME OF THE FILE, not the path and it should not
-                        contain problematic characters like '/' etc
+    filename [string] - name for the directory and the files this should be
+                        only the NAME OF THE FILE, not the path and it should
+                        not contain problematic characters like '/' etc
     dirname [string] - name of the directory
     save_piezo [bool] - should save the piezo data
     save_command [bool] - what about the command voltage data
