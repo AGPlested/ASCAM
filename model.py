@@ -179,13 +179,13 @@ class Series(list):
 class Recording(dict):
     def __init__(self, filename = '',
                  samplingRate = 0, filetype = '', headerlength = 0,
-                 bindtype = None, timeUnit = 'ms', piezoUnit = 'V',
+                 dtype = None, timeUnit = 'ms', piezoUnit = 'V',
                  commandUnit = 'V', currentUnit = 'A'):
         ### parameters for loading the data
         self.filename = filename
         self.filetype = filetype
         self.headerlength = int(float(headerlength))
-        self.bindtype = bindtype
+        self.dtype = dtype
 
         ### attributes of the data
         self.samplingRate = int(float(samplingRate))
@@ -210,21 +210,34 @@ class Recording(dict):
 
     def load_data(self):
         """
+        this method is supposed to load data from a file or a dictionary
+        """
+        if os.path.isfile(self.filename):
+            self.load_series(filename = self.filename,
+                             filetype = self.filetype,
+                             dtype = self.dtype,
+                             headerlength = self.headerlength,
+                             samplingRate = self.samplingRate,
+                             datakey = 'raw_')
+
+    def load_series(self, filename, filetype, dtype, headerlength,
+                    samplingRate, datakey):
+        """
         Load the data in the file at `self.filename`.
         Accepts `.mat`, `.axgd` and `.bin` files.
         (`.bin` files are for simulated data only at the moment.)
         """
-        names, *loaded_data = readdata.load(filename = self.filename,
-                                            filetype = self.filetype,
-                                            dtype = self.bindtype,
-                                            headerlength = self.headerlength,
-                                            fs = self.samplingRate)
+        names, *loaded_data = readdata.load(filename = filename,
+                                            filetype = filetype,
+                                            dtype = dtype,
+                                            headerlength = headerlength,
+                                            fs = samplingRate)
         ### The `if` accounts for the presence or absence of
         ### piezo and command voltage in the data being loaded
 
         if 'Piezo [V]' in names and 'Command Voltage [V]' in names:
             time = loaded_data[0]
-            self['raw_'] = Series([Episode(time, trace, nthEpisode=i,
+            self[datakey] = Series([Episode(time, trace, nthEpisode=i,
                                             piezo=pTrace,
                                             command=cVtrace,
                                             samplingRate = self.samplingRate)
@@ -233,21 +246,21 @@ class Recording(dict):
 
         elif 'Piezo [V]' in names:
             time, current, piezo, _ = loaded_data
-            self['raw_'] = Series([Episode(time, current[i], nthEpisode=i,
+            self[datakey] = Series([Episode(time, current[i], nthEpisode=i,
                                             piezo=piezo[i],
                                             samplingRate = self.samplingRate)
                                     for i in range(len(current))])
 
         elif 'Command Voltage [V]' in names:
             time, current, _, command = loaded_data
-            self['raw_'] = Series([Episode(time, current[i], nthEpisode=i,
+            self[datakey] = Series([Episode(time, current[i], nthEpisode=i,
                                             command=command[i],
                                             samplingRate = self.samplingRate)
                                     for i in range(len(current))])
 
         else:
             time, current, _, _ = loaded_data
-            self['raw_'] = Series([Episode(time, current[i], nthEpisode=i,
+            self[datakey] = Series([Episode(time, current[i], nthEpisode=i,
                                             samplingRate = self.samplingRate)
                                     for i in range(len(current))])
 
