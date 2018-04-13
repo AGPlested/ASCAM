@@ -136,26 +136,26 @@ class Series(list):
             episode.filter_episode(filterFrequency, episode.samplingRate)
         return output
 
-    def baseline_correct_all(self, intervals = [], method = 'poly', degree = 1,
-                                 timeUnit = 'ms', intervalSelection = False,
-                                 piezoSelection = False, active = False,
-                                 deviation = 0.05):
+    def baseline_correct_all(self, intervals = [], method = 'poly',
+                             degree = 1, timeUnit = 'ms',
+                             intervalSelection = False,
+                             piezoSelection = False, active = False,
+                             deviation = 0.05):
         """
         Return a `Series` object in which the episodes stored in `self` are
         baseline corrected with the given parameters
         """
         output = copy.deepcopy(self)
         for episode in output:
-            episode.baseline_correct_episode(degree = degree,
-                                             intervals = intervals,
-                                             method = method,
-                                             timeUnit = timeUnit,
-                                             intervalSelection = (
-                                                   intervalSelection),
-                                             piezoSelection = (
-                                                      piezoSelection),
-                                             active = active,
-                                             deviation = deviation)
+            episode.baseline_correct_episode(
+                                        degree = degree,
+                                        intervals = intervals,
+                                        method = method,
+                                        timeUnit = timeUnit,
+                                        intervalSelection = intervalSelection,
+                                        piezoSelection = piezoSelection,
+                                        active = active,
+                                        deviation = deviation)
         return output
 
     def idealize_all(self, thresholds):
