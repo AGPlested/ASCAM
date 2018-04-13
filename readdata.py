@@ -3,6 +3,24 @@ import subprocess
 from scipy.io import loadmat as scipy_loadmat
 from scipy.io.matlab.mio5 import varmats_from_mat
 import os
+from tools import detect_filetype
+import json
+
+def read_metadata(filename):
+    """
+    read a json file containing the attributes of a recording and its episodes
+    and return dictionaries containing these attributes
+    """
+    with open(filename,'r') as metadata_file:
+        metadata = json.load(metadata_file)
+    # seperate attributes into recording attributes and episode attributes per series
+    series_attributes = dict()
+    for datakey in metadata['datakeys']:
+        series_attributes[datakey] = (metadata[datakey])
+        metadata.pop(datakey)
+    metadata.pop('datakeys')
+    return metadata, series_attributes
+
 
 def load_matlab(filename):
     """
@@ -132,23 +150,6 @@ def load_axo(filename):
 
     return names_to_output, time, current, piezo, commandVoltage
 
-def detect_filetype(filename):
-    """
-    detect the type of file from the extension
-    works by walking through the filename in reverse order and considering
-    the filetype to be whatever comes before the first '.' it encounters
-    """
-    N = len(filename)
-    for i, char in enumerate(filename[::-1]):
-        # loop over the full filename (which includes directory) backwards
-        # to extract the extension and name of the file
-        if char=='.':
-            period = N-i
-            break
-    filetype = filename[period:]
-    if filetype=='axgd': filetype = 'axo'
-    return filetype
-
 def load(filename, filetype=False, dtype=None, headerlength=None, fs=None):
     """
     get data form a file
@@ -159,11 +160,12 @@ def load(filename, filetype=False, dtype=None, headerlength=None, fs=None):
         filetype = detect_filetype(filename)
 
     if filetype == 'axo':
-        return load_axo(filename)
+        output = load_axo(filename)
     elif filetype == 'mat':
-        return load_matlab(filename)
+        output = load_matlab(filename)
     elif filetype == 'bin':
-        return load_binary(filename,dtype,headerlength,fs)
+        output = load_binary(filename,dtype,headerlength,fs)
     else:
         print("Filetype not supported.")
-        pass
+        output = False
+    return output
