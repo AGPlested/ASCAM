@@ -5,6 +5,7 @@ from scipy.io.matlab.mio5 import varmats_from_mat
 import os
 from tools import detect_filetype
 import json
+import pickle
 
 def read_metadata(filename):
     """
@@ -21,6 +22,13 @@ def read_metadata(filename):
     metadata.pop('datakeys')
     return metadata, series_attributes
 
+def load_pickle(filename):
+    """
+    read a recording object from a pickle file
+    """
+    with open(filename,'rb') as file:
+        data = pickle.load(file)
+    return data
 
 def load_matlab(filename):
     """
