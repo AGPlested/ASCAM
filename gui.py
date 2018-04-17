@@ -375,6 +375,14 @@ class MenuBar(tk.Menu):
         self.add_cascade(label="File", menu=self.subMenu) #Main Menu
         self.subMenu.add_command(label="Hello",command=self.Hello) #Submenus under File
         self.subMenu.add_command(label="Quit",command=self.parent.master.quit)
+
+        # the code below is needed to make the menuBar responsive on Mac OS
+        appmenu = tk.Menu(self, name='apple')
+        self.add_cascade(menu=appmenu)
+        appmenu.add_command(label='About My Application')
+        appmenu.add_separator()
+        self.parent.master['menu'] = self
+
     def Hello(self):
         print("Hello")
 
