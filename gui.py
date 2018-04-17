@@ -101,8 +101,6 @@ class GUI(ttk.Frame):
         self.create_widgets()
         self.configure_grid()
 
-        self.commandbar.loadbutton.focus()
-
         if bintest or axotest or mattest:
             self.load_for_testing()
         ## if testing arguments have been given data will be loaded when the
@@ -177,6 +175,7 @@ class GUI(ttk.Frame):
         self.histogramOptions = HistogramConfiguration(self)
         self.plotOptions = PlotOptions(self)
         self.displayFrame = Displayframe(self)
+        self.menuBar = MenuBar(self)
 
     def configure_grid(self):
         """
@@ -366,6 +365,18 @@ class Displayframe(ttk.Frame):
             else:
                 if VERBOSE: print("no command voltage found")
         else: pass
+
+class MenuBar(tk.Menu):
+    def __init__(self,parent):
+        self.parent = parent
+        tk.Menu.__init__(self, parent.master,tearoff=0)
+        self.parent.master.config(menu=self)
+        self.subMenu = tk.Menu(self)
+        self.add_cascade(label="File", menu=self.subMenu) #Main Menu
+        self.subMenu.add_command(label="Hello",command=self.Hello) #Submenus under File
+        self.subMenu.add_command(label="Quit",command=self.parent.master.quit)
+    def Hello(self):
+        print("Hello")
 
 class Commandframe(ttk.Frame):
     """
