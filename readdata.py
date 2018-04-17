@@ -14,7 +14,8 @@ def read_metadata(filename):
     """
     with open(filename,'r') as metadata_file:
         metadata = json.load(metadata_file)
-    # seperate attributes into recording attributes and episode attributes per series
+    # seperate attributes into recording attributes and episode attributes per
+    # series
     series_attributes = dict()
     for datakey in metadata['datakeys']:
         series_attributes[datakey] = (metadata[datakey])
@@ -26,6 +27,7 @@ def load_pickle(filename):
     """
     read a recording object from a pickle file
     """
+    print("reading pickle")
     with open(filename,'rb') as file:
         data = pickle.load(file)
     return data

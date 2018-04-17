@@ -41,6 +41,9 @@ class GUI(ttk.Frame):
         ttk.Frame.__init__(self, master)
         self.master = master
 
+        # which window system is being used
+        self.window_system = master.tk.call('tk', 'windowingsystem')
+
         ### parameters for loading of a file
         self.filenamefull = tk.StringVar()
         self.filename = tk.StringVar()
@@ -371,20 +374,38 @@ class MenuBar(tk.Menu):
         self.parent = parent
         tk.Menu.__init__(self, parent.master,tearoff=0)
         self.parent.master.config(menu=self)
+
+        # menu holding all the cascading options
         self.subMenu = tk.Menu(self)
-        self.add_cascade(label="File", menu=self.subMenu) #Main Menu
-        self.subMenu.add_command(label="Hello",command=self.Hello) #Submenus under File
+
+        self.create_file_cascade()
+
+        # # the code below is needed to make the menuBar responsive on Mac OS
+        # # apple uses window system aqua
+        # if parent.window_system == 'aquaa':
+        #     if VERBOSE: print("trying to make the menu work on Mac")
+        #     appmenu = tk.Menu(self, name='apple')
+        #     self.add_cascade(menu=appmenu)
+        #     appmenu.add_command(label='About My Application')
+        #     appmenu.add_separator()
+        #     self.parent.master['menu'] = self
+        # elif parent.window_system == 'X11':
+        #     # this part of the code has not yet been tested on linux, any
+        #     # adjustments to the menu that are required should go here
+        #     pass
+        #     # some linux distributions now use Wayland or other window managers,
+        #     # beware
+
+    def create_file_cascade(self):
+        """
+        Create all the options associated with files in the menu (e.g. 'open',
+        'export' and 'save')
+        """
+        self.add_cascade(label="File", menu=self.subMenu)
+        # self.subMenu.add_command(label="Hello",command=self.Hello) #Submenus under File
         self.subMenu.add_command(label="Quit",command=self.parent.master.quit)
 
-        # the code below is needed to make the menuBar responsive on Mac OS
-        appmenu = tk.Menu(self, name='apple')
-        self.add_cascade(menu=appmenu)
-        appmenu.add_command(label='About My Application')
-        appmenu.add_separator()
-        self.parent.master['menu'] = self
 
-    def Hello(self):
-        print("Hello")
 
 class Commandframe(ttk.Frame):
     """
@@ -1290,9 +1311,7 @@ class Loadframe(tk.Toplevel):
     def load_button(self):
         if self.filetype.get() == 'bin':
             binframe = Binaryquery(self)
-
-        elif (self.filetype.get() == 'axo'
-              or self.filetype.get() == 'mat'):
+        else:
             try:
                 ### move variables to parent if data loaded succesfully
                 self.parent.filetype.set(self.filetype.get())
@@ -1331,22 +1350,21 @@ class Loadframe(tk.Toplevel):
         self.filename.set(filename[slash:])
         self.path.set(filename[:slash])
         extension=filename[period:]
-
+        if VERBOSE:
+            print("name of the file is {}".format(self.filename.get()))
+            print("the extension was identified as "+extension)
         if extension == 'bin':
-            if VERBOSE: print("found '.bin' extension")
             self.filetype.set('bin')
             self.filetypefull.set('binary')
-
         elif extension == 'axgd':
-            if VERBOSE: print("found '.axgd' extension")
             self.filetype.set('axo')
             self.filetypefull.set('axograph')
-
         elif extension == 'mat':
-            if VERBOSE: print("found '.mat' extension")
             self.filetype.set('mat')
             self.filetypefull.set('matlab')
-
+        elif extension == 'pkl':
+            self.filetype.set('pkl')
+            self.filetypefull.set('pickle')
         self.samplingentry.focus()
 
 class Binaryquery(tk.Toplevel):

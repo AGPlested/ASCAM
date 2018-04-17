@@ -208,9 +208,15 @@ class Recording(dict):
 
     def load_data(self):
         """
-        this method is supposed to load data from a file or a dictionary
+        this method is supposed to load data from a file or a directory
         """
-        if os.path.isfile(self.filename):
+        print("filename in backend is "+self.filename)
+        if 'pkl' in detect_filetype(self.filename):
+            loaded_data = readdata.load_pickle(self.filename)
+            self.__dict__ = loaded_data.__dict__
+            for key, value in loaded_data.items():
+                self[key] = value
+        elif os.path.isfile(self.filename):
             self.load_series(filename = self.filename,
                              filetype = self.filetype,
                              dtype = self.dtype,
