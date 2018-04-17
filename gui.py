@@ -51,6 +51,9 @@ class GUI(ttk.Frame):
         self.filetype = tk.StringVar()
         self.data_loaded = False
 
+        # bind window name updating
+        self.filename.trace("w",self.update_frame_title)
+
         ### parameters for the histogram
         self.hist_number_bins = tk.StringVar()
         self.hist_number_bins.set(50)
@@ -144,6 +147,13 @@ class GUI(ttk.Frame):
         self.samplingrate.set('4e4')
         self.data_loaded = True
         self.update_all()
+
+    def update_frame_title(self,*args):
+        """
+        Update the name of the application window to include the name of the file
+        that is loaded
+        """
+        self.master.title("ASCAM - "+self.filename.get())
 
     def update_all(self, *args):
         """
@@ -382,6 +392,12 @@ class Commandframe(ttk.Frame):
 
     def save_dialog(self):
         SaveFrame(self.parent)
+
+    def open_file(self):
+        print("open file")
+
+    def open_directory(self):
+        print("open directory")
 
 class SaveFrame(tk.Toplevel):
     """docstring for SaveFrame"""
