@@ -413,7 +413,12 @@ class MenuBar(tk.Menu):
 
     def open_file(self):
         # open the dialog for loading a single file
-        OpenFileDialog(self.parent)
+        filename = askopenfilename()
+        if VERBOSE: print("selected file: '"+filename+"'")
+        if filename is not None:
+            OpenFileDialog(self.parent, filename)
+        else:
+            if VERBOSE: print("User pressed 'Cancel'")
 
     def open_folder(self):
         # placeholder for function opening folders
@@ -431,6 +436,8 @@ class MenuBar(tk.Menu):
                                        filetype = 'pkl',
                                        save_piezo = True,
                                        save_command = True)
+        else:
+            if VERBOSE: print("User pressed 'Cancel'")
 
     def export(self):
         # placeholder that will create a export data dialog
@@ -1227,22 +1234,13 @@ class OpenFileDialog(tk.Toplevel):
     Select file and load it by clicking 'ok' button, in case of binary
     file another window pops up to ask for additional parameters.
     """
-    def __init__(self, parent):
+    def __init__(self, parent, filename):
         if VERBOSE: print("initializing OpenFileDialog")
 
         tk.Toplevel.__init__(self,parent)
         self.parent = parent
         self.title("Select file")
-        self.create_entryFields()
-        self.create_widgets()
-        self.loadbutton.focus()
 
-        if VERBOSE: print("OpenFileDialog initialized")
-
-    def create_entryFields(self):
-        """
-        create the variables that hold all the entries of the load dialog
-        """
         if VERBOSE: print("creating StringVars for parameter entry")
         self.filenamefull = tk.StringVar()
         self.filetypefull = tk.StringVar()
@@ -1251,10 +1249,13 @@ class OpenFileDialog(tk.Toplevel):
         self.samplingrate = tk.StringVar()
         self.path = tk.StringVar()
 
-        self.filetype.set('')
-        self.filename.set('')
-        self.samplingrate.set('')
-        self.path.set('')
+        self.parse_filename(filename)
+        self.filenamefull.set(filename)
+        # self.samplingrate.set('')
+
+        self.create_widgets()
+        self.samplingentry.focus()
+        if VERBOSE: print("OpenFileDialog initialized")
 
     def create_widgets(self):
         if VERBOSE: print("creating OpenFileDialog widgets")
@@ -1264,9 +1265,9 @@ class OpenFileDialog(tk.Toplevel):
         filenamelabel = ttk.Label(self, textvariable=self.filename)
         filenamelabel.grid(column=2, row=1, sticky=tk.N)
 
-        self.loadbutton = ttk.Button(self, text='Select file',
-                                     command=self.get_file)
-        self.loadbutton.grid(column = 3, row = 1, sticky=(tk.N, tk.E))
+        # self.loadbutton = ttk.Button(self, text='Select file',
+        #                              command=self.get_file)
+        # self.loadbutton.grid(column = 3, row = 1, sticky=(tk.N, tk.E))
 
         #second row - show filepath
         ttk.Label(self, text='Path:').grid(column=1, row=2, sticky = tk.W)
@@ -1314,13 +1315,13 @@ class OpenFileDialog(tk.Toplevel):
             finally:
                 self.destroy()
 
-    def get_file(self):
+    def parse_filename(self, filename):
         """
         Get data by clicking.
         Relies on tkinter and gets name and type of the file
         """
-        filename = askopenfilename()
-        self.filenamefull.set(filename)
+        # filename = askopenfilename()
+        # self.filenamefull.set(filename)
         extension = ''
 
         N = len(filename)
@@ -1351,7 +1352,6 @@ class OpenFileDialog(tk.Toplevel):
         elif extension == 'pkl':
             self.filetype.set('pkl')
             self.filetypefull.set('pickle')
-        self.samplingentry.focus()
 
 class Binaryquery(tk.Toplevel):
     """
