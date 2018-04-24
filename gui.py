@@ -422,7 +422,15 @@ class MenuBar(tk.Menu):
     def save_to_file(self):
         # save the current recording object with all its attributes as a
         # pickle file
-        SaveDialog(self.parent)
+        filename = asksaveasfilename()
+        if filename is not None:
+            if VERBOSE:
+                print("selected filename: '"+filename+"'")
+                print("Calling save_data method")
+            self.parent.data.save_data(filename = filename,
+                                       filetype = 'pkl',
+                                       save_piezo = True,
+                                       save_command = True)
 
     def export(self):
         # placeholder that will create a export data dialog
@@ -470,63 +478,6 @@ class Commandframe(ttk.Frame):
 
     def open_directory(self):
         print("open directory")
-
-class SaveDialog(tk.Toplevel):
-    """
-    Dialog for saving data
-    parent should be GUI main frame
-    """
-    def __init__(self, parent):
-        if VERBOSE: print("initializing SaveDialog")
-
-        tk.Toplevel.__init__(self,parent)
-        self.parent = parent
-        self.title("Save...")
-        self.create_entryFields()
-        self.create_widgets()
-        # self.loadbutton.focus()
-
-    def create_entryFields(self):
-        self.filename = tk.StringVar()
-        # self.dirname = tk.StringVar()
-        # self.filetype = tk.StringVar()
-        # self.filetype.set('mat')
-        # self.save_piezo = tk.IntVar()
-        # self.save_command = tk.IntVar()
-
-    def create_widgets(self):
-        # ttk.Label(self, text="Filetype:").grid(row=0,column=0)
-        # ttk.Entry(self,width=5,textvariable=self.filetype).grid(row=0,column=2)
-
-        # ttk.Label(self, text="Save piezo data").grid(row=1,column=0)
-        # ttk.Checkbutton(self,variable=self.save_piezo).grid(row=1,column=2)
-        #
-        # ttk.Label(self, text="Save command voltage data").grid(row=2,column=0)
-        # ttk.Checkbutton(self,variable=self.save_command).grid(row=2,column=2)
-
-        ttk.Button(self,text="Select File",command=self.select_button
-                    ).grid(row=3,column=1)
-
-        ttk.Label(self, text='Filename:').grid(row=4,column=0)
-        ttk.Label(self, textvariable=self.filename).grid(row=4,column=2)
-
-
-        ttk.Button(self,text="Save",command=self.save_button
-                    ).grid(row=6,column=0)
-        ttk.Button(self,text='Cancel',command=self.destroy
-                    ).grid(row=6, column=2)
-
-    def select_button(self):
-        self.filename.set(asksaveasfilename())
-        if VERBOSE: print("selected filename: '"+self.filename.get()+"'")
-
-    def save_button(self):
-        if VERBOSE: print("Calling save_data method")
-        self.parent.data.save_data(filename = self.filename.get(),
-                                   filetype = 'pkl',
-                                   save_piezo = True,
-                                   save_command = True)
-        self.destroy()
 
 class HistogramConfiguration(ttk.Frame):
     """
