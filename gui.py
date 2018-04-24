@@ -376,7 +376,9 @@ class MenuBar(tk.Menu):
         self.parent.master.config(menu=self)
 
         # menu holding all the cascading options
-        self.subMenu = tk.Menu(self)
+        # `tearoff` is needed because otherwise there is a seperator on top the
+        # menu
+        self.subMenu = tk.Menu(self, tearoff=0)
 
         self.create_file_cascade()
 
@@ -402,9 +404,39 @@ class MenuBar(tk.Menu):
         'export' and 'save')
         """
         self.add_cascade(label="File", menu=self.subMenu)
-        # self.subMenu.add_command(label="Hello",command=self.Hello) #Submenus under File
+        #Submenus under File
+        self.subMenu.add_command(label="Open File",command=self.open_file)
+        self.subMenu.add_command(label="Open Folder",command=self.open_folder)
+        self.subMenu.add_command(label="Save",command=self.save_to_file)
+        self.subMenu.add_command(label="Export",command=self.export)
         self.subMenu.add_command(label="Quit",command=self.parent.master.quit)
 
+    def open_file(self):
+        # open the dialog for loading a single file
+        OpenFileDialog(self.parent)
+
+    def open_folder(self):
+        # placeholder for function opening folders
+        pass
+
+    def save_to_file(self):
+        # save the current recording object with all its attributes as a
+        # pickle file
+        SaveDialog(self.parent)
+
+    def export(self):
+        # placeholder that will create a export data dialog
+        pass
+
+
+class ExportFileDialog(tk.Toplevel):
+    """
+    placeholder for a dialog for exporting data
+    """
+    def __init__(self, parent):
+        if VERBOSE: print("initializing ExportFileDialog")
+        tk.Toplevel.__init__(self,parent)
+        self.parent = parent
 
 
 class Commandframe(ttk.Frame):
@@ -416,7 +448,7 @@ class Commandframe(ttk.Frame):
     def __init__(self, parent):
         ttk.Frame.__init__(self, parent)
         self.parent = parent
-        self.create_widgets()
+        # self.create_widgets()
 
     def create_widgets(self):
         self.loadbutton = ttk.Button(self, text="Load file",
@@ -431,7 +463,7 @@ class Commandframe(ttk.Frame):
         Loadframe(self.parent)
 
     def save_dialog(self):
-        SaveFrame(self.parent)
+        SaveDialog(self.parent)
 
     def open_file(self):
         print("open file")
@@ -439,14 +471,17 @@ class Commandframe(ttk.Frame):
     def open_directory(self):
         print("open directory")
 
-class SaveFrame(tk.Toplevel):
-    """docstring for SaveFrame"""
+class SaveDialog(tk.Toplevel):
+    """
+    Dialog for saving data
+    parent should be GUI main frame
+    """
     def __init__(self, parent):
-        if VERBOSE: print("initializing SaveFrame")
+        if VERBOSE: print("initializing SaveDialog")
 
         tk.Toplevel.__init__(self,parent)
         self.parent = parent
-        self.title("Save data")
+        self.title("Save...")
         self.create_entryFields()
         self.create_widgets()
         # self.loadbutton.focus()
@@ -454,20 +489,20 @@ class SaveFrame(tk.Toplevel):
     def create_entryFields(self):
         self.filename = tk.StringVar()
         # self.dirname = tk.StringVar()
-        self.filetype = tk.StringVar()
-        self.filetype.set('mat')
-        self.save_piezo = tk.IntVar()
-        self.save_command = tk.IntVar()
+        # self.filetype = tk.StringVar()
+        # self.filetype.set('mat')
+        # self.save_piezo = tk.IntVar()
+        # self.save_command = tk.IntVar()
 
     def create_widgets(self):
-        ttk.Label(self, text="Filetype:").grid(row=0,column=0)
-        ttk.Entry(self,width=5,textvariable=self.filetype).grid(row=0,column=2)
+        # ttk.Label(self, text="Filetype:").grid(row=0,column=0)
+        # ttk.Entry(self,width=5,textvariable=self.filetype).grid(row=0,column=2)
 
-        ttk.Label(self, text="Save piezo data").grid(row=1,column=0)
-        ttk.Checkbutton(self,variable=self.save_piezo).grid(row=1,column=2)
-
-        ttk.Label(self, text="Save command voltage data").grid(row=2,column=0)
-        ttk.Checkbutton(self,variable=self.save_command).grid(row=2,column=2)
+        # ttk.Label(self, text="Save piezo data").grid(row=1,column=0)
+        # ttk.Checkbutton(self,variable=self.save_piezo).grid(row=1,column=2)
+        #
+        # ttk.Label(self, text="Save command voltage data").grid(row=2,column=0)
+        # ttk.Checkbutton(self,variable=self.save_command).grid(row=2,column=2)
 
         ttk.Button(self,text="Select File",command=self.select_button
                     ).grid(row=3,column=1)
@@ -488,9 +523,9 @@ class SaveFrame(tk.Toplevel):
     def save_button(self):
         if VERBOSE: print("Calling save_data method")
         self.parent.data.save_data(filename = self.filename.get(),
-                                   filetype = self.filetype.get(),
-                                   save_piezo = bool(self.save_piezo.get()),
-                                   save_command = bool(self.save_command.get()))
+                                   filetype = 'pkl',
+                                   save_piezo = True,
+                                   save_command = True)
         self.destroy()
 
 class HistogramConfiguration(ttk.Frame):
@@ -1235,14 +1270,14 @@ class EpisodeList(ttk.Frame):
         self.parent.update_episodelist()
         self.parent.update_plots()
 
-class Loadframe(tk.Toplevel):
+class OpenFileDialog(tk.Toplevel):
     """
     Temporary frame that gets the file and information about it.
     Select file and load it by clicking 'ok' button, in case of binary
     file another window pops up to ask for additional parameters.
     """
     def __init__(self, parent):
-        if VERBOSE: print("initializing LoadFrame")
+        if VERBOSE: print("initializing OpenFileDialog")
 
         tk.Toplevel.__init__(self,parent)
         self.parent = parent
@@ -1251,7 +1286,7 @@ class Loadframe(tk.Toplevel):
         self.create_widgets()
         self.loadbutton.focus()
 
-        if VERBOSE: print("LoadFrame initialized")
+        if VERBOSE: print("OpenFileDialog initialized")
 
     def create_entryFields(self):
         """
@@ -1271,7 +1306,7 @@ class Loadframe(tk.Toplevel):
         self.path.set('')
 
     def create_widgets(self):
-        if VERBOSE: print("creating LoadFrame widgets")
+        if VERBOSE: print("creating OpenFileDialog widgets")
         # first row - filename and button for choosing file
         ttk.Label(self, text='File:').grid(column=1,row=1,sticky=(tk.N, tk.W))
 

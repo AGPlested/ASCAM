@@ -246,7 +246,8 @@ class Recording(dict):
                                     headerlength = metadata['headerlength'],
                                     samplingRate = metadata['samplingRate'],
                                     datakey=datakey)
-                        for episode, attributes in zip(self[datakey],series_metadata[datakey].values()):
+                        for episode, attributes in zip(self[datakey],
+                                            series_metadata[datakey].values()):
                             episode.__dict__ = attributes
 
     def load_series(self, filename, filetype, dtype, headerlength,
