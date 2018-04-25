@@ -1,6 +1,6 @@
 import numpy as np
 
-def detect_filetype(filename):
+def parse_filename(filename):
     """
     detect the type of file from the extension
     works by walking through the filename in reverse order and considering
@@ -12,10 +12,19 @@ def detect_filetype(filename):
         # to extract the extension and name of the file
         if char=='.':
             period = N-i
+        if char=='/':
+            slash = N-i
             break
+    path = filename[:slash]
     filetype = filename[period:]
-    if filetype=='axgd': filetype = 'axo'
-    return filetype
+    if filetype=='axgd':
+        filetype = 'axo'
+        filetype_long = 'axograph'
+    elif filetype == 'bin': filetype_long = 'binary'
+    elif filetype == 'mat': filetype_long = 'matlab'
+    elif filetype == 'pkl': filetype_long = 'pickle'
+
+    return filetype, path, filetype_long
 
 def piezo_selection(time, piezo, trace, active = True, deviation = 0.05):
     """

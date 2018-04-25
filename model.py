@@ -5,7 +5,7 @@ import filtering
 import analysis
 import copy
 import os
-from tools import piezo_selection, detect_filetype
+from tools import piezo_selection, parse_filename
 
 class Episode(dict):
     def __init__(self, time, trace, nthEpisode = 0, piezo = None,
@@ -211,7 +211,7 @@ class Recording(dict):
         this method is supposed to load data from a file or a directory
         """
         print("filename in backend is "+self.filename)
-        if 'pkl' in detect_filetype(self.filename):
+        if 'pkl' in parse_filename(self.filename)[0]:
             loaded_data = readdata.load_pickle(self.filename)
             self.__dict__ = loaded_data.__dict__
             for key, value in loaded_data.items():
