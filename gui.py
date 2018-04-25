@@ -987,7 +987,7 @@ class BaselineFrame(tk.Toplevel):
 class ListSelection(ttk.Frame):
     def __init__(self, parent):
         ttk.Frame.__init__(self, parent)
-        self.parent = parent
+        self.parent = parent # parent is mainframe
         self.buttons = dict()
         ## the `buttons` dict holds ordered pairs of the button objects and
         ## the variables they refer to, `dict['name']=(button,var)`
@@ -1040,7 +1040,6 @@ class ListSelection(ttk.Frame):
 
         ### create function to color episode on keypress and add to list
         if key:
-
             ### convert key to lower case and take only the first letter if
             ### multiple were entered
             key=key.lower()
@@ -1050,7 +1049,7 @@ class ListSelection(ttk.Frame):
                 n_episode = self.parent.Nepisode
                 new_list = self.parent.data.lists[name][0]
                 episodelist = self.parent.episodeList.episodelist
-
+                print(self.parent.master.focus_get())
                 if not (n_episode in new_list):
                     episodelist.itemconfig(n_episode, bg=color)
                     new_list.append(n_episode)
@@ -1067,7 +1066,7 @@ class ListSelection(ttk.Frame):
                               '''.format(key,n_episode,name))
                         print('"{}" now contains:'.format(name))
                         print(new_list)
-            self.parent.bind_all(key,color_episode)
+            self.parent.episodeList.episodelist.bind(key,color_episode)
             self.parent.data.lists[name][1] = color
             self.colorind+=1
 
