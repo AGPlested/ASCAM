@@ -13,11 +13,6 @@ import plotting
 from tools import stringList_parser, parse_filename
 import os
 import copy
-### parameters for testing and verbose output
-VERBOSE = False
-axotest = False
-bintest = False
-mattest = False
 
 class GUI(ttk.Frame):
     """
@@ -29,13 +24,16 @@ class GUI(ttk.Frame):
     because then they can be entered in entry fields without problems
     """
     @classmethod
-    def run(cls, v, axo, bin, mat):
+    def run(cls, v=False, axo=False, bin=False, mat=False):
+        # parameters for verbose output and testting modes
         global VERBOSE
         global axotest
         global bintest
         global mattest
-
-        VERBOSE = VERBOSE
+        VERBOSE = v
+        axotest = axo
+        bintest = bin
+        mattest = mat
 
         root = tk.Tk()
         root.protocol('WM_DELETE_WINDOW', quit)

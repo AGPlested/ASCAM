@@ -1,7 +1,7 @@
 import numpy as np
 import filtering
 import analysis
-from tools import piezo_selection, detect_filetype
+from tools import piezo_selection, parse_filename
 
 class Episode(dict):
     def __init__(self, time, trace, nthEpisode = 0, piezo = None,
