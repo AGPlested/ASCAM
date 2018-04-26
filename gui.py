@@ -410,7 +410,7 @@ class MenuBar(tk.Menu):
         'export' and 'save')
         """
         self.add_cascade(label="File", menu=self.subMenu)
-        #Submenus under File
+        #Submenus under 'File'
         self.subMenu.add_command(label="Open File",command=self.open_file)
         self.subMenu.add_command(label="Open Folder",command=self.open_folder)
         self.subMenu.add_command(label="Save",command=self.save_to_file)
@@ -1376,19 +1376,3 @@ class Binaryquery(tk.Toplevel):
         self.parent.update_all()
         self.loadframe.destroy()
         self.destroy()
-#
-# if __name__ == '__main__':
-#     import sys, os, copy
-#     try:
-#         if 'axo' in sys.argv:
-#             axotest = True
-#         elif 'bin' in sys.argv:
-#             bintest = True
-#         elif 'mat' in sys.argv:
-#             mattest = True
-#         if 'v' in sys.argv:
-#             VERBOSE = True
-#     except IndexError:
-#         pass
-#
-#     GUI.run()
