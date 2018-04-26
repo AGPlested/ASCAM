@@ -3,15 +3,16 @@ from tkinter import ttk
 from tkinter.filedialog import askopenfilename, asksaveasfilename, askdirectory
 import matplotlib
 matplotlib.use('TkAgg')
-import model as backend
+from recording import Recording
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg,
                                             NavigationToolbar2TkAgg)
 from matplotlib import gridspec as gs
 import plotting
-from tools import stringList_parser
-
+from tools import stringList_parser, parse_filename
+import os
+import copy
 ### parameters for testing and verbose output
 VERBOSE = False
 axotest = False
@@ -28,7 +29,14 @@ class GUI(ttk.Frame):
     because then they can be entered in entry fields without problems
     """
     @classmethod
-    def run(cls):
+    def run(cls, v, axo, bin, mat):
+        global VERBOSE
+        global axotest
+        global bintest
+        global mattest
+
+        VERBOSE = VERBOSE
+
         root = tk.Tk()
         root.protocol('WM_DELETE_WINDOW', quit)
         root.title("ASCAM")
@@ -94,7 +102,7 @@ class GUI(ttk.Frame):
         self.samplingrate.set("0")
 
         # dictionary for the data
-        self.data = backend.Recording()
+        self.data = Recording()
         # datakey of the current displayed data
         self.datakey = tk.StringVar()
         self.datakey.set('raw_')
@@ -122,8 +130,8 @@ class GUI(ttk.Frame):
         ### multiplied with random numbers to create additional episodes
             if VERBOSE:
                 print('Test mode with binary data')
-            self.data = backend.Recording(
-                                    cwd+'/data/sim1600.bin', 4e4,
+            self.data = Recording(
+                                    os.getcwd()+'/data/sim1600.bin', 4e4,
                                     'bin', 3072, np.int16)
             self.data['raw_'][0]['trace']=self.data['raw_'][0]['trace'][:9999]
             self.data['raw_'][0]['time']=self.data['raw_'][0]['time'][:9999]
@@ -137,12 +145,12 @@ class GUI(ttk.Frame):
         elif axotest:
             if VERBOSE:
                 print('Test mode with axograph data')
-            self.data = backend.Recording(filename = 'data/170404 015.axgd',
+            self.data = Recording(filename = 'data/170404 015.axgd',
                                         filetype = 'axo')
         elif mattest:
             if VERBOSE:
                 print('Test mode with matlab data.')
-            self.data = backend.Recording(
+            self.data = Recording(
                                 filename = 'data/171124 013 Copy Export.mat',
                                 filetype = 'mat')
         self.samplingrate.set('4e4')
@@ -171,7 +179,7 @@ class GUI(ttk.Frame):
         """
         self.commandbar = Commandframe(self)
         self.histogramFrame = HistogramFrame(self)
-        self.plots = Plotframe(self)
+        self.plots = PlotFrame(self)
         self.manipulations = Manipulations(self)
         self.episodeList = EpisodeList(self)
         self.listSelection = ListSelection(self)
@@ -376,7 +384,9 @@ class MenuBar(tk.Menu):
         self.parent.master.config(menu=self)
 
         # menu holding all the cascading options
-        self.subMenu = tk.Menu(self)
+        # `tearoff` is needed because otherwise there is a seperator on top the
+        # menu
+        self.subMenu = tk.Menu(self, tearoff=0)
 
         self.create_file_cascade()
 
@@ -402,9 +412,60 @@ class MenuBar(tk.Menu):
         'export' and 'save')
         """
         self.add_cascade(label="File", menu=self.subMenu)
-        # self.subMenu.add_command(label="Hello",command=self.Hello) #Submenus under File
+        #Submenus under File
+        self.subMenu.add_command(label="Open File",command=self.open_file)
+        self.subMenu.add_command(label="Open Folder",command=self.open_folder)
+        self.subMenu.add_command(label="Save",command=self.save_to_file)
+        self.subMenu.add_command(label="Export",command=self.export)
         self.subMenu.add_command(label="Quit",command=self.parent.master.quit)
 
+    def open_file(self):
+        # open the dialog for loading a single file
+        filename = askopenfilename()
+        if VERBOSE: print("selected file: '"+filename+"'")
+        if filename is not None:
+            OpenFileDialog(self.parent, filename)
+        else:
+            if VERBOSE: print("User pressed 'Cancel'")
+
+    def open_folder(self):
+        dirname = askdirectory()
+        if dirname is not None:
+            if VERBOSE:
+                print("selected directory with name: '"+dirname+"'")
+                print("Calling save_data method")
+            OpenFileDialog(self.parent, dirname)
+        else:
+            if VERBOSE: print("User pressed 'Cancel'")
+
+    def save_to_file(self):
+        # save the current recording object with all its attributes as a
+        # pickle file
+        filename = asksaveasfilename()
+        if filename is not None:
+            if VERBOSE:
+                print("selected filename: '"+filename+"'")
+                print("Calling save_data method")
+            self.parent.data.save_data(filename = filename,
+                                       filetype = 'pkl',
+                                       save_piezo = True,
+                                       save_command = True)
+        else:
+            if VERBOSE: print("User pressed 'Cancel'")
+
+    def export(self):
+        # placeholder that will create a export data dialog
+        pass
+
+
+class ExportFileDialog(tk.Toplevel):
+    """
+    placeholder for a dialog for exporting data
+    """
+    def __init__(self, parent):
+        if VERBOSE: print("initializing ExportFileDialog")
+        tk.Toplevel.__init__(self,parent)
+        self.parent = parent
 
 
 class Commandframe(ttk.Frame):
@@ -416,7 +477,7 @@ class Commandframe(ttk.Frame):
     def __init__(self, parent):
         ttk.Frame.__init__(self, parent)
         self.parent = parent
-        self.create_widgets()
+        # self.create_widgets()
 
     def create_widgets(self):
         self.loadbutton = ttk.Button(self, text="Load file",
@@ -431,67 +492,13 @@ class Commandframe(ttk.Frame):
         Loadframe(self.parent)
 
     def save_dialog(self):
-        SaveFrame(self.parent)
+        SaveDialog(self.parent)
 
     def open_file(self):
         print("open file")
 
     def open_directory(self):
         print("open directory")
-
-class SaveFrame(tk.Toplevel):
-    """docstring for SaveFrame"""
-    def __init__(self, parent):
-        if VERBOSE: print("initializing SaveFrame")
-
-        tk.Toplevel.__init__(self,parent)
-        self.parent = parent
-        self.title("Save data")
-        self.create_entryFields()
-        self.create_widgets()
-        # self.loadbutton.focus()
-
-    def create_entryFields(self):
-        self.filename = tk.StringVar()
-        # self.dirname = tk.StringVar()
-        self.filetype = tk.StringVar()
-        self.filetype.set('mat')
-        self.save_piezo = tk.IntVar()
-        self.save_command = tk.IntVar()
-
-    def create_widgets(self):
-        ttk.Label(self, text="Filetype:").grid(row=0,column=0)
-        ttk.Entry(self,width=5,textvariable=self.filetype).grid(row=0,column=2)
-
-        ttk.Label(self, text="Save piezo data").grid(row=1,column=0)
-        ttk.Checkbutton(self,variable=self.save_piezo).grid(row=1,column=2)
-
-        ttk.Label(self, text="Save command voltage data").grid(row=2,column=0)
-        ttk.Checkbutton(self,variable=self.save_command).grid(row=2,column=2)
-
-        ttk.Button(self,text="Select File",command=self.select_button
-                    ).grid(row=3,column=1)
-
-        ttk.Label(self, text='Filename:').grid(row=4,column=0)
-        ttk.Label(self, textvariable=self.filename).grid(row=4,column=2)
-
-
-        ttk.Button(self,text="Save",command=self.save_button
-                    ).grid(row=6,column=0)
-        ttk.Button(self,text='Cancel',command=self.destroy
-                    ).grid(row=6, column=2)
-
-    def select_button(self):
-        self.filename.set(asksaveasfilename())
-        if VERBOSE: print("selected filename: '"+self.filename.get()+"'")
-
-    def save_button(self):
-        if VERBOSE: print("Calling save_data method")
-        self.parent.data.save_data(filename = self.filename.get(),
-                                   filetype = self.filetype.get(),
-                                   save_piezo = bool(self.save_piezo.get()),
-                                   save_command = bool(self.save_command.get()))
-        self.destroy()
 
 class HistogramConfiguration(ttk.Frame):
     """
@@ -723,7 +730,7 @@ class PlotOptions(ttk.Frame):
                 self.parent.show_command.set(0)
         else: pass
 
-class Plotframe(ttk.Frame):
+class PlotFrame(ttk.Frame):
     def __init__(self, parent):
         ttk.Frame.__init__(self, parent)
         self.parent = parent
@@ -994,7 +1001,7 @@ class BaselineFrame(tk.Toplevel):
 class ListSelection(ttk.Frame):
     def __init__(self, parent):
         ttk.Frame.__init__(self, parent)
-        self.parent = parent
+        self.parent = parent # parent is mainframe
         self.buttons = dict()
         ## the `buttons` dict holds ordered pairs of the button objects and
         ## the variables they refer to, `dict['name']=(button,var)`
@@ -1047,7 +1054,6 @@ class ListSelection(ttk.Frame):
 
         ### create function to color episode on keypress and add to list
         if key:
-
             ### convert key to lower case and take only the first letter if
             ### multiple were entered
             key=key.lower()
@@ -1057,7 +1063,7 @@ class ListSelection(ttk.Frame):
                 n_episode = self.parent.Nepisode
                 new_list = self.parent.data.lists[name][0]
                 episodelist = self.parent.episodeList.episodelist
-
+                print(self.parent.master.focus_get())
                 if not (n_episode in new_list):
                     episodelist.itemconfig(n_episode, bg=color)
                     new_list.append(n_episode)
@@ -1074,7 +1080,7 @@ class ListSelection(ttk.Frame):
                               '''.format(key,n_episode,name))
                         print('"{}" now contains:'.format(name))
                         print(new_list)
-            self.parent.bind_all(key,color_episode)
+            self.parent.episodeList.episodelist.bind(key,color_episode)
             self.parent.data.lists[name][1] = color
             self.colorind+=1
 
@@ -1235,28 +1241,19 @@ class EpisodeList(ttk.Frame):
         self.parent.update_episodelist()
         self.parent.update_plots()
 
-class Loadframe(tk.Toplevel):
+class OpenFileDialog(tk.Toplevel):
     """
     Temporary frame that gets the file and information about it.
     Select file and load it by clicking 'ok' button, in case of binary
     file another window pops up to ask for additional parameters.
     """
-    def __init__(self, parent):
-        if VERBOSE: print("initializing LoadFrame")
+    def __init__(self, parent, filename):
+        if VERBOSE: print("initializing OpenFileDialog")
 
         tk.Toplevel.__init__(self,parent)
         self.parent = parent
         self.title("Select file")
-        self.create_entryFields()
-        self.create_widgets()
-        self.loadbutton.focus()
 
-        if VERBOSE: print("LoadFrame initialized")
-
-    def create_entryFields(self):
-        """
-        create the variables that hold all the entries of the load dialog
-        """
         if VERBOSE: print("creating StringVars for parameter entry")
         self.filenamefull = tk.StringVar()
         self.filetypefull = tk.StringVar()
@@ -1265,22 +1262,24 @@ class Loadframe(tk.Toplevel):
         self.samplingrate = tk.StringVar()
         self.path = tk.StringVar()
 
-        self.filetype.set('')
-        self.filename.set('')
-        self.samplingrate.set('')
-        self.path.set('')
+        self.filenamefull.set(filename)
+        filetype, path, filetypefull, filename = parse_filename(filename)
+        self.filename.set(filename)
+        self.path.set(path)
+        self.filetype.set(filetype)
+        self.filetypefull.set(filetypefull)
+
+        self.create_widgets()
+        self.samplingentry.focus()
+        if VERBOSE: print("OpenFileDialog initialized")
 
     def create_widgets(self):
-        if VERBOSE: print("creating LoadFrame widgets")
+        if VERBOSE: print("creating OpenFileDialog widgets")
         # first row - filename and button for choosing file
         ttk.Label(self, text='File:').grid(column=1,row=1,sticky=(tk.N, tk.W))
 
         filenamelabel = ttk.Label(self, textvariable=self.filename)
         filenamelabel.grid(column=2, row=1, sticky=tk.N)
-
-        self.loadbutton = ttk.Button(self, text='Select file',
-                                     command=self.get_file)
-        self.loadbutton.grid(column = 3, row = 1, sticky=(tk.N, tk.E))
 
         #second row - show filepath
         ttk.Label(self, text='Path:').grid(column=1, row=2, sticky = tk.W)
@@ -1290,7 +1289,6 @@ class Loadframe(tk.Toplevel):
         ttk.Label(self, text='Filetype:').grid(column=1, row=3, sticky = tk.W)
         ttk.Label(self, textvariable=self.filetypefull).grid(column=2,
                                                    row=3, sticky=(tk.W, tk.E))
-        ###### lets see if this way of line splitting works
 
         #fourth row - enter sampling rate
         self.samplingentry = ttk.Entry(self, width=7,
@@ -1319,7 +1317,7 @@ class Loadframe(tk.Toplevel):
                 self.parent.samplingrate.set(self.samplingrate.get())
                 self.parent.path.set(self.path.get())
 
-                self.parent.data = backend.Recording(self.filenamefull.get(),
+                self.parent.data = Recording(self.filenamefull.get(),
                                                      self.samplingrate.get(),
                                                      self.filetype.get())
                 self.parent.datakey.set(self.parent.data.currentDatakey)
@@ -1327,45 +1325,6 @@ class Loadframe(tk.Toplevel):
                 self.parent.update_all()
             finally:
                 self.destroy()
-
-    def get_file(self):
-        """
-        Get data by clicking.
-        Relies on tkinter and gets name and type of the file
-        """
-        filename = askopenfilename()
-        self.filenamefull.set(filename)
-        extension = ''
-
-        N = len(filename)
-        for i, char in enumerate(filename[::-1]):
-            # loop over the full filename (which includes directory) backwards
-            # to extract the extension and name of the file
-            if char=='.':
-                period = N-i
-            if char=='/':
-                slash = N-i
-                break
-
-        self.filename.set(filename[slash:])
-        self.path.set(filename[:slash])
-        extension=filename[period:]
-        if VERBOSE:
-            print("name of the file is {}".format(self.filename.get()))
-            print("the extension was identified as "+extension)
-        if extension == 'bin':
-            self.filetype.set('bin')
-            self.filetypefull.set('binary')
-        elif extension == 'axgd':
-            self.filetype.set('axo')
-            self.filetypefull.set('axograph')
-        elif extension == 'mat':
-            self.filetype.set('mat')
-            self.filetypefull.set('matlab')
-        elif extension == 'pkl':
-            self.filetype.set('pkl')
-            self.filetypefull.set('pickle')
-        self.samplingentry.focus()
 
 class Binaryquery(tk.Toplevel):
     """
@@ -1411,7 +1370,7 @@ class Binaryquery(tk.Toplevel):
         datatype = np.int16 #this is here because stringvar.get
                             #returns a string which numpy doesnt
                             #understand
-        self.parent.data = backend.Recording(self.parent.filenamefull.get(),
+        self.parent.data = Recording(self.parent.filenamefull.get(),
                                          self.parent.samplingrate.get(),
                                          self.parent.filetype.get(),
                                          self.parent.headerlength.get(),
@@ -1419,20 +1378,19 @@ class Binaryquery(tk.Toplevel):
         self.parent.update_all()
         self.loadframe.destroy()
         self.destroy()
-
-if __name__ == '__main__':
-    import sys, os, copy
-    cwd = os.getcwd()
-    try:
-        if 'axo' in sys.argv:
-            axotest = True
-        elif 'bin' in sys.argv:
-            bintest = True
-        elif 'mat' in sys.argv:
-            mattest = True
-        if 'v' in sys.argv:
-            VERBOSE = True
-    except IndexError:
-        pass
-
-    GUI.run()
+#
+# if __name__ == '__main__':
+#     import sys, os, copy
+#     try:
+#         if 'axo' in sys.argv:
+#             axotest = True
+#         elif 'bin' in sys.argv:
+#             bintest = True
+#         elif 'mat' in sys.argv:
+#             mattest = True
+#         if 'v' in sys.argv:
+#             VERBOSE = True
+#     except IndexError:
+#         pass
+#
+#     GUI.run()
