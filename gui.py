@@ -10,7 +10,7 @@ from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg,
                                             NavigationToolbar2TkAgg)
 from matplotlib import gridspec as gs
 import plotting
-from tools import stringList_parser
+from tools import stringList_parser, parse_filename
 
 ### parameters for testing and verbose output
 VERBOSE = False
@@ -123,7 +123,7 @@ class GUI(ttk.Frame):
             if VERBOSE:
                 print('Test mode with binary data')
             self.data = backend.Recording(
-                                    cwd+'/data/sim1600.bin', 4e4,
+                                    os.getcwd()+'/data/sim1600.bin', 4e4,
                                     'bin', 3072, np.int16)
             self.data['raw_'][0]['trace']=self.data['raw_'][0]['trace'][:9999]
             self.data['raw_'][0]['time']=self.data['raw_'][0]['time'][:9999]
@@ -171,7 +171,7 @@ class GUI(ttk.Frame):
         """
         self.commandbar = Commandframe(self)
         self.histogramFrame = HistogramFrame(self)
-        self.plots = Plotframe(self)
+        self.plots = PlotFrame(self)
         self.manipulations = Manipulations(self)
         self.episodeList = EpisodeList(self)
         self.listSelection = ListSelection(self)
@@ -421,8 +421,14 @@ class MenuBar(tk.Menu):
             if VERBOSE: print("User pressed 'Cancel'")
 
     def open_folder(self):
-        # placeholder for function opening folders
-        pass
+        dirname = askdirectory()
+        if dirname is not None:
+            if VERBOSE:
+                print("selected directory with name: '"+dirname+"'")
+                print("Calling save_data method")
+            OpenFileDialog(self.parent, dirname)
+        else:
+            if VERBOSE: print("User pressed 'Cancel'")
 
     def save_to_file(self):
         # save the current recording object with all its attributes as a
@@ -716,7 +722,7 @@ class PlotOptions(ttk.Frame):
                 self.parent.show_command.set(0)
         else: pass
 
-class Plotframe(ttk.Frame):
+class PlotFrame(ttk.Frame):
     def __init__(self, parent):
         ttk.Frame.__init__(self, parent)
         self.parent = parent
@@ -1248,9 +1254,12 @@ class OpenFileDialog(tk.Toplevel):
         self.samplingrate = tk.StringVar()
         self.path = tk.StringVar()
 
-        self.parse_filename(filename)
         self.filenamefull.set(filename)
-        # self.samplingrate.set('')
+        filetype, path, filetypefull, filename = parse_filename(filename)
+        self.filename.set(filename)
+        self.path.set(path)
+        self.filetype.set(filetype)
+        self.filetypefull.set(filetypefull)
 
         self.create_widgets()
         self.samplingentry.focus()
@@ -1264,10 +1273,6 @@ class OpenFileDialog(tk.Toplevel):
         filenamelabel = ttk.Label(self, textvariable=self.filename)
         filenamelabel.grid(column=2, row=1, sticky=tk.N)
 
-        # self.loadbutton = ttk.Button(self, text='Select file',
-        #                              command=self.get_file)
-        # self.loadbutton.grid(column = 3, row = 1, sticky=(tk.N, tk.E))
-
         #second row - show filepath
         ttk.Label(self, text='Path:').grid(column=1, row=2, sticky = tk.W)
         ttk.Label(self, textvariable=self.path).grid(column=2, row=2)
@@ -1276,7 +1281,6 @@ class OpenFileDialog(tk.Toplevel):
         ttk.Label(self, text='Filetype:').grid(column=1, row=3, sticky = tk.W)
         ttk.Label(self, textvariable=self.filetypefull).grid(column=2,
                                                    row=3, sticky=(tk.W, tk.E))
-        ###### lets see if this way of line splitting works
 
         #fourth row - enter sampling rate
         self.samplingentry = ttk.Entry(self, width=7,
@@ -1313,44 +1317,6 @@ class OpenFileDialog(tk.Toplevel):
                 self.parent.update_all()
             finally:
                 self.destroy()
-
-    def parse_filename(self, filename):
-        """
-        Get data by clicking.
-        Relies on tkinter and gets name and type of the file
-        """
-        # filename = askopenfilename()
-        # self.filenamefull.set(filename)
-        extension = ''
-
-        N = len(filename)
-        for i, char in enumerate(filename[::-1]):
-            # loop over the full filename (which includes directory) backwards
-            # to extract the extension and name of the file
-            if char=='.':
-                period = N-i
-            if char=='/':
-                slash = N-i
-                break
-
-        self.filename.set(filename[slash:])
-        self.path.set(filename[:slash])
-        extension=filename[period:]
-        if VERBOSE:
-            print("name of the file is {}".format(self.filename.get()))
-            print("the extension was identified as "+extension)
-        if extension == 'bin':
-            self.filetype.set('bin')
-            self.filetypefull.set('binary')
-        elif extension == 'axgd':
-            self.filetype.set('axo')
-            self.filetypefull.set('axograph')
-        elif extension == 'mat':
-            self.filetype.set('mat')
-            self.filetypefull.set('matlab')
-        elif extension == 'pkl':
-            self.filetype.set('pkl')
-            self.filetypefull.set('pickle')
 
 class Binaryquery(tk.Toplevel):
     """
@@ -1407,7 +1373,6 @@ class Binaryquery(tk.Toplevel):
 
 if __name__ == '__main__':
     import sys, os, copy
-    cwd = os.getcwd()
     try:
         if 'axo' in sys.argv:
             axotest = True
