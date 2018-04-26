@@ -11,12 +11,8 @@ from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg,
 from matplotlib import gridspec as gs
 import plotting
 from tools import stringList_parser, parse_filename
-<<<<<<< HEAD
 import os
 import copy
-=======
-
->>>>>>> io
 ### parameters for testing and verbose output
 VERBOSE = False
 axotest = False
@@ -134,11 +130,7 @@ class GUI(ttk.Frame):
         ### multiplied with random numbers to create additional episodes
             if VERBOSE:
                 print('Test mode with binary data')
-<<<<<<< HEAD
             self.data = Recording(
-=======
-            self.data = backend.Recording(
->>>>>>> io
                                     os.getcwd()+'/data/sim1600.bin', 4e4,
                                     'bin', 3072, np.int16)
             self.data['raw_'][0]['trace']=self.data['raw_'][0]['trace'][:9999]
@@ -1386,7 +1378,6 @@ class Binaryquery(tk.Toplevel):
         self.parent.update_all()
         self.loadframe.destroy()
         self.destroy()
-<<<<<<< HEAD
 #
 # if __name__ == '__main__':
 #     import sys, os, copy
@@ -1403,21 +1394,3 @@ class Binaryquery(tk.Toplevel):
 #         pass
 #
 #     GUI.run()
-=======
-
-if __name__ == '__main__':
-    import sys, os, copy
-    try:
-        if 'axo' in sys.argv:
-            axotest = True
-        elif 'bin' in sys.argv:
-            bintest = True
-        elif 'mat' in sys.argv:
-            mattest = True
-        if 'v' in sys.argv:
-            VERBOSE = True
-    except IndexError:
-        pass
-
-    GUI.run()
->>>>>>> io
