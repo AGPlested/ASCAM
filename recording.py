@@ -1,10 +1,7 @@
-import numpy as np
 import readdata
 import savedata
-import filtering
-import analysis
-import copy
 import os
+<<<<<<< HEAD:model.py
 from tools import piezo_selection, parse_filename
 
 class Episode(dict):
@@ -173,6 +170,11 @@ class Series(list):
         """
         for episode in self:
             episode.check_standarddeviation(stdthreshold)
+=======
+from tools import detect_filetype
+from episode import Episode
+from series import Series
+>>>>>>> development:recording.py
 
 class Recording(dict):
     def __init__(self, filename = '',
