@@ -275,8 +275,6 @@ at the top of the screen
 
 
 ISSUES:
-    - if a key is bound to list assignment pressing that key at any time will
-    cause assignment, e.g. even when creating a new list and typing its name
     - does not update histogram after a new file is loaded when there was
     - does not plot all episode histogram if only list is selected
 

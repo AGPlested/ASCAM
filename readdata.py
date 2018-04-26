@@ -3,7 +3,7 @@ import subprocess
 from scipy.io import loadmat as scipy_loadmat
 from scipy.io.matlab.mio5 import varmats_from_mat
 import os
-from tools import detect_filetype
+from tools import parse_filename
 import json
 import pickle
 
@@ -167,7 +167,8 @@ def load(filename, filetype=False, dtype=None, headerlength=None, fs=None):
     extension
     """
     if not filetype:
-        filetype = detect_filetype(filename)
+        # the first value returned by parse_filename is the filetype
+        filetype = parse_filename(filename)[0]
 
     if filetype == 'axo':
         output = load_axo(filename)
