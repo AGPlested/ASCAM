@@ -2,6 +2,7 @@ from scipy import io
 import os
 import json
 import pickle
+from tools import parse_filename
 
 def save_metadata(data, filename):
     """
@@ -19,15 +20,15 @@ def save_metadata(data, filename):
             recording_metadata[key][str(i)]=episode.__dict__
     with open(filename,'w') as save_file:
         json.dump(recording_metadata,save_file)
-
-def save_pickle(data, filepath):
-    """
-    save data using the pickle module
-    useful for saving data that is to be used in ASCAM again
-    """
-    with open(filepath+'.pkl', 'wb') as save_file:
-        pickle.dump(data, save_file)
-    return True
+#
+# def save_pickle(data, filepath):
+#     """
+#     save data using the pickle module
+#     useful for saving data that is to be used in ASCAM again
+#     """
+#     with open(filepath+'.pkl', 'wb') as save_file:
+#         pickle.dump(data, save_file)
+#     return True
 
 def save_data(data, filename='', filetype = 'mat', save_piezo=True,
              save_command=True):

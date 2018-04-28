@@ -128,9 +128,8 @@ class GUI(ttk.Frame):
         ### multiplied with random numbers to create additional episodes
             if VERBOSE:
                 print('Test mode with binary data')
-            self.data = Recording(
-                                    os.getcwd()+'/data/sim1600.bin', 4e4,
-                                    'bin', 3072, np.int16)
+            self.data = Recording(os.getcwd()+'/data/sim1600.bin', 4e4,
+                                 'bin', 3072, np.int16)
             self.data['raw_'][0]['trace']=self.data['raw_'][0]['trace'][:9999]
             self.data['raw_'][0]['time']=self.data['raw_'][0]['time'][:9999]
             for i in range(1,25):
@@ -157,8 +156,8 @@ class GUI(ttk.Frame):
 
     def update_frame_title(self,*args):
         """
-        Update the name of the application window to include the name of the file
-        that is loaded
+        Update the name of the application window to include the name of the
+        file that is loaded
         """
         self.master.title("ASCAM - "+self.filename.get())
 
@@ -175,7 +174,6 @@ class GUI(ttk.Frame):
         """
         Create the contents of the main window.
         """
-        self.commandbar = Commandframe(self)
         self.histogramFrame = HistogramFrame(self)
         self.plots = PlotFrame(self)
         self.manipulations = Manipulations(self)
@@ -200,9 +198,6 @@ class GUI(ttk.Frame):
         self.grid_columnconfigure(0, weight=1)
 
         ##### First row
-        self.commandbar.grid(row=0, column=0, padx=5, pady=5,
-                             sticky=tk.N+tk.W)
-
         self.plotOptions.grid(row=0, column=1,padx=5,pady=5,sticky=tk.N+tk.W)
 
         self.displayFrame.grid(row=0, column=2, padx=5, sticky=tk.S)
@@ -439,22 +434,14 @@ class MenuBar(tk.Menu):
     def save_to_file(self):
         # save the current recording object with all its attributes as a
         # pickle file
-        filename = asksaveasfilename()
-        if filename is not None:
-            if VERBOSE:
-                print("selected filename: '"+filename+"'")
-                print("Calling save_data method")
-            self.parent.data.save_data(filename = filename,
-                                       filetype = 'pkl',
-                                       save_piezo = True,
-                                       save_command = True)
+        filepath = asksaveasfilename()
+        if filepath is not None:
+            self.parent.data.save_to_pickle(filepath)
         else:
             if VERBOSE: print("User pressed 'Cancel'")
 
     def export(self):
-        # placeholder that will create a export data dialog
-        pass
-
+        ExportFileDialog(self.parent)
 
 class ExportFileDialog(tk.Toplevel):
     """
@@ -463,40 +450,64 @@ class ExportFileDialog(tk.Toplevel):
     def __init__(self, parent):
         if VERBOSE: print("initializing ExportFileDialog")
         tk.Toplevel.__init__(self,parent)
-        self.parent = parent
+        self.parent = parent #parent should be main window
 
+        #export parameters
+        self.save_piezo = tk.IntVar()
+        self.save_piezo.set(0)
+        self.save_command = tk.IntVar()
+        self.save_command.set(0)
+        self.datakey = tk.StringVar()
+        self.datakey.set('raw_')
+        self.lists_to_export = list()
 
-class Commandframe(ttk.Frame):
-    """
-    This frame will contain all the command buttons such as loading
-    data and plotting
-    Creating the tk.Toplevel pop ups could be done with lambda functions
-    """
-    def __init__(self, parent):
-        ttk.Frame.__init__(self, parent)
-        self.parent = parent
-        # self.create_widgets()
+        self.create_widgets()
 
     def create_widgets(self):
-        self.loadbutton = ttk.Button(self, text="Load file",
-                                     command=self.load_dialog)
-        self.loadbutton.grid(column=0,row=0,sticky=tk.N+tk.E)
+        #first row - select the series
+        ttk.Label(self,text='Select series: ')
+        self.menu = tk.OptionMenu(self, self.datakey, *self.parent.data.keys())
+        self.menu.grid(row=1,column=1,columnspan=3)
+        #second row - save piezo and command?
+        ttk.Label(self, text="Piezo").grid(row=2, column=0)
+        ttk.Checkbutton(self, variable=self.save_piezo).grid(row=2, column=1)
+        ttk.Label(self, text="Command").grid(row=2, column=3)
+        ttk.Checkbutton(self, variable=self.save_command).grid(row=2, column=4)
 
-        self.savebutton = ttk.Button(self, text="Save data",
-                                     command=self.save_dialog)
-        self.savebutton.grid(column=1,row=0,sticky=tk.N)
+        #third to end which lists to save?
+        row_num = 3
+        for list_name in self.parent.data.lists.keys():
+            var = tk.IntVar()
+            var.set(1) if list_name=='all' else var.set(0)
+            ttk.Label(self, text=list_name).grid(row=row_num,column=1)
+            ttk.Checkbutton(self, variable=var).grid(row=row_num,column=2)
+            self.lists_to_export.append((list_name,var))
+            row_num+=1
 
-    def load_dialog(self):
-        Loadframe(self.parent)
+        #last row - save and cancel button
+        save_button = ttk.Button(self, text="Save", command=self.save)
+        save_button.grid(row=row_num, column=0)
+        cancel_button = ttk.Button(self, text="Cancel", command=self.cancel)
+        cancel_button.grid(row=row_num, column=2)
 
-    def save_dialog(self):
-        SaveDialog(self.parent)
+    def save(self):
+        lists_to_save = list()
+        for (listname, var) in self.lists_to_export:
+            if var.get(): lists_to_save.append(listname)
+        filepath = asksaveasfilename()
+        if filepath is not None:
+            self.parent.data.export_matlab(filepath = filepath,
+                                           datakey = self.datakey.get(),
+                                           lists = lists_to_save,
+                                           save_piezo = self.save_piezo.get(),
+                                           save_command = self.save_command.get())
+        else:
+            if VERBOSE: print("User pressed 'Cancel'")
+        self.destroy()
 
-    def open_file(self):
-        print("open file")
+    def cancel(self):
+        self.destroy()
 
-    def open_directory(self):
-        print("open directory")
 
 class HistogramConfiguration(ttk.Frame):
     """
@@ -847,6 +858,7 @@ class Manipulations(ttk.Frame):
         if VERBOSE: print('going to filter all episodes')
         #convert textvar to float
         cutoffFrequency = float(self.cutoffFrequency.get())
+        if VERBOSE: print("filter frequency is {}".format(cutoffFrequency))
         if self.parent.data.call_operation('FILTER_',cutoffFrequency):
             if VERBOSE: print('called operation succesfully')
             self.parent.datakey.set(self.parent.data.currentDatakey)
@@ -1048,7 +1060,7 @@ class ListSelection(ttk.Frame):
 
         ### create a new list of indices if the list is new
         if not name in self.parent.data.lists.keys():
-            self.parent.data.lists[name] = [[],'']
+            self.parent.data.lists[name] = [list(),str()]
 
         ### create function to color episode on keypress and add to list
         if key:
@@ -1061,7 +1073,6 @@ class ListSelection(ttk.Frame):
                 n_episode = self.parent.Nepisode
                 new_list = self.parent.data.lists[name][0]
                 episodelist = self.parent.episodeList.episodelist
-                print(self.parent.master.focus_get())
                 if not (n_episode in new_list):
                     episodelist.itemconfig(n_episode, bg=color)
                     new_list.append(n_episode)
@@ -1376,19 +1387,3 @@ class Binaryquery(tk.Toplevel):
         self.parent.update_all()
         self.loadframe.destroy()
         self.destroy()
-#
-# if __name__ == '__main__':
-#     import sys, os, copy
-#     try:
-#         if 'axo' in sys.argv:
-#             axotest = True
-#         elif 'bin' in sys.argv:
-#             bintest = True
-#         elif 'mat' in sys.argv:
-#             mattest = True
-#         if 'v' in sys.argv:
-#             VERBOSE = True
-#     except IndexError:
-#         pass
-#
-#     GUI.run()

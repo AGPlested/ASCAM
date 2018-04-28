@@ -4,6 +4,8 @@ import os
 from tools import parse_filename
 from episode import Episode
 from series import Series
+import pickle
+from scipy import io
 
 class Recording(dict):
     def __init__(self, filename = '',
@@ -125,18 +127,53 @@ class Recording(dict):
                                             samplingRate = self.samplingRate)
                                     for i in range(len(current))])
 
-    def save_data(self,filename,dirname='./',filetype='mat',
-                  save_piezo=True,save_command=True):
+    def save_to_pickle(self, filepath):
         """
-        Save the data
+        save data using the pickle module
+        useful for saving data that is to be used in ASCAM again
         """
-        return_status = False
-        return_status = savedata.save_data(data = self,
-                                           filename=filename,
-                                           filetype = filetype,
-                                           save_piezo=save_piezo,
-                                           save_command=save_command)
-        return return_status
+        if not filepath.endswith('.pkl'):
+            filepath+='.pkl'
+        with open(filepath, 'wb') as save_file:
+            pickle.dump(self, save_file)
+        return True
+
+    def export_matlab(self,filepath,datakey,lists,save_piezo,save_command):
+        """Export all the episodes in the givens list(s) from the given series
+        (only one) to a matlab file."""
+        if not filepath.endswith('.mat'):
+            filepath+='.mat'
+
+        list_exports = list()
+        # combine the episode numbers to be saved in one list
+        for list_name in lists:
+            list_exports.extend(self.lists[list_name][0])
+        # filter out duplicate elements
+        list_exports = list(set(list_exports))
+
+        # create dict to write matlab file and add the time vector
+        export_dict = dict()
+        export_dict['time'] = self['raw_'][0]['time']
+        no_episodes = len(self[datakey])
+        fill_length = len(str(no_episodes))
+        for i, episode in enumerate(self[datakey]):
+            if i in list_exports:
+                for name, value in episode.items():
+                    # the if statements skip the items that do not need to be
+                    # saved
+                    if name == 'time':
+                        continue
+                    elif name == 'piezo' and not save_piezo:
+                        continue
+                    elif name == 'command' and not save_command:
+                        continue
+                    else:
+                    # add data to dictionary
+                        n = str(episode.nthEpisode)
+                        n = n.zfill(fill_length)
+                        export_dict[name+n] = value
+        io.savemat(filepath,export_dict)
+
 
     def call_operation(self, operation, *args, **kwargs):
         """
