@@ -1015,7 +1015,7 @@ class ListSelection(ttk.Frame):
         ## the `buttons` dict holds ordered pairs of the button objects and
         ## the variables they refer to, `dict['name']=(button,var)`
         self.color_choice = tk.StringVar()
-        self.color_choice.set('red')
+        self.color_choice.set('green')
         self.create_button()
         self.create_checkbox('all')
         self.colors = ['','red', 'green', 'yellow', 'purple', 'orange']
@@ -1089,6 +1089,7 @@ class ListSelection(ttk.Frame):
                             print(new_list)
             self.parent.episodeList.episodelist.bind(key,color_episode)
             self.parent.data.lists[name][1] = color
+
 
         ### trace the variable to add/removoe the corresponding list to/from
         ### the list of current lists, also update the histogram to immediatly
