@@ -407,7 +407,7 @@ class MenuBar(tk.Menu):
         self.add_cascade(label="File", menu=self.subMenu)
         #Submenus under 'File'
         self.subMenu.add_command(label="Open File",command=self.open_file)
-        self.subMenu.add_command(label="Open Folder",command=self.open_folder)
+        # self.subMenu.add_command(label="Open Folder",command=self.open_folder)
         self.subMenu.add_command(label="Save",command=self.save_to_file)
         self.subMenu.add_command(label="Export",command=self.export)
         self.subMenu.add_command(label="Quit",command=self.parent.master.quit)
@@ -421,15 +421,15 @@ class MenuBar(tk.Menu):
         else:
             if VERBOSE: print("User pressed 'Cancel'")
 
-    def open_folder(self):
-        dirname = askdirectory()
-        if dirname is not None:
-            if VERBOSE:
-                print("selected directory with name: '"+dirname+"'")
-                print("Calling save_data method")
-            OpenFileDialog(self.parent, dirname)
-        else:
-            if VERBOSE: print("User pressed 'Cancel'")
+    # def open_folder(self):
+    #     dirname = askdirectory()
+    #     if dirname is not None:
+    #         if VERBOSE:
+    #             print("selected directory with name: '"+dirname+"'")
+    #             print("Calling save_data method")
+    #         OpenFileDialog(self.parent, dirname)
+    #     else:
+    #         if VERBOSE: print("User pressed 'Cancel'")
 
     def save_to_file(self):
         # save the current recording object with all its attributes as a
