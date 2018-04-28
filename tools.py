@@ -23,8 +23,8 @@ def parse_filename(filename):
     elif filetype == 'bin': filetype_long = 'binary'
     elif filetype == 'mat': filetype_long = 'matlab'
     elif filetype == 'pkl': filetype_long = 'pickle'
-
-    return filetype, path, filetype_long, filename[slash+1:period]
+    filename = filename[slash+1:period]
+    return filetype, path, filetype_long, filename
 
 def piezo_selection(time, piezo, trace, active = True, deviation = 0.05):
     """

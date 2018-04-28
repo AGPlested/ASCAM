@@ -277,6 +277,7 @@ at the top of the screen
 ISSUES:
     - does not update histogram after a new file is loaded when there was
     - does not plot all episode histogram if only list is selected
+    - lists created before data is loaded cannot be used
 
 Notes last meeting:
     for piezo voltage simultaneously show both inactive and active in
