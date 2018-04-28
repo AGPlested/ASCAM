@@ -508,7 +508,6 @@ class ExportFileDialog(tk.Toplevel):
     def cancel(self):
         self.destroy()
 
-
 class HistogramConfiguration(ttk.Frame):
     """
     A frame in which the setting of the histogram can be configured
@@ -1015,15 +1014,11 @@ class ListSelection(ttk.Frame):
         self.buttons = dict()
         ## the `buttons` dict holds ordered pairs of the button objects and
         ## the variables they refer to, `dict['name']=(button,var)`
-
+        self.color_choice = tk.StringVar()
+        self.color_choice.set('red')
         self.create_button()
         self.create_checkbox('all')
-
-        ## for some reason the first element is skipped
-        self.colors = ['red', 'green', 'yellow', 'purple', 'orange']
-        self.colorind = 0
-        ## until color selection is added we use these three colors to color
-        ## the episodes
+        self.colors = ['','red', 'green', 'yellow', 'purple', 'orange']
 
     def create_checkbox(self, name, key=''):
         """
@@ -1068,30 +1063,32 @@ class ListSelection(ttk.Frame):
             ### multiple were entered
             key=key.lower()
             key=key[0]
-            color = self.colors[self.colorind]
+            color = self.color_choice.get()
             def color_episode(*args, **kwargs):
-                n_episode = self.parent.Nepisode
+                selected_eps = self.parent.episodeList.episodelist.curselection()
+                print(selected_eps)
                 new_list = self.parent.data.lists[name][0]
                 episodelist = self.parent.episodeList.episodelist
-                if not (n_episode in new_list):
-                    episodelist.itemconfig(n_episode, bg=color)
-                    new_list.append(n_episode)
-                    if VERBOSE:
-                        print('''pressing "{}" added episode {} to list {}
-                              '''.format(key,n_episode,name))
-                        print('"{}" now contains:'.format(name))
-                        print(new_list)
-                else:
-                    episodelist.itemconfig(n_episode, bg='white')
-                    new_list.remove(n_episode)
-                    if VERBOSE:
-                        print('''pressing "{}" removed episode {} from list {}
-                              '''.format(key,n_episode,name))
-                        print('"{}" now contains:'.format(name))
-                        print(new_list)
+                if VERBOSE: print("Currently selected episodes are {}".selected_eps)
+                for n_episode in selected_eps:
+                    if not (n_episode in new_list):
+                        episodelist.itemconfig(n_episode, bg=color)
+                        new_list.append(n_episode)
+                        if VERBOSE:
+                            print('''pressing "{}" added episode {} to list {}
+                                  '''.format(key,n_episode,name))
+                            print('"{}" now contains:'.format(name))
+                            print(new_list)
+                    else:
+                        episodelist.itemconfig(n_episode, bg='white')
+                        new_list.remove(n_episode)
+                        if VERBOSE:
+                            print('''pressing "{}" removed episode {} from list {}
+                                  '''.format(key,n_episode,name))
+                            print('"{}" now contains:'.format(name))
+                            print(new_list)
             self.parent.episodeList.episodelist.bind(key,color_episode)
             self.parent.data.lists[name][1] = color
-            self.colorind+=1
 
         ### trace the variable to add/removoe the corresponding list to/from
         ### the list of current lists, also update the histogram to immediatly
@@ -1130,7 +1127,7 @@ class AddListDialog(tk.Toplevel):
     def __init__(self, parent):
         if VERBOSE: print("initializing AddListDialog")
         tk.Toplevel.__init__(self, parent)
-        self.parent = parent
+        self.parent = parent #parent is ListSelection frame
         self.title("Add list")
         self.name = tk.StringVar()
         self.key = tk.StringVar()
@@ -1148,9 +1145,15 @@ class AddListDialog(tk.Toplevel):
         ttk.Label(self, text='key:').grid(row=1,column=0)
         ttk.Entry(self, width=7, textvariable=self.key).grid(row=1,column=1)
 
-        ttk.Button(self,text="OK",command=self.ok_button).grid(row=2,column=0)
-        ttk.Button(self,text="Cancel",command=self.destroy).grid(row=2,
+        ttk.Label(self,text="Color: ").grid(row=2,column=0)
+        color = ttk.OptionMenu(self,self.parent.color_choice,*self.parent.colors)
+        color.grid(row=2,column=1)
+
+        ttk.Button(self,text="OK",command=self.ok_button).grid(row=3,column=0)
+        ttk.Button(self,text="Cancel",command=self.destroy).grid(row=3,
                                                                  column=1)
+
+
 
     def ok_button(self):
         if VERBOSE: print("Confirmed checkbox creation through dialog")
@@ -1199,7 +1202,8 @@ class EpisodeList(ttk.Frame):
 
         if VERBOSE: print("creating episodelist")
         self.episodelist = tk.Listbox(self, bd=2,
-                                      yscrollcommand=self.Scrollbar.set)
+                                      yscrollcommand=self.Scrollbar.set,
+                                      selectmode=tk.EXTENDED)
         self.episodelist.grid(row=1, rowspan=3, sticky=tk.S+tk.W+tk.N)
         ### set what should happen when an episode is selected
         self.episodelist.bind('<<ListboxSelect>>', self.onselect_plot)
