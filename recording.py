@@ -43,7 +43,6 @@ class Recording(dict):
         """
         this method is supposed to load data from a file or a directory
         """
-        print("filename in backend is "+self.filename)
         if 'pkl' in parse_filename(self.filename)[0]:
             loaded_data = readdata.load_pickle(self.filename)
             self.__dict__ = loaded_data.__dict__
