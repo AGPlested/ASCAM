@@ -372,7 +372,7 @@ class Displayframe(ttk.Frame):
 
 class MenuBar(tk.Menu):
     def __init__(self,parent):
-        self.parent = parent
+        self.parent = parent #parent is main window
         tk.Menu.__init__(self, parent.master,tearoff=0)
         self.parent.master.config(menu=self)
 
@@ -383,21 +383,15 @@ class MenuBar(tk.Menu):
 
         self.create_file_cascade()
 
-        # # the code below is needed to make the menuBar responsive on Mac OS
-        # # apple uses window system aqua
-        # if parent.window_system == 'aquaa':
-        #     if VERBOSE: print("trying to make the menu work on Mac")
-        #     appmenu = tk.Menu(self, name='apple')
-        #     self.add_cascade(menu=appmenu)
-        #     appmenu.add_command(label='About My Application')
-        #     appmenu.add_separator()
-        #     self.parent.master['menu'] = self
-        # elif parent.window_system == 'X11':
-        #     # this part of the code has not yet been tested on linux, any
-        #     # adjustments to the menu that are required should go here
-        #     pass
-        #     # some linux distributions now use Wayland or other window managers,
-        #     # beware
+        # the code below is needed to make the menuBar responsive on Mac OS
+        # apple uses window system aqua
+        if parent.window_system == 'aqua':
+            if VERBOSE: print("trying to make the menu work on Mac")
+            appmenu = tk.Menu(self, name='apple')
+            self.add_cascade(menu=appmenu)
+            appmenu.add_command(label='About My Application')
+            appmenu.add_separator()
+            self.parent.master['menu'] = self
 
     def create_file_cascade(self):
         """
@@ -407,7 +401,6 @@ class MenuBar(tk.Menu):
         self.add_cascade(label="File", menu=self.subMenu)
         #Submenus under 'File'
         self.subMenu.add_command(label="Open File",command=self.open_file)
-        # self.subMenu.add_command(label="Open Folder",command=self.open_folder)
         self.subMenu.add_command(label="Save",command=self.save_to_file)
         self.subMenu.add_command(label="Export",command=self.export)
         self.subMenu.add_command(label="Quit",command=self.parent.master.quit)
@@ -420,16 +413,6 @@ class MenuBar(tk.Menu):
             OpenFileDialog(self.parent, filename)
         else:
             if VERBOSE: print("User pressed 'Cancel'")
-
-    # def open_folder(self):
-    #     dirname = askdirectory()
-    #     if dirname is not None:
-    #         if VERBOSE:
-    #             print("selected directory with name: '"+dirname+"'")
-    #             print("Calling save_data method")
-    #         OpenFileDialog(self.parent, dirname)
-    #     else:
-    #         if VERBOSE: print("User pressed 'Cancel'")
 
     def save_to_file(self):
         # save the current recording object with all its attributes as a
