@@ -61,7 +61,8 @@ class GUI(ttk.Frame):
         self.data_loaded = False
 
         # bind window name updating
-        self.filename.trace("w",self.update_frame_title)
+        self.filename.trace("w",
+                lambda *args: self.master.title("ASCAM - "+self.filename.get()))
 
         ### parameters for the histogram
         self.hist_number_bins = tk.StringVar()
@@ -146,17 +147,11 @@ class GUI(ttk.Frame):
                 print('Test mode with matlab data.')
             self.data = Recording(
                                 filename = 'data/171124 013 Copy Export.mat',
-                                filetype = 'mat')
+                                filetype = 'mat',
+                                samplingRate = 4e4)
         self.samplingrate.set('4e4')
         self.data_loaded = True
         self.update_all()
-
-    def update_frame_title(self,*args):
-        """
-        Update the name of the application window to include the name of the
-        file that is loaded
-        """
-        self.master.title("ASCAM - "+self.filename.get())
 
     def update_all(self, *args):
         """
@@ -267,12 +262,6 @@ class GUI(ttk.Frame):
         ### for now `update_list` will update both the list and the dropdown
         ### menu, in case they need to be uncoupled use the two functions below
 
-    def parse_hist_interval_entry(self,*args):
-        """
-        Convert the string that is entered in the config menu into a list of
-        intervals that can be used for the histogram
-        """
-
     def get_episodes_in_lists(self):
         """
         return an array of the indices of all the episodes in the currently
@@ -303,11 +292,9 @@ class Displayframe(ttk.Frame):
     """
     def __init__(self, parent):
         if VERBOSE: print("initializing DisplayFrame")
-
         ttk.Frame.__init__(self, parent)
         self.parent = parent
         self.show_command_stats()
-
         if VERBOSE: print("initialized DisplayFrame")
 
     def update(self):
