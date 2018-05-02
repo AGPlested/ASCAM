@@ -213,7 +213,7 @@ class GUI(ttk.Frame):
                         pady=5, sticky=tk.W)
         self.plots.grid_rowconfigure(0, weight=1)
         self.plots.grid_columnconfigure(0, weight=1)
-
+        #
         self.histogramFrame.grid(row=1, column=4, rowspan=3, columnspan=3,
                                  sticky=tk.E)
         self.histogramFrame.grid_rowconfigure(0, weight=1)
@@ -568,7 +568,7 @@ class HistogramFrame(ttk.Frame):
         self.parent = parent
         self.fig = plt.figure(1,figsize=(6,5))
         canvasHist = FigureCanvasTkAgg(self.fig, self)
-        canvasHist.show()
+        # canvasHist.show()
         canvasHist.get_tk_widget().grid(row=0,column=0)
         self.canvas = canvasHist
 
@@ -706,20 +706,17 @@ class PlotOptions(ttk.Frame):
             episode = self.parent.data[datakey][self.parent.Nepisode]
             if episode['piezo'] is not None:
                 ttk.Label(self, text="Piezo voltage").grid(row=0, column=0)
-                ttk.Checkbutton(self, variable=self.parent.show_piezo).grid(
-                                                                        row=0,
-                                                                     column=1)
+                piezo = ttk.Checkbutton(self, variable=self.parent.show_piezo)
+                piezo.grid(row=0, column=1)
                 # if piezo exists, default is to plot it
                 self.parent.show_piezo.set(1)
 
             if self.parent.data[datakey][0]['command'] is not None:
                 ttk.Label(self, text="Command voltage").grid(row=1, column=0)
-                ttk.Checkbutton(self, variable=self.parent.show_command).grid(
-                                                                        row=1,
-                                                                     column=1)
+                command = ttk.Checkbutton(self,variable=self.parent.show_command)
+                command.grid(row=1,column=1)
                 # if command exists default is to not plot it
                 self.parent.show_command.set(0)
-        else: pass
 
 class PlotFrame(ttk.Frame):
     def __init__(self, parent):
@@ -727,10 +724,8 @@ class PlotFrame(ttk.Frame):
         self.parent = parent
         self.fig = plt.figure(figsize=(10,5))
 
-
-
         canvasPlot = FigureCanvasTkAgg(self.fig, master=self)
-        canvasPlot.show()
+        # canvasPlot.show()
         canvasPlot.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
         self.canvas = canvasPlot
         self.toolbar = NavigationToolbar2TkAgg(self.canvas, self)
