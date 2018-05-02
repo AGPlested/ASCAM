@@ -68,24 +68,21 @@ class GUI(ttk.Frame):
         self.hist_number_bins.set(50)
         self.hist_density = tk.IntVar()
         self.hist_density.set(0)
-        self.hist_piezoSelection = tk.IntVar()
-        self.hist_piezoSelection.set(0)
+
         self.hist_piezo_active = tk.IntVar()
         self.hist_piezo_active.set(1)
         self.hist_piezo_deviation = tk.StringVar()
         self.hist_piezo_deviation.set(0.05)
-        self.hist_intervalSelection = tk.IntVar()
-        self.hist_intervalSelection.set(0)
+
         self.hist_interval_entry = tk.StringVar()
         self.hist_interval_entry.set('')
         self.hist_intervals = []
         self.hist_single_ep = tk.IntVar()
         self.hist_single_ep.set(1)
         self.hist_single_ep.trace("w",self.draw_histogram)
-
-        ### trace selection methods to be mutually exclusive
-        self.hist_piezoSelection.trace("w",self.hist_piezo_NotInterval)
-        self.hist_intervalSelection.trace("w",self.hist_interval_NotPiezo)
+        # radio button variable to decide how to select points in histogram
+        self.hist_piezo_interval = tk.IntVar()
+        self.hist_piezo_interval.set(1)
 
         ### parameters for the plots
         self.show_piezo = tk.IntVar()
@@ -263,35 +260,12 @@ class GUI(ttk.Frame):
         self.displayFrame.update()
 
     def update_list(self):
-        if VERBOSE: print('calling `update_list`')
-        self.update_episodelist()
-        self.update_listmenu()
+        if VERBOSE: print('updatin list')
+        self.episodeList.create_list()
+        if VERBOSE: print("created new list")
+        self.episodeList.create_dropdownmenu()
         ### for now `update_list` will update both the list and the dropdown
         ### menu, in case they need to be uncoupled use the two functions below
-
-    def update_episodelist(self):
-        if VERBOSE: print('calling `update_episodelist`')
-        self.episodeList.create_list()
-
-    def update_listmenu(self):
-        if VERBOSE: print('calling `update_listmenu`')
-        self.episodeList.create_dropdownmenu()
-
-    def hist_interval_NotPiezo(self,*args):
-        """
-        If interval selection for histogram is turned on turn off the piezo
-        selection
-        """
-        if self.hist_intervalSelection.get() == 1:
-            self.hist_piezoSelection.set(0)
-
-    def hist_piezo_NotInterval(self,*args):
-        """
-        If piezo selection for histogram is turned on turn off interval
-        selection
-        """
-        if self.hist_piezoSelection.get() == 1:
-            self.hist_intervalSelection.set(0)
 
     def parse_hist_interval_entry(self,*args):
         """
@@ -513,9 +487,9 @@ class HistogramConfiguration(ttk.Frame):
         # piezo selection options
         ttk.Label(self, text="Select using piezo voltage").grid(row=1,
                                                                 column=0)
-        ttk.Checkbutton(self, variable=self.parent.hist_piezoSelection).\
-                                                                grid(row=1,
-                                                                     column=1)
+        ttk.Radiobutton(self,variable=self.parent.hist_piezo_interval,
+        value=1).grid(row=1,column=1)
+
 
         ttk.Label(self, text="Active/Inactive").grid(row=2, column=0)
         ttk.Checkbutton(self, variable=self.parent.hist_piezo_active).\
@@ -528,9 +502,9 @@ class HistogramConfiguration(ttk.Frame):
 
         ### interval selection options
         ttk.Label(self, text="Use intervals").grid(row=1, column=3)
-        ttk.Checkbutton(self, variable=self.parent.hist_intervalSelection).\
-                                                                grid(row=1,
-                                                                     column=4)
+        ttk.Radiobutton(self,variable=self.parent.hist_piezo_interval,
+        value=0).grid(row=1,column=4)
+
         ttk.Label(self, text="Intervals").grid(row=2, column=3)
         ttk.Entry(self,textvariable=self.parent.hist_interval_entry,
                   width=7).grid(row = 2, column=4)
@@ -584,7 +558,9 @@ class HistogramFrame(ttk.Frame):
         ### get histogram parameters
         n_bins = int(float(self.parent.hist_number_bins.get()))
         density = bool(self.parent.hist_density.get())
-        piezoSelection = bool(self.parent.hist_piezoSelection.get())
+        # time points are selected based on piezo values if the variable
+        # 'hist_piezo_interval' is 1
+        piezoSelection = bool(self.parent.hist_piezo_interval.get())
         active = bool(self.parent.hist_piezo_active.get())
         deviation = float(self.parent.hist_piezo_deviation.get())
         fs = float(self.parent.samplingrate.get())
@@ -1230,7 +1206,7 @@ class EpisodeList(ttk.Frame):
         to it (we currently dont need those)
         """
         if VERBOSE: print(self.parent.datakey.get()+' selected')
-        self.parent.update_episodelist()
+        self.create_list()
         self.parent.update_plots()
 
 class OpenFileDialog(tk.Toplevel):
