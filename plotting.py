@@ -1,17 +1,24 @@
-import numpy as np 
+import numpy as np
 import matplotlib.pyplot as plt
 from tools import piezo_selection, interval_selection
+VERBOSE = True
 
 def create_histogram(data, n_bins, density=False):
     """
     Create a histogram of the values in `traces`. Keyword arguments for
     `np.histogram` can be given as kwargs here.
     Parameters:
-        traces [numpy array] - Array containing all the values for the 
+        traces [numpy array] - Array containing all the values for the
                                histogram.
         **kwargs - Keyword arguments for the `numpy.histogram` function
     """
     data = data.flatten()
+    if VERBOSE: print(""" called 'create_histogram'\n
+    will use {} bins\n
+    normalize histogram to a density is {}\n
+    the data are of type {},
+    the data are {}
+    """.format(n_bins,density,type(data),data))
     hist, bins = np.histogram(data, n_bins, density=density)
     return hist, bins
 
@@ -25,8 +32,8 @@ def histogram(time, piezos, traces, active = True, piezoSelection=True,
         time [1D array of floats] - Vector containing the time points.
         piezo [array of floats] - Vector of piezo voltages.
         trace [array of floats] - Vector of current trace.
-        active [boolean] - If true return time points at which piezo 
-                           voltage is within `deviation` percent of the 
+        active [boolean] - If true return time points at which piezo
+                           voltage is within `deviation` percent of the
                            maximum piezo voltage.
         piezoSelection [boolean] - If true the points to be included in the
                                     histogram are selected based on the piezo
@@ -51,16 +58,16 @@ def histogram(time, piezos, traces, active = True, piezoSelection=True,
     trace_list = []
     if piezoSelection:
         for piezo, trace in zip(piezos, traces):
-            _, _, trace_points = piezo_selection(time, piezo, trace, active, 
+            _, _, trace_points = piezo_selection(time, piezo, trace, active,
                                                  deviation)
-            trace_list.append(trace_points)
+            trace_list.extend(trace_points)
     elif intervals:
         for trace in traces:
-            _, trace_points = interval_selection(time, trace, 
-                                                          intervals, 
+            _, trace_points = interval_selection(time, trace,
+                                                          intervals,
                                                           samplingRate,
                                                           timeUnit)
-            trace_list.append(trace_points)
+            trace_list.extend(trace_points)
     else:
         trace_list = traces
 
@@ -68,7 +75,6 @@ def histogram(time, piezos, traces, active = True, piezoSelection=True,
     hist, bins = create_histogram(trace_list, n_bins, density)
     center = (bins[:-1] + bins[1:]) / 2
     width = (bins[1] - bins[0])
-
     return hist, bins, center, width
 
 def plotTrace(ax, time, trace, ylabel, ybounds = []):
