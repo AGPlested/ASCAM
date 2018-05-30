@@ -33,10 +33,12 @@ class Recording(dict):
         ### if a file is specified load it
         if filename: self.load_data()
 
-        ### variables for user created lists of episodes
-        ### `lists` stores the indices of the episodes in the list and their
-        ### color under their name
-        self.lists = {'all': [list(range(len(self['raw_']))), 'white']}
+        # variables for user created lists of episodes
+        # `lists` stores the indices of the episodes in the list in the first
+        # element, their color in the GUI in the second and the associated key
+        # (i.e. for adding selected episodes to the list in the third element
+        # of a tuple that is the value under the list's name (as dict key)
+        self.lists = {'all': (list(range(len(self['raw_']))), 'white', None)}
         self.current_lists = ['all']
 
     def load_data(self):
