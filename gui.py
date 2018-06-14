@@ -13,10 +13,11 @@ import plotting
 from tools import stringList_parser, parse_filename
 import os
 import copy
+import logging as log
 
 class GUI(ttk.Frame):
     """
-    GUI frame of the GUI for ASCAM.
+    GUI frame for ASCAM.
     All the variables and objects are stored as attributes of this
     object to make refering them uniform.
     All other widgets will be children of this frame.
@@ -25,7 +26,7 @@ class GUI(ttk.Frame):
     """
     @classmethod
     def run(cls, v=False, axo=False, bin=False, mat=False):
-        # parameters for verbose output and testting modes
+        # parameters for verbose output and testing modes
         global VERBOSE
         global axotest
         global bintest
@@ -34,7 +35,12 @@ class GUI(ttk.Frame):
         axotest = axo
         bintest = bin
         mattest = mat
-
+        log.info("Starting ASCAM GUI")
+        log.debug("""Parameters of `run` method:\n
+                    verbose = {}\n
+                    axotest = {}\n
+                    bintest = {}\n
+                    mattest = {}""".format(v,axo,bin,mat))
         root = tk.Tk()
         root.protocol('WM_DELETE_WINDOW', quit)
         root.title("ASCAM")
@@ -46,9 +52,10 @@ class GUI(ttk.Frame):
     def __init__(self, master):
         ttk.Frame.__init__(self, master)
         self.master = master
-
+        log.info("initializing main window")
         # which window system is being used
         self.window_system = master.tk.call('tk', 'windowingsystem')
+        log.debug("window system is {}".format(self.window_system))
 
         ### parameters for loading of a file
         self.filenamefull = tk.StringVar()
@@ -116,6 +123,22 @@ class GUI(ttk.Frame):
         self.bind("<Configure>", self.update_plots)
         # this line calls `draw` when it is run
 
+    def load_recording(self):
+        """ Take a recording object and load it into the GUI.
+        """
+        # get filename and set GUI title
+        # _, _, _, filename = parse_filename(self.data.filename)
+        # self.master.title("ASCAM - "+filename)
+        self.master.title("ASCAM - "+self.filename.get())
+
+        # recreate user defined episodelists
+        for name, (_, color, key) in self.data.lists.items():
+            self.listSelection.create_checkbox(name = name,
+                                               key = key,
+                                               color = color)
+
+        self.update_all()
+
     def load_for_testing(self):
         """
         this function is called if the program is called with arguments "mat",
@@ -124,8 +147,7 @@ class GUI(ttk.Frame):
         if bintest:
         ### testing mode that uses simulated data, the data is copied and
         ### multiplied with random numbers to create additional episodes
-            if VERBOSE:
-                print('Test mode with binary data')
+            log.info('Test mode with binary data')
             self.data = Recording(os.getcwd()+'/data/sim1600.bin', 4e4,
                                  'bin', 3072, np.int16)
             self.data['raw_'][0]['trace']=self.data['raw_'][0]['trace'][:9999]
@@ -138,13 +160,11 @@ class GUI(ttk.Frame):
                 dummyepisode.nthEpisode = i
                 self.data['raw_'].append(dummyepisode)
         elif axotest:
-            if VERBOSE:
-                print('Test mode with axograph data')
+            log.info('Test mode with axograph data')
             self.data = Recording(filename = 'data/170404 015.axgd',
                                         filetype = 'axo')
         elif mattest:
-            if VERBOSE:
-                print('Test mode with matlab data.')
+            log.info('Test mode with matlab data.')
             self.data = Recording(
                                 filename = 'data/171124 013 Copy Export.mat',
                                 filetype = 'mat',
@@ -227,11 +247,11 @@ class GUI(ttk.Frame):
         Plot the current episode
         """
         if self.data:
-            if VERBOSE: print('Calling `plot`, `self.data` is `True`')
+            log.info('Calling `plot`, `self.data` is `True`')
             self.plots.plot()
             self.plots.toolbar.update()
         else:
-            if VERBOSE: print('Cannot plot, `self.data` is `False`')
+            log.info('Cannot plot, `self.data` is `False`')
             pass
 
     def draw_histogram(self, *args):
@@ -239,25 +259,25 @@ class GUI(ttk.Frame):
         draw a histogram of the current episode
         """
         if self.data:
-            if VERBOSE: print('Calling histogram, `self.data` is `True`.')
+            log.info('Calling histogram, `self.data` is `True`.')
             self.histogramFrame.draw_histogram()
         else:
-            if VERBOSE: print('Cannot draw histogram, `self.data` is `False`')
+            log.info('Cannot draw histogram, `self.data` is `False`')
             pass
 
     def update_plots(self,*args,**kwargs):
         """
         update the plot and histogram of the current episode
         """
-        if VERBOSE: print("updating plots")
+        log.info("updating plots")
         self.plot_episode()
         self.draw_histogram()
         self.displayFrame.update()
 
     def update_list(self):
-        if VERBOSE: print('updatin list')
+        log.info('updatin list')
         self.episodeList.create_list()
-        if VERBOSE: print("created new list")
+        log.info("created new list")
         self.episodeList.create_dropdownmenu()
         ### for now `update_list` will update both the list and the dropdown
         ### menu, in case they need to be uncoupled use the two functions below
@@ -267,7 +287,7 @@ class GUI(ttk.Frame):
         return an array of the indices of all the episodes in the currently
         selected lists
         """
-        if VERBOSE: print("getting episodes in list")
+        log.info("getting episodes in currently selected lists")
         indices = []
         for listname in self.data.current_lists:
             indices.extend(self.data.lists[listname][0])
@@ -277,10 +297,11 @@ class GUI(ttk.Frame):
         ### remove duplicate indices
         indices = np.array(list(set(indices)))
         indices = indices.flatten()
+        log.info("indices in currently selected lists:\n {}".format(indices))
         return indices
 
     def quit(self):
-        if VERBOSE: print('exiting ASCAM')
+        log.info('exiting ASCAM')
         self.master.destroy()
         self.master.quit()
 
@@ -291,17 +312,17 @@ class Displayframe(ttk.Frame):
     voltage.
     """
     def __init__(self, parent):
-        if VERBOSE: print("initializing DisplayFrame")
+        log.info("initializing DisplayFrame")
         ttk.Frame.__init__(self, parent)
         self.parent = parent
         self.show_command_stats()
-        if VERBOSE: print("initialized DisplayFrame")
+        log.info("initialized DisplayFrame")
 
     def update(self):
         """
         Update all contents of the Display frame
         """
-        if VERBOSE: print("updating DisplayFrame")
+        log.info("updating DisplayFrame")
         self.show_filename()
         self.show_command_stats()
 
@@ -328,7 +349,7 @@ class Displayframe(ttk.Frame):
                 command_stats+=self.parent.data.commandUnit
                 ttk.Label(self, text=command_stats).grid(row=4, column=0)
             else:
-                if VERBOSE: print("no command voltage found")
+                log.info("no command voltage found")
         else: pass
 
 class MenuBar(tk.Menu):
@@ -347,7 +368,7 @@ class MenuBar(tk.Menu):
         # the code below is needed to make the menuBar responsive on Mac OS
         # apple uses window system aqua
         if parent.window_system == 'aqua':
-            if VERBOSE: print("trying to make the menu work on Mac")
+            log.info("trying to make the menu work on Mac")
             appmenu = tk.Menu(self, name='apple')
             self.add_cascade(menu=appmenu)
             appmenu.add_command(label='About My Application')
@@ -369,11 +390,11 @@ class MenuBar(tk.Menu):
     def open_file(self):
         # open the dialog for loading a single file
         filename = askopenfilename()
-        if VERBOSE: print("selected file: '"+filename+"'")
+        log.info("selected file: '"+filename+"'")
         if filename is not None:
             OpenFileDialog(self.parent, filename)
         else:
-            if VERBOSE: print("User pressed 'Cancel'")
+            log.info("User pressed 'Cancel'")
 
     def save_to_file(self):
         # save the current recording object with all its attributes as a
@@ -382,7 +403,7 @@ class MenuBar(tk.Menu):
         if filepath is not None:
             self.parent.data.save_to_pickle(filepath)
         else:
-            if VERBOSE: print("User pressed 'Cancel'")
+            log.info("User pressed 'Cancel'")
 
     def export(self):
         ExportFileDialog(self.parent)
@@ -392,7 +413,7 @@ class ExportFileDialog(tk.Toplevel):
     placeholder for a dialog for exporting data
     """
     def __init__(self, parent):
-        if VERBOSE: print("initializing ExportFileDialog")
+        log.info("initializing ExportFileDialog")
         tk.Toplevel.__init__(self,parent)
         self.parent = parent #parent should be main window
 
@@ -446,7 +467,7 @@ class ExportFileDialog(tk.Toplevel):
                                            save_piezo = self.save_piezo.get(),
                                            save_command = self.save_command.get())
         else:
-            if VERBOSE: print("User pressed 'Cancel'")
+            log.info("User pressed 'Cancel'")
         self.destroy()
 
     def cancel(self):
@@ -523,7 +544,7 @@ class HistogramFrame(ttk.Frame):
     Frame for the histograms.
     """
     def __init__(self, parent):
-        if VERBOSE: print("initializing HistogramFrame")
+        log.info("initializing HistogramFrame")
 
         ttk.Frame.__init__(self, parent)
         self.parent = parent
@@ -533,14 +554,14 @@ class HistogramFrame(ttk.Frame):
         canvasHist.get_tk_widget().grid(row=0,column=0)
         self.canvas = canvasHist
 
-        if VERBOSE: print("initialized HistogramFrame")
+        log.info("initialized HistogramFrame")
 
     def draw_histogram(self, **kwargs):
         """
         draw a histogram of the current episode and a transparent all point hist
         in the background
         """
-        if VERBOSE: print("drawing histogram")
+        log.info("drawing histogram")
 
         ### get histogram parameters
         n_bins = int(float(self.parent.hist_number_bins.get()))
@@ -565,7 +586,7 @@ class HistogramFrame(ttk.Frame):
         ax = self.fig.add_subplot(111)
 
         if self.parent.data_loaded:
-            if VERBOSE: print("found data")
+            log.info("found data")
             ### get data
             series = self.parent.data[self.parent.datakey.get()]
             time = series[0]['time']
@@ -624,15 +645,15 @@ class HistogramFrame(ttk.Frame):
                 ax.plot(center_all,heights_all,color='orange', lw=2)
                 ax.set_xlabel("Current ["+self.parent.data.currentUnit+']')
                 if self.parent.hist_density.get()==1:
-                    if VERBOSE: print('setting y-label "Relative frequency"')
+                    log.info('setting y-label "Relative frequency"')
                     ax.set_ylabel("Relative frequency")
                 elif self.parent.hist_density.get()==0:
-                    if VERBOSE: print('setting y-label "Count"')
+                    log.info('setting y-label "Count"')
                     ax.set_ylabel("Count")
 
             ### histogram of single episode
             if self.parent.hist_single_ep.get()==1:
-                if VERBOSE: print("plotting single episode histogram")
+                log.info("plotting single episode histogram")
                 ax.bar(center_single, heights_single, width = width_single,
                          alpha=1)
 
@@ -650,7 +671,7 @@ class PlotOptions(ttk.Frame):
         self.parent = parent
 
         self.create_widgets()
-        if VERBOSE: print("creating plotOptions")
+        log.info("creating plotOptions")
 
     def update(self):
         """
@@ -696,9 +717,6 @@ class PlotFrame(ttk.Frame):
         self.canvas._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
 
     def plot(self):
-        # clear the last figure to prevent memory leak
-        plt.clf()
-
         datakey = self.parent.datakey.get()
         if self.parent.data.filename:
             # get data to plot
@@ -737,7 +755,7 @@ class PlotFrame(ttk.Frame):
 
             # plot the piezo
             if self.parent.show_piezo.get():
-                if VERBOSE: print('will plot piezo voltage')
+                log.info('will plot piezo voltage')
                 piezo_plot = self.fig.add_subplot(pgs[n_plot,:])
                 plotting.plotTrace(
                         ax = piezo_plot,
@@ -749,7 +767,7 @@ class PlotFrame(ttk.Frame):
                 self.subplots.append(piezo_plot)
             # plot command voltage
             if self.parent.show_command.get():
-                if VERBOSE: print('will plot command voltage')
+                log.info('will plot command voltage')
                 try: #get axis bounds
                     min_V = self.parent.data[datakey].get_min('command')
                     max_V = self.parent.data[datakey].get_max('command')
@@ -769,7 +787,9 @@ class PlotFrame(ttk.Frame):
                 plot.set_xticklabels([]) #turn off numbering on upper plots
             # label only the last axis
             self.subplots[-1].set_xlabel("Time ["+self.parent.data.timeUnit+"]")
+
             self.canvas.draw() # draw plots
+            plt.clf() #clear figure from memory
 
 class Manipulations(ttk.Frame):
     """docstring for Manipulations"""
@@ -796,14 +816,14 @@ class Manipulations(ttk.Frame):
         self.baselineButton.grid(row = 0, column=2,columnspan=2)
 
     def filter_series(self):
-        if VERBOSE: print('going to filter all episodes')
+        log.info('going to filter all episodes')
         #convert textvar to float
         cutoffFrequency = float(self.cutoffFrequency.get())
-        if VERBOSE: print("filter frequency is {}".format(cutoffFrequency))
+        log.info("filter frequency is {}".format(cutoffFrequency))
         if self.parent.data.call_operation('FILTER_',cutoffFrequency):
-            if VERBOSE: print('called operation succesfully')
+            log.info('called operation succesfully')
             self.parent.datakey.set(self.parent.data.currentDatakey)
-            if VERBOSE: print('updating list and plots')
+            log.info('updating list and plots')
             self.parent.update_list()
             self.parent.update_plots()
         ## here we should also have that if the operation has been performed
@@ -906,7 +926,7 @@ class BaselineFrame(tk.Toplevel):
         """
         redraw the histogram (with new settings) and close the dialog
         """
-        if VERBOSE: print('going to baseline all episodes')
+        log.info('going to baseline all episodes')
         try:
             self.intervals=stringList_parser(self.interval_entry.get())
         except: pass
@@ -925,10 +945,10 @@ class BaselineFrame(tk.Toplevel):
                                            active = self.piezo_active.get(),
                                            deviation = deviation
                                            ):
-            if VERBOSE: print('called operation succesfully')
+            log.info('called operation succesfully')
             self.parent.parent.datakey.set(
                                        self.parent.parent.data.currentDatakey)
-            if VERBOSE: print('updating list and plots')
+            log.info('updating list and plots')
             self.parent.parent.update_list()
             self.parent.parent.update_plots()
         ## here we should also have that if the operation has been performed
@@ -953,16 +973,10 @@ class ListSelection(ttk.Frame):
     def __init__(self, parent):
         ttk.Frame.__init__(self, parent)
         self.parent = parent # parent is mainframe
-        self.buttons = dict()
-        ## the `buttons` dict holds ordered pairs of the button objects and
-        ## the variables they refer to, `dict['name']=(button,var)`
-        self.color_choice = tk.StringVar()
-        self.color_choice.set('green')
         self.create_button()
-        self.create_checkbox('all')
-        self.colors = ['','red', 'green', 'yellow', 'purple', 'orange']
+        # self.create_checkbox(name = 'all')
 
-    def create_checkbox(self, name, key=''):
+    def create_checkbox(self, name, key='', color=''):
         """
         Create another checkbutton for a new selection of episodes and add
         them to the buttons dict.
@@ -972,83 +986,86 @@ class ListSelection(ttk.Frame):
         the `pack` which should ensure that they are places underneath one
         another.
         """
-        if VERBOSE: print('Creating checkbox with name "{}"'.format(name))
-
-        ### remove old 'add' button
-        self.createBoxButton.destroy()
-
-        ### create a checkbox and a variable for it
-        variable = tk.IntVar()
-        if name=='all':
-            variable.set(1) ### start with 'all' selected
-            button = ttk.Checkbutton(self, text=name, variable=variable)
+        if name in self.parent.data.lists.keys():
+            log.info("""tried to create list with the name ({}) of an
+                                existing list\n list creation failed""".format(name))
+            pass
         else:
-            button = ttk.Checkbutton(self, text='[{}] {}'.format(key,name),
-                                     variable=variable)
-            variable.set(0)
+            log.info('''Creating checkbox with name "{}"
+                              under key "{}"" with color {} '''.format(name,key,color))
 
-        button.pack()
+            # remove old 'add' button
+            self.createBoxButton.destroy()
 
-        ### store button and variable in dict
-        self.buttons[name] = (button, variable)
+            # create a checkbox and a variable for it
+            variable = tk.IntVar()
+            if name=='all':
+                variable.set(1) ### start with 'all' selected
+                button = ttk.Checkbutton(self, text=name, variable=variable)
+                button.pack()
+                self.create_button()
 
-        ### create new 'add' button underneath the checkbox
-        self.create_button()
-
-        ### create a new list of indices if the list is new
-        if not name in self.parent.data.lists.keys():
-            self.parent.data.lists[name] = [list(),str()]
-
-        ### create function to color episode on keypress and add to list
-        if key:
-            ### convert key to lower case and take only the first letter if
-            ### multiple were entered
-            key=key.lower()
-            key=key[0]
-            color = self.color_choice.get()
-            def color_episode(*args, **kwargs):
-                selected_eps = self.parent.episodeList.episodelist.curselection()
-                print(selected_eps)
-                new_list = self.parent.data.lists[name][0]
-                episodelist = self.parent.episodeList.episodelist
-                if VERBOSE: print("Currently selected episodes are {}".selected_eps)
-                for n_episode in selected_eps:
-                    if not (n_episode in new_list):
-                        episodelist.itemconfig(n_episode, bg=color)
-                        new_list.append(n_episode)
-                        if VERBOSE:
-                            print('''pressing "{}" added episode {} to list {}
-                                  '''.format(key,n_episode,name))
-                            print('"{}" now contains:'.format(name))
-                            print(new_list)
-                    else:
-                        episodelist.itemconfig(n_episode, bg='white')
-                        new_list.remove(n_episode)
-                        if VERBOSE:
-                            print('''pressing "{}" removed episode {} from list {}
-                                  '''.format(key,n_episode,name))
-                            print('"{}" now contains:'.format(name))
-                            print(new_list)
-            self.parent.episodeList.episodelist.bind(key,color_episode)
-            self.parent.data.lists[name][1] = color
-
-
-        ### trace the variable to add/removoe the corresponding list to/from
-        ### the list of current lists, also update the histogram to immediatly
-        ### show the change
-        def trace_variable(*args):
-            if name in self.parent.data.current_lists:
-                self.parent.data.current_lists.remove(name)
-                if VERBOSE:
-                    print('remove {} from `current_lists'.format(name))
             else:
-                self.parent.data.current_lists.append(name)
-                if VERBOSE:
-                    print('added {} to `current_lists'.format(name))
-            ### when changing lists update the histogram to display only
-            ### episodes in selected lists
-            self.parent.draw_histogram()
-        variable.trace("w",trace_variable)
+                button = ttk.Checkbutton(self, text='[{}] {}'.format(key,name),
+                                         variable=variable)
+                variable.set(0)
+                button.pack()
+
+                # create new 'add' button underneath the checkbox
+                self.create_button()
+
+                # initialize with empty elemnts
+                self.parent.data.lists[name] = [list(),str(),str()]
+
+                # create function to color episode on keypress and add to list
+                # convert key to lower case and take only the first letter
+                key = key[0].lower()
+                def add_episode(*args, **kwargs):
+                    """
+                    for every list a function is created to add episodes to the
+                    list and color them
+                    """
+                    # get highlighted selection of episode from episode list
+                    selected_eps = self.parent.episodeList.episodelist.curselection()
+                    new_list = self.parent.data.lists[name][0]
+                    episodelist = self.parent.episodeList.episodelist
+                    log.info("Currently selected episodes are {}".format(selected_eps))
+                    # loop over all currently selected episodes
+                    for n_episode in selected_eps:
+                        # if episode not in list add it
+                        if not (n_episode in new_list):
+                            episodelist.itemconfig(n_episode, bg=color)
+                            new_list.append(n_episode)
+                            log.info("added {} to {}".format(n_episode,name))
+                        # if already in list remove it
+                        else:
+                            episodelist.itemconfig(n_episode, bg='white')
+                            new_list.remove(n_episode)
+                            log.info("removed {} from {}".format(n_episode,name))
+                    if VERBOSE:
+                        print('"{}" now contains:\n {}'.format(name, new_list))
+                # bind coloring function to key press
+                self.parent.episodeList.episodelist.bind(key,add_episode)
+                # add list attributes to the list dict in the recording instance
+                self.parent.data.lists[name][1] = color
+                self.parent.data.lists[name][2] = key
+
+                # trace the variable to add/removoe the corresponding list to/from
+                # the list of current lists, also update the histogram to immediatly
+                # show the change
+                def trace_variable(*args):
+                    if name in self.parent.data.current_lists:
+                        self.parent.data.current_lists.remove(name)
+                        if VERBOSE:
+                            print('remove {} from `current_lists'.format(name))
+                    else:
+                        self.parent.data.current_lists.append(name)
+                        if VERBOSE:
+                            print('added {} to `current_lists'.format(name))
+                    # when changing lists update the histogram to display only
+                    # episodes in selected lists
+                    self.parent.draw_histogram()
+                variable.trace("w",trace_variable)
 
     def create_button(self):
         """
@@ -1056,7 +1073,7 @@ class ListSelection(ttk.Frame):
         This functions uses `pack` geometry because the button will be created
         and destroyed several times at different locations in the grid.
         """
-        if VERBOSE: print("Creating new checkbox maker button")
+        log.info("Creating new checkbox maker button")
 
         self.createBoxButton = ttk.Button(self,text='Add',
                                           command=lambda: AddListDialog(self))
@@ -1068,18 +1085,21 @@ class AddListDialog(tk.Toplevel):
     of the list.
     """
     def __init__(self, parent):
-        if VERBOSE: print("initializing AddListDialog")
+        log.info("initializing AddListDialog")
         tk.Toplevel.__init__(self, parent)
         self.parent = parent #parent is ListSelection frame
         self.title("Add list")
         self.name = tk.StringVar()
         self.key = tk.StringVar()
+        self.color_choice = tk.StringVar()
+        self.color_choice.set('green')
+        self.colors = ['','red', 'green', 'yellow', 'purple', 'orange']
         self.create_widgets()
 
-        if VERBOSE: print("Opened new AddListDialog")
+        log.info("Opened new AddListDialog")
 
     def create_widgets(self):
-        if VERBOSE: print('populating dialog')
+        log.info('populating dialog')
         ttk.Label(self, text='Name:').grid(row=0,column=0)
         name_entry = ttk.Entry(self, width=7, textvariable=self.name)
         name_entry.grid(row=0,column=1)
@@ -1089,19 +1109,19 @@ class AddListDialog(tk.Toplevel):
         ttk.Entry(self, width=7, textvariable=self.key).grid(row=1,column=1)
 
         ttk.Label(self,text="Color: ").grid(row=2,column=0)
-        color = ttk.OptionMenu(self,self.parent.color_choice,*self.parent.colors)
+        color = ttk.OptionMenu(self,self.color_choice,*self.colors)
         color.grid(row=2,column=1)
 
         ttk.Button(self,text="OK",command=self.ok_button).grid(row=3,column=0)
         ttk.Button(self,text="Cancel",command=self.destroy).grid(row=3,
                                                                  column=1)
 
-
-
     def ok_button(self):
-        if VERBOSE: print("Confirmed checkbox creation through dialog")
+        log.info("Confirmed checkbox creation through dialog")
         if self.name.get() and self.key.get():
-            self.parent.create_checkbox(self.name.get(),self.key.get())
+            self.parent.create_checkbox(name = self.name.get(),
+                                        key = self.key.get(),
+                                        color = self.color_choice.get())
         else: print("failed to enter name and/or key")
         self.destroy()
 
@@ -1139,11 +1159,11 @@ class EpisodeList(ttk.Frame):
         the last line of scrollbar references episodelist so it has to come
         after the creating of episodelist
         """
-        if VERBOSE: print("creating scrollbar")
+        log.info("creating scrollbar")
         self.Scrollbar = tk.Scrollbar(self, orient=tk.VERTICAL)
         self.Scrollbar.grid(column=1, row=1, rowspan=3, sticky=tk.N+tk.S+tk.E)
 
-        if VERBOSE: print("creating episodelist")
+        log.info("creating episodelist")
         self.episodelist = tk.Listbox(self, bd=2,
                                       yscrollcommand=self.Scrollbar.set,
                                       selectmode=tk.EXTENDED)
@@ -1154,7 +1174,7 @@ class EpisodeList(ttk.Frame):
         self.episodelist.config(height=30)
         ### only create the list if there is data to fill it with
         if self.parent.data:
-            if VERBOSE: print("found data to fill list with")
+            log.info("found data to fill list with")
             for episode in self.parent.data[self.parent.datakey.get()]:
                 self.episodelist.insert(tk.END, "episode #"
                                                 +str(episode.nthEpisode))
@@ -1179,7 +1199,7 @@ class EpisodeList(ttk.Frame):
         """
         if  VERBOSE: print("creating dropdown menu")
         if self.parent.data:
-            if VERBOSE: print("found data")
+            log.info("found data")
             ### the options in the list are all the datakeys
             listOptions = self.parent.data.keys()
         else:
@@ -1193,7 +1213,7 @@ class EpisodeList(ttk.Frame):
         it needs the `*args` arguments because tkinter passes some arguments
         to it (we currently dont need those)
         """
-        if VERBOSE: print(self.parent.datakey.get()+' selected')
+        log.info(self.parent.datakey.get()+' selected')
         self.create_list()
         self.parent.update_plots()
 
@@ -1204,13 +1224,13 @@ class OpenFileDialog(tk.Toplevel):
     file another window pops up to ask for additional parameters.
     """
     def __init__(self, parent, filename):
-        if VERBOSE: print("initializing OpenFileDialog")
+        log.info("initializing OpenFileDialog")
 
         tk.Toplevel.__init__(self,parent)
         self.parent = parent
         self.title("Select file")
 
-        if VERBOSE: print("creating StringVars for parameter entry")
+        log.info("creating StringVars for parameter entry")
         self.filenamefull = tk.StringVar()
         self.filetypefull = tk.StringVar()
         self.filetype = tk.StringVar()
@@ -1227,10 +1247,10 @@ class OpenFileDialog(tk.Toplevel):
 
         self.create_widgets()
         self.samplingentry.focus()
-        if VERBOSE: print("OpenFileDialog initialized")
+        log.info("OpenFileDialog initialized")
 
     def create_widgets(self):
-        if VERBOSE: print("creating OpenFileDialog widgets")
+        log.info("creating OpenFileDialog widgets")
         # first row - filename and button for choosing file
         ttk.Label(self, text='File:').grid(column=1,row=1,sticky=(tk.N, tk.W))
 
@@ -1278,7 +1298,7 @@ class OpenFileDialog(tk.Toplevel):
                                                      self.filetype.get())
                 self.parent.datakey.set(self.parent.data.currentDatakey)
                 self.parent.data_loaded = True
-                self.parent.update_all()
+                self.parent.load_recording()
             finally:
                 self.destroy()
 
