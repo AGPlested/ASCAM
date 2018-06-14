@@ -14,7 +14,7 @@ def initialize_logger(output_dir,log_level='INFO',silent=False):
     Set up the logging module to write INFO level output to the console and
     write everything to a file with timestamps and module name
     """
-    date = datetime.datetime.now().strftime("%Y-%m-%d")
+    date = datetime.datetime.now().strftime("%Y-%m-%d-%H:%M")
 
     logger = logging.getLogger()
     logger.setLevel(logging.DEBUG)
@@ -71,6 +71,7 @@ def parse_options():
             sys.exit(2)
         else: assert False, "unhandled option"
     return log_level, test, silent, logdir
+
 def usage():
     """
     Print a manual for calling ASCAM to the commandline.
@@ -90,6 +91,7 @@ def main():
     mattest = False
 
     log_level, test, silent, logdir = parse_options()
+
     if test=='mat': mattest=True
     elif test=='bin': bintest=True
     elif test=='axo': axotest=True
@@ -98,17 +100,6 @@ def main():
     initialize_logger(logdir,log_level,silent)
     logging.info("-"*20+"Start of new ASCAM session"+"-"*20)
 
-    # try:
-    #     if 'axo' in sys.argv:
-    #         axotest = True
-    #     elif 'bin' in sys.argv:
-    #         bintest = True
-    #     elif 'mat' in sys.argv:
-    #         mattest = True
-    #     if 'v' in sys.argv:
-    #         VERBOSE = True
-    # except IndexError:
-    #     pass
     GUI.run(VERBOSE, axotest, bintest, mattest)
 
 if __name__ == '__main__': main()
