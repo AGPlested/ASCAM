@@ -1,4 +1,5 @@
 import numpy as np
+import logging as log
 
 def parse_filename(filename):
     """
@@ -6,23 +7,32 @@ def parse_filename(filename):
     works by walking through the filename in reverse order and considering
     the filetype to be whatever comes before the first '.' it encounters
     """
+    log.info("""called `parse_filename` on: {}""".format(filename))
     N = len(filename)
+    period = False
+    slash = False
     for i, char in enumerate(filename[::-1]):
         # loop over the full filename (which includes directory) backwards
         # to extract the extension and name of the file
-        if char=='.':
+        if char=='.' and not period:
             period = N-i
-        if char=='/':
+        if char=='/' and not slash:
             slash = N-i
             break
     path = filename[:slash]
     filetype = filename[period:]
+    log.debug("""filename length: {}
+                period (.) at position: {}
+                slash (/) at position: {}
+                path: {}
+                filetype: {}""".format(N,period,slash,path,filetype))
     if filetype=='axgd':
         filetype = 'axo'
         filetype_long = 'axograph'
     elif filetype == 'bin': filetype_long = 'binary'
     elif filetype == 'mat': filetype_long = 'matlab'
     elif filetype == 'pkl': filetype_long = 'pickle'
+    else: log.warning("Could not detect filetype!")
     filename = filename[slash+1:period]
     return filetype, path, filetype_long, filename
 
