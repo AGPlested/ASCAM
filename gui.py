@@ -717,6 +717,7 @@ class PlotFrame(ttk.Frame):
         self.canvas._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
 
     def plot(self):
+        plt.clf() #clear figure from memory
         datakey = self.parent.datakey.get()
         if self.parent.data.filename:
             # get data to plot
@@ -787,9 +788,7 @@ class PlotFrame(ttk.Frame):
                 plot.set_xticklabels([]) #turn off numbering on upper plots
             # label only the last axis
             self.subplots[-1].set_xlabel("Time ["+self.parent.data.timeUnit+"]")
-
             self.canvas.draw() # draw plots
-            plt.clf() #clear figure from memory
 
 class Manipulations(ttk.Frame):
     """docstring for Manipulations"""
