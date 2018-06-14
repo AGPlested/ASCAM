@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import logging as log
 from tools import piezo_selection, interval_selection
-VERBOSE = True
 
 def create_histogram(data, n_bins, density=False):
     """
@@ -13,13 +13,16 @@ def create_histogram(data, n_bins, density=False):
         **kwargs - Keyword arguments for the `numpy.histogram` function
     """
     data = data.flatten()
-    if VERBOSE: print(""" called 'create_histogram'\n
-    will use {} bins\n
+    log.info("called 'create_histogram'")
+    log.debug(""" histogram will use {} bins\n
     normalize histogram to a density is {}\n
     the data are of type {},
     the data are {}
     """.format(n_bins,density,type(data),data))
     hist, bins = np.histogram(data, n_bins, density=density)
+    log.debug("""`np.histogram` returned
+                \n hist = {}
+                \n bins={} """.format(hist,bins))
     return hist, bins
 
 def histogram(time, piezos, traces, active = True, piezoSelection=True,
@@ -63,19 +66,19 @@ def histogram(time, piezos, traces, active = True, piezoSelection=True,
             trace_list.extend(trace_points)
     elif intervals:
         for trace in traces:
-            _, trace_points = interval_selection(time, trace,
-                                                          intervals,
-                                                          samplingRate,
-                                                          timeUnit)
+            _, trace_points = interval_selection(time, trace, intervals,
+                                                 samplingRate, timeUnit)
             trace_list.extend(trace_points)
     else:
         trace_list = traces
 
     trace_list = np.asarray(trace_list)
     hist, bins = create_histogram(trace_list, n_bins, density)
-    center = (bins[:-1] + bins[1:]) / 2
+    # get centers of all the bins
+    centers = (bins[:-1] + bins[1:]) / 2
+    # get the width of a(ll) bin(s)
     width = (bins[1] - bins[0])
-    return hist, bins, center, width
+    return hist, bins, centers, width
 
 def plotTrace(ax, time, trace, ylabel, ybounds = []):
     """
