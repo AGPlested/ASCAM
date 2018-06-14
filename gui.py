@@ -36,10 +36,10 @@ class GUI(ttk.Frame):
         bintest = bin
         mattest = mat
         log.info("Starting ASCAM GUI")
-        log.debug("""Parameters of `run` method:\n
-                    verbose = {}\n
-                    axotest = {}\n
-                    bintest = {}\n
+        log.debug("""Parameters of `run` method:
+                    verbose = {}
+                    axotest = {}
+                    bintest = {}
                     mattest = {}""".format(v,axo,bin,mat))
         root = tk.Tk()
         root.protocol('WM_DELETE_WINDOW', quit)
