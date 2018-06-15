@@ -48,10 +48,10 @@ def parse_options():
     """
     log_level = 'INFO'
     test = False
-    silent = False
+    silent = True
     logdir = '.'
     try:
-        options, args = getopt.getopt(sys.argv[1:], "l:t:sd:h", ["loglevel=", "test=", "silent=", "logdir=","help"])
+        options, args = getopt.getopt(sys.argv[1:], "l:t:d:h", ["loglevel=", "test=", "logdir=","help"])
     except getopt.GetoptError as err:
         # print help information and exit:
         print(err)  # will print something like "option -a not recognized"
@@ -60,10 +60,9 @@ def parse_options():
     for opt, arg in options:
         if opt in ("-l", "--loglevel"):
             log_level = arg
+            silent = False
         elif opt in ("-t", "--test"):
             test = arg
-        elif opt in ("-s","--silent"):
-            silent = True
         elif opt in ("-d", "--logdir"):
             logdir = arg
         elif opt in ("-h", "--help"):
@@ -78,13 +77,12 @@ def usage():
     """
     print("""Usage: ./ASCAM --loglevel=INFO --test=False --silent --logdir=.
             -l --loglevel : level of logging to be printed to console (INFO or DEBUG)
+                            if no level is given nothing will be printed to consoleF
             -t --test : type of file to be used for testing (mat, axo or bin)
-            -s --silent : if used nothing will be printed to console
             -d --logdir : directory in which the log file should be saved
             -h --help : display this message""")
 
 def main():
-    VERBOSE = False #only here until VERBOSE has been replaced with logging everywhere
     # parameters for testing
     axotest = False
     bintest = False
@@ -100,6 +98,6 @@ def main():
     initialize_logger(logdir,log_level,silent)
     logging.info("-"*20+"Start of new ASCAM session"+"-"*20)
 
-    GUI.run(VERBOSE, axotest, bintest, mattest)
+    GUI.run(axotest, bintest, mattest)
 
 if __name__ == '__main__': main()

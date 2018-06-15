@@ -25,22 +25,19 @@ class GUI(ttk.Frame):
     because then they can be entered in entry fields without problems
     """
     @classmethod
-    def run(cls, v=False, axo=False, bin=False, mat=False):
-        # parameters for verbose output and testing modes
-        global VERBOSE
+    def run(cls, axo=False, bin=False, mat=False):
+        # parameters for testing modes
         global axotest
         global bintest
         global mattest
-        VERBOSE = v
         axotest = axo
         bintest = bin
         mattest = mat
         log.info("Starting ASCAM GUI")
         log.debug("""Parameters of `run` method:
-                    verbose = {}
                     axotest = {}
                     bintest = {}
-                    mattest = {}""".format(v,axo,bin,mat))
+                    mattest = {}""".format(axo,bin,mat))
         root = tk.Tk()
         root.protocol('WM_DELETE_WINDOW', quit)
         root.title("ASCAM")
@@ -291,10 +288,8 @@ class GUI(ttk.Frame):
         indices = []
         for listname in self.data.current_lists:
             indices.extend(self.data.lists[listname][0])
-            if VERBOSE:
-                print('for list "{}" added:'.format(listname))
-                print(self.data.lists[listname][0])
-        ### remove duplicate indices
+            log.debug('''for list "{}" added:\n {}'''.format(listname,self.data.lists[listname][0]))
+        # remove duplicate indices
         indices = np.array(list(set(indices)))
         indices = indices.flatten()
         log.info("indices in currently selected lists:\n {}".format(indices))
@@ -329,9 +324,7 @@ class Displayframe(ttk.Frame):
     def show_filename(self):
         if self.parent.data_loaded:
             filename = self.parent.filename.get()
-            if VERBOSE:
-                print('will show filename as "{}"'.format(filename))
-
+            log.info('will show filename as "{}"'.format(filename))
             ttk.Label(self,text = filename).grid(row=0, column=0, pady=10)
 
     def show_command_stats(self):
@@ -340,9 +333,8 @@ class Displayframe(ttk.Frame):
             episode = self.parent.data[datakey][self.parent.Nepisode]
 
             if episode['command'] is not None:
-                if VERBOSE:
-                    print("showing command stats for datakey "+datakey)
-                    print("episode number {}".format(self.parent.Nepisode))
+                log.info("""showing command stats for {}
+                         episode number: {}""".format(datakey,self.parent.Nepisode))
                 mean, std = episode.get_command_stats()
                 command_stats ="Command Voltage = "
                 command_stats+="{:2f} +/- {:2f}".format(mean,std)
@@ -574,14 +566,11 @@ class HistogramFrame(ttk.Frame):
         fs = float(self.parent.samplingrate.get())
         intervals = self.parent.hist_intervals
 
-
-        if VERBOSE:
-            print("number of bins = {}".format(n_bins))
-            print("density is {}".format(density))
-            print("piezoSelection is {}".format(piezoSelection))
-            print("active is {}".format(active))
-            print("deviation = {}".format(deviation))
-
+        log.debug("""number of bins = {}
+            density = {}
+            piezoSelection = {}
+            active = {}
+            deviation = {}""".format(deviation,n_bins,density,piezoSelection,active))
         ### create the plot object so we can delete it later
         ax = self.fig.add_subplot(111)
 
@@ -610,11 +599,7 @@ class HistogramFrame(ttk.Frame):
              center_single, width_single) = hist_single
 
             if self.parent.data.current_lists:
-                if VERBOSE:
-                    print("list(s) selected")
-                    print("current lists are:")
-                    for entry in self.parent.data.current_lists:
-                        print(entry)
+                log.info("""current lists are: {}""".format(self.parent.data.current_lists))
                 ### get a list of all the currents and all the traces
                 all_piezos = [episode['piezo'] for episode in series ]
                 all_traces = [episode['trace'] for episode in series ]
@@ -731,10 +716,8 @@ class PlotFrame(ttk.Frame):
             # plot grid to make current plot bigger
             pgs = gs.GridSpec(num_plots+1,1)
 
-            if VERBOSE:
-                print('`data` exists, plotting...')
-                print('datakey = '+datakey)
-                print('Nepisode = '+str(self.parent.Nepisode))
+            log.info("""`data` exists, will plot episode number {}
+            from series {}""".format(self.parent.Nepisode,datakey))
 
             time = episode['time']
 
@@ -829,8 +812,7 @@ class Manipulations(ttk.Frame):
         ## the selection switches to that operation
 
     def baseline_correct_frame(self):
-        if VERBOSE:
-            print('Opening the baseline correction frame.')
+        log.info('Opening the baseline correction frame.')
         BaselineFrame(self)
 
 class BaselineFrame(tk.Toplevel):
@@ -1041,8 +1023,7 @@ class ListSelection(ttk.Frame):
                             episodelist.itemconfig(n_episode, bg='white')
                             new_list.remove(n_episode)
                             log.info("removed {} from {}".format(n_episode,name))
-                    if VERBOSE:
-                        print('"{}" now contains:\n {}'.format(name, new_list))
+                    log.debug("""'{}' now contains:\n {}""".format(name,new_list))
                 # bind coloring function to key press
                 self.parent.episodeList.episodelist.bind(key,add_episode)
                 # add list attributes to the list dict in the recording instance
@@ -1055,12 +1036,10 @@ class ListSelection(ttk.Frame):
                 def trace_variable(*args):
                     if name in self.parent.data.current_lists:
                         self.parent.data.current_lists.remove(name)
-                        if VERBOSE:
-                            print('remove {} from `current_lists'.format(name))
+                        log.debug('removed {} from `current_lists'.format(name))
                     else:
                         self.parent.data.current_lists.append(name)
-                        if VERBOSE:
-                            print('added {} to `current_lists'.format(name))
+                        log.debug('added {} from `current_lists'.format(name))
                     # when changing lists update the histogram to display only
                     # episodes in selected lists
                     self.parent.draw_histogram()
@@ -1146,8 +1125,7 @@ class EpisodeList(ttk.Frame):
         change the number of the current episode and update the plots
         """
         selected_episode = int(event.widget.curselection()[0])
-        if VERBOSE:
-            print("selected episode number {}".format(selected_episode))
+        log.info("selected episode number {}".format(selected_episode))
         self.parent.Nepisode = selected_episode
         self.parent.update_plots()
 
@@ -1177,9 +1155,7 @@ class EpisodeList(ttk.Frame):
             for episode in self.parent.data[self.parent.datakey.get()]:
                 self.episodelist.insert(tk.END, "episode #"
                                                 +str(episode.nthEpisode))
-                if VERBOSE:
-                    print("inserting episode number {}".format(
-                                                          episode.nthEpisode))
+                log.debug("inserting episode number {}".format(episode.nthEpisode))
         ### color all episodes according to their list membership
             ### start from second element because white is default bg color
             for name in list(self.parent.data.lists.keys())[1:]:
@@ -1196,7 +1172,7 @@ class EpisodeList(ttk.Frame):
         """
         create the dropdown menu that is a list of the available series
         """
-        if  VERBOSE: print("creating dropdown menu")
+        log.info("""creating dropdown menu""")
         if self.parent.data:
             log.info("found data")
             ### the options in the list are all the datakeys
