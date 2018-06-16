@@ -6,6 +6,7 @@ import os
 from tools import parse_filename
 import json
 import pickle
+import logging as log
 
 def read_metadata(filename):
     """
@@ -27,7 +28,7 @@ def load_pickle(filename):
     """
     read a recording object from a pickle file
     """
-    print("reading pickle")
+    log.info("""reading pickle""")
     with open(filename,'rb') as file:
         data = pickle.load(file)
     return data

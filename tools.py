@@ -62,19 +62,18 @@ def piezo_selection(time, piezo, trace, active = True, deviation = 0.05):
         piezo [1D array of floats] - The piezo voltage at selected points.
         trace [1D array of floats] - The current at selected points.
     """
-    log.info("""called `piezo_selection`""")
     maxPiezo = np.max(np.abs(piezo))
-    log.debug("""parameters are:
+    log.debug("""called `piezo_selection` with parameters:
               active = {}, deviation = {}, maxPiezo = {}
               time: {}
               piezo: {}
               trace: {}
               """.format(active,deviation,maxPiezo,time,piezo,trace))
     if active:
-        log.info("""selecting for active piezo""")
+        log.debug("""selecting for active piezo""")
         indices = np.where((maxPiezo-np.abs(piezo))/maxPiezo<deviation)
     else:
-        log.info("""selecting for inactive piezo""")
+        log.debug("""selecting for inactive piezo""")
         indices = np.where(np.abs(piezo)/maxPiezo<deviation)
     time = time[indices]
     piezo = piezo[indices]
