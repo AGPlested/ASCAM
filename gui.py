@@ -204,12 +204,12 @@ class GUI(ttk.Frame):
         WITHIN the widgets
         """
         log.info("""configuring tkinter grid""")
-        ##### Place the main window in the root window
+        # Place the main window in the root window
         self.grid(row=0, column=0, sticky=tk.N+tk.S+tk.E+tk.W)
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
 
-        ##### First row
+        # First row
         self.plotOptions.grid(row=0, column=1,padx=5,pady=5,sticky=tk.N+tk.W)
 
         self.displayFrame.grid(row=0, column=2, padx=5, sticky=tk.S)
@@ -220,7 +220,7 @@ class GUI(ttk.Frame):
         self.histogramOptions.grid(row=0, column=4, columnspan=3)
 
 
-        ##### Second row
+        # Second row
         self.plots.grid(row=1, column=0, rowspan=3, columnspan=3, padx=5,
                         pady=5, sticky=tk.W)
         self.plots.grid_rowconfigure(0, weight=1)
@@ -231,14 +231,14 @@ class GUI(ttk.Frame):
         self.histogramFrame.grid_rowconfigure(0, weight=1)
         self.histogramFrame.grid_columnconfigure(0, weight=1)
 
-        ##### Third row
+        # Third row
         self.episodeList.grid(row=2, column=3, rowspan=2)
         for i in range(2):
             self.episodeList.grid_columnconfigure(i, weight=1)
             self.episodeList.grid_rowconfigure(i, weight=1)
-        ##### Fourth row
+        # Fourth row
 
-        ##### Fifth row
+        # Fifth row
         self.manipulations.grid(row=4, column=0, columnspan=3, padx=5, pady=5,
                                 sticky=tk.S+tk.W)
 
@@ -356,9 +356,11 @@ class MenuBar(tk.Menu):
         # menu holding all the cascading options
         # `tearoff` is needed because otherwise there is a seperator on top the
         # menu
-        self.subMenu = tk.Menu(self, tearoff=0)
+        self.file_menu = tk.Menu(self, tearoff=0)
+        self.analysis_menu = tk.Menu(self, tearoff=0)
 
         self.create_file_cascade()
+        self.create_analysis_cascade()
 
         # the code below is needed to make the menuBar responsive on Mac OS
         # apple uses window system aqua
@@ -375,12 +377,18 @@ class MenuBar(tk.Menu):
         Create all the options associated with files in the menu (e.g. 'open',
         'export' and 'save')
         """
-        self.add_cascade(label="File", menu=self.subMenu)
+        self.add_cascade(label="File", menu=self.file_menu)
         #Submenus under 'File'
-        self.subMenu.add_command(label="Open File",command=self.open_file)
-        self.subMenu.add_command(label="Save",command=self.save_to_file)
-        self.subMenu.add_command(label="Export",command=self.export)
-        self.subMenu.add_command(label="Quit",command=self.parent.master.quit)
+        self.file_menu.add_command(label="Open File",command=self.open_file)
+        self.file_menu.add_command(label="Save",command=self.save_to_file)
+        self.file_menu.add_command(label="Export",command=self.export)
+        self.file_menu.add_command(label="Quit",command=self.parent.master.quit)
+
+    def create_analysis_cascade(self):
+        self.add_cascade(label='Analysis',menu=self.analysis_menu)
+        self.analysis_menu.add_command(label="Baseline",command=lambda: BaselineFrame(self))
+        self.analysis_menu.add_command(label="Filter")
+        # self.analysis_menu.add_command(label="Idealize")
 
     def open_file(self):
         # open the dialog for loading a single file
@@ -796,10 +804,6 @@ class Manipulations(ttk.Frame):
         ttk.Label(self, text="Filter Frequency (Hz):").grid(column=0, row=1,
                                                             sticky=(tk.W))
 
-        self.baselineButton = ttk.Button(self,text='baseline',
-                                        command=self.baseline_correct_frame)
-        self.baselineButton.grid(row = 0, column=2,columnspan=2)
-
     def filter_series(self):
         log.info('going to filter all episodes')
         #convert textvar to float
@@ -813,10 +817,6 @@ class Manipulations(ttk.Frame):
             self.parent.update_plots()
         ## here we should also have that if the operation has been performed
         ## the selection switches to that operation
-
-    def baseline_correct_frame(self):
-        log.info('Opening the baseline correction frame.')
-        BaselineFrame(self)
 
 class BaselineFrame(tk.Toplevel):
     """
