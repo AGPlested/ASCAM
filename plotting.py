@@ -14,15 +14,15 @@ def create_histogram(data, n_bins, density=False):
     """
     data = data.flatten()
     log.info("called 'create_histogram'")
-    log.debug(""" histogram will use {} bins\n
-    normalize histogram to a density is {}\n
+    log.debug(""" histogram will use {} bins
+    normalize histogram to a density is {}
     the data are of type {},
     the data are {}
     """.format(n_bins,density,type(data),data))
     hist, bins = np.histogram(data, n_bins, density=density)
     log.debug("""`np.histogram` returned
-                \n hist = {}
-                \n bins={} """.format(hist,bins))
+                hist = {}
+                bins={} """.format(hist,bins))
     return hist, bins
 
 def histogram(time, piezos, traces, active = True, piezoSelection=True,
