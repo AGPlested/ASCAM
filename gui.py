@@ -123,6 +123,7 @@ class GUI(ttk.Frame):
     def load_recording(self):
         """ Take a recording object and load it into the GUI.
         """
+        log.info("""loading recording...""")
         # get filename and set GUI title
         # _, _, _, filename = parse_filename(self.data.filename)
         # self.master.title("ASCAM - "+filename)
@@ -130,10 +131,10 @@ class GUI(ttk.Frame):
 
         # recreate user defined episodelists
         for name, (_, color, key) in self.data.lists.items():
+            log.debug("""found list {}, color: {}, key: {}""".format(name, color, key))
             self.listSelection.create_checkbox(name = name,
                                                key = key,
                                                color = color)
-
         self.update_all()
 
     def load_for_testing(self):
@@ -174,6 +175,7 @@ class GUI(ttk.Frame):
         """
         Use to update all data dependent widgets in the main window
         """
+        log.debug("""updating all""")
         self.update_list()
         self.plotOptions.update()
         self.update_plots()
@@ -183,6 +185,7 @@ class GUI(ttk.Frame):
         """
         Create the contents of the main window.
         """
+        log.info("""creating widgets""")
         self.histogramFrame = HistogramFrame(self)
         self.plots = PlotFrame(self)
         self.manipulations = Manipulations(self)
@@ -200,7 +203,7 @@ class GUI(ttk.Frame):
         The values in col/rowconfig refer to the position of the elements
         WITHIN the widgets
         """
-
+        log.info("""configuring tkinter grid""")
         ##### Place the main window in the root window
         self.grid(row=0, column=0, sticky=tk.N+tk.S+tk.E+tk.W)
         self.grid_rowconfigure(0, weight=1)
@@ -952,10 +955,20 @@ class BaselineFrame(tk.Toplevel):
 
 class ListSelection(ttk.Frame):
     def __init__(self, parent):
+        log.info("""initializing ListSelection frame""")
         ttk.Frame.__init__(self, parent)
         self.parent = parent # parent is mainframe
-        self.create_button()
-        # self.create_checkbox(name = 'all')
+        self.create_button() #button for adding new lists
+
+    def new_checkbox(self, name, key='', color=''):
+        """
+        Create a new checkbox but first check if a list by that name already
+        exists
+        """
+        if name in self.parent.data.lists.keys():
+            log.info("""tried to create list with the name ("{}") of an existing list\n list creation failed""".format(name))
+            pass
+        else: self.create_checkbox(name=name, key=key, color=color)
 
     def create_checkbox(self, name, key='', color=''):
         """
@@ -967,83 +980,77 @@ class ListSelection(ttk.Frame):
         the `pack` which should ensure that they are places underneath one
         another.
         """
-        if name in self.parent.data.lists.keys():
-            log.info("""tried to create list with the name ({}) of an
-                                existing list\n list creation failed""".format(name))
-            pass
+
+        log.info('''Creating checkbox with name "{}" under key "{}"" with color {} '''.format(name,key,color))
+
+        # remove old 'add' button
+        self.createBoxButton.destroy()
+
+        # create a checkbox and a variable for it
+        variable = tk.IntVar()
+        if name=='all':
+            variable.set(1) ### start with 'all' selected
+            button = ttk.Checkbutton(self, text=name, variable=variable)
+            button.pack()
+            self.create_button()
         else:
-            log.info('''Creating checkbox with name "{}"
-                              under key "{}"" with color {} '''.format(name,key,color))
+            button = ttk.Checkbutton(self, text='[{}] {}'.format(key,name),
+                                     variable=variable)
+            variable.set(0)
+            button.pack()
 
-            # remove old 'add' button
-            self.createBoxButton.destroy()
+            # create new 'add' button underneath the checkbox
+            self.create_button()
 
-            # create a checkbox and a variable for it
-            variable = tk.IntVar()
-            if name=='all':
-                variable.set(1) ### start with 'all' selected
-                button = ttk.Checkbutton(self, text=name, variable=variable)
-                button.pack()
-                self.create_button()
+            # initialize with empty elemnts
+            self.parent.data.lists[name] = [list(),str(),str()]
 
-            else:
-                button = ttk.Checkbutton(self, text='[{}] {}'.format(key,name),
-                                         variable=variable)
-                variable.set(0)
-                button.pack()
-
-                # create new 'add' button underneath the checkbox
-                self.create_button()
-
-                # initialize with empty elemnts
-                self.parent.data.lists[name] = [list(),str(),str()]
-
-                # create function to color episode on keypress and add to list
-                # convert key to lower case and take only the first letter
-                key = key[0].lower()
-                def add_episode(*args, **kwargs):
-                    """
-                    for every list a function is created to add episodes to the
-                    list and color them
-                    """
-                    # get highlighted selection of episode from episode list
-                    selected_eps = self.parent.episodeList.episodelist.curselection()
-                    new_list = self.parent.data.lists[name][0]
-                    episodelist = self.parent.episodeList.episodelist
-                    log.info("Currently selected episodes are {}".format(selected_eps))
-                    # loop over all currently selected episodes
-                    for n_episode in selected_eps:
-                        # if episode not in list add it
-                        if not (n_episode in new_list):
-                            episodelist.itemconfig(n_episode, bg=color)
-                            new_list.append(n_episode)
-                            log.info("added {} to {}".format(n_episode,name))
-                        # if already in list remove it
-                        else:
-                            episodelist.itemconfig(n_episode, bg='white')
-                            new_list.remove(n_episode)
-                            log.info("removed {} from {}".format(n_episode,name))
-                    log.debug("""'{}' now contains:\n {}""".format(name,new_list))
-                # bind coloring function to key press
-                self.parent.episodeList.episodelist.bind(key,add_episode)
-                # add list attributes to the list dict in the recording instance
-                self.parent.data.lists[name][1] = color
-                self.parent.data.lists[name][2] = key
-
-                # trace the variable to add/removoe the corresponding list to/from
-                # the list of current lists, also update the histogram to immediatly
-                # show the change
-                def trace_variable(*args):
-                    if name in self.parent.data.current_lists:
-                        self.parent.data.current_lists.remove(name)
-                        log.debug('removed {} from `current_lists'.format(name))
+            # create function to color episode on keypress and add to list
+            # convert key to lower case and take only the first letter
+            key = key[0].lower()
+            def add_episode(*args, **kwargs):
+                """
+                for every list a function is created to add episodes to the
+                list and color them
+                """
+                # get highlighted selection of episode from episode list
+                selected_eps = self.parent.episodeList.episodelist.curselection()
+                new_list = self.parent.data.lists[name][0]
+                episodelist = self.parent.episodeList.episodelist
+                log.info("Currently selected episodes are {}".format(selected_eps))
+                # loop over all currently selected episodes
+                for n_episode in selected_eps:
+                    # if episode not in list add it
+                    if not (n_episode in new_list):
+                        episodelist.itemconfig(n_episode, bg=color)
+                        new_list.append(n_episode)
+                        log.info("added {} to {}".format(n_episode,name))
+                    # if already in list remove it
                     else:
-                        self.parent.data.current_lists.append(name)
-                        log.debug('added {} from `current_lists'.format(name))
-                    # when changing lists update the histogram to display only
-                    # episodes in selected lists
-                    self.parent.draw_histogram()
-                variable.trace("w",trace_variable)
+                        episodelist.itemconfig(n_episode, bg='white')
+                        new_list.remove(n_episode)
+                        log.info("removed {} from {}".format(n_episode,name))
+                log.debug("""'{}' now contains:\n {}""".format(name,new_list))
+            # bind coloring function to key press
+            self.parent.episodeList.episodelist.bind(key,add_episode)
+            # add list attributes to the list dict in the recording instance
+            self.parent.data.lists[name][1] = color
+            self.parent.data.lists[name][2] = key
+
+            # trace the variable to add/removoe the corresponding list to/from
+            # the list of current lists, also update the histogram to immediatly
+            # show the change
+            def trace_variable(*args):
+                if name in self.parent.data.current_lists:
+                    self.parent.data.current_lists.remove(name)
+                    log.debug('removed {} from `current_lists'.format(name))
+                else:
+                    self.parent.data.current_lists.append(name)
+                    log.debug('added {} from `current_lists'.format(name))
+                # when changing lists update the histogram to display only
+                # episodes in selected lists
+                self.parent.draw_histogram()
+            variable.trace("w",trace_variable)
 
     def create_button(self):
         """
@@ -1052,7 +1059,6 @@ class ListSelection(ttk.Frame):
         and destroyed several times at different locations in the grid.
         """
         log.info("Creating new checkbox maker button")
-
         self.createBoxButton = ttk.Button(self,text='Add',
                                           command=lambda: AddListDialog(self))
         self.createBoxButton.pack()
@@ -1097,7 +1103,7 @@ class AddListDialog(tk.Toplevel):
     def ok_button(self):
         log.info("Confirmed checkbox creation through dialog")
         if self.name.get() and self.key.get():
-            self.parent.create_checkbox(name = self.name.get(),
+            self.parent.new_checkbox(name = self.name.get(),
                                         key = self.key.get(),
                                         color = self.color_choice.get())
         else: print("failed to enter name and/or key")
@@ -1124,10 +1130,14 @@ class EpisodeList(ttk.Frame):
         When a new episode is selected by clicking or with arrow keys get the
         change the number of the current episode and update the plots
         """
-        selected_episode = int(event.widget.curselection()[0])
-        log.info("selected episode number {}".format(selected_episode))
-        self.parent.Nepisode = selected_episode
-        self.parent.update_plots()
+        #uses try to catch and ignore the event of the user clickling
+        #outside the list
+        try:
+            selected_episode = int(event.widget.curselection()[0])
+            log.info("selected episode number {}".format(selected_episode))
+            self.parent.Nepisode = selected_episode
+            self.parent.update_plots()
+        except IndexError: pass
 
     def create_list(self):
         """
@@ -1269,8 +1279,8 @@ class OpenFileDialog(tk.Toplevel):
                 self.parent.path.set(self.path.get())
 
                 self.parent.data = Recording(self.filenamefull.get(),
-                                                     self.samplingrate.get(),
-                                                     self.filetype.get())
+                                             self.samplingrate.get(),
+                                             self.filetype.get())
                 self.parent.datakey.set(self.parent.data.currentDatakey)
                 self.parent.data_loaded = True
                 self.parent.load_recording()

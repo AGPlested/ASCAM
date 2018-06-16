@@ -6,32 +6,32 @@ from episode import Episode
 from series import Series
 import pickle
 from scipy import io
+import logging as log
 
 class Recording(dict):
     def __init__(self, filename = '',
                  samplingRate = 0, filetype = '', headerlength = 0,
                  dtype = None, timeUnit = 'ms', piezoUnit = 'V',
                  commandUnit = 'V', currentUnit = 'A'):
-        ### parameters for loading the data
+        log.info("""intializing Recording""")
+
+        # parameters for loading the data
         self.filename = filename
         self.filetype = filetype
         self.headerlength = int(float(headerlength))
         self.dtype = dtype
 
-        ### attributes of the data
+        # attributes of the data
         self.samplingRate = int(float(samplingRate))
         self.timeUnit = timeUnit
         self.commandUnit = commandUnit
         self.currentUnit = currentUnit
         self.piezoUnit = piezoUnit
 
-        ### attributes for storing and managing the data
+        # attributes for storing and managing the data
         self['raw_'] = Series()
         self.currentDatakey = 'raw_'
         self.currentEpisode = 0
-
-        ### if a file is specified load it
-        if filename: self.load_data()
 
         # variables for user created lists of episodes
         # `lists` stores the indices of the episodes in the list in the first
@@ -40,6 +40,11 @@ class Recording(dict):
         # of a tuple that is the value under the list's name (as dict key)
         self.lists = {'all': (list(range(len(self['raw_']))), 'white', None)}
         self.current_lists = ['all']
+
+        # if a file is specified load it
+        if filename:
+            log.info("""`filename` is not empty, will load data""")
+            self.load_data()
 
     def load_data(self):
         """
