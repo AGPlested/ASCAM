@@ -106,7 +106,7 @@ class Recording(dict):
 
         if 'Piezo [V]' in names and 'Command Voltage [V]' in names:
             time = loaded_data[0]
-            self[datakey] = Series([Episode(time, trace, nthEpisode=i,
+            self[datakey] = Series([Episode(time, trace, n_episode=i,
                                             piezo=pTrace,
                                             command=cVtrace,
                                             samplingRate = self.samplingRate)
@@ -115,21 +115,21 @@ class Recording(dict):
 
         elif 'Piezo [V]' in names:
             time, current, piezo, _ = loaded_data
-            self[datakey] = Series([Episode(time, current[i], nthEpisode=i,
+            self[datakey] = Series([Episode(time, current[i], n_episode=i,
                                             piezo=piezo[i],
                                             samplingRate = self.samplingRate)
                                     for i in range(len(current))])
 
         elif 'Command Voltage [V]' in names:
             time, current, _, command = loaded_data
-            self[datakey] = Series([Episode(time, current[i], nthEpisode=i,
+            self[datakey] = Series([Episode(time, current[i], n_episode=i,
                                             command=command[i],
                                             samplingRate = self.samplingRate)
                                     for i in range(len(current))])
 
         else:
             time, current, _, _ = loaded_data
-            self[datakey] = Series([Episode(time, current[i], nthEpisode=i,
+            self[datakey] = Series([Episode(time, current[i], n_episode=i,
                                             samplingRate = self.samplingRate)
                                     for i in range(len(current))])
 
@@ -175,7 +175,7 @@ class Recording(dict):
                         continue
                     else:
                     # add data to dictionary
-                        n = str(episode.nthEpisode)
+                        n = str(episode.n_episode)
                         n = n.zfill(fill_length)
                         export_dict[name+n] = value
         io.savemat(filepath,export_dict)

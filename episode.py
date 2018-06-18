@@ -4,7 +4,7 @@ import analysis
 from tools import piezo_selection, parse_filename
 
 class Episode(dict):
-    def __init__(self, time, trace, nthEpisode = 0, piezo = None,
+    def __init__(self, time, trace, n_episode = 0, piezo = None,
                  command = None, filterType = None, fc = None,
                  samplingRate = 4e4, timeInputUnit = 'ms'):
         """
@@ -36,7 +36,7 @@ class Episode(dict):
         self['trace'] = trace
         self['piezo'] = piezo
         self['command'] = command
-        self.nthEpisode = int(nthEpisode)
+        self.n_episode = int(n_episode)
         self.samplingRate = samplingRate
         self.suspiciousSTD = False
 

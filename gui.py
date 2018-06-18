@@ -130,14 +130,11 @@ class GUI(ttk.Frame):
         self.master.title("ASCAM - "+self.filename.get())
 
         # recreate user defined episodelists
-        for name, (episode_numbers, color, key) in self.data.lists.items():
+        for name, (_, color, key) in self.data.lists.items():
             log.debug("""found list {}, color: {}, key: {}""".format(name, color, key))
             self.listSelection.create_checkbox(name = name,
                                                key = key,
                                                color = color)
-            for n_episode in episode_numbers:
-                self.episodeList.episodelist.itemconfig(n_episode, bg=color)
-
         self.update_all()
 
     def load_for_testing(self):
@@ -158,7 +155,7 @@ class GUI(ttk.Frame):
                 randommultiplier = np.random.random(
                                     len(dummyepisode['trace']))
                 dummyepisode['trace'] = dummyepisode['trace']*randommultiplier
-                dummyepisode.nthEpisode = i
+                dummyepisode.n_episode = i
                 self.data['raw_'].append(dummyepisode)
         elif axotest:
             log.info('Test mode with axograph data')
@@ -279,7 +276,7 @@ class GUI(ttk.Frame):
 
     def update_list(self):
         log.info('updatin list')
-        self.episodeList.create_list()
+        # self.episodeList.create_list()
         log.info("created new list")
         self.episodeList.create_dropdownmenu()
         ### for now `update_list` will update both the list and the dropdown
@@ -413,45 +410,6 @@ class MenuBar(tk.Menu):
 
     def export(self):
         ExportFileDialog(self.parent)
-
-class FilterFrame(tk.Toplevel):
-    """TopLevel frame to choose which filter to use and its parameters"""
-    def __init__(self, parent):
-        log.info("""initializing filter frame""")
-        tk.Toplevel.__init__(self, parent)
-        self.parent = parent #for now the parent will be the menubar
-        self.title("Filter")
-
-        #parameters for gaussian filter
-        self.gaussian_fc = tk.StringVar()
-        self.gaussian_fc.set('1000')
-
-        #parameters for chung-kennedy filter
-        self.num_filters = tk.StringVar()
-        sef.num_filters.set('')
-
-        create_dropdownmenu()
-
-    def create_dropdownmenu(self):
-        """
-        create the dropdown menu that is a list of the available filters
-        """
-        log.info("""creating filter dropdown menu""")
-        listOptions = ['Gaussian', 'Chung-Kennedy']
-        self.menu = tk.OptionMenu(self, "Gaussian", *listOptions)
-        self.menu.grid(row=0,column=0,columnspan=2,sticky=tk.N)
-
-    def gaussian_widgets(self):
-        pass
-
-    def ck_widgets(self):
-        """
-        Widgets for the parameters of the Chung-Kennedy filter
-        """
-        ttk.Label(self,text='Filter frequency [Hz]').grid(column=1,row=0)
-        ############## create dropdown menu
-        ttk.Entry(self,width=7,textvariable=self.method).grid(
-                                                            column=2,row = 0)
 
 class ExportFileDialog(tk.Toplevel):
     """
@@ -843,7 +801,7 @@ class Manipulations(ttk.Frame):
         self.cutoffentry = ttk.Entry(self, width=7, textvariable=(
                                                         self.cutoffFrequency))
         self.cutoffentry.grid(column=1,row=1)
-        ttk.Label(self, text="Filter Frequency [Hz]:").grid(column=0, row=1,
+        ttk.Label(self, text="Filter Frequency (Hz):").grid(column=0, row=1,
                                                             sticky=(tk.W))
 
     def filter_series(self):
@@ -1206,8 +1164,8 @@ class EpisodeList(ttk.Frame):
             log.info("found data to fill list with")
             for episode in self.parent.data[self.parent.datakey.get()]:
                 self.episodelist.insert(tk.END, "episode #"
-                                                +str(episode.nthEpisode))
-                log.debug("inserting episode number {}".format(episode.nthEpisode))
+                                                +str(episode.n_episode))
+                log.debug("inserting episode number {}".format(episode.n_episode))
         ### color all episodes according to their list membership
             ### start from second element because white is default bg color
             for name in list(self.parent.data.lists.keys())[1:]:
@@ -1379,5 +1337,6 @@ class Binaryquery(tk.Toplevel):
                                          self.parent.headerlength.get(),
                                          datatype)
         self.parent.update_all()
+        self.parent.episodeList.create_list()
         self.loadframe.destroy()
         self.destroy()
