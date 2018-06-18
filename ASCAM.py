@@ -49,7 +49,7 @@ def parse_options():
     log_level = 'INFO'
     test = False
     silent = True
-    logdir = '.'
+    logdir = './logfiles'
     try:
         options, args = getopt.getopt(sys.argv[1:], "l:t:d:h", ["loglevel=", "test=", "logdir=","help"])
     except getopt.GetoptError as err:
