@@ -31,6 +31,7 @@ def initialize_logger(output_dir,log_level='INFO',silent=False):
         logger.addHandler(handler)
 
     # create debug file handler and set level to debug
+    if not os.path.exists(output_dir): os.makedirs(directory)
     handler = logging.FileHandler(os.path.join(output_dir,'ASCAM'+'_'+date+'.log'),"w")
     handler.setLevel(logging.DEBUG)
     formatter = logging.Formatter('%(asctime)s:%(levelname)s:%(module)s:%(lineno)d:%(message)s')
@@ -77,7 +78,7 @@ def usage():
     """
     print("""Usage: ./ASCAM --loglevel=INFO --test=False --silent --logdir=.
             -l --loglevel : level of logging to be printed to console (INFO or DEBUG)
-                            if no level is given nothing will be printed to consoleF
+                            if no level is given nothing will be printed to console
             -t --test : type of file to be used for testing (mat, axo or bin)
             -d --logdir : directory in which the log file should be saved
             -h --help : display this message""")
