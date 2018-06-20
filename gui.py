@@ -25,19 +25,8 @@ class GUI(ttk.Frame):
     because then they can be entered in entry fields without problems
     """
     @classmethod
-    def run(cls, axo=False, bin=False, mat=False):
-        # parameters for testing modes
-        global axotest
-        global bintest
-        global mattest
-        axotest = axo
-        bintest = bin
-        mattest = mat
+    def run(cls):
         log.info("Starting ASCAM GUI")
-        log.debug("""Parameters of `run` method:
-                    axotest = {}
-                    bintest = {}
-                    mattest = {}""".format(axo,bin,mat))
         root = tk.Tk()
         root.protocol('WM_DELETE_WINDOW', quit)
         root.title("ASCAM")
@@ -112,11 +101,6 @@ class GUI(ttk.Frame):
         self.create_widgets()
         self.configure_grid()
 
-        if bintest or axotest or mattest:
-            self.load_for_testing()
-        ## if testing arguments have been given data will be loaded when the
-        ## program starts
-
         self.bind("<Configure>", self.update_plots)
         # this line calls `draw` when it is run
 
@@ -135,40 +119,6 @@ class GUI(ttk.Frame):
             self.listSelection.create_checkbox(name = name,
                                                key = key,
                                                color = color)
-        self.update_all()
-
-    def load_for_testing(self):
-        """
-        this function is called if the program is called with arguments "mat",
-        "bin" or 'axo' and
-        """
-        if bintest:
-        ### testing mode that uses simulated data, the data is copied and
-        ### multiplied with random numbers to create additional episodes
-            log.info('Test mode with binary data')
-            self.data = Recording(os.getcwd()+'/data/sim1600.bin', 4e4,
-                                 'bin', 3072, np.int16)
-            self.data['raw_'][0]['trace']=self.data['raw_'][0]['trace'][:9999]
-            self.data['raw_'][0]['time']=self.data['raw_'][0]['time'][:9999]
-            for i in range(1,25):
-                dummyepisode = copy.deepcopy(self.data['raw_'][0])
-                randommultiplier = np.random.random(
-                                    len(dummyepisode['trace']))
-                dummyepisode['trace'] = dummyepisode['trace']*randommultiplier
-                dummyepisode.nthEpisode = i
-                self.data['raw_'].append(dummyepisode)
-        elif axotest:
-            log.info('Test mode with axograph data')
-            self.data = Recording(filename = 'data/170404 015.axgd',
-                                        filetype = 'axo')
-        elif mattest:
-            log.info('Test mode with matlab data.')
-            self.data = Recording(
-                                filename = 'data/171124 013 Copy Export.mat',
-                                filetype = 'mat',
-                                samplingRate = 4e4)
-        self.samplingrate.set('4e4')
-        self.data_loaded = True
         self.update_all()
 
     def update_all(self, *args):
@@ -276,7 +226,7 @@ class GUI(ttk.Frame):
 
     def update_list(self):
         log.info('updatin list')
-        self.episodeList.create_list()
+        # self.episodeList.create_list()
         log.info("created new list")
         self.episodeList.create_dropdownmenu()
         ### for now `update_list` will update both the list and the dropdown
@@ -389,6 +339,7 @@ class MenuBar(tk.Menu):
         self.analysis_menu.add_command(label="Baseline",command=lambda: BaselineFrame(self))
         self.analysis_menu.add_command(label="Filter")
         # self.analysis_menu.add_command(label="Idealize")
+        # self.analysis_menu.add_command(label="Set t_zero")
 
     def open_file(self):
         # open the dialog for loading a single file
@@ -1164,8 +1115,8 @@ class EpisodeList(ttk.Frame):
             log.info("found data to fill list with")
             for episode in self.parent.data[self.parent.datakey.get()]:
                 self.episodelist.insert(tk.END, "episode #"
-                                                +str(episode.nthEpisode))
-                log.debug("inserting episode number {}".format(episode.nthEpisode))
+                                                +str(episode.n_episode))
+                log.debug("inserting episode number {}".format(episode.n_episode))
         ### color all episodes according to their list membership
             ### start from second element because white is default bg color
             for name in list(self.parent.data.lists.keys())[1:]:
@@ -1337,5 +1288,6 @@ class Binaryquery(tk.Toplevel):
                                          self.parent.headerlength.get(),
                                          datatype)
         self.parent.update_all()
+        self.parent.episodeList.create_list()
         self.loadframe.destroy()
         self.destroy()
