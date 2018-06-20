@@ -6,6 +6,7 @@ import logging as log
 import numpy as np
 import tkinter as tk
 from tkinter import ttk
+from tkinter import messagebox
 from tkinter.filedialog import askopenfilename, asksaveasfilename, askdirectory
 import matplotlib
 import matplotlib.pyplot as plt
@@ -440,10 +441,8 @@ class FilterFrame(tk.Toplevel):
                 self.parent.update_plots()
         elif self.filter_selection.get()=="Chung-Kennedy":
             #backend for CK filter is not finished
-            warning = tk.Toplevel()
-            ttk.Label(warning, text="Chung-Kennedy filter has not yet been implemented").pack()
-            time.sleep(5)
-            warning.destroy()
+            messagebox.showerror("Sorry","Chung-Kennedy filter has not yet been implemented")
+            # time.sleep(5)
 
     def ok_button(self):
         if self.filter_selection.get(): self.filter_series()
