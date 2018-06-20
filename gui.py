@@ -1,19 +1,24 @@
+import os
+import copy
+import time
+import logging as log
+
+import numpy as np
 import tkinter as tk
 from tkinter import ttk
 from tkinter.filedialog import askopenfilename, asksaveasfilename, askdirectory
 import matplotlib
-matplotlib.use('TkAgg')
-from recording import Recording
-import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg,
-                                            NavigationToolbar2TkAgg)
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.backends.backend_tkagg import NavigationToolbar2TkAgg
 from matplotlib import gridspec as gs
-import plotting
+
 from tools import stringList_parser, parse_filename
-import os
-import copy
-import logging as log
+import plotting
+from recording import Recording
+
+matplotlib.use('TkAgg')
+
 
 class GUI(ttk.Frame):
     """
@@ -138,7 +143,6 @@ class GUI(ttk.Frame):
         log.info("""creating widgets""")
         self.histogramFrame = HistogramFrame(self)
         self.plots = PlotFrame(self)
-        self.manipulations = Manipulations(self)
         self.episodeList = EpisodeList(self)
         self.listSelection = ListSelection(self)
         self.histogramOptions = HistogramConfiguration(self)
@@ -188,9 +192,6 @@ class GUI(ttk.Frame):
             self.episodeList.grid_rowconfigure(i, weight=1)
         # Fourth row
 
-        # Fifth row
-        self.manipulations.grid(row=4, column=0, columnspan=3, padx=5, pady=5,
-                                sticky=tk.S+tk.W)
 
     def plot_episode(self, *args):
         """
@@ -339,7 +340,7 @@ class MenuBar(tk.Menu):
         self.analysis_menu.add_command(label="Baseline",
                                        command=lambda: BaselineFrame(self))
         self.analysis_menu.add_command(label="Filter",
-                                       command=lambda: FilterFrame(self))
+                                       command=lambda: FilterFrame(self.parent))
         self.analysis_menu.add_command(label="Idealize")
         self.analysis_menu.add_command(label="Set t_zero")
 
@@ -425,19 +426,27 @@ class FilterFrame(tk.Toplevel):
             ttk.Entry(self.entry_frame,
                       textvariable=self.lengths_predictors,width=7).grid(
                                                               row = 2, column=1)
-    # def filter_series(self):
-    #     log.info('going to filter all episodes')
-    #     #convert textvar to float
-    #     cutoffFrequency = float(self.cutoffFrequency.get())
-    #     log.info("filter frequency is {}".format(cutoffFrequency))
-    #     if self.parent.data.call_operation('FILTER_',cutoffFrequency):
-    #         log.info('called operation succesfully')
-    #         self.parent.datakey.set(self.parent.data.currentDatakey)
-    #         log.info('updating list and plots')
-    #         self.parent.update_list()
-    #         self.parent.update_plots()
+    def filter_series(self):
+        log.info('going to filter all episodes')
+        if self.filter_selection.get()=="Gaussian":
+            #convert textvar to float
+            cutoffFrequency = float(self.gaussian_fc.get())
+            log.info("filter frequency is {}".format(cutoffFrequency))
+            if self.parent.data.call_operation('FILTER_',cutoffFrequency):
+                log.info('called operation succesfully')
+                self.parent.datakey.set(self.parent.data.currentDatakey)
+                log.info('updating list and plots')
+                self.parent.update_list()
+                self.parent.update_plots()
+        elif self.filter_selection.get()=="Chung-Kennedy":
+            #backend for CK filter is not finished
+            warning = tk.Toplevel()
+            ttk.Label(warning, text="Chung-Kennedy filter has not yet been implemented").pack()
+            time.sleep(5)
+            warning.destroy()
 
     def ok_button(self):
+        if self.filter_selection.get(): self.filter_series()
         self.destroy()
 
     def cancel_button(self):
