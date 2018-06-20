@@ -336,10 +336,12 @@ class MenuBar(tk.Menu):
 
     def create_analysis_cascade(self):
         self.add_cascade(label='Analysis',menu=self.analysis_menu)
-        self.analysis_menu.add_command(label="Baseline",command=lambda: BaselineFrame(self))
-        self.analysis_menu.add_command(label="Filter")
-        # self.analysis_menu.add_command(label="Idealize")
-        # self.analysis_menu.add_command(label="Set t_zero")
+        self.analysis_menu.add_command(label="Baseline",
+                                       command=lambda: BaselineFrame(self))
+        self.analysis_menu.add_command(label="Filter",
+                                       command=lambda: FilterFrame(self))
+        self.analysis_menu.add_command(label="Idealize")
+        self.analysis_menu.add_command(label="Set t_zero")
 
     def open_file(self):
         # open the dialog for loading a single file
@@ -361,6 +363,85 @@ class MenuBar(tk.Menu):
 
     def export(self):
         ExportFileDialog(self.parent)
+
+class FilterFrame(tk.Toplevel):
+    """docstring for FilterFrame."""
+    def __init__(self, parent):
+        tk.Toplevel.__init__(self, parent)
+        self.parent = parent
+        self.title("Filter")
+        #filterframe variables
+        self.filter_selection = tk.StringVar()
+        self.filter_selection.trace("w",self.create_entry_frame)
+        #paramters for gaussian filter
+        self.gaussian_fc = tk.StringVar()
+        self.gaussian_fc.set('1000')
+        #parameters for Chung Kennedy filter
+        self.n_predictors = tk.StringVar()
+        self.weight_exponent = tk.StringVar()
+        self.lengths_predictors = tk.StringVar()
+
+        self.create_widgets()
+
+    def create_widgets(self):
+        """
+        create the dropdown menu from which to choose the type of filter
+        placeholder frame for entry fields
+        and 'ok' and 'cancel' buttons
+        """
+        log.info("""creating dropdown menu for filter selection""")
+        listOptions = ['Gaussian', 'Chung-Kennedy']
+        self.menu = tk.OptionMenu(self, self.filter_selection, *listOptions)
+        self.menu.grid(row=0,column=0,columnspan=2,sticky=tk.N)
+
+        self.entry_frame = ttk.Frame(self)
+        self.entry_frame.grid(row=1,column=0,columnspan=2)
+
+        ttk.Button(self, text="OK", command=self.ok_button).grid(row=5)
+        ttk.Button(self, text="Cancel", command=self.cancel_button).grid(row=5,
+                                                                       column=1)
+
+    def create_entry_frame(self,*args,**kwargs):
+        """
+        Create a frame for the entry of the filter parameters
+        """
+        if self.filter_selection.get()=='Gaussian':
+            ttk.Label(self.entry_frame, text="Frequency [Hz]").grid(row=0,
+                                                                    column=0)
+            ttk.Entry(self.entry_frame,textvariable=self.gaussian_fc, width=7).\
+                                                         grid(row = 0, column=1)
+        elif self.filter_selection.get()=='Chung-Kennedy':
+            ttk.Label(self.entry_frame, text="Number of predictors").grid(row=0,
+                                                                    column=0)
+            ttk.Entry(self.entry_frame,textvariable=self.n_predictors,width=7).\
+                                                         grid(row = 0, column=1)
+            ttk.Label(self.entry_frame, text="Weight exponent").grid(row=1,
+                                                                    column=0)
+            ttk.Entry(self.entry_frame,
+                      textvariable=self.weight_exponent,width=7).grid(row = 1,
+                                                                      column=1)
+            ttk.Label(self.entry_frame, text="Lengths of predictors").grid(
+                                                                row=2, column=0)
+            ttk.Entry(self.entry_frame,
+                      textvariable=self.lengths_predictors,width=7).grid(
+                                                              row = 2, column=1)
+    # def filter_series(self):
+    #     log.info('going to filter all episodes')
+    #     #convert textvar to float
+    #     cutoffFrequency = float(self.cutoffFrequency.get())
+    #     log.info("filter frequency is {}".format(cutoffFrequency))
+    #     if self.parent.data.call_operation('FILTER_',cutoffFrequency):
+    #         log.info('called operation succesfully')
+    #         self.parent.datakey.set(self.parent.data.currentDatakey)
+    #         log.info('updating list and plots')
+    #         self.parent.update_list()
+    #         self.parent.update_plots()
+
+    def ok_button(self):
+        self.destroy()
+
+    def cancel_button(self):
+        self.destroy()
 
 class ExportFileDialog(tk.Toplevel):
     """
@@ -735,40 +816,6 @@ class PlotFrame(ttk.Frame):
             self.subplots[-1].set_xlabel("Time ["+self.parent.data.timeUnit+"]")
             self.canvas.draw() # draw plots
 
-class Manipulations(ttk.Frame):
-    """docstring for Manipulations"""
-    def __init__(self, parent):
-        ttk.Frame.__init__(self, parent)
-        self.parent = parent
-        self.cutoffFrequency = tk.StringVar()
-        self.cutoffFrequency.set(1000)
-        self.create_widgets()
-
-    def create_widgets(self):
-        self.filterallbutton = ttk.Button(self, text="Filter",
-                                     command=self.filter_series)
-        self.filterallbutton.grid(column=1,row=0,sticky=())
-
-        self.cutoffentry = ttk.Entry(self, width=7, textvariable=(
-                                                        self.cutoffFrequency))
-        self.cutoffentry.grid(column=1,row=1)
-        ttk.Label(self, text="Filter Frequency (Hz):").grid(column=0, row=1,
-                                                            sticky=(tk.W))
-
-    def filter_series(self):
-        log.info('going to filter all episodes')
-        #convert textvar to float
-        cutoffFrequency = float(self.cutoffFrequency.get())
-        log.info("filter frequency is {}".format(cutoffFrequency))
-        if self.parent.data.call_operation('FILTER_',cutoffFrequency):
-            log.info('called operation succesfully')
-            self.parent.datakey.set(self.parent.data.currentDatakey)
-            log.info('updating list and plots')
-            self.parent.update_list()
-            self.parent.update_plots()
-        ## here we should also have that if the operation has been performed
-        ## the selection switches to that operation
-
 class BaselineFrame(tk.Toplevel):
     """
     Temporary frame in which to chose how and based on what points
@@ -777,9 +824,9 @@ class BaselineFrame(tk.Toplevel):
     def __init__(self, parent):
         tk.Toplevel.__init__(self, parent)
         self.parent = parent
-        self.title("Baseline correction.")
+        self.title("Baseline correction")
 
-        ### variables to choose the method
+        # variables to choose the method
         self.piezoSelection = tk.IntVar()
         self.piezoSelection.set(1)
         self.intervalSelection = tk.IntVar()
