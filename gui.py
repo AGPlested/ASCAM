@@ -25,19 +25,8 @@ class GUI(ttk.Frame):
     because then they can be entered in entry fields without problems
     """
     @classmethod
-    def run(cls, axo=False, bin=False, mat=False):
-        # parameters for testing modes
-        global axotest
-        global bintest
-        global mattest
-        axotest = axo
-        bintest = bin
-        mattest = mat
+    def run(cls):
         log.info("Starting ASCAM GUI")
-        log.debug("""Parameters of `run` method:
-                    axotest = {}
-                    bintest = {}
-                    mattest = {}""".format(axo,bin,mat))
         root = tk.Tk()
         root.protocol('WM_DELETE_WINDOW', quit)
         root.title("ASCAM")
@@ -112,11 +101,6 @@ class GUI(ttk.Frame):
         self.create_widgets()
         self.configure_grid()
 
-        if bintest or axotest or mattest:
-            self.load_for_testing()
-        ## if testing arguments have been given data will be loaded when the
-        ## program starts
-
         self.bind("<Configure>", self.update_plots)
         # this line calls `draw` when it is run
 
@@ -137,6 +121,7 @@ class GUI(ttk.Frame):
                                                color = color)
         self.update_all()
 
+<<<<<<< HEAD
     def load_for_testing(self):
         """
         this function is called if the program is called with arguments "mat",
@@ -171,6 +156,8 @@ class GUI(ttk.Frame):
         self.data_loaded = True
         self.update_all()
 
+=======
+>>>>>>> testmode
     def update_all(self, *args):
         """
         Use to update all data dependent widgets in the main window
