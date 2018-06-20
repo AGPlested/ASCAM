@@ -339,6 +339,7 @@ class MenuBar(tk.Menu):
         self.analysis_menu.add_command(label="Baseline",command=lambda: BaselineFrame(self))
         self.analysis_menu.add_command(label="Filter")
         # self.analysis_menu.add_command(label="Idealize")
+        # self.analysis_menu.add_command(label="Set t_zero")
 
     def open_file(self):
         # open the dialog for loading a single file
