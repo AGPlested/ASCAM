@@ -32,9 +32,11 @@ def initialize_logger(output_dir,log_level='INFO',silent=False):
 
     # create debug file handler and set level to debug
     if not os.path.exists(output_dir): os.makedirs(output_dir)
-    handler = logging.FileHandler(os.path.join(output_dir,'ASCAM'+'_'+date+'.log'),"w")
+    handler = logging.FileHandler(
+                           os.path.join(output_dir,'ASCAM'+'_'+date+'.log'),"w")
     handler.setLevel(logging.DEBUG)
-    formatter = logging.Formatter('%(asctime)s:%(levelname)s:%(module)s:%(lineno)d:%(message)s')
+    formatter = logging.Formatter('%(asctime)s:%(levelname)s:%(module)s:'
+                                   '%(lineno)d:%(message)s')
     handler.setFormatter(formatter)
     logger.addHandler(handler)
 
@@ -73,19 +75,12 @@ def usage():
     """
     Print a manual for calling ASCAM to the commandline.
     """
-<<<<<<< HEAD
-    print("""Usage: ./ASCAM --loglevel=INFO --test=False --silent --logdir=.
-            -l --loglevel : level of logging to be printed to console (INFO or DEBUG)
-                            if no level is given nothing will be printed to console
-            -t --test : type of file to be used for testing (mat, axo or bin)
-=======
-    print("""Usage: ./ASCAM --loglevel=INFO --logdir=.
-    
+    print("""Usage: ./ASCAM --loglevel=INFO --silent --logdir=./logfiles
+
             -l --loglevel : level of logging to be printed to console (INFO or
                             DEBUG)
                             if no level is given nothing will be printed to
                             console
->>>>>>> testmode
             -d --logdir : directory in which the log file should be saved
             -h --help : display this message""")
 
