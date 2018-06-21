@@ -13,3 +13,4 @@ __pycache__/
 .eggs/
 .idea/
 *log*
+todo

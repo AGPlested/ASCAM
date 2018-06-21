@@ -14,9 +14,9 @@ def parse_filename(filename):
     for i, char in enumerate(filename[::-1]):
         # loop over the full filename (which includes directory) backwards
         # to extract the extension and name of the file
-        if char=='.' and not period:
+        if (char == '.') and not period:
             period = N-1-i
-        if char=='/' and not slash:
+        if (char == '/') and not slash:
             slash = N-1-i
             break
     path = filename[:slash]
@@ -25,8 +25,8 @@ def parse_filename(filename):
                 period (.) at position: {}
                 slash (/) at position: {}
                 path: {}
-                filetype: {}""".format(N,period,slash,path,filetype))
-    if filetype=='axgd':
+                filetype: {}""".format(N, period, slash, path, filetype))
+    if filetype == 'axgd':
         filetype = 'axo'
         filetype_long = 'axograph'
     elif filetype == 'bin': filetype_long = 'binary'
@@ -38,7 +38,7 @@ def parse_filename(filename):
                filename: {} """.format(filetype_long,filename))
     return filetype, path, filetype_long, filename
 
-def piezo_selection(time, piezo, trace, active = True, deviation = 0.05):
+def piezo_selection(time, piezo, trace, active=True, deviation=0.05):
     """
     Selects part of the episode based on the Piezo voltage.
     The selection is done by choosing extracting the data from those time
@@ -81,7 +81,7 @@ def piezo_selection(time, piezo, trace, active = True, deviation = 0.05):
     log.debug("""found indices: {}
               times: {}
               piezo: {}
-              trace: {}""".format(indices,time,piezo,trace))
+              trace: {}""".format(indices, time, piezo, trace))
     return time, piezo, trace
 
 def interval_selection(time, signal, intervals, fs, timeUnit):
@@ -92,7 +92,7 @@ def interval_selection(time, signal, intervals, fs, timeUnit):
     log.debug("""parameters are: sampling frequency: {}, timeUnit: {}
               time: {}
               signal: {}
-              intervals: {}""".format(fs,timeUnit,time,signal,intervals))
+              intervals: {}""".format(fs, timeUnit, time, signal, intervals))
     if timeUnit == 'ms':
         timeUnit = 1000
     elif timeUnit == 's':
@@ -103,9 +103,9 @@ def interval_selection(time, signal, intervals, fs, timeUnit):
         log.debug("""`intervals` is a list of intervals""")
         for ival in intervals:
             time_out.extend(time[ int(ival[0]*fs/timeUnit)
-                           : int(ival[-1]*fs/timeUnit) ])
+                            : int(ival[-1]*fs/timeUnit) ])
             signal_out.extend(signal[ int(ival[0]*fs/timeUnit)
-                             : int(ival[-1]*fs/timeUnit)])
+                              : int(ival[-1]*fs/timeUnit)])
     elif type(intervals[0]) in [int, float]:
         log.debug("""`intervals` is just one interval""")
         time_out = time[ int(intervals[0]*fs/timeUnit)

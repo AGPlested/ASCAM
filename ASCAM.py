@@ -26,7 +26,8 @@ def initialize_logger(output_dir,log_level='INFO',silent=False):
             handler.setLevel(logging.INFO)
         elif log_level=='DEBUG':
             handler.setLevel(logging.DEBUG)
-        formatter = logging.Formatter("%(levelname)s - %(message)s")
+        formatter = logging.Formatter("%(levelname)s:%(module)s:"
+                                       "%(lineno)d - %(message)s")
         handler.setFormatter(formatter)
         logger.addHandler(handler)
 

@@ -26,14 +26,14 @@ def apply_filter(
 
 	return output
 
-def gaussian_window(filterFrequency, samplingRate = 4e4):
+def gaussian_window(filterFrequency, sampling_rate = 4e4):
 	"""This calculates the coefficients for a disrete Gaussian filter
 	as described in equation A10 in chapter 19 in the blue book
 	Parameters:
 		filterFrequency - should be given in units Hz
-		samplingRate - units of Hz
+		sampling_rate - units of Hz
 	"""
-	filterFrequency /= samplingRate
+	filterFrequency /= sampling_rate
 	sigma = .1325/filterFrequency
 
 	if sigma >= .62: # filter as normal
@@ -55,8 +55,8 @@ def gaussian_window(filterFrequency, samplingRate = 4e4):
 
 	return coefficients
 
-def gaussian_filter(signal, filterFrequency, samplingRate = 4e4,
+def gaussian_filter(signal, filterFrequency, sampling_rate = 4e4,
 				    method='convolution'):
-	window = gaussian_window(filterFrequency, samplingRate)
+	window = gaussian_window(filterFrequency, sampling_rate)
 	output = apply_filter(signal, window, method)
 	return output
