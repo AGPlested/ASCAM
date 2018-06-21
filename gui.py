@@ -1043,20 +1043,20 @@ class ListSelection(ttk.Frame):
             self.parent.data.lists[name][1] = color
             self.parent.data.lists[name][2] = key
 
-            # trace the variable to add/removoe the corresponding list to/from
-            # the list of current lists, also update the histogram to immediatly
-            # show the change
-            def trace_variable(*args):
-                if name in self.parent.data.current_lists:
-                    self.parent.data.current_lists.remove(name)
-                    log.debug('removed {} from `current_lists'.format(name))
-                else:
-                    self.parent.data.current_lists.append(name)
-                    log.debug('added {} from `current_lists'.format(name))
-                # when changing lists update the histogram to display only
-                # episodes in selected lists
-                self.parent.draw_histogram()
-            variable.trace("w",trace_variable)
+        # trace the variable to add/removoe the corresponding list to/from
+        # the list of current lists, also update the histogram to immediatly
+        # show the change
+        def trace_variable(*args):
+            if name in self.parent.data.current_lists:
+                self.parent.data.current_lists.remove(name)
+                log.debug('removed {} from `current_lists'.format(name))
+            else:
+                self.parent.data.current_lists.append(name)
+                log.debug('added {} to `current_lists'.format(name))
+            # when changing lists update the histogram to display only
+            # episodes in selected lists
+            self.parent.draw_histogram()
+        variable.trace("w",trace_variable)
 
     def create_button(self):
         """
