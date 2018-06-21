@@ -287,7 +287,7 @@ class Displayframe(ttk.Frame):
             datakey = self.parent.datakey.get()
             episode = self.parent.data[datakey][self.parent.Nepisode]
 
-            if episode['command'] is not None:
+            if episode.command is not None:
                 log.info("""showing command stats for {}
                          episode number: {}""".format(datakey,self.parent.Nepisode))
                 mean, std = episode.get_command_stats()
@@ -630,12 +630,12 @@ class HistogramFrame(ttk.Frame):
             log.info("found data")
             ### get data
             series = self.parent.data[self.parent.datakey.get()]
-            time = series[0]['time']
+            time = series[0].time
 
             # get current episode values and put them in a list
             # because the histogram function expects a list
-            single_piezo = [series[self.parent.Nepisode]['piezo']]
-            single_trace = [series[self.parent.Nepisode]['trace']]
+            single_piezo = [series[self.parent.Nepisode].piezo]
+            single_trace = [series[self.parent.Nepisode].trace]
 
             # get the bins and their values or the current episode
             hist_single = plotting.histogram(time, single_piezo, single_trace,
@@ -654,8 +654,8 @@ class HistogramFrame(ttk.Frame):
                 log.info("""current lists are: {}""".format(
                                                 self.parent.data.current_lists))
                 # get a list of all the currents and all the traces
-                all_piezos = [episode['piezo'] for episode in series ]
-                all_traces = [episode['trace'] for episode in series ]
+                all_piezos = [episode.piezo for episode in series ]
+                all_traces = [episode.trace for episode in series ]
 
                 # get the indices of currently selected lists
                 indices = self.parent.get_episodes_in_lists()
@@ -724,14 +724,14 @@ class PlotOptions(ttk.Frame):
         if self.parent.data_loaded:
             datakey = self.parent.datakey.get()
             episode = self.parent.data[datakey][self.parent.Nepisode]
-            if episode['piezo'] is not None:
+            if episode.piezo is not None:
                 ttk.Label(self, text="Piezo voltage").grid(row=0, column=0)
                 piezo = ttk.Checkbutton(self, variable=self.parent.show_piezo)
                 piezo.grid(row=0, column=1)
                 # if piezo exists, default is to plot it
                 self.parent.show_piezo.set(1)
 
-            if self.parent.data[datakey][0]['command'] is not None:
+            if self.parent.data[datakey][0].command is not None:
                 ttk.Label(self, text="Command voltage").grid(row=1, column=0)
                 command = ttk.Checkbutton(self,variable=self.parent.show_command)
                 command.grid(row=1,column=1)
@@ -770,20 +770,20 @@ class PlotFrame(ttk.Frame):
             log.info("""`data` exists, will plot episode number {}
             from series {}""".format(self.parent.Nepisode,datakey))
 
-            time = episode['time']
+            time = episode.time
 
             #get axis bounds
-            min_A = self.parent.data[datakey].get_min('trace')
-            max_A = self.parent.data[datakey].get_max('trace')
+            # min_A = self.parent.data[datakey].get_min('trace')
+            # max_A = self.parent.data[datakey].get_max('trace')
 
             # plot the current trace
             current_plot = self.fig.add_subplot(pgs[:2,:])
             plotting.plotTrace(
                         ax = current_plot,
                         time = time,
-                        trace = episode['trace'],
-                        ylabel = "Current ["+self.parent.data.currentUnit+"]",
-                        ybounds = (min_A, max_A))
+                        trace = episode.trace,
+                        ylabel = "Current ["+self.parent.data.currentUnit+"]")
+                        # ybounds = (min_A, max_A))
             n_plot += 1 #move to next plot
 
             self.subplots = [current_plot]
@@ -795,7 +795,7 @@ class PlotFrame(ttk.Frame):
                 plotting.plotTrace(
                         ax = piezo_plot,
                         time = time,
-                        trace = episode['piezo'],
+                        trace = episode.piezo,
                         ylabel = "Piezo ["+self.parent.data.piezoUnit+']',
                         ybounds = [])
                 n_plot += 1
@@ -803,17 +803,17 @@ class PlotFrame(ttk.Frame):
             # plot command voltage
             if self.parent.show_command.get():
                 log.info('will plot command voltage')
-                try: #get axis bounds
-                    min_V = self.parent.data[datakey].get_min('command')
-                    max_V = self.parent.data[datakey].get_max('command')
-                except: pass
+                # try: #get axis bounds
+                #     min_V = self.parent.data[datakey].get_min('command')
+                #     max_V = self.parent.data[datakey].get_max('command')
+                # except: pass
                 command_plot = self.fig.add_subplot(pgs[n_plot,:])
                 plotting.plotTrace(
                         ax = command_plot,
                         time = time,
-                        trace = episode['command'],
-                        ylabel = "Command ["+self.parent.data.commandUnit+']',
-                        ybounds = [min_V,max_V])
+                        trace = episode.command,
+                        ylabel = "Command ["+self.parent.data.commandUnit+']')
+                        # ybounds = [min_V,max_V])
                 n_plot += 1
                 self.subplots.append(command_plot)
 

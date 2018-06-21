@@ -3,7 +3,7 @@ import filtering
 import analysis
 from tools import piezo_selection, parse_filename
 
-class Episode(dict):
+class Episode():
     def __init__(self, time, trace, n_episode = 0, piezo = None,
                  command = None, filterType = None, fc = None,
                  sampling_rate = 4e4, timeInputUnit = 'ms'):
@@ -32,10 +32,10 @@ class Episode(dict):
         self.baselineCorrected = False
         self.idealized = False
 
-        self['time'] = time*time_unit_multiplier
-        self['trace'] = trace
-        self['piezo'] = piezo
-        self['command'] = command
+        self.time = time*time_unit_multiplier
+        self.trace = trace
+        self.piezo = piezo
+        self.command = command
         self.n_episode = int(n_episode)
         self.sampling_rate = sampling_rate
         self.suspiciousSTD = False
@@ -45,8 +45,8 @@ class Episode(dict):
         if sampling_rate is None:
             sampling_rate = self.sampling_rate
         filterLag = 0 #int(1/(2*frequencyOnSamples))
-        self['trace'] = filtering.gaussian_filter(
-                                            signal = self['trace'],
+        self.trace = filtering.gaussian_filter(
+                                            signal = self.trace,
                                             filterFrequency = filterFrequency,
                                             sampling_rate = sampling_rate,
                                             method = method
@@ -57,8 +57,8 @@ class Episode(dict):
                                  timeUnit = 'ms', intervalSelection = False,
                                  piezoSelection = False, active = False,
                                  deviation = 0.05):
-        self['trace'] = analysis.baseline_correction(time = self['time'],
-                                                     signal = self['trace'],
+        self.trace = analysis.baseline_correction(time = self.time,
+                                                     signal = self.trace,
                                                      fs = self.sampling_rate,
                                                      intervals = intervals,
                                                      degree = degree,
@@ -66,7 +66,7 @@ class Episode(dict):
                                                      timeUnit = timeUnit,
                                                      intervalSelection = (
                                                            intervalSelection),
-                                                     piezo = self['piezo'],
+                                                     piezo = self.piezo,
                                                      piezoSelection = (
                                                               piezoSelection),
                                                      active = active,
@@ -74,16 +74,16 @@ class Episode(dict):
         self.baselineCorrected = True
 
     def idealize(self, thresholds):
-        activity, signalmax = threshold_crossing(self['trace'], thresholds)
-        episode['trace'] = activity*signalmax
+        activity, signalmax = threshold_crossing(self.trace, thresholds)
+        episode.trace = activity*signalmax
         self.idealized = True
 
     def check_standarddeviation_all(self, stdthreshold = 5e-13):
         """
         check the standard deviation of the episode against a reference value
         """
-        _, _, trace = piezo_selection(self['time'], self['piezo'],
-                                      self['trace'], active = False,
+        _, _, trace = piezo_selection(self.time, self.piezo,
+                                      self.trace, active = False,
                                       deviation = 0.01)
         tracestd = np.std(trace)
         if tracestd>stdthreshold:
@@ -95,7 +95,7 @@ class Episode(dict):
         episode
         """
         try:
-            mean = np.mean(self['command'])
-            std = np.std(self['command'])
+            mean = np.mean(self.command)
+            std = np.std(self.command)
         except: pass
         return mean, std

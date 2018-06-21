@@ -15,12 +15,12 @@ class Series(list):
         The `reconstruct` input is a placeholder
         """
         list.__init__(self,data)
-
-    def get_min(self,name):
-        return np.min([np.min(episode[name]) for episode in self])
-
-    def get_max(self,name):
-        return np.max([np.max(episode[name]) for episode in self])
+    # 
+    # def get_min(self,name):
+    #     return np.min([np.min(episode[name]) for episode in self])
+    #
+    # def get_max(self,name):
+    #     return np.max([np.max(episode[name]) for episode in self])
 
     def filter_all(self, filterFrequency = 1e3):
         """
