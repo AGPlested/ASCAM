@@ -163,25 +163,15 @@ class Recording(dict):
 
         # create dict to write matlab file and add the time vector
         export_dict = dict()
-        export_dict['time'] = self['raw_'][0]['time']
+        export_dict['time'] = self['raw_'][0].time
         no_episodes = len(self[datakey])
         fill_length = len(str(no_episodes))
         for i, episode in enumerate(self[datakey]):
             if i in list_exports:
-                for name, value in episode.items():
-                    # the if statements skip the items that do not need to be
-                    # saved
-                    if name == 'time':
-                        continue
-                    elif name == 'piezo' and not save_piezo:
-                        continue
-                    elif name == 'command' and not save_command:
-                        continue
-                    else:
-                    # add data to dictionary
-                        n = str(episode.n_episode)
-                        n = n.zfill(fill_length)
-                        export_dict[name+n] = value
+                n = str(episode.n_episode).zfill(fill_length)
+                export_dict['trace'+n] = episode.trace
+                if save_piezo: export_dict['piezo'+n] = episode.piezo
+                if save_command: export_dict['command'+n] = episode.command
         io.savemat(filepath,export_dict)
 
 
