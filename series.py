@@ -29,7 +29,7 @@ class Series(list):
         """
         output = copy.deepcopy(self)
         for episode in output:
-            episode.filter_episode(filterFrequency, episode.samplingRate)
+            episode.filter_episode(filterFrequency, episode.sampling_rate)
         return output
 
     def baseline_correct_all(self, intervals = [], method = 'poly',
