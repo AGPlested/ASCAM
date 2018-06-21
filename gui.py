@@ -621,8 +621,8 @@ class HistogramFrame(ttk.Frame):
             density = {}
             piezo_selection = {}
             active = {}
-            deviation = {}""".format(deviation,n_bins,density,piezo_selection,
-                                     active))
+            deviation = {}""".format(n_bins,density,piezo_selection,
+                                     active,deviation))
         ### create the plot object so we can delete it later
         ax = self.fig.add_subplot(111)
 
@@ -678,7 +678,7 @@ class HistogramFrame(ttk.Frame):
                 # draw bar graphs of the histogram values over all episodes
                 ax.barh(center_all, heights_all, width_all,
                         alpha=0.2, color='orange', align='center')
-                ax.plot(center_all,heights_all,color='orange', lw=2)
+                ax.plot(heights_all,center_all,color='orange', lw=2)
                 ax.set_ylabel("Current ["+self.parent.data.currentUnit+']')
                 if self.parent.hist_density.get()==1:
                     log.info('setting y-label "Relative frequency"')
