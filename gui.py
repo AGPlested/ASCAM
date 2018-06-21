@@ -666,13 +666,13 @@ class HistogramFrame(ttk.Frame):
 
                 # get the bins and their values for all episodes
                 hist_all = plotting.histogram(time, all_piezos, all_traces,
-                                              active = active,
-                                              piezo_selection = piezo_selection,
+                                              active=active,
+                                              piezo_selection=piezo_selection,
                                               deviation=deviation,
-                                              n_bins = n_bins,
-                                              density = density,
-                                              intervals = intervals,
-                                              sampling_rate = fs,
+                                              n_bins=n_bins,
+                                              density=density,
+                                              intervals=intervals,
+                                              sampling_rate=fs,
                                               **kwargs)
                 heights_all, bins_all, center_all, width_all = hist_all
                 # draw bar graphs of the histogram values over all episodes
