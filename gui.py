@@ -93,8 +93,8 @@ class GUI(ttk.Frame):
         self.show_command.trace("w", self.plot_episode)
 
         ### parameters of the data
-        self.samplingrate = tk.StringVar()
-        self.samplingrate.set("0")
+        self.sampling_rate = tk.StringVar()
+        self.sampling_rate.set("0")
 
         # dictionary for the data
         self.data = Recording()
@@ -611,17 +611,18 @@ class HistogramFrame(ttk.Frame):
         density = bool(self.parent.hist_density.get())
         # time points are selected based on piezo values if the variable
         # 'hist_piezo_interval' is 1
-        piezoSelection = bool(self.parent.hist_piezo_interval.get())
+        piezo_selection = bool(self.parent.hist_piezo_interval.get())
         active = bool(self.parent.hist_piezo_active.get())
         deviation = float(self.parent.hist_piezo_deviation.get())
-        fs = float(self.parent.samplingrate.get())
+        fs = float(self.parent.sampling_rate.get())
         intervals = self.parent.hist_intervals
 
         log.debug("""number of bins = {}
             density = {}
-            piezoSelection = {}
+            piezo_selection = {}
             active = {}
-            deviation = {}""".format(deviation,n_bins,density,piezoSelection,active))
+            deviation = {}""".format(deviation,n_bins,density,piezo_selection,
+                                     active))
         ### create the plot object so we can delete it later
         ax = self.fig.add_subplot(111)
 
@@ -631,70 +632,69 @@ class HistogramFrame(ttk.Frame):
             series = self.parent.data[self.parent.datakey.get()]
             time = series[0]['time']
 
-            ### get current episode values and put them in a list
-            ### because the histogram function expects a list
+            # get current episode values and put them in a list
+            # because the histogram function expects a list
             single_piezo = [series[self.parent.Nepisode]['piezo']]
             single_trace = [series[self.parent.Nepisode]['trace']]
 
-            ### get the bins and their values or the current episode
+            # get the bins and their values or the current episode
             hist_single = plotting.histogram(time, single_piezo, single_trace,
-                                             active = active,
-                                             piezoSelection = piezoSelection,
-                                             deviation = deviation,
-                                             n_bins = n_bins,
-                                             density = density,
-                                             intervals = intervals,
-                                             samplingRate = fs,
+                                             active=active,
+                                             piezo_selection=piezo_selection,
+                                             deviation=deviation,
+                                             n_bins=n_bins,
+                                             density=density,
+                                             intervals=intervals,
+                                             sampling_rate=fs,
                                              **kwargs)
             (heights_single,bins_single,
              center_single, width_single) = hist_single
 
             if self.parent.data.current_lists:
-                log.info("""current lists are: {}""".format(self.parent.data.current_lists))
-                ### get a list of all the currents and all the traces
+                log.info("""current lists are: {}""".format(
+                                                self.parent.data.current_lists))
+                # get a list of all the currents and all the traces
                 all_piezos = [episode['piezo'] for episode in series ]
                 all_traces = [episode['trace'] for episode in series ]
 
-                ### get the indices of currently selected lists
+                # get the indices of currently selected lists
                 indices = self.parent.get_episodes_in_lists()
 
-                ### get corresponding piezos and traces
+                # get corresponding piezos and traces
                 all_piezos = [all_piezos[i] for i in indices]
                 all_traces = [all_traces[i] for i in indices]
 
-                ### get the bins and their values for all episodes
+                # get the bins and their values for all episodes
                 hist_all = plotting.histogram(time, all_piezos, all_traces,
                                               active = active,
-                                              piezoSelection = piezoSelection,
+                                              piezo_selection = piezo_selection,
                                               deviation=deviation,
                                               n_bins = n_bins,
                                               density = density,
                                               intervals = intervals,
-                                              samplingRate = fs,
+                                              sampling_rate = fs,
                                               **kwargs)
                 heights_all, bins_all, center_all, width_all = hist_all
-
-
-                ### draw bar graphs of the histogram values over all episodes
-                ax.bar(center_all, heights_all, width = width_all, alpha=.2,
-                         color='orange')
+                # draw bar graphs of the histogram values over all episodes
+                ax.barh(center_all, heights_all, width_all,
+                        alpha=0.2, color='orange', align='center')
                 ax.plot(center_all,heights_all,color='orange', lw=2)
-                ax.set_xlabel("Current ["+self.parent.data.currentUnit+']')
+                ax.set_ylabel("Current ["+self.parent.data.currentUnit+']')
                 if self.parent.hist_density.get()==1:
                     log.info('setting y-label "Relative frequency"')
-                    ax.set_ylabel("Relative frequency")
+                    ax.set_xlabel("Relative frequency")
                 elif self.parent.hist_density.get()==0:
                     log.info('setting y-label "Count"')
-                    ax.set_ylabel("Count")
+                    ax.set_xlabel("Count")
 
-            ### histogram of single episode
+            # histogram of single episode
             if self.parent.hist_single_ep.get()==1:
                 log.info("plotting single episode histogram")
-                ax.bar(center_single, heights_single, width = width_single,
-                         alpha=1)
+                ax.barh(center_single, heights_single, width_single,
+                        align='center', alpha=1)
 
-            ### draw the histogram and clear the ax object to avoid
-            ### cluttering memory
+            # draw the histogram and clear the ax object to avoid
+            # cluttering memory
             self.canvas.draw()
             ax.clear()
 
@@ -835,13 +835,13 @@ class BaselineFrame(tk.Toplevel):
         self.title("Baseline correction")
 
         # variables to choose the method
-        self.piezoSelection = tk.IntVar()
-        self.piezoSelection.set(1)
+        self.piezo_selection = tk.IntVar()
+        self.piezo_selection.set(1)
         self.intervalSelection = tk.IntVar()
         self.intervalSelection.set(0)
 
         ### piezo and interval selection should be mutually exclusive
-        self.piezoSelection.trace("w",self.piezo_NotInterval)
+        self.piezo_selection.trace("w",self.piezo_NotInterval)
         self.intervalSelection.trace("w",self.interval_NotPiezo)
 
         ### parameters of the baseline procedure
@@ -886,7 +886,7 @@ class BaselineFrame(tk.Toplevel):
         ### piezo selection options
         ttk.Label(self, text="Select using piezo voltage").grid(row=2,
                                                                 column=0)
-        ttk.Checkbutton(self, variable=self.piezoSelection). grid(row=2,
+        ttk.Checkbutton(self, variable=self.piezo_selection). grid(row=2,
                                                                   column=1)
 
         ttk.Label(self, text="Active/Inactive").grid(row=3, column=0)
@@ -930,8 +930,8 @@ class BaselineFrame(tk.Toplevel):
                                            timeUnit = self.time_unit,
                                            intervalSelection = (
                                                 self.intervalSelection.get()),
-                                           piezoSelection = (
-                                                self.piezoSelection.get()),
+                                           piezo_selection = (
+                                                self.piezo_selection.get()),
                                            active = self.piezo_active.get(),
                                            deviation = deviation
                                            ):
@@ -950,13 +950,13 @@ class BaselineFrame(tk.Toplevel):
         If interval selection is turned on turn off the piezo selection
         """
         if self.intervalSelection.get() == 1:
-            self.piezoSelection.set(0)
+            self.piezo_selection.set(0)
 
     def piezo_NotInterval(self,*args):
         """
         If piezo selection is turned on turn off interval
         """
-        if self.piezoSelection.get() == 1:
+        if self.piezo_selection.get() == 1:
             self.intervalSelection.set(0)
 
 class ListSelection(ttk.Frame):
@@ -1226,7 +1226,7 @@ class OpenFileDialog(tk.Toplevel):
         self.filetypefull = tk.StringVar()
         self.filetype = tk.StringVar()
         self.filename = tk.StringVar()
-        self.samplingrate = tk.StringVar()
+        self.sampling_rate = tk.StringVar()
         self.path = tk.StringVar()
 
         self.filenamefull.set(filename)
@@ -1259,9 +1259,9 @@ class OpenFileDialog(tk.Toplevel):
 
         #fourth row - enter sampling rate
         self.samplingentry = ttk.Entry(self, width=7,
-                                       textvariable=self.samplingrate)
+                                       textvariable=self.sampling_rate)
         self.samplingentry.grid(column=2,row=4)
-        ttk.Label(self, text="Samplingrate (Hz):").grid(column=1,
+        ttk.Label(self, text="sampling_rate (Hz):").grid(column=1,
                                                         row=4, sticky=(tk.W))
 
         #fifth row - Load button to close and go to next window and close button
@@ -1281,11 +1281,11 @@ class OpenFileDialog(tk.Toplevel):
                 ### move variables to parent if data loaded succesfully
                 self.parent.filetype.set(self.filetype.get())
                 self.parent.filename.set(self.filename.get())
-                self.parent.samplingrate.set(self.samplingrate.get())
+                self.parent.sampling_rate.set(self.sampling_rate.get())
                 self.parent.path.set(self.path.get())
 
                 self.parent.data = Recording(self.filenamefull.get(),
-                                             self.samplingrate.get(),
+                                             self.sampling_rate.get(),
                                              self.filetype.get())
                 self.parent.datakey.set(self.parent.data.currentDatakey)
                 self.parent.data_loaded = True
@@ -1338,7 +1338,7 @@ class Binaryquery(tk.Toplevel):
                             #returns a string which numpy doesnt
                             #understand
         self.parent.data = Recording(self.parent.filenamefull.get(),
-                                         self.parent.samplingrate.get(),
+                                         self.parent.sampling_rate.get(),
                                          self.parent.filetype.get(),
                                          self.parent.headerlength.get(),
                                          datatype)
