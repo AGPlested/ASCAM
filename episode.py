@@ -5,7 +5,7 @@ from tools import piezo_selection, parse_filename
 
 class Episode():
     def __init__(self, time, trace, n_episode = 0, piezo = None,
-                 command = None, filterType = None, fc = None,
+                 command = None, filterType = None,
                  sampling_rate = 4e4, timeInputUnit = 'ms'):
         """
         Episode objects hold all the information about an epoch and
@@ -22,7 +22,6 @@ class Episode():
             nthEp [int] - the number of measurements on this cell that
                           came before this one
             filterType [string] - type of filter used
-            fc [int] - cutoff frequency of the filter in Hz
         """
         time_unit_multiplier = 1
         if timeInputUnit == 'ms':
