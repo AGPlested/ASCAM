@@ -32,6 +32,9 @@ def parse_filename(filename):
     elif filetype == 'bin': filetype_long = 'binary'
     elif filetype == 'mat': filetype_long = 'matlab'
     elif filetype == 'pkl': filetype_long = 'pickle'
+    elif filetype == 'txt':
+        filetype = 'tdt'
+        filetype_long = 'tab-delimited-text'
     else: log.warning("Could not detect filetype!")
     filename = filename[slash+1:]
     log.debug("""filetype_long : {}"
