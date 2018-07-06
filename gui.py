@@ -9,6 +9,7 @@ from tkinter import ttk
 from tkinter import messagebox
 from tkinter.filedialog import askopenfilename, asksaveasfilename, askdirectory
 import matplotlib
+matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.backends.backend_tkagg import NavigationToolbar2TkAgg
@@ -18,7 +19,6 @@ from tools import stringList_parser, parse_filename
 import plotting
 from recording import Recording
 
-matplotlib.use('TkAgg')
 
 
 class GUI(ttk.Frame):
