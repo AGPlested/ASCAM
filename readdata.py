@@ -40,6 +40,17 @@ def load_pickle(filename):
 def load_tdt(filename):
     """
     Load data from a tab-delimited text file
+    the file must have the data stored in columns with the first line
+    containing the names of each column
+    Input:
+        filename [string] - name (including location) of the file to be loaded
+    Output:
+        names [list of strings] - names of the different variables
+        time [1D numpy array] - times of measurement
+        current [list of 1D numpy arrays] - the current recorded from the patch
+        piezo [list of 1D numpy arrays] - voltage of the piezo pipette
+        commandVoltage [list of 1D numpy arrays] - command voltage applied to the
+                                            patch
     """
     current = []
     commandVoltage = []
@@ -88,10 +99,10 @@ def load_matlab(filename):
         filename [string] - name (including location) of the file to be loaded
     Output:
         names [list of strings] - names of the different variables
-        time [1D array] - times of measurement
-        current [list of 1D arrays] - the current recorded from the patch
-        piezo [list of 1D arrays] - voltage of the piezo pipette
-        commandVoltage [list of 1D arrays] - command voltage applied to the
+        time [1D numpy array] - times of measurement
+        current [list of 1D numpy arrays] - the current recorded from the patch
+        piezo [list of 1D numpy arrays] - voltage of the piezo pipette
+        commandVoltage [list of 1D numpy arrays] - command voltage applied to the
                                             patch
     Because the data we have comes with strange dictionary keys (i.e.
     including column numbers and hex values) the function loops over the keys
