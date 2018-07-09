@@ -67,7 +67,7 @@ class GUI(ttk.Frame):
         self.hist_number_bins.set(50)
         self.hist_density = tk.IntVar()
         self.hist_density.set(0)
-        self.hist_density.trace("w",self.draw_plots)
+        self.hist_density.trace("w", self.draw_plots)
 
         self.hist_piezo_active = tk.IntVar()
         self.hist_piezo_active.set(1)
@@ -79,20 +79,20 @@ class GUI(ttk.Frame):
         self.hist_intervals = []
         self.hist_single_ep = tk.IntVar()
         self.hist_single_ep.set(1)
-        self.hist_single_ep.trace("w",self.draw_plots)
+        self.hist_single_ep.trace("w", self.draw_plots)
         # radio button variable to decide how to select points in histogram
         self.hist_piezo_interval = tk.IntVar()
         self.hist_piezo_interval.set(1)
 
-        ### parameters for the plots
+        # parameters for the plots
         self.show_piezo = tk.IntVar()
-        self.show_piezo.set(0)
+        self.show_piezo.set(1)
         self.show_piezo.trace("w", self.draw_plots)
         self.show_command = tk.IntVar()
-        self.show_command.set(0)
+        self.show_command.set(1)
         self.show_command.trace("w", self.draw_plots)
 
-        ### parameters of the data
+        # parameters of the data
         self.sampling_rate = tk.StringVar()
         self.sampling_rate.set("0")
 
@@ -133,7 +133,6 @@ class GUI(ttk.Frame):
         """
         log.debug("""updating all""")
         self.update_list()
-        self.plotOptions.update()
         self.draw_plots()
         self.displayFrame.update()
 
@@ -145,7 +144,6 @@ class GUI(ttk.Frame):
         self.plots = PlotFrame(self)
         self.episodeList = EpisodeList(self)
         self.listSelection = ListSelection(self)
-        self.plotOptions = PlotOptions(self)
         self.displayFrame = Displayframe(self)
         self.menuBar = MenuBar(self)
 
@@ -163,10 +161,6 @@ class GUI(ttk.Frame):
         self.grid_columnconfigure(0, weight=1)
 
         # First row
-        self.plotOptions.grid(row=0, column=1,padx=5,pady=5,sticky=tk.N+tk.W)
-
-        self.displayFrame.grid(row=0, column=2, padx=5, sticky=tk.S)
-
         self.listSelection.grid(row=0, column=3, rowspan=2, padx=5, pady=5,
                                 sticky=tk.N)
 
@@ -181,6 +175,8 @@ class GUI(ttk.Frame):
         for i in range(2):
             self.episodeList.grid_columnconfigure(i, weight=1)
             self.episodeList.grid_rowconfigure(i, weight=1)
+
+        self.displayFrame.grid(row=3, column=2, padx=5, sticky=tk.S)
 
     def draw_plots(self, *args):
         """
@@ -242,14 +238,14 @@ class Displayframe(ttk.Frame):
         Update all contents of the Display frame
         """
         log.info("updating DisplayFrame")
-        self.show_filename()
+        # self.show_filename()
         self.show_command_stats()
 
-    def show_filename(self):
-        if self.parent.data_loaded:
-            filename = self.parent.filename.get()
-            log.info('will show filename as "{}"'.format(filename))
-            ttk.Label(self,text = filename).grid(row=0, column=0, pady=10)
+    # def show_filename(self):
+    #     if self.parent.data_loaded:
+    #         filename = self.parent.filename.get()
+    #         log.info('will show filename as "{}"'.format(filename))
+    #         ttk.Label(self,text = filename).grid(row=0, column=0, pady=10)
 
     def show_command_stats(self):
         if self.parent.data_loaded:
@@ -300,8 +296,11 @@ class MenuBar(tk.Menu):
     def create_plot_cascade(self):
         self.add_cascade(label='Plot', menu=self.plot_menu)
         self.plot_menu.add_command(label="Set t_zero")
-        self.plot_menu.add_command(label="Show piezo voltage")
-        self.plot_menu.add_command(label="Show command voltage")
+        self.plot_menu.add_separator()
+        self.plot_menu.add_checkbutton(label="Show piezo voltage",
+                                       variable=self.parent.show_piezo)
+        self.plot_menu.add_checkbutton(label="Show command voltage",
+                                       variable=self.parent.show_command)
 
     def create_histogram_cascade(self):
         self.add_cascade(label='Histogram', menu=self.histogram_menu)
@@ -309,6 +308,7 @@ class MenuBar(tk.Menu):
                                             variable=self.parent.hist_single_ep)
         self.histogram_menu.add_checkbutton(label="Density",
                                             variable=self.parent.hist_density)
+        self.histogram_menu.add_separator()
         self.histogram_menu.add_command(label="Configuration",
                                         command=lambda:\
                                         HistogramConfiguration(self.parent))
@@ -569,46 +569,6 @@ class HistogramConfiguration(tk.Toplevel):
             self.parent.draw_plots()
         except: pass
         self.destroy()
-
-class PlotOptions(ttk.Frame):
-    """
-    A frame in which the setting of the histogram can be configured
-    """
-    def __init__(self, parent):
-        ttk.Frame.__init__(self, parent)
-        self.parent = parent
-
-        self.create_widgets()
-        log.info("creating plotOptions")
-
-    def update(self):
-        """
-        For updating the plot options (in case they every do more than just
-        show those two things)
-        """
-        self.create_widgets()
-
-    def create_widgets(self):
-        """
-        If piezo/command voltage data exists create widgets to toggle their
-        displey in the plots
-        """
-        if self.parent.data_loaded:
-            datakey = self.parent.datakey.get()
-            episode = self.parent.data[datakey][self.parent.Nepisode]
-            if episode.piezo is not None:
-                ttk.Label(self, text="Piezo voltage").grid(row=0, column=0)
-                piezo = ttk.Checkbutton(self, variable=self.parent.show_piezo)
-                piezo.grid(row=0, column=1)
-                # if piezo exists, default is to plot it
-                self.parent.show_piezo.set(1)
-
-            if self.parent.data[datakey][0].command is not None:
-                ttk.Label(self, text="Command voltage").grid(row=1, column=0)
-                command = ttk.Checkbutton(self,variable=self.parent.show_command)
-                command.grid(row=1,column=1)
-                # if command exists default is to not plot it
-                self.parent.show_command.set(0)
 
 class PlotFrame(ttk.Frame):
     def __init__(self, parent):
