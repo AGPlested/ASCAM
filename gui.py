@@ -91,6 +91,8 @@ class GUI(ttk.Frame):
         self.show_command = tk.IntVar()
         self.show_command.set(1)
         self.show_command.trace("w", self.draw_plots)
+        self.plot_t_zero = tk.StringVar()
+        self.plot_t_zero.set("0.00")
 
         # parameters of the data
         self.sampling_rate = tk.StringVar()
@@ -241,12 +243,6 @@ class Displayframe(ttk.Frame):
         # self.show_filename()
         self.show_command_stats()
 
-    # def show_filename(self):
-    #     if self.parent.data_loaded:
-    #         filename = self.parent.filename.get()
-    #         log.info('will show filename as "{}"'.format(filename))
-    #         ttk.Label(self,text = filename).grid(row=0, column=0, pady=10)
-
     def show_command_stats(self):
         if self.parent.data_loaded:
             datakey = self.parent.datakey.get()
@@ -295,12 +291,14 @@ class MenuBar(tk.Menu):
 
     def create_plot_cascade(self):
         self.add_cascade(label='Plot', menu=self.plot_menu)
-        self.plot_menu.add_command(label="Set t_zero")
+        self.plot_menu.add_command(label="Set t_zero",
+                                   command=lambda: ZeroTFrame(self.parent))
         self.plot_menu.add_separator()
         self.plot_menu.add_checkbutton(label="Show piezo voltage",
                                        variable=self.parent.show_piezo)
         self.plot_menu.add_checkbutton(label="Show command voltage",
                                        variable=self.parent.show_command)
+
 
     def create_histogram_cascade(self):
         self.add_cascade(label='Histogram', menu=self.histogram_menu)
@@ -354,6 +352,22 @@ class MenuBar(tk.Menu):
     def export(self):
         ExportFileDialog(self.parent)
 
+class ZeroTFrame(tk.Toplevel):
+    """docstring for ZeroTFrame."""
+    def __init__(self, parent):
+        tk.Toplevel.__init__(self, parent)
+        self.parent = parent #parent is main window
+        self.title("Set time offset")
+        entry = ttk.Entry(self, textvariable=self.parent.plot_t_zero, width=7)
+        entry.grid(row=0, column=0, columnspan=3)
+        entry.focus()
+        ttk.Button(self, text="OK", command=self.ok_click\
+                   ).grid(row=1, column=0, columnspan=3)
+
+    def ok_click(self):
+        self.parent.draw_plots()
+        self.destroy()
+
 class FilterFrame(tk.Toplevel):
     """docstring for FilterFrame."""
     def __init__(self, parent):
@@ -362,7 +376,7 @@ class FilterFrame(tk.Toplevel):
         self.title("Filter")
         #filterframe variables
         self.filter_selection = tk.StringVar()
-        self.filter_selection.trace("w",self.create_entry_frame)
+        self.filter_selection.trace("w", self.create_entry_frame)
         #paramters for gaussian filter
         self.gaussian_fc = tk.StringVar()
         self.gaussian_fc.set('1000')
@@ -382,10 +396,10 @@ class FilterFrame(tk.Toplevel):
         log.info("""creating dropdown menu for filter selection""")
         listOptions = ['Gaussian', 'Chung-Kennedy']
         self.menu = tk.OptionMenu(self, self.filter_selection, *listOptions)
-        self.menu.grid(row=0,column=0,columnspan=2,sticky=tk.N)
+        self.menu.grid(row=0, column=0, columnspan=2, sticky=tk.N)
 
         self.entry_frame = ttk.Frame(self)
-        self.entry_frame.grid(row=1,column=0,columnspan=2)
+        self.entry_frame.grid(row=1, column=0, columnspan=2)
 
         ttk.Button(self, text="OK", command=self.ok_button).grid(row=5)
         ttk.Button(self, text="Cancel", command=self.cancel_button).grid(row=5,
@@ -588,7 +602,8 @@ class PlotFrame(ttk.Frame):
         """
         This method will plot the current, piezo and command voltage traces
         """
-        time = episode.time
+        t_zero = float(self.parent.plot_t_zero.get())
+        time = episode.time-t_zero
         n_plot = 1 #counter for plots
 
         # plot the current trace
@@ -598,7 +613,7 @@ class PlotFrame(ttk.Frame):
                     time = time,
                     trace = episode.trace,
                     ylabel = "Current ["+self.parent.data.currentUnit+"]")
-                    # ybounds = (min_A, max_A))
+        if t_zero!=0: plt.axvline(0,c='r')
         n_plot += 1 #move to next plot
 
         self.subplots = [current_plot]
@@ -613,6 +628,7 @@ class PlotFrame(ttk.Frame):
                     trace = episode.piezo,
                     ylabel = "Piezo ["+self.parent.data.piezoUnit+']',
                     ybounds = [])
+            if t_zero!=0: plt.axvline(0,c='r')
             n_plot += 1
             self.subplots.append(piezo_plot)
         # plot command voltage
@@ -624,6 +640,7 @@ class PlotFrame(ttk.Frame):
                     time = time,
                     trace = episode.command,
                     ylabel = "Command ["+self.parent.data.commandUnit+']')
+            if t_zero!=0: plt.axvline(0,c='r')
             n_plot += 1
             self.subplots.append(command_plot)
 
