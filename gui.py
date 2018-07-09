@@ -141,11 +141,11 @@ class GUI(ttk.Frame):
         Create the contents of the main window.
         """
         log.info("""creating widgets""")
-        self.histogramFrame = HistogramFrame(self)
+        # self.histogramFrame = HistogramFrame(self)
         self.plots = PlotFrame(self)
         self.episodeList = EpisodeList(self)
         self.listSelection = ListSelection(self)
-        self.histogramOptions = HistogramConfiguration(self)
+        # self.histogramOptions = HistogramConfiguration(self)
         self.plotOptions = PlotOptions(self)
         self.displayFrame = Displayframe(self)
         self.menuBar = MenuBar(self)
@@ -171,7 +171,7 @@ class GUI(ttk.Frame):
         self.listSelection.grid(row=0, column=3, rowspan=2, padx=5, pady=5,
                                 sticky=tk.N)
 
-        self.histogramOptions.grid(row=0, column=4, columnspan=3)
+        # self.histogramOptions.grid(row=0, column=4, columnspan=3)
 
 
         # Second row
@@ -180,10 +180,10 @@ class GUI(ttk.Frame):
         self.plots.grid_rowconfigure(0, weight=1)
         self.plots.grid_columnconfigure(0, weight=1)
         #
-        self.histogramFrame.grid(row=1, column=4, rowspan=3, columnspan=3,
-                                 sticky=tk.E)
-        self.histogramFrame.grid_rowconfigure(0, weight=1)
-        self.histogramFrame.grid_columnconfigure(0, weight=1)
+        # self.histogramFrame.grid(row=1, column=4, rowspan=3, columnspan=3,
+        #                          sticky=tk.E)
+        # self.histogramFrame.grid_rowconfigure(0, weight=1)
+        # self.histogramFrame.grid_columnconfigure(0, weight=1)
 
         # Third row
         self.episodeList.grid(row=2, column=3, rowspan=2)
@@ -211,7 +211,7 @@ class GUI(ttk.Frame):
         """
         if self.data:
             log.info('Calling histogram, `self.data` is `True`.')
-            self.histogramFrame.draw_histogram()
+            # self.histogramFrame.draw_histogram()
         else:
             log.info('Cannot draw histogram, `self.data` is `False`')
             pass
