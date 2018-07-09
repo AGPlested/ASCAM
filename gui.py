@@ -309,9 +309,13 @@ class MenuBar(tk.Menu):
         # menu
         self.file_menu = tk.Menu(self, tearoff=0)
         self.analysis_menu = tk.Menu(self, tearoff=0)
+        self.plot_menu = tk.Menu(self, tearoff=0)
+        self.histogram_menu = tk.Menu(self, tearoff=0)
 
         self.create_file_cascade()
         self.create_analysis_cascade()
+        self.create_plot_cascade()
+        self.create_histogram_cascade()
 
         # the code below is needed to make the menuBar responsive on Mac OS
         # apple uses window system aqua
@@ -322,6 +326,21 @@ class MenuBar(tk.Menu):
             appmenu.add_command(label='About My Application')
             appmenu.add_separator()
             self.parent.master['menu'] = self
+
+    def create_plot_cascade(self):
+        self.add_cascade(label='Plot', menu=self.plot_menu)
+        self.plot_menu.add_command(label="Set t_zero")
+        self.plot_menu.add_command(label="Set t_zero")
+        self.plot_menu.add_command(label="Show piezo voltage")
+        self.plot_menu.add_command(label="Show command voltage")
+
+    def create_histogram_cascade(self):
+        self.add_cascade(label='Histogram', menu=self.histogram_menu)
+        self.histogram_menu.add_command(label="Show single episode")
+        self.histogram_menu.add_command(label="Density")
+        self.histogram_menu.add_command(label="Configuration",
+                                        command=lambda:\
+                                        HistogramConfiguration(self.parent))
 
     def create_file_cascade(self):
         """
@@ -336,13 +355,12 @@ class MenuBar(tk.Menu):
         self.file_menu.add_command(label="Quit",command=self.parent.master.quit)
 
     def create_analysis_cascade(self):
-        self.add_cascade(label='Analysis',menu=self.analysis_menu)
+        self.add_cascade(label='Analysis', menu=self.analysis_menu)
         self.analysis_menu.add_command(label="Baseline",
                                        command=lambda: BaselineFrame(self))
         self.analysis_menu.add_command(label="Filter",
                                        command=lambda: FilterFrame(self.parent))
-        self.analysis_menu.add_command(label="Idealize")
-        self.analysis_menu.add_command(label="Set t_zero")
+        # self.analysis_menu.add_command(label="Idealize")
 
     def open_file(self):
         # open the dialog for loading a single file
@@ -364,6 +382,8 @@ class MenuBar(tk.Menu):
 
     def export(self):
         ExportFileDialog(self.parent)
+
+
 
 class FilterFrame(tk.Toplevel):
     """docstring for FilterFrame."""
@@ -515,13 +535,13 @@ class ExportFileDialog(tk.Toplevel):
     def cancel(self):
         self.destroy()
 
-class HistogramConfiguration(ttk.Frame):
+class HistogramConfiguration(tk.Toplevel):
     """
     A frame in which the setting of the histogram can be configured
     """
     def __init__(self, parent):
-        ttk.Frame.__init__(self, parent)
-        self.parent = parent
+        tk.Toplevel.__init__(self, parent)
+        self.parent = parent #parent is main frame
         self.create_widgets()
 
     def create_widgets(self):
