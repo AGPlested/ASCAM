@@ -20,7 +20,6 @@ import plotting
 from recording import Recording
 
 
-
 class GUI(ttk.Frame):
     """
     GUI frame for ASCAM.
@@ -752,6 +751,147 @@ class PlotFrame(ttk.Frame):
         self.toolbar.update()
         self.canvas._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
 
+    def plot_traces(self,episode, pgs):
+        """
+        This method will plot the current, piezo and command voltage traces
+        """
+        time = episode.time
+        n_plot = 1 #counter for plots
+
+        # plot the current trace
+        current_plot = self.fig.add_subplot(pgs[:2,:2])
+        plotting.plotTrace(
+                    ax = current_plot,
+                    time = time,
+                    trace = episode.trace,
+                    ylabel = "Current ["+self.parent.data.currentUnit+"]")
+                    # ybounds = (min_A, max_A))
+        n_plot += 1 #move to next plot
+
+        self.subplots = [current_plot]
+
+        # plot the piezo
+        if self.parent.show_piezo.get():
+            log.info('will plot piezo voltage')
+            piezo_plot = self.fig.add_subplot(pgs[n_plot,:2])
+            plotting.plotTrace(
+                    ax = piezo_plot,
+                    time = time,
+                    trace = episode.piezo,
+                    ylabel = "Piezo ["+self.parent.data.piezoUnit+']',
+                    ybounds = [])
+            n_plot += 1
+            self.subplots.append(piezo_plot)
+        # plot command voltage
+        if self.parent.show_command.get():
+            log.info('will plot command voltage')
+            command_plot = self.fig.add_subplot(pgs[n_plot,:2])
+            plotting.plotTrace(
+                    ax = command_plot,
+                    time = time,
+                    trace = episode.command,
+                    ylabel = "Command ["+self.parent.data.commandUnit+']')
+            n_plot += 1
+            self.subplots.append(command_plot)
+
+        ## configure x-axis
+        for plot in self.subplots[:-1]:
+            plot.set_xticklabels([]) #turn off numbering on upper plots
+        # label only the last axis
+        self.subplots[-1].set_xlabel("Time ["+self.parent.data.timeUnit+"]")
+
+    def plot_histogram(self,pgs,**kwargs):
+        """
+        this method will draw the histogram next to the current trace
+        """
+        log.info("drawing histogram")
+
+        ### get histogram parameters
+        n_bins = int(float(self.parent.hist_number_bins.get()))
+        density = bool(self.parent.hist_density.get())
+        # time points are selected based on piezo values if the variable
+        # 'hist_piezo_interval' is 1
+        piezo_selection = bool(self.parent.hist_piezo_interval.get())
+        active = bool(self.parent.hist_piezo_active.get())
+        deviation = float(self.parent.hist_piezo_deviation.get())
+        fs = float(self.parent.sampling_rate.get())
+        intervals = self.parent.hist_intervals
+
+        log.debug("""number of bins = {}
+            density = {}
+            piezo_selection = {}
+            active = {}
+            deviation = {}""".format(n_bins,density,piezo_selection,
+                                     active,deviation))
+        # create the plot object so we can delete it later
+        ax = self.fig.add_subplot(pgs[:2,2])
+
+        if self.parent.data_loaded:
+            log.info("found data")
+            # get data
+            series = self.parent.data[self.parent.datakey.get()]
+            time = series[0].time
+
+            # get current episode values and put them in a list
+            # because the histogram function expects a list
+            single_piezo = [series[self.parent.Nepisode].piezo]
+            single_trace = [series[self.parent.Nepisode].trace]
+
+            # get the bins and their values or the current episode
+            hist_single = plotting.histogram(time, single_piezo, single_trace,
+                                             active=active,
+                                             piezo_selection=piezo_selection,
+                                             deviation=deviation,
+                                             n_bins=n_bins,
+                                             density=density,
+                                             intervals=intervals,
+                                             sampling_rate=fs,
+                                             **kwargs)
+            (heights_single,bins_single,
+             center_single, width_single) = hist_single
+
+            if self.parent.data.current_lists:
+                log.info("""current lists are: {}""".format(
+                                                self.parent.data.current_lists))
+                # get a list of all the currents and all the traces
+                all_piezos = [episode.piezo for episode in series ]
+                all_traces = [episode.trace for episode in series ]
+
+                # get the indices of currently selected lists
+                indices = self.parent.get_episodes_in_lists()
+
+                # get corresponding piezos and traces
+                all_piezos = [all_piezos[i] for i in indices]
+                all_traces = [all_traces[i] for i in indices]
+
+                # get the bins and their values for all episodes
+                hist_all = plotting.histogram(time, all_piezos, all_traces,
+                                              active=active,
+                                              piezo_selection=piezo_selection,
+                                              deviation=deviation,
+                                              n_bins=n_bins,
+                                              density=density,
+                                              intervals=intervals,
+                                              sampling_rate=fs,
+                                              **kwargs)
+                heights_all, bins_all, center_all, width_all = hist_all
+                # draw bar graphs of the histogram values over all episodes
+                ax.barh(center_all, heights_all, width_all,
+                        alpha=0.2, color='orange', align='center')
+                ax.plot(heights_all,center_all,color='orange', lw=2)
+                ax.set_ylabel("Current ["+self.parent.data.currentUnit+']')
+                if self.parent.hist_density.get()==1:
+                    log.info('setting y-label "Relative frequency"')
+                    ax.set_xlabel("Relative frequency")
+                elif self.parent.hist_density.get()==0:
+                    log.info('setting y-label "Count"')
+                    ax.set_xlabel("Count")
+
+            # histogram of single episode
+            if self.parent.hist_single_ep.get()==1:
+                log.info("plotting single episode histogram")
+                ax.barh(center_single, heights_single, width_single,
+                        align='center', alpha=1)
     def plot(self):
         plt.clf() #clear figure from memory
         datakey = self.parent.datakey.get()
@@ -762,67 +902,18 @@ class PlotFrame(ttk.Frame):
             # decide how many plots there will be
             num_plots = (1 + self.parent.show_command.get()
                           + self.parent.show_piezo.get())
-            n_plot = 1 #counter for plots
 
             # plot grid to make current plot bigger
-            pgs = gs.GridSpec(num_plots+1,1)
+            #arguments are nRows by nCols
+            pgs = gs.GridSpec(num_plots+1,3)
 
             log.info("""`data` exists, will plot episode number {}
             from series {}""".format(self.parent.Nepisode,datakey))
 
-            time = episode.time
+            self.plot_traces(episode, pgs)
+            self.plot_histogram(pgs)
 
-            #get axis bounds
-            # min_A = self.parent.data[datakey].get_min('trace')
-            # max_A = self.parent.data[datakey].get_max('trace')
-
-            # plot the current trace
-            current_plot = self.fig.add_subplot(pgs[:2,:])
-            plotting.plotTrace(
-                        ax = current_plot,
-                        time = time,
-                        trace = episode.trace,
-                        ylabel = "Current ["+self.parent.data.currentUnit+"]")
-                        # ybounds = (min_A, max_A))
-            n_plot += 1 #move to next plot
-
-            self.subplots = [current_plot]
-
-            # plot the piezo
-            if self.parent.show_piezo.get():
-                log.info('will plot piezo voltage')
-                piezo_plot = self.fig.add_subplot(pgs[n_plot,:])
-                plotting.plotTrace(
-                        ax = piezo_plot,
-                        time = time,
-                        trace = episode.piezo,
-                        ylabel = "Piezo ["+self.parent.data.piezoUnit+']',
-                        ybounds = [])
-                n_plot += 1
-                self.subplots.append(piezo_plot)
-            # plot command voltage
-            if self.parent.show_command.get():
-                log.info('will plot command voltage')
-                # try: #get axis bounds
-                #     min_V = self.parent.data[datakey].get_min('command')
-                #     max_V = self.parent.data[datakey].get_max('command')
-                # except: pass
-                command_plot = self.fig.add_subplot(pgs[n_plot,:])
-                plotting.plotTrace(
-                        ax = command_plot,
-                        time = time,
-                        trace = episode.command,
-                        ylabel = "Command ["+self.parent.data.commandUnit+']')
-                        # ybounds = [min_V,max_V])
-                n_plot += 1
-                self.subplots.append(command_plot)
-
-            ## configure x-axis
-            for plot in self.subplots[:-1]:
-                plot.set_xticklabels([]) #turn off numbering on upper plots
-            # label only the last axis
-            self.subplots[-1].set_xlabel("Time ["+self.parent.data.timeUnit+"]")
-            self.canvas.draw() # draw plots
+        self.canvas.draw() # draw plots
 
 class BaselineFrame(tk.Toplevel):
     """
