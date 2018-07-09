@@ -1065,7 +1065,7 @@ class ListSelection(ttk.Frame):
         and destroyed several times at different locations in the grid.
         """
         log.info("Creating new checkbox maker button")
-        self.createBoxButton = ttk.Button(self,text='Add',
+        self.createBoxButton = ttk.Button(self,text='new list',
                                           command=lambda: AddListDialog(self))
         self.createBoxButton.pack()
 
