@@ -12,7 +12,7 @@ import matplotlib
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from matplotlib.backends.backend_tkagg import NavigationToolbar2TkAgg
+from matplotlib.backends.backend_tkagg import NavigationToolbar2Tk
 from matplotlib import gridspec as gs
 
 from tools import stringList_parser, parse_filename
@@ -594,7 +594,7 @@ class PlotFrame(ttk.Frame):
         # canvasPlot.show()
         canvasPlot.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
         self.canvas = canvasPlot
-        self.toolbar = NavigationToolbar2TkAgg(self.canvas, self)
+        self.toolbar = NavigationToolbar2Tk(self.canvas, self)
         self.toolbar.update()
         self.canvas._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
 
