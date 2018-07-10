@@ -401,34 +401,33 @@ class FilterFrame(tk.Toplevel):
         self.entry_frame = ttk.Frame(self)
         self.entry_frame.grid(row=1, column=0, columnspan=2)
 
-        ttk.Button(self, text="OK", command=self.ok_button).grid(row=5)
-        ttk.Button(self, text="Cancel", command=self.cancel_button).grid(row=5,
-                                                                       column=1)
+        ttk.Button(self, text="OK", command=self.ok_click).grid(row=5)
+        ttk.Button(self, text="Cancel", command=self.cancel_button\
+                   ).grid(row=5, column=1)
 
     def create_entry_frame(self,*args,**kwargs):
         """
         Create a frame for the entry of the filter parameters
         """
         if self.filter_selection.get()=='Gaussian':
-            ttk.Label(self.entry_frame, text="Frequency [Hz]").grid(row=0,
-                                                                    column=0)
-            ttk.Entry(self.entry_frame,textvariable=self.gaussian_fc, width=7).\
-                                                         grid(row = 0, column=1)
+            ttk.Label(self.entry_frame, text="Frequency [Hz]"\
+                      ).grid(row=0, column=0)
+            ttk.Entry(self.entry_frame,textvariable=self.gaussian_fc, width=7
+                      ).grid(row=0, column=1)
         elif self.filter_selection.get()=='Chung-Kennedy':
-            ttk.Label(self.entry_frame, text="Number of predictors").grid(row=0,
-                                                                    column=0)
-            ttk.Entry(self.entry_frame,textvariable=self.n_predictors,width=7).\
-                                                         grid(row = 0, column=1)
-            ttk.Label(self.entry_frame, text="Weight exponent").grid(row=1,
-                                                                    column=0)
-            ttk.Entry(self.entry_frame,
-                      textvariable=self.weight_exponent,width=7).grid(row = 1,
-                                                                      column=1)
-            ttk.Label(self.entry_frame, text="Lengths of predictors").grid(
-                                                                row=2, column=0)
-            ttk.Entry(self.entry_frame,
-                      textvariable=self.lengths_predictors,width=7).grid(
-                                                              row = 2, column=1)
+            ttk.Label(self.entry_frame, text="Number of predictors"\
+                      ).grid(row=0, column=0)
+            ttk.Entry(self.entry_frame, textvariable=self.n_predictors, width=7\
+                      ).grid(row=0, column=1)
+            ttk.Label(self.entry_frame, text="Weight exponent"\
+                      ).grid(row=1,column=0)
+            ttk.Entry(self.entry_frame, textvariable=self.weight_exponent,
+                      width=7).grid(row=1,column=1)
+            ttk.Label(self.entry_frame, text="Lengths of predictors"\
+                      ).grid(row=2, column=0)
+            ttk.Entry(self.entry_frame, textvariable=self.lengths_predictors,
+                      width=7).grid(row=2, column=1)
+
     def filter_series(self):
         log.info('going to filter all episodes')
         if self.filter_selection.get()=="Gaussian":
@@ -447,7 +446,7 @@ class FilterFrame(tk.Toplevel):
                                  +"been implemented")
             # time.sleep(5)
 
-    def ok_button(self):
+    def ok_click(self):
         if self.filter_selection.get(): self.filter_series()
         self.destroy()
 
@@ -584,6 +583,19 @@ class HistogramConfiguration(tk.Toplevel):
         except: pass
         self.destroy()
 
+class PlotToolbar(NavigationToolbar2Tk):
+    """docstring for PlotToolbar.NavigationToolbar2Tk
+    """
+    def __init__(self, canvas, parent):
+        # this toolbar is just the standard with fewer buttons
+        self.toolitems = (
+        ('Pan', '', 'move', 'pan'),
+        ('Zoom', '', 'zoom_to_rect', 'zoom'),
+        # ('Save', 'save to png', 'filesave', 'save_figure'),
+        )
+        NavigationToolbar2Tk.__init__(self, canvas, parent)
+
+
 class PlotFrame(ttk.Frame):
     def __init__(self, parent):
         ttk.Frame.__init__(self, parent)
@@ -594,7 +606,7 @@ class PlotFrame(ttk.Frame):
         # canvasPlot.show()
         canvasPlot.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
         self.canvas = canvasPlot
-        self.toolbar = NavigationToolbar2Tk(self.canvas, self)
+        self.toolbar = PlotToolbar(self.canvas, self)
         self.toolbar.update()
         self.canvas._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
 
@@ -608,12 +620,9 @@ class PlotFrame(ttk.Frame):
 
         # plot the current trace
         current_plot = self.fig.add_subplot(pgs[:2,:2])
-        plotting.plotTrace(
-                    ax = current_plot,
-                    time = time,
-                    trace = episode.trace,
-                    ylabel = "Current ["+self.parent.data.currentUnit+"]")
-        if t_zero!=0: plt.axvline(0,c='r')
+        plotting.plotTrace(ax=current_plot, time=time, trace=episode.trace,
+                           ylabel="Current ["+self.parent.data.currentUnit+"]")
+        if t_zero!=0: plt.axvline(0, c='r')
         n_plot += 1 #move to next plot
 
         self.subplots = [current_plot]
@@ -622,25 +631,20 @@ class PlotFrame(ttk.Frame):
         if self.parent.show_piezo.get():
             log.info('will plot piezo voltage')
             piezo_plot = self.fig.add_subplot(pgs[n_plot,:2])
-            plotting.plotTrace(
-                    ax = piezo_plot,
-                    time = time,
-                    trace = episode.piezo,
-                    ylabel = "Piezo ["+self.parent.data.piezoUnit+']',
-                    ybounds = [])
-            if t_zero!=0: plt.axvline(0,c='r')
+            plotting.plotTrace(ax=piezo_plot, time=time, trace=episode.piezo,
+                               ylabel="Piezo ["+self.parent.data.piezoUnit+']',
+                               ybounds=[])
+            if t_zero!=0: plt.axvline(0, c='r')
             n_plot += 1
             self.subplots.append(piezo_plot)
         # plot command voltage
         if self.parent.show_command.get():
             log.info('will plot command voltage')
             command_plot = self.fig.add_subplot(pgs[n_plot,:2])
-            plotting.plotTrace(
-                    ax = command_plot,
-                    time = time,
-                    trace = episode.command,
-                    ylabel = "Command ["+self.parent.data.commandUnit+']')
-            if t_zero!=0: plt.axvline(0,c='r')
+            plotting.plotTrace(ax=command_plot, time=time,
+                           trace=episode.command,
+                           ylabel="Command ["+self.parent.data.commandUnit+']')
+            if t_zero!=0: plt.axvline(0, c='r')
             n_plot += 1
             self.subplots.append(command_plot)
 
@@ -650,7 +654,7 @@ class PlotFrame(ttk.Frame):
         # label only the last axis
         self.subplots[-1].set_xlabel("Time ["+self.parent.data.timeUnit+"]")
 
-    def plot_histogram(self,pgs,**kwargs):
+    def plot_histogram(self, pgs, **kwargs):
         """
         this method will draw the histogram next to the current trace
         """
@@ -697,8 +701,8 @@ class PlotFrame(ttk.Frame):
                                              intervals=intervals,
                                              sampling_rate=fs,
                                              **kwargs)
-            (heights_single,bins_single,
-             center_single, width_single) = hist_single
+            heights_single, bins_single, center_single, width_single\
+            = hist_single
 
             if self.parent.data.current_lists:
                 log.info("""current lists are: {}""".format(
@@ -728,7 +732,7 @@ class PlotFrame(ttk.Frame):
                 # draw bar graphs of the histogram values over all episodes
                 ax.barh(center_all, heights_all, width_all,
                         alpha=0.2, color='orange', align='center')
-                ax.plot(heights_all,center_all,color='orange', lw=2)
+                ax.plot(heights_all, center_all, color='orange', lw=2)
                 ax.set_ylabel("Current ["+self.parent.data.currentUnit+']')
                 if self.parent.hist_density.get()==1:
                     log.info('setting y-label "Relative frequency"')
@@ -1065,9 +1069,9 @@ class EpisodeList(ttk.Frame):
         ttk.Frame.__init__(self, parent)
         self.parent = parent
 
-        ### create the variable tracking the current selection, `currentSeries`
-        ### and assign it to call the function `selection_change` when it is
-        ### changed
+        # create the variable tracking the current selection, `currentSeries`
+        # and assign it to call the function `selection_change` when it is
+        # changed
         self.parent.datakey.trace("w", self.selection_change)
         self.create_list()
         self.create_dropdownmenu()
@@ -1118,7 +1122,7 @@ class EpisodeList(ttk.Frame):
             for name in list(self.parent.data.lists.keys())[1:]:
                 for index in self.parent.data.lists[name][0]:
                     self.episodelist.itemconfig(index,
-                                    {'bg':self.parent.data.lists[name][1]})
+                                        {'bg':self.parent.data.lists[name][1]})
 
 
         ### assign the scrollbar its function
