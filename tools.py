@@ -1,5 +1,6 @@
-import numpy as np
 import logging as log
+
+import numpy as np
 
 def parse_filename(filename):
     """
@@ -66,7 +67,7 @@ def piezo_selection(time, piezo, trace, active=True, deviation=0.05):
         trace [1D array of floats] - The current at selected points.
     """
     maxPiezo = np.max(np.abs(piezo))
-    log.debug("""called `piezo_selection` with parameters:
+    log.debug("""called `select_piezo` with parameters:
               active = {}, deviation = {}, maxPiezo = {}
               time: {}
               piezo: {}
@@ -87,34 +88,34 @@ def piezo_selection(time, piezo, trace, active=True, deviation=0.05):
               trace: {}""".format(indices, time, piezo, trace))
     return time, piezo, trace
 
-def interval_selection(time, signal, intervals, fs, timeUnit):
+def interval_selection(time, signal, intervals, fs, time_unit):
     """
     return the signal at the times specified in the interval
     """
     log.info("""called `interval_selection`""")
-    log.debug("""parameters are: sampling frequency: {}, timeUnit: {}
+    log.debug("""parameters are: sampling frequency: {}, time_unit: {}
               time: {}
               signal: {}
-              intervals: {}""".format(fs, timeUnit, time, signal, intervals))
-    if timeUnit == 'ms':
-        timeUnit = 1000
-    elif timeUnit == 's':
-        timeUnit = 1
+              intervals: {}""".format(fs, time_unit, time, signal, intervals))
+    if time_unit == 'ms':
+        time_unit = 1000
+    elif time_unit == 's':
+        time_unit = 1
     time_out = []
     signal_out = []
     if type(intervals[0]) is list:
         log.debug("""`intervals` is a list of intervals""")
         for ival in intervals:
-            time_out.extend(time[ int(ival[0]*fs/timeUnit)
-                            : int(ival[-1]*fs/timeUnit) ])
-            signal_out.extend(signal[ int(ival[0]*fs/timeUnit)
-                              : int(ival[-1]*fs/timeUnit)])
+            time_out.extend(time[ int(ival[0]*fs/time_unit)
+                            : int(ival[-1]*fs/time_unit) ])
+            signal_out.extend(signal[ int(ival[0]*fs/time_unit)
+                              : int(ival[-1]*fs/time_unit)])
     elif type(intervals[0]) in [int, float]:
         log.debug("""`intervals` is just one interval""")
-        time_out = time[ int(intervals[0]*fs/timeUnit)
-                   : int(intervals[-1]*fs/timeUnit)]
-        signal_out = signal[int(intervals[0]*fs/timeUnit)
-                   : int(intervals[1]*fs/timeUnit)]
+        time_out = time[ int(intervals[0]*fs/time_unit)
+                   : int(intervals[-1]*fs/time_unit)]
+        signal_out = signal[int(intervals[0]*fs/time_unit)
+                   : int(intervals[1]*fs/time_unit)]
     log.debug("""selected times: {}
                  and signal: {}""".format(time_out,signal_out))
     return time_out, signal_out
