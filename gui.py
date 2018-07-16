@@ -405,11 +405,7 @@ class FilterFrame(tk.Toplevel):
         self.entry_frame.grid(row=1, column=0, columnspan=2)
 
         ttk.Button(self, text="OK", command=self.ok_click).grid(row=5)
-<<<<<<< HEAD
-        ttk.Button(self, text="Cancel", command=self.cancel_button\
-=======
         ttk.Button(self, text="Cancel", command=self.destroy\
->>>>>>> master
                    ).grid(row=5, column=1)
 
     def create_entry_frame(self,*args,**kwargs):
@@ -419,11 +415,7 @@ class FilterFrame(tk.Toplevel):
         if self.filter_selection.get()=='Gaussian':
             ttk.Label(self.entry_frame, text="Frequency [Hz]"\
                       ).grid(row=0, column=0)
-<<<<<<< HEAD
-            ttk.Entry(self.entry_frame,textvariable=self.gaussian_fc, width=7
-=======
             ttk.Entry(self.entry_frame, textvariable=self.gaussian_fc, width=7\
->>>>>>> master
                       ).grid(row=0, column=1)
         elif self.filter_selection.get()=='Chung-Kennedy':
             ttk.Label(self.entry_frame, text="Number of predictors"\
@@ -431,15 +423,9 @@ class FilterFrame(tk.Toplevel):
             ttk.Entry(self.entry_frame, textvariable=self.n_predictors, width=7\
                       ).grid(row=0, column=1)
             ttk.Label(self.entry_frame, text="Weight exponent"\
-<<<<<<< HEAD
-                      ).grid(row=1,column=0)
-            ttk.Entry(self.entry_frame, textvariable=self.weight_exponent,
-                      width=7).grid(row=1,column=1)
-=======
                       ).grid(row=1, column=0)
             ttk.Entry(self.entry_frame, textvariable=self.weight_exponent,
                       width=7).grid(row=1, column=1)
->>>>>>> master
             ttk.Label(self.entry_frame, text="Lengths of predictors"\
                       ).grid(row=2, column=0)
             ttk.Entry(self.entry_frame, textvariable=self.lengths_predictors,
@@ -623,16 +609,8 @@ class PlotFrame(ttk.Frame):
         """
         t_zero = float(self.parent.plot_t_zero.get())
         time = episode.time-t_zero
-        n_plot = 1 #counter for plots
-
-        # plot the current trace
-        current_plot = self.fig.add_subplot(pgs[:2,:2])
-        plotting.plotTrace(ax=current_plot, time=time, trace=episode.trace,
-                           ylabel="Current ["+self.parent.data.currentUnit+"]")
-        if t_zero!=0: plt.axvline(0, c='r')
-        n_plot += 1 #move to next plot
-
-        self.subplots = [current_plot]
+        n_plot = 0 #counter for plots
+        self.subplots = list()
 
         # plot the piezo
         if self.parent.show_piezo.get():
@@ -644,6 +622,15 @@ class PlotFrame(ttk.Frame):
             if t_zero!=0: plt.axvline(0, c='r')
             n_plot += 1
             self.subplots.append(piezo_plot)
+
+        # plot the current trace
+        current_plot = self.fig.add_subplot(pgs[n_plot:n_plot+2,:2])
+        plotting.plotTrace(ax=current_plot, time=time, trace=episode.trace,
+                           ylabel="Current ["+self.parent.data.currentUnit+"]")
+        if t_zero!=0: plt.axvline(0, c='r')
+        n_plot += 2 #move to next plot
+        self.subplots.append(current_plot)
+
         # plot command voltage
         if self.parent.show_command.get():
             log.info('will plot command voltage')
@@ -685,7 +672,9 @@ class PlotFrame(ttk.Frame):
             deviation = {}""".format(n_bins,density,select_piezo,
                                      active,deviation))
         # create the plot object so we can delete it later
-        ax = self.fig.add_subplot(pgs[:2,2])
+        ax = self.fig.add_subplot(pgs[:,2])
+        ax.yaxis.set_label_position('right')
+        ax.yaxis.tick_right()
 
         if self.parent.data_loaded:
             log.info("found data")
@@ -753,7 +742,7 @@ class PlotFrame(ttk.Frame):
                 log.info("plotting single episode histogram")
                 ax.barh(center_single, heights_single, width_single,
                         align='center', alpha=1)
-            cursor = PlotCursor(ax, useblit=True, color='black', linewidth=1)
+            # cursor = PlotCursor(ax, useblit=True, color='black', linewidth=1)
 
     def plot(self):
         plt.clf() #clear figure from memory
