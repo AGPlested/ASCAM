@@ -123,7 +123,8 @@ class GUI(ttk.Frame):
 
         # recreate user defined episodelists
         for name, (_, color, key) in self.data.lists.items():
-            log.debug("""found list {}, color: {}, key: {}""".format(name, color, key))
+            log.debug("""found list {}, color: {}, key: {}"""\
+                        .format(name, color, key))
             self.listSelection.create_checkbox(name = name,
                                                key = key,
                                                color = color)
@@ -210,7 +211,8 @@ class GUI(ttk.Frame):
         indices = []
         for listname in self.data.current_lists:
             indices.extend(self.data.lists[listname][0])
-            log.debug('''for list "{}" added:\n {}'''.format(listname,self.data.lists[listname][0]))
+            log.debug('''for list "{}" added:\n {}'''\
+                      .format(listname,self.data.lists[listname][0]))
         # remove duplicate indices
         indices = np.array(list(set(indices)))
         indices = indices.flatten()
@@ -1051,8 +1053,8 @@ class AddListDialog(tk.Toplevel):
         log.info("Confirmed checkbox creation through dialog")
         if self.name.get() and self.key.get():
             self.parent.new_checkbox(name = self.name.get(),
-                                        key = self.key.get(),
-                                        color = self.color_choice.get())
+                                     key = self.key.get(),
+                                     color = self.color_choice.get())
         else: print("failed to enter name and/or key")
         self.destroy()
 
@@ -1219,7 +1221,7 @@ class OpenFileDialog(tk.Toplevel):
             binframe = Binaryquery(self)
         else:
             try:
-                ### move variables to parent if data loaded succesfully
+                # move variables to parent if data loaded succesfully
                 self.parent.filetype.set(self.filetype.get())
                 self.parent.filename.set(self.filename.get())
                 self.parent.sampling_rate.set(self.sampling_rate.get())
