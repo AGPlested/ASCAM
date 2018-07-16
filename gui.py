@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.backends.backend_tkagg import NavigationToolbar2Tk
 from matplotlib import gridspec as gs
+from matplotlib.widgets import Cursor as PlotCursor
 
 from tools import stringList_parser, parse_filename
 import plotting
@@ -261,9 +262,9 @@ class Displayframe(ttk.Frame):
         else: pass
 
 class MenuBar(tk.Menu):
-    def __init__(self,parent):
+    def __init__(self, parent):
         self.parent = parent #parent is main window
-        tk.Menu.__init__(self, parent.master,tearoff=0)
+        tk.Menu.__init__(self, parent.master, tearoff=0)
         self.parent.master.config(menu=self)
 
         # menu holding all the cascading options
@@ -281,7 +282,7 @@ class MenuBar(tk.Menu):
 
         # the code below is needed to make the menuBar responsive on Mac OS
         # apple uses window system aqua
-        if parent.window_system == 'aqua':
+        if parent.window_system=='aqua':
             log.info("trying to make the menu work on Mac")
             appmenu = tk.Menu(self, name='apple')
             self.add_cascade(menu=appmenu)
@@ -584,17 +585,14 @@ class HistogramConfiguration(tk.Toplevel):
         self.destroy()
 
 class PlotToolbar(NavigationToolbar2Tk):
-    """docstring for PlotToolbar.NavigationToolbar2Tk
-    """
     def __init__(self, canvas, parent):
         # this toolbar is just the standard with fewer buttons
         self.toolitems = (
         ('Pan', '', 'move', 'pan'),
-        ('Zoom', '', 'zoom_to_rect', 'zoom'),
+        ('Zoom', '', 'zoom_to_rect', 'zoom')
         # ('Save', 'save to png', 'filesave', 'save_figure'),
         )
         NavigationToolbar2Tk.__init__(self, canvas, parent)
-
 
 class PlotFrame(ttk.Frame):
     def __init__(self, parent):
@@ -602,12 +600,9 @@ class PlotFrame(ttk.Frame):
         self.parent = parent
         self.fig = plt.figure(figsize=(10,5))
 
-        canvasPlot = FigureCanvasTkAgg(self.fig, master=self)
-        # canvasPlot.show()
-        canvasPlot.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
-        self.canvas = canvasPlot
+        self.canvas = FigureCanvasTkAgg(self.fig, master=self)
+        self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
         self.toolbar = PlotToolbar(self.canvas, self)
-        self.toolbar.update()
         self.canvas._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
 
     def plot_traces(self,episode, pgs):
@@ -746,6 +741,8 @@ class PlotFrame(ttk.Frame):
                 log.info("plotting single episode histogram")
                 ax.barh(center_single, heights_single, width_single,
                         align='center', alpha=1)
+            cursor = PlotCursor(ax, useblit=True, color='black', linewidth=1)
+
     def plot(self):
         plt.clf() #clear figure from memory
         datakey = self.parent.datakey.get()
@@ -766,7 +763,7 @@ class PlotFrame(ttk.Frame):
 
             self.plot_traces(episode, pgs)
             self.plot_histogram(pgs)
-
+        self.toolbar.update()
         self.canvas.draw() # draw plots
 
 class BaselineFrame(tk.Toplevel):
