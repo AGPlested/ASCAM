@@ -32,26 +32,20 @@ class Series(list):
         """
         return self
 
-    def baseline_correct_all(self, intervals = [], method = 'poly',
-                             degree = 1, time_unit = 'ms',
-                             select_intvl = False,
-                             select_piezo = False, active = False,
-                             deviation = 0.05):
+    def baseline_correct_all(self, intervals=[], method='poly', degree=1,
+                             time_unit='ms', select_intvl=False,
+                             select_piezo=False, active=False, deviation=0.05):
         """
         Return a `Series` object in which the episodes stored in `self` are
         baseline corrected with the given parameters
         """
         output = copy.deepcopy(self)
         for episode in output:
-            episode.baseline_correct_episode(
-                                        degree = degree,
-                                        intervals = intervals,
-                                        method = method,
-                                        time_unit = time_unit,
-                                        select_intvl = select_intvl,
-                                        select_piezo = select_piezo,
-                                        active = active,
-                                        deviation = deviation)
+            episode.baseline_correct_episode(degree=degree, intervals=intervals,
+                                             method=method, time_unit=time_unit,
+                                             select_intvl=select_intvl,
+                                             select_piezo=select_piezo,
+                                             active=active, deviation=deviation)
         return output
 
     def idealize_all(self, thresholds):

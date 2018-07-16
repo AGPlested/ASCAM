@@ -2,7 +2,7 @@ import numpy as np
 
 from tools import interval_selection, piezo_selection
 
-def threshold_crossing(signal,amplitudes):
+def threshold_crossing(signal, amplitudes):
     """
     Given a signal and amplitudes assign to each point in the signal its
     closest amplitude value.
@@ -28,8 +28,8 @@ def threshold_crossing(signal,amplitudes):
                 break
     return idealization
 
-def multilevel_threshold(signal,thresholds, maxAmplitude = False,
-                         relativeThresholds = True):
+def multilevel_threshold(signal, thresholds, maxAmplitude=False,
+                         relativeThresholds=True):
     """
     performs threshold crossing for given thresholds. value should be
     given as fraction of the maximum amplitude of the signal
@@ -72,10 +72,10 @@ def multilevel_threshold(signal,thresholds, maxAmplitude = False,
     idealization *= signalmax
     return idealization
 
-def baseline_correction(time, signal, fs, intervals = None, time_unit = 'ms',
-                        degree = 1, method = 'poly',select_intvl = False,
-                        piezo = None, select_piezo = False, active = False,
-                        deviation = 0.05):
+def baseline_correction(time, signal, fs, intervals=None, time_unit='ms',
+                        degree=1, method='poly',select_intvl=False,
+                        piezo=None, select_piezo=False, active= False,
+                        deviation=0.05):
     """
     Perform baseline correction by offsetting the signal with its mean
     in the selected intervals
