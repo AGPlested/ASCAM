@@ -1,6 +1,7 @@
 import numpy as np
-import filtering
-import analysis
+
+from filtering import gauss_filter
+from analysis import baseline_correction
 from tools import piezo_selection, parse_filename
 
 class Episode():
@@ -18,7 +19,7 @@ class Episode():
                                          Piezo device
             command [1D array of floats] - voltage applied to
                                                   cell
-            nthEp [int] - the number of measurements on this cell that
+            n_episode [int] - the number of measurements on this cell that
                           came before this one
             filterType [string] - type of filter used
         """
@@ -41,31 +42,24 @@ class Episode():
                        method='convolution'):
         if sampling_rate is None:
             sampling_rate = self.sampling_rate
-        filterLag = 0 #int(1/(2*frequencyOnSamples))
-        self.trace = filtering.gaussian_filter(signal=self.trace,
-                                               filterFrequency=filterFrequency,
-                                               sampling_rate=sampling_rate,
-                                               method=method)[filterLag:]
+        self.trace = gaussian_filter(signal=self.trace, method=method,
+                                     filterFrequency=filterFrequency,
+                                     sampling_rate=sampling_rate)
         self.filterFrequency = filterFrequency
 
     def baseline_correct_episode(self, intervals, method='poly', degree=1,
                                  time_unit='ms', select_intvl=False,
                                  select_piezo=False, active=False,
                                  deviation=0.05):
-        self.trace = analysis.baseline_correction(time=self.time,
-                                                     signal=self.trace,
-                                                     fs=self.sampling_rate,
-                                                     intervals=intervals,
-                                                     degree=degree,
-                                                     method=method,
-                                                     time_unit=time_unit,
-                                                     select_intvl=(
-                                                           select_intvl),
-                                                     piezo=self.piezo,
-                                                     select_piezo=(
-                                                              select_piezo),
-                                                     active=active,
-                                                     deviation=deviation)
+        self.trace = baseline_correction(time=self.time, signal=self.trace,
+                                         fs=self.sampling_rate,
+                                         intervals=intervals,
+                                         degree=degree, method=method,
+                                         time_unit=time_unit,
+                                         select_intvl=select_intvl,
+                                         piezo=self.piezo,
+                                         select_piezo=select_piezo,
+                                         active=active, deviation=deviation)
         self.baselineCorrected = True
 
     def idealize(self, thresholds):
