@@ -401,57 +401,58 @@ class FilterFrame(tk.Toplevel):
         self.entry_frame = ttk.Frame(self)
         self.entry_frame.grid(row=1, column=0, columnspan=2)
 
-        ttk.Button(self, text="OK", command=self.ok_button).grid(row=5)
-        ttk.Button(self, text="Cancel", command=self.cancel_button).grid(row=5,
-                                                                       column=1)
+        ttk.Button(self, text="OK", command=self.ok_click).grid(row=5)
+        ttk.Button(self, text="Cancel", command=self.destroy\
+                   ).grid(row=5, column=1)
 
     def create_entry_frame(self,*args,**kwargs):
         """
         Create a frame for the entry of the filter parameters
         """
         if self.filter_selection.get()=='Gaussian':
-            ttk.Label(self.entry_frame, text="Frequency [Hz]").grid(row=0,
-                                                                    column=0)
-            ttk.Entry(self.entry_frame,textvariable=self.gaussian_fc, width=7).\
-                                                         grid(row = 0, column=1)
+            ttk.Label(self.entry_frame, text="Frequency [Hz]"\
+                      ).grid(row=0, column=0)
+            ttk.Entry(self.entry_frame, textvariable=self.gaussian_fc, width=7\
+                      ).grid(row=0, column=1)
         elif self.filter_selection.get()=='Chung-Kennedy':
-            ttk.Label(self.entry_frame, text="Number of predictors").grid(row=0,
-                                                                    column=0)
-            ttk.Entry(self.entry_frame,textvariable=self.n_predictors,width=7).\
-                                                         grid(row = 0, column=1)
-            ttk.Label(self.entry_frame, text="Weight exponent").grid(row=1,
-                                                                    column=0)
-            ttk.Entry(self.entry_frame,
-                      textvariable=self.weight_exponent,width=7).grid(row = 1,
-                                                                      column=1)
-            ttk.Label(self.entry_frame, text="Lengths of predictors").grid(
-                                                                row=2, column=0)
-            ttk.Entry(self.entry_frame,
-                      textvariable=self.lengths_predictors,width=7).grid(
-                                                              row = 2, column=1)
+            ttk.Label(self.entry_frame, text="Number of predictors"\
+                      ).grid(row=0, column=0)
+            ttk.Entry(self.entry_frame, textvariable=self.n_predictors, width=7\
+                      ).grid(row=0, column=1)
+            ttk.Label(self.entry_frame, text="Weight exponent"\
+                      ).grid(row=1, column=0)
+            ttk.Entry(self.entry_frame, textvariable=self.weight_exponent,
+                      width=7).grid(row=1, column=1)
+            ttk.Label(self.entry_frame, text="Lengths of predictors"\
+                      ).grid(row=2, column=0)
+            ttk.Entry(self.entry_frame, textvariable=self.lengths_predictors,
+                      width=7).grid(row=2, column=1)
+
     def filter_series(self):
         log.info('going to filter all episodes')
         if self.filter_selection.get()=="Gaussian":
             #convert textvar to float
             cutoffFrequency = float(self.gaussian_fc.get())
             log.info("filter frequency is {}".format(cutoffFrequency))
-            if self.parent.data.call_operation('FILTER_',cutoffFrequency):
-                log.info('called operation succesfully')
+            if self.parent.data.gauss_filter_series(cutoffFrequency):
+                log.info('succesfully called gauss filter')
                 self.parent.datakey.set(self.parent.data.currentDatakey)
-                log.info('updating list and plots')
                 self.parent.update_list()
                 self.parent.draw_plots()
+            # if self.parent.data.call_operation('FILTER_',cutoffFrequency):
+            #     log.info('called operation succesfully')
+            #     self.parent.datakey.set(self.parent.data.currentDatakey)
+            #     log.info('updating list and plots')
+            #     self.parent.update_list()
+            #     self.parent.draw_plots()
         elif self.filter_selection.get()=="Chung-Kennedy":
             #backend for CK filter is not finished
             messagebox.showerror("Sorry","Chung-Kennedy filter has not yet"\
                                  +"been implemented")
             # time.sleep(5)
 
-    def ok_button(self):
+    def ok_click(self):
         if self.filter_selection.get(): self.filter_series()
-        self.destroy()
-
-    def cancel_button(self):
         self.destroy()
 
 class ExportFileDialog(tk.Toplevel):
@@ -811,49 +812,46 @@ class BaselineFrame(tk.Toplevel):
         Creates all widgets that apply to both modes.
         """
 
-        ### general options
+        # general options
 
-        ttk.Label(self,text='method').grid(column=1,row=0)
-        ############## create dropdown menu
-        ttk.Entry(self,width=7,textvariable=self.method).grid(
-                                                            column=2,row = 0)
+        ttk.Label(self, text='method').grid(column=1, row=0)
+        # create dropdown menu
+        ttk.Entry(self, width=7, textvariable=self.method\
+                  ).grid(column=2, row=0)
 
-        ttk.Label(self,text='degree').grid(column=1,row=1)
-        ttk.Entry(self,width=8,textvariable=self.degree).grid(row = 1,
-                                                                column = 2)
+        ttk.Label(self, text='degree').grid(column=1, row=1)
+        ttk.Entry(self,width=8, textvariable=self.degree\
+                  ).grid(row=1, column=2)
 
-
-
-        ### piezo selection options
-        ttk.Label(self, text="Select using piezo voltage").grid(row=2,
-                                                                column=0)
-        ttk.Checkbutton(self, variable=self.piezo_selection). grid(row=2,
-                                                                  column=1)
+        # piezo selection options
+        ttk.Label(self, text="Select using piezo voltage"\
+                  ).grid(row=2, column=0)
+        ttk.Checkbutton(self, variable=self.piezo_selection\
+                        ).grid(row=2, column=1)
 
         ttk.Label(self, text="Active/Inactive").grid(row=3, column=0)
-        ttk.Checkbutton(self, variable=self.piezo_active).grid(row=3,column=1)
+        ttk.Checkbutton(self, variable=self.piezo_active).grid(row=3, column=1)
 
         ttk.Label(self, text="deviation from max/min").grid(row=4, column=0)
-        ttk.Entry(self,textvariable=self.deviation,
-                  width=7).grid(row = 4, column=1)
+        ttk.Entry(self, textvariable=self.deviation, width=7\
+                  ).grid(row=4, column=1)
 
-        ### interval selection options
+        # interval selection options
         ttk.Label(self, text="Use intervals").grid(row=2, column=3)
-        ttk.Checkbutton(self, variable=self.intervalSelection).grid(row=2,
-                                                                    column=4)
+        ttk.Checkbutton(self, variable=self.intervalSelection\
+                        ).grid(row=2, column=4)
         ttk.Label(self, text="Intervals").grid(row=3, column=3)
-        ttk.Entry(self,textvariable=self.interval_entry,width=7).grid(row = 3,
-                                                                     column=4)
+        ttk.Entry(self, textvariable=self.interval_entry, width=7\
+                  ).grid(row=3, column=4)
 
 
-        ### ok and close
-        ttk.Button(self, text="OK", command=self.ok_button).grid(row=5,
-                                                                 columnspan=2)
-        ttk.Button(self, text="Cancel", command=self.destroy).grid(row=5,
-                                                                  column=3,
-                                                                 columnspan=2)
+        # ok and close
+        ttk.Button(self, text="OK", command=self.ok_click\
+                   ).grid(row=5, columnspan=2)
+        ttk.Button(self, text="Cancel", command=self.destroy\
+                   ).grid(row=5, column=3, columnspan=2)
 
-    def ok_button(self):
+    def ok_click(self):
         """
         redraw the histogram (with new settings) and close the dialog
         """
@@ -863,23 +861,28 @@ class BaselineFrame(tk.Toplevel):
         except: pass
 
         deviation = float(self.deviation.get())
-
-        if self.parent.parent.data.call_operation('BC_',
-                                           method = self.method.get(),
-                                           degree = int(self.degree.get()),
-                                           intervals = self.intervals,
-                                           timeUnit = self.time_unit,
-                                           intervalSelection = (
-                                                self.intervalSelection.get()),
-                                           piezo_selection = (
-                                                self.piezo_selection.get()),
-                                           active = self.piezo_active.get(),
-                                           deviation = deviation
-                                           ):
-            log.info('called operation succesfully')
+        # if self.parent.parent.data.call_operation('BC_',
+        #                                    method=self.method.get(),
+        #                                    degree=int(self.degree.get()),
+        #                                    intervals=self.intervals,
+        #                                    timeUnit=self.time_unit,
+        #                                    intervalSelection=(
+        #                                         self.intervalSelection.get()),
+        #                                    piezo_selection=(
+        #                                         self.piezo_selection.get()),
+        #                                    active=self.piezo_active.get(),
+        #                                    deviation=deviation
+        #                                    ):
+        if self.parent.parent.data.baseline_correction(
+                method=self.method.get(), poly_degree=int(self.degree.get()),
+                intval=self.intervals, time_unit=self.time_unit,
+                intval_select=self.intervalSelection.get(),
+                piezo_select=self.piezo_selection.get(),
+                active_piezo=self.piezo_active.get(),
+                piezo_diff=deviation):
+            log.info('succesfully called baseline_correction')
             self.parent.parent.datakey.set(
                                        self.parent.parent.data.currentDatakey)
-            log.info('updating list and plots')
             self.parent.parent.update_list()
             self.parent.parent.draw_plots()
         ## here we should also have that if the operation has been performed

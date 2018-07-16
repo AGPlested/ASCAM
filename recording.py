@@ -9,10 +9,9 @@ from scipy import io
 import logging as log
 
 class Recording(dict):
-    def __init__(self, filename = '',
-                 sampling_rate = 0, filetype = '', headerlength = 0,
-                 dtype = None, timeUnit = 'ms', piezoUnit = 'V',
-                 commandUnit = 'V', currentUnit = 'A'):
+    def __init__(self, filename='', sampling_rate=0, filetype='',
+                 headerlength=0, dtype=None, time_unit='ms', piezoUnit='V',
+                 commandUnit='V', currentUnit='A'):
         log.info("""intializing Recording""")
 
         # parameters for loading the data
@@ -23,7 +22,7 @@ class Recording(dict):
 
         # attributes of the data
         self.sampling_rate = int(float(sampling_rate))
-        self.timeUnit = timeUnit
+        self.time_unit = time_unit
         self.commandUnit = commandUnit
         self.currentUnit = currentUnit
         self.piezoUnit = piezoUnit
@@ -148,7 +147,7 @@ class Recording(dict):
             pickle.dump(self, save_file)
         return True
 
-    def export_matlab(self,filepath,datakey,lists,save_piezo,save_command):
+    def export_matlab(self, filepath, datakey, lists, save_piezo, save_command):
         """Export all the episodes in the givens list(s) from the given series
         (only one) to a matlab file."""
         if not filepath.endswith('.mat'):
@@ -174,6 +173,64 @@ class Recording(dict):
                 if save_command: export_dict['command'+n] = episode.command
         io.savemat(filepath,export_dict)
 
+    def baseline_correction(self, method='poly', poly_degree=1, intval=[],
+                            time_unit='ms', intval_select=False,
+                            piezo_select=True, active_piezo=False,
+                            piezo_diff=0.05):
+
+        # valid = self.check_operation('BC_')
+        if self.currentDatakey=='raw_':
+            #if its the first operation drop the 'raw_'
+            newDatakey = 'BC_'
+        else:
+            #if operations have been done before combine the names
+            newDatakey = self.currentDatakey+'BC_'
+
+        self[newDatakey] = self[self.currentDatakey].baseline_correct_all(
+                            intervals=intval, method=method, degree=poly_degree,
+                            timeUnit=time_unit, intervalSelection=intval_select,
+                            piezoSelection=piezo_select, active=active_piezo,
+                            deviation=piezo_diff)
+        return True
+
+    def gauss_filter_series(self, filter_freq):
+        """
+        Filter the current series using a gaussian filter
+        """
+        if self.currentDatakey == 'raw_':
+            #if its the first operation drop the 'raw-'
+            newDatakey = 'GFILTER'+str(filter_freq)+'_'
+        else:
+            #if operations have been done before combine the names
+            newDatakey = self.currentDatakey+'GFILTER'+str(filter_freq)+'_'
+        self[newDatakey] = self[self.currentDatakey].gauss_filter(filter_freq)
+        return True
+
+    def filter_series_CK(self, *args, **kwargs):
+        """ DOES NOTHING
+        Filter the current series using the Chung-Kennedy filter banks
+        """
+        # if self.currentDatakey == 'raw_':
+        #     #if its the first operation drop the 'raw-'
+        #     newDatakey = 'CKFILTER_'
+        # else:
+        #     #if operations have been done before combine the names
+        #     newDatakey = self.currentDatakey+'CKFILTER_'
+        # self[newDatakey] = self[self.currentDatakey].CK_filter(*args, **kwargs)
+        return True
+
+    def idealize_series(self, thresholds):
+        """
+        DOES NOTHING
+        """
+        # if self.currentDatakey == 'raw_':
+        #     #if its the first operation drop the 'raw-'
+        #     newDatakey = 'TC_'
+        # else:
+        #     #if operations have been done before combine the names
+        #     newDatakey = self.currentDatakey+'TC_'
+        # self[newDatakey] = self[self.currentDatakey].idealize_all(thresholds)
+        return True
 
     def call_operation(self, operation, *args, **kwargs):
         """
