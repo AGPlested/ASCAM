@@ -48,38 +48,24 @@ class Episode():
                                                method=method)[filterLag:]
         self.filterFrequency = filterFrequency
 
-<<<<<<< HEAD
     def baseline_correct_episode(self, intervals, method='poly', degree=1,
-                                 time_unit='ms', intervalSelection=False,
-                                 piezoSelection=False, active=False,
+                                 time_unit='ms', select_intvl=False,
+                                 select_piezo=False, active=False,
                                  deviation=0.05):
-        self.trace = analysis.baseline_correction(
-                    time=self.time, signal=self.trace, fs=self.sampling_rate,
-                    intervals=intervals, degree=degree, method=method,
-                    time_unit=time_unit, intervalSelection=intervalSelection,
-                    piezo=self.piezo, piezoSelection=piezoSelection,
-                    active=active, deviation=deviation)
-
-=======
-    def baseline_correct_episode(self, intervals, method = 'poly', degree = 1,
-                                 timeUnit = 'ms', select_intvl = False,
-                                 select_piezo = False, active = False,
-                                 deviation = 0.05):
-        self.trace = analysis.baseline_correction(time = self.time,
-                                                     signal = self.trace,
-                                                     fs = self.sampling_rate,
-                                                     intervals = intervals,
-                                                     degree = degree,
-                                                     method = method,
-                                                     timeUnit = timeUnit,
-                                                     select_intvl = (
+        self.trace = analysis.baseline_correction(time=self.time,
+                                                     signal=self.trace,
+                                                     fs=self.sampling_rate,
+                                                     intervals=intervals,
+                                                     degree=degree,
+                                                     method=method,
+                                                     time_unit=time_unit,
+                                                     select_intvl=(
                                                            select_intvl),
-                                                     piezo = self.piezo,
-                                                     select_piezo = (
+                                                     piezo=self.piezo,
+                                                     select_piezo=(
                                                               select_piezo),
-                                                     active = active,
-                                                     deviation = deviation)
->>>>>>> master
+                                                     active=active,
+                                                     deviation=deviation)
         self.baselineCorrected = True
 
     def idealize(self, thresholds):

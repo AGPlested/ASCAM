@@ -65,7 +65,7 @@ def histogram(time, piezos, traces, active = True, select_piezo=True,
                 time: {}
                 piezos: {}
                 traces: {}
-                active: {}, piezo_selection:{}, deviation: {}
+                active: {}, select_piezo:{}, deviation: {}
                 n_bins: {}, density:{}, time_unit: {}, sampling_rate: {}
                 intervals: {}
                 and kwars: {}

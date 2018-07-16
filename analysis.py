@@ -27,7 +27,6 @@ def threshold_crossing(signal,amplitudes):
                 break
     return idealization
 
-
 def multilevel_threshold(signal,thresholds, maxAmplitude = False,
                          relativeThresholds = True):
     """
@@ -72,16 +71,9 @@ def multilevel_threshold(signal,thresholds, maxAmplitude = False,
     idealization *= signalmax
     return idealization
 
-
-<<<<<<< HEAD
 def baseline_correction(time, signal, fs, intervals = None, time_unit = 'ms',
-                        degree = 1, method = 'poly',intervalSelection = False,
-                        piezo = None, piezoSelection = False, active = False,
-=======
-def baseline_correction(time, signal, fs, intervals = None, timeUnit = 'ms',
                         degree = 1, method = 'poly',select_intvl = False,
                         piezo = None, select_piezo = False, active = False,
->>>>>>> master
                         deviation = 0.05):
     """
     Perform baseline correction by offsetting the signal with its mean
@@ -93,26 +85,16 @@ def baseline_correction(time, signal, fs, intervals = None, timeUnit = 'ms',
         intervals - interval or list of intervals from which to
                    estimate the baseline (in ms)
         fs - sampling frequency (in Hz)
-<<<<<<< HEAD
         time_unit - units of the time vector, 'ms' or 's'
-=======
-        timeUnit - units of the time vector, 'ms' or 's'
->>>>>>> master
         method - `baseline` can subtract a fitted polynomial of
                  desired degree OR subtract the mean
         degree - if method is 'poly', the degree of the polynomial
     Returns:
         original signal less the fitted baseline
     """
-<<<<<<< HEAD
-    if intervalSelection:
-        t, s = interval_selection(time, signal, intervals, fs, time_unit)
-    elif piezoSelection:
-=======
     if select_intvl:
-        t, s = interval_selection(time, signal, intervals, fs, timeUnit)
+        t, s = interval_selection(time, signal, intervals, fs, time_unit)
     elif select_piezo:
->>>>>>> master
         t, _, s = piezo_selection(time, piezo, signal, active, deviation)
     else:
         t = time

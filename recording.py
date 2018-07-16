@@ -174,8 +174,8 @@ class Recording(dict):
         io.savemat(filepath,export_dict)
 
     def baseline_correction(self, method='poly', poly_degree=1, intval=[],
-                            time_unit='ms', intval_select=False,
-                            piezo_select=True, active_piezo=False,
+                            time_unit='ms', select_intvl=False,
+                            select_piezo=True, active_piezo=False,
                             piezo_diff=0.05):
         log.info("""calling baseline_correction""")
         # valid = self.check_operation('BC_')
@@ -188,8 +188,8 @@ class Recording(dict):
         log.info("""new datakey is {}""".format(newDatakey))
         self[newDatakey] = self[self.currentDatakey].baseline_correct_all(
                             intervals=intval, method=method, degree=poly_degree,
-                            time_unit=time_unit, intervalSelection=intval_select,
-                            piezoSelection=piezo_select, active=active_piezo,
+                            time_unit=time_unit, select_intvl=select_intvl,
+                            select_piezo=select_piezo, active=active_piezo,
                             deviation=piezo_diff)
         self.currentDatakey = newDatakey
         log.debug("""keys of the recording are now {}""".format(self.keys()))

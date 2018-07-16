@@ -66,7 +66,7 @@ def piezo_selection(time, piezo, trace, active=True, deviation=0.05):
         trace [1D array of floats] - The current at selected points.
     """
     maxPiezo = np.max(np.abs(piezo))
-    log.debug("""called `piezo_selection` with parameters:
+    log.debug("""called `select_piezo` with parameters:
               active = {}, deviation = {}, maxPiezo = {}
               time: {}
               piezo: {}

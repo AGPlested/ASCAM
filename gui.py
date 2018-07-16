@@ -817,19 +817,11 @@ class BaselineFrame(tk.Toplevel):
         ttk.Entry(self,width=8, textvariable=self.degree\
                   ).grid(row=1, column=2)
 
-<<<<<<< HEAD
-        # piezo selection options
-        ttk.Label(self, text="Select using piezo voltage"\
-                  ).grid(row=2, column=0)
-        ttk.Checkbutton(self, variable=self.piezo_selection\
-                        ).grid(row=2, column=1)
-=======
         ### piezo selection options
         ttk.Label(self, text="Select using piezo voltage").grid(row=2,
                                                                 column=0)
         ttk.Checkbutton(self, variable=self.select_piezo). grid(row=2,
                                                                   column=1)
->>>>>>> master
 
         ttk.Label(self, text="Active/Inactive").grid(row=3, column=0)
         ttk.Checkbutton(self, variable=self.piezo_active).grid(row=3, column=1)
@@ -840,13 +832,8 @@ class BaselineFrame(tk.Toplevel):
 
         # interval selection options
         ttk.Label(self, text="Use intervals").grid(row=2, column=3)
-<<<<<<< HEAD
-        ttk.Checkbutton(self, variable=self.intervalSelection\
-                        ).grid(row=2, column=4)
-=======
         ttk.Checkbutton(self, variable=self.select_intvl).grid(row=2,
                                                                     column=4)
->>>>>>> master
         ttk.Label(self, text="Intervals").grid(row=3, column=3)
         ttk.Entry(self, textvariable=self.interval_entry, width=7\
                   ).grid(row=3, column=4)
@@ -868,35 +855,15 @@ class BaselineFrame(tk.Toplevel):
         except: pass
 
         deviation = float(self.deviation.get())
-<<<<<<< HEAD
         if self.parent.parent.data.baseline_correction(
                 method=self.method.get(), poly_degree=int(self.degree.get()),
                 intval=self.intervals, time_unit=self.time_unit,
-                intval_select=self.intervalSelection.get(),
-                piezo_select=self.piezo_selection.get(),
+                select_intvl=self.select_intvl.get(),
+                select_piezo=self.select_piezo.get(),
                 active_piezo=self.piezo_active.get(),
                 piezo_diff=deviation):
             log.info('succesfully called baseline_correction')
             self.parent.parent.datakey.set(self.parent.parent.data.currentDatakey)
-=======
-
-        if self.parent.parent.data.call_operation('BC_',
-                                           method = self.method.get(),
-                                           degree = int(self.degree.get()),
-                                           intervals = self.intervals,
-                                           timeUnit = self.time_unit,
-                                           select_intvl = (
-                                                self.select_intvl.get()),
-                                           select_piezo = (
-                                                self.select_piezo.get()),
-                                           active = self.piezo_active.get(),
-                                           deviation = deviation
-                                           ):
-            log.info('called operation succesfully')
-            self.parent.parent.datakey.set(
-                                       self.parent.parent.data.currentDatakey)
-            log.info('updating list and plots')
->>>>>>> master
             self.parent.parent.update_list()
             self.parent.parent.draw_plots()
         self.destroy()
