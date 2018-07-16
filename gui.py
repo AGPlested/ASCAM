@@ -656,7 +656,7 @@ class PlotFrame(ttk.Frame):
         density = bool(self.parent.hist_density.get())
         # time points are selected based on piezo values if the variable
         # 'hist_piezo_interval' is 1
-        piezo_selection = bool(self.parent.hist_piezo_interval.get())
+        select_piezo = bool(self.parent.hist_piezo_interval.get())
         active = bool(self.parent.hist_piezo_active.get())
         deviation = float(self.parent.hist_piezo_deviation.get())
         fs = float(self.parent.sampling_rate.get())
@@ -664,9 +664,9 @@ class PlotFrame(ttk.Frame):
 
         log.debug("""number of bins = {}
             density = {}
-            piezo_selection = {}
+            select_piezo = {}
             active = {}
-            deviation = {}""".format(n_bins,density,piezo_selection,
+            deviation = {}""".format(n_bins,density,select_piezo,
                                      active,deviation))
         # create the plot object so we can delete it later
         ax = self.fig.add_subplot(pgs[:2,2])
@@ -685,7 +685,7 @@ class PlotFrame(ttk.Frame):
             # get the bins and their values or the current episode
             hist_single = plotting.histogram(time, single_piezo, single_trace,
                                              active=active,
-                                             piezo_selection=piezo_selection,
+                                             select_piezo=select_piezo,
                                              deviation=deviation,
                                              n_bins=n_bins,
                                              density=density,
@@ -712,7 +712,7 @@ class PlotFrame(ttk.Frame):
                 # get the bins and their values for all episodes
                 hist_all = plotting.histogram(time, all_piezos, all_traces,
                                               active=active,
-                                              piezo_selection=piezo_selection,
+                                              select_piezo=select_piezo,
                                               deviation=deviation,
                                               n_bins=n_bins,
                                               density=density,
@@ -771,14 +771,14 @@ class BaselineFrame(tk.Toplevel):
         self.title("Baseline correction")
 
         # variables to choose the method
-        self.piezo_selection = tk.IntVar()
-        self.piezo_selection.set(1)
-        self.intervalSelection = tk.IntVar()
-        self.intervalSelection.set(0)
+        self.select_piezo = tk.IntVar()
+        self.select_piezo.set(1)
+        self.select_intvl = tk.IntVar()
+        self.select_intvl.set(0)
 
         ### piezo and interval selection should be mutually exclusive
-        self.piezo_selection.trace("w",self.piezo_NotInterval)
-        self.intervalSelection.trace("w",self.interval_NotPiezo)
+        self.select_piezo.trace("w",self.piezo_NotInterval)
+        self.select_intvl.trace("w",self.interval_NotPiezo)
 
         ### parameters of the baseline procedure
         self.method = tk.StringVar()
@@ -817,11 +817,19 @@ class BaselineFrame(tk.Toplevel):
         ttk.Entry(self,width=8, textvariable=self.degree\
                   ).grid(row=1, column=2)
 
+<<<<<<< HEAD
         # piezo selection options
         ttk.Label(self, text="Select using piezo voltage"\
                   ).grid(row=2, column=0)
         ttk.Checkbutton(self, variable=self.piezo_selection\
                         ).grid(row=2, column=1)
+=======
+        ### piezo selection options
+        ttk.Label(self, text="Select using piezo voltage").grid(row=2,
+                                                                column=0)
+        ttk.Checkbutton(self, variable=self.select_piezo). grid(row=2,
+                                                                  column=1)
+>>>>>>> master
 
         ttk.Label(self, text="Active/Inactive").grid(row=3, column=0)
         ttk.Checkbutton(self, variable=self.piezo_active).grid(row=3, column=1)
@@ -832,8 +840,13 @@ class BaselineFrame(tk.Toplevel):
 
         # interval selection options
         ttk.Label(self, text="Use intervals").grid(row=2, column=3)
+<<<<<<< HEAD
         ttk.Checkbutton(self, variable=self.intervalSelection\
                         ).grid(row=2, column=4)
+=======
+        ttk.Checkbutton(self, variable=self.select_intvl).grid(row=2,
+                                                                    column=4)
+>>>>>>> master
         ttk.Label(self, text="Intervals").grid(row=3, column=3)
         ttk.Entry(self, textvariable=self.interval_entry, width=7\
                   ).grid(row=3, column=4)
@@ -855,6 +868,7 @@ class BaselineFrame(tk.Toplevel):
         except: pass
 
         deviation = float(self.deviation.get())
+<<<<<<< HEAD
         if self.parent.parent.data.baseline_correction(
                 method=self.method.get(), poly_degree=int(self.degree.get()),
                 intval=self.intervals, time_unit=self.time_unit,
@@ -864,6 +878,25 @@ class BaselineFrame(tk.Toplevel):
                 piezo_diff=deviation):
             log.info('succesfully called baseline_correction')
             self.parent.parent.datakey.set(self.parent.parent.data.currentDatakey)
+=======
+
+        if self.parent.parent.data.call_operation('BC_',
+                                           method = self.method.get(),
+                                           degree = int(self.degree.get()),
+                                           intervals = self.intervals,
+                                           timeUnit = self.time_unit,
+                                           select_intvl = (
+                                                self.select_intvl.get()),
+                                           select_piezo = (
+                                                self.select_piezo.get()),
+                                           active = self.piezo_active.get(),
+                                           deviation = deviation
+                                           ):
+            log.info('called operation succesfully')
+            self.parent.parent.datakey.set(
+                                       self.parent.parent.data.currentDatakey)
+            log.info('updating list and plots')
+>>>>>>> master
             self.parent.parent.update_list()
             self.parent.parent.draw_plots()
         self.destroy()
@@ -872,15 +905,15 @@ class BaselineFrame(tk.Toplevel):
         """
         If interval selection is turned on turn off the piezo selection
         """
-        if self.intervalSelection.get() == 1:
-            self.piezo_selection.set(0)
+        if self.select_intvl.get() == 1:
+            self.select_piezo.set(0)
 
     def piezo_NotInterval(self,*args):
         """
         If piezo selection is turned on turn off interval
         """
-        if self.piezo_selection.get() == 1:
-            self.intervalSelection.set(0)
+        if self.select_piezo.get() == 1:
+            self.select_intvl.set(0)
 
 class ListSelection(ttk.Frame):
     def __init__(self, parent):
