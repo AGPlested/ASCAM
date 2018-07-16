@@ -53,8 +53,8 @@ class Episode():
         self.filterFrequency = filterFrequency
 
     def baseline_correct_episode(self, intervals, method = 'poly', degree = 1,
-                                 timeUnit = 'ms', intervalSelection = False,
-                                 piezoSelection = False, active = False,
+                                 timeUnit = 'ms', select_intvl = False,
+                                 select_piezo = False, active = False,
                                  deviation = 0.05):
         self.trace = analysis.baseline_correction(time = self.time,
                                                      signal = self.trace,
@@ -63,11 +63,11 @@ class Episode():
                                                      degree = degree,
                                                      method = method,
                                                      timeUnit = timeUnit,
-                                                     intervalSelection = (
-                                                           intervalSelection),
+                                                     select_intvl = (
+                                                           select_intvl),
                                                      piezo = self.piezo,
-                                                     piezoSelection = (
-                                                              piezoSelection),
+                                                     select_piezo = (
+                                                              select_piezo),
                                                      active = active,
                                                      deviation = deviation)
         self.baselineCorrected = True

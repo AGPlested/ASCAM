@@ -15,7 +15,7 @@ class Series(list):
         The `reconstruct` input is a placeholder
         """
         list.__init__(self,data)
-    # 
+    #
     # def get_min(self,name):
     #     return np.min([np.min(episode[name]) for episode in self])
     #
@@ -34,8 +34,8 @@ class Series(list):
 
     def baseline_correct_all(self, intervals = [], method = 'poly',
                              degree = 1, timeUnit = 'ms',
-                             intervalSelection = False,
-                             piezoSelection = False, active = False,
+                             select_intvl = False,
+                             select_piezo = False, active = False,
                              deviation = 0.05):
         """
         Return a `Series` object in which the episodes stored in `self` are
@@ -48,8 +48,8 @@ class Series(list):
                                         intervals = intervals,
                                         method = method,
                                         timeUnit = timeUnit,
-                                        intervalSelection = intervalSelection,
-                                        piezoSelection = piezoSelection,
+                                        select_intvl = select_intvl,
+                                        select_piezo = select_piezo,
                                         active = active,
                                         deviation = deviation)
         return output

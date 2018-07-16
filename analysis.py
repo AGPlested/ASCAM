@@ -3,8 +3,8 @@ from tools import interval_selection, piezo_selection
 
 def threshold_crossing(signal,amplitudes):
     """
-    Given a signal and amplitudes assign to each point in the signal its 
-    closest amplitude value. 
+    Given a signal and amplitudes assign to each point in the signal its
+    closest amplitude value.
     Amplitude of 0 is assumed to be present.
     """
     if type(amplitudes) in [list, tuple] :
@@ -26,26 +26,26 @@ def threshold_crossing(signal,amplitudes):
                 idealization[i]=amplitudes[n]
                 break
     return idealization
-    
+
 
 def multilevel_threshold(signal,thresholds, maxAmplitude = False,
                          relativeThresholds = True):
     """
-    performs threshold crossing for given thresholds. value should be 
+    performs threshold crossing for given thresholds. value should be
     given as fraction of the maximum amplitude of the signal
     Parameters:
         signal [1D array of floats] - the signal to be idealized
-        thetas [1D array of floats] - the thresholds seperating the 
+        thetas [1D array of floats] - the thresholds seperating the
                                       different levels
-        maxAmplitude [float] - the number relative to which the 
+        maxAmplitude [float] - the number relative to which the
                                threshold values are given
         relativeThresholds [bool] - True is thresholds are relative
                                     to maxAmplitude or not, if false
                                     use absolute values for thresholds
     Returns:
-        idealization [1D array of floats] - an array of the same 
-                                            length as `signal` 
-                                            containing the 
+        idealization [1D array of floats] - an array of the same
+                                            length as `signal`
+                                            containing the
                                             idealization of the trace
         signalmax [float] - the maximum amplitude of the signal
     """
@@ -63,7 +63,7 @@ def multilevel_threshold(signal,thresholds, maxAmplitude = False,
         thresholds = np.sort(thresholds)
     N = len(thresholds)
     idealization = np.zeros(len(signal))
-    
+
     for i, point in enumerate(signal):
         for n, threshold in enumerate(thresholds[:-1]):
             if np.abs(threshold)<np.abs(point)<=np.abs(thresholds[n+1]):
@@ -73,9 +73,9 @@ def multilevel_threshold(signal,thresholds, maxAmplitude = False,
     return idealization
 
 
-def baseline_correction(time, signal, fs, intervals = None, timeUnit = 'ms', 
-                        degree = 1, method = 'poly',intervalSelection = False,
-                        piezo = None, piezoSelection = False, active = False,
+def baseline_correction(time, signal, fs, intervals = None, timeUnit = 'ms',
+                        degree = 1, method = 'poly',select_intvl = False,
+                        piezo = None, select_piezo = False, active = False,
                         deviation = 0.05):
     """
     Perform baseline correction by offsetting the signal with its mean
@@ -84,19 +84,19 @@ def baseline_correction(time, signal, fs, intervals = None, timeUnit = 'ms',
         time - 1D array containing times of the measurements in signal
                units of `timeUnit`
         signal - time series of measurements
-        intervals - interval or list of intervals from which to 
+        intervals - interval or list of intervals from which to
                    estimate the baseline (in ms)
         fs - sampling frequency (in Hz)
         timeUnit - units of the time vector, 'ms' or 's'
-        method - `baseline` can subtract a fitted polynomial of 
+        method - `baseline` can subtract a fitted polynomial of
                  desired degree OR subtract the mean
         degree - if method is 'poly', the degree of the polynomial
     Returns:
-        original signal less the fitted baseline     
+        original signal less the fitted baseline
     """
-    if intervalSelection:
+    if select_intvl:
         t, s = interval_selection(time, signal, intervals, fs, timeUnit)
-    elif piezoSelection:
+    elif select_piezo:
         t, _, s = piezo_selection(time, piezo, signal, active, deviation)
     else:
         t = time
