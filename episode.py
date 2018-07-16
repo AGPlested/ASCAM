@@ -1,6 +1,6 @@
 import numpy as np
 
-from filtering import gauss_filter
+from filtering import gaussian_filter
 from analysis import baseline_correction
 from tools import piezo_selection, parse_filename
 

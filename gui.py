@@ -377,6 +377,7 @@ class FilterFrame(tk.Toplevel):
         #filterframe variables
         self.filter_selection = tk.StringVar()
         self.filter_selection.trace("w", self.create_entry_frame)
+        self.filter_selection.set('Gaussian')
         #paramters for gaussian filter
         self.gaussian_fc = tk.StringVar()
         self.gaussian_fc.set('1000')
@@ -386,6 +387,7 @@ class FilterFrame(tk.Toplevel):
         self.lengths_predictors = tk.StringVar()
 
         self.create_widgets()
+        self.create_entry_frame()
 
     def create_widgets(self):
         """

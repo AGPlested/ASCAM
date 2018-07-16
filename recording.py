@@ -207,7 +207,7 @@ class Recording(dict):
         else:
             #if operations have been done before combine the names
             newDatakey = self.currentDatakey+'GFILTER'+str(filter_freq)+'_'
-        self[newDatakey] = self[self.currentDatakey].gauss_filter(filter_freq)
+        self[newDatakey] = self[self.currentDatakey].gaussian_filter(filter_freq)
         self.currentDatakey = newDatakey
         return True
 

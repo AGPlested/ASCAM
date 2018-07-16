@@ -17,7 +17,7 @@ class Series(list):
         """
         list.__init__(self,data)
 
-    def gauss_filter(self, filterFrequency=1e3):
+    def gaussian_filter(self, filterFrequency=1e3):
         """
         Return a Series object in which all episodes are the filtered version
         of episodes in `self`
