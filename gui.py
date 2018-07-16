@@ -439,12 +439,6 @@ class FilterFrame(tk.Toplevel):
                 self.parent.datakey.set(self.parent.data.currentDatakey)
                 self.parent.update_list()
                 self.parent.draw_plots()
-            # if self.parent.data.call_operation('FILTER_',cutoffFrequency):
-            #     log.info('called operation succesfully')
-            #     self.parent.datakey.set(self.parent.data.currentDatakey)
-            #     log.info('updating list and plots')
-            #     self.parent.update_list()
-            #     self.parent.draw_plots()
         elif self.filter_selection.get()=="Chung-Kennedy":
             #backend for CK filter is not finished
             messagebox.showerror("Sorry","Chung-Kennedy filter has not yet"\
@@ -649,7 +643,7 @@ class PlotFrame(ttk.Frame):
         for plot in self.subplots[:-1]:
             plot.set_xticklabels([]) #turn off numbering on upper plots
         # label only the last axis
-        self.subplots[-1].set_xlabel("Time ["+self.parent.data.timeUnit+"]")
+        self.subplots[-1].set_xlabel("Time ["+self.parent.data.time_unit+"]")
 
     def plot_histogram(self,pgs,**kwargs):
         """
@@ -861,18 +855,6 @@ class BaselineFrame(tk.Toplevel):
         except: pass
 
         deviation = float(self.deviation.get())
-        # if self.parent.parent.data.call_operation('BC_',
-        #                                    method=self.method.get(),
-        #                                    degree=int(self.degree.get()),
-        #                                    intervals=self.intervals,
-        #                                    timeUnit=self.time_unit,
-        #                                    intervalSelection=(
-        #                                         self.intervalSelection.get()),
-        #                                    piezo_selection=(
-        #                                         self.piezo_selection.get()),
-        #                                    active=self.piezo_active.get(),
-        #                                    deviation=deviation
-        #                                    ):
         if self.parent.parent.data.baseline_correction(
                 method=self.method.get(), poly_degree=int(self.degree.get()),
                 intval=self.intervals, time_unit=self.time_unit,
@@ -881,12 +863,9 @@ class BaselineFrame(tk.Toplevel):
                 active_piezo=self.piezo_active.get(),
                 piezo_diff=deviation):
             log.info('succesfully called baseline_correction')
-            self.parent.parent.datakey.set(
-                                       self.parent.parent.data.currentDatakey)
+            self.parent.parent.datakey.set(self.parent.parent.data.currentDatakey)
             self.parent.parent.update_list()
             self.parent.parent.draw_plots()
-        ## here we should also have that if the operation has been performed
-        ## the selection switches to that operation
         self.destroy()
 
     def interval_NotPiezo(self,*args):

@@ -177,7 +177,7 @@ class Recording(dict):
                             time_unit='ms', intval_select=False,
                             piezo_select=True, active_piezo=False,
                             piezo_diff=0.05):
-
+        log.info("""calling baseline_correction""")
         # valid = self.check_operation('BC_')
         if self.currentDatakey=='raw_':
             #if its the first operation drop the 'raw_'
@@ -185,12 +185,14 @@ class Recording(dict):
         else:
             #if operations have been done before combine the names
             newDatakey = self.currentDatakey+'BC_'
-
+        log.info("""new datakey is {}""".format(newDatakey))
         self[newDatakey] = self[self.currentDatakey].baseline_correct_all(
                             intervals=intval, method=method, degree=poly_degree,
-                            timeUnit=time_unit, intervalSelection=intval_select,
+                            time_unit=time_unit, intervalSelection=intval_select,
                             piezoSelection=piezo_select, active=active_piezo,
                             deviation=piezo_diff)
+        self.currentDatakey = newDatakey
+        log.debug("""keys of the recording are now {}""".format(self.keys()))
         return True
 
     def gauss_filter_series(self, filter_freq):
@@ -204,6 +206,7 @@ class Recording(dict):
             #if operations have been done before combine the names
             newDatakey = self.currentDatakey+'GFILTER'+str(filter_freq)+'_'
         self[newDatakey] = self[self.currentDatakey].gauss_filter(filter_freq)
+        self.currentDatakey = newDatakey
         return True
 
     def filter_series_CK(self, *args, **kwargs):
@@ -217,6 +220,7 @@ class Recording(dict):
         #     #if operations have been done before combine the names
         #     newDatakey = self.currentDatakey+'CKFILTER_'
         # self[newDatakey] = self[self.currentDatakey].CK_filter(*args, **kwargs)
+        # self.currentDatakey = newDatakey
         return True
 
     def idealize_series(self, thresholds):
@@ -230,52 +234,5 @@ class Recording(dict):
         #     #if operations have been done before combine the names
         #     newDatakey = self.currentDatakey+'TC_'
         # self[newDatakey] = self[self.currentDatakey].idealize_all(thresholds)
+        # self.currentDatakey = newDatakey
         return True
-
-    def call_operation(self, operation, *args, **kwargs):
-        """
-        Calls an operation to be performed on the data.
-        Valid operations:
-        'BC_' - baseline correction
-        'FILTER_' - filter
-        'TC_' - threshold crossing
-
-        returns TRUE if the operation was called FALSE if not
-        """
-        valid = self.check_operation(operation)
-        if valid:
-            # create new datakey
-            if self.currentDatakey == 'raw_':
-                #if its the first operation drop the 'raw-'
-                newDatakey = operation+str(*args)+'_'
-            else:
-                #if operations have been done before combine the names
-                newDatakey = self.currentDatakey+operation+str(*args)+'_'
-
-            if operation == 'FILTER_':
-                self[newDatakey] = self[self.currentDatakey].filter_all(*args)
-            elif operation == 'BC_':
-                self[newDatakey] = (
-                        self[self.currentDatakey].baseline_correct_all(*args,
-                                                                    **kwargs))
-            elif operation == 'TC_':
-                self[newDatakey]=self[self.currentDatakey].idealize_all(*args)
-            else:
-                print("Uknown operation!")
-            self.currentDatakey = newDatakey
-        return valid
-
-    def check_operation(self, operation):
-        """
-        Check if the requested operatioin is valid, i.e. if it has not already
-        been applied to the current series.
-        The check is to see if the series has been filter or baselined. It
-        does not compare the filter frequency so filtering twice at different
-        frequencies is currently forbidden.
-        """
-        if operation in self.currentDatakey:
-            print(operation+" has already been performed on this series.")
-            print('Current series is '+self.currentDatakey)
-            return False
-        else:
-            return True

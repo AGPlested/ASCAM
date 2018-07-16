@@ -33,7 +33,7 @@ class Series(list):
         return self
 
     def baseline_correct_all(self, intervals=[], method='poly', degree=1,
-                             timeUnit='ms', intervalSelection=False,
+                             time_unit='ms', intervalSelection=False,
                              piezoSelection=False, active=False,
                              deviation=0.05):
         """
@@ -43,7 +43,7 @@ class Series(list):
         output = copy.deepcopy(self)
         for episode in output:
             episode.baseline_correct_episode(degree=degree, intervals=intervals,
-                                             method=method, timeUnit=timeUnit,
+                                             method=method, time_unit=time_unit,
                                              intervalSelection=intervalSelection,
                                              piezoSelection=piezoSelection,
                                              active=active, deviation=deviation)
