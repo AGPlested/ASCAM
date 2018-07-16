@@ -1,12 +1,14 @@
+import os
+import logging as log
+import pickle
+
+from scipy import io
+
 import readdata
 import savedata
-import os
 from tools import parse_filename
 from episode import Episode
 from series import Series
-import pickle
-from scipy import io
-import logging as log
 
 class Recording(dict):
     def __init__(self, filename='', sampling_rate=0, filetype='',

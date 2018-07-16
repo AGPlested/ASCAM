@@ -1,5 +1,6 @@
-import numpy as np
 import logging as log
+
+import numpy as np
 
 def parse_filename(filename):
     """
