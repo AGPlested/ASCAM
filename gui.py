@@ -9,16 +9,15 @@ from tkinter import ttk
 from tkinter import messagebox
 from tkinter.filedialog import askopenfilename, asksaveasfilename, askdirectory
 import matplotlib
+matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from matplotlib.backends.backend_tkagg import NavigationToolbar2TkAgg
+from matplotlib.backends.backend_tkagg import NavigationToolbar2Tk
 from matplotlib import gridspec as gs
 
 from tools import stringList_parser, parse_filename
 import plotting
 from recording import Recording
-
-matplotlib.use('TkAgg')
 
 
 class GUI(ttk.Frame):
@@ -68,6 +67,7 @@ class GUI(ttk.Frame):
         self.hist_number_bins.set(50)
         self.hist_density = tk.IntVar()
         self.hist_density.set(0)
+        self.hist_density.trace("w", self.draw_plots)
 
         self.hist_piezo_active = tk.IntVar()
         self.hist_piezo_active.set(1)
@@ -79,20 +79,22 @@ class GUI(ttk.Frame):
         self.hist_intervals = []
         self.hist_single_ep = tk.IntVar()
         self.hist_single_ep.set(1)
-        self.hist_single_ep.trace("w",self.draw_histogram)
+        self.hist_single_ep.trace("w", self.draw_plots)
         # radio button variable to decide how to select points in histogram
         self.hist_piezo_interval = tk.IntVar()
         self.hist_piezo_interval.set(1)
 
-        ### parameters for the plots
+        # parameters for the plots
         self.show_piezo = tk.IntVar()
-        self.show_piezo.set(0)
-        self.show_piezo.trace("w", self.plot_episode)
+        self.show_piezo.set(1)
+        self.show_piezo.trace("w", self.draw_plots)
         self.show_command = tk.IntVar()
-        self.show_command.set(0)
-        self.show_command.trace("w", self.plot_episode)
+        self.show_command.set(1)
+        self.show_command.trace("w", self.draw_plots)
+        self.plot_t_zero = tk.StringVar()
+        self.plot_t_zero.set("0.00")
 
-        ### parameters of the data
+        # parameters of the data
         self.sampling_rate = tk.StringVar()
         self.sampling_rate.set("0")
 
@@ -107,7 +109,7 @@ class GUI(ttk.Frame):
         self.create_widgets()
         self.configure_grid()
 
-        self.bind("<Configure>", self.update_plots)
+        self.bind("<Configure>", self.draw_plots)
         # this line calls `draw` when it is run
 
     def load_recording(self):
@@ -133,8 +135,7 @@ class GUI(ttk.Frame):
         """
         log.debug("""updating all""")
         self.update_list()
-        self.plotOptions.update()
-        self.update_plots()
+        self.draw_plots()
         self.displayFrame.update()
 
     def create_widgets(self):
@@ -142,12 +143,9 @@ class GUI(ttk.Frame):
         Create the contents of the main window.
         """
         log.info("""creating widgets""")
-        self.histogramFrame = HistogramFrame(self)
         self.plots = PlotFrame(self)
         self.episodeList = EpisodeList(self)
         self.listSelection = ListSelection(self)
-        self.histogramOptions = HistogramConfiguration(self)
-        self.plotOptions = PlotOptions(self)
         self.displayFrame = Displayframe(self)
         self.menuBar = MenuBar(self)
 
@@ -165,36 +163,24 @@ class GUI(ttk.Frame):
         self.grid_columnconfigure(0, weight=1)
 
         # First row
-        self.plotOptions.grid(row=0, column=1,padx=5,pady=5,sticky=tk.N+tk.W)
-
-        self.displayFrame.grid(row=0, column=2, padx=5, sticky=tk.S)
-
         self.listSelection.grid(row=0, column=3, rowspan=2, padx=5, pady=5,
                                 sticky=tk.N)
-
-        self.histogramOptions.grid(row=0, column=4, columnspan=3)
-
 
         # Second row
         self.plots.grid(row=1, column=0, rowspan=3, columnspan=3, padx=5,
                         pady=5, sticky=tk.W)
         self.plots.grid_rowconfigure(0, weight=1)
         self.plots.grid_columnconfigure(0, weight=1)
-        #
-        self.histogramFrame.grid(row=1, column=4, rowspan=3, columnspan=3,
-                                 sticky=tk.E)
-        self.histogramFrame.grid_rowconfigure(0, weight=1)
-        self.histogramFrame.grid_columnconfigure(0, weight=1)
 
         # Third row
         self.episodeList.grid(row=2, column=3, rowspan=2)
         for i in range(2):
             self.episodeList.grid_columnconfigure(i, weight=1)
             self.episodeList.grid_rowconfigure(i, weight=1)
-        # Fourth row
 
+        self.displayFrame.grid(row=3, column=2, padx=5, sticky=tk.S)
 
-    def plot_episode(self, *args):
+    def draw_plots(self, *args):
         """
         Plot the current episode
         """
@@ -205,25 +191,6 @@ class GUI(ttk.Frame):
         else:
             log.info('Cannot plot, `self.data` is `False`')
             pass
-
-    def draw_histogram(self, *args):
-        """
-        draw a histogram of the current episode
-        """
-        if self.data:
-            log.info('Calling histogram, `self.data` is `True`.')
-            self.histogramFrame.draw_histogram()
-        else:
-            log.info('Cannot draw histogram, `self.data` is `False`')
-            pass
-
-    def update_plots(self,*args,**kwargs):
-        """
-        update the plot and histogram of the current episode
-        """
-        log.info("updating plots")
-        self.plot_episode()
-        self.draw_histogram()
         self.displayFrame.update()
 
     def update_list(self):
@@ -231,8 +198,8 @@ class GUI(ttk.Frame):
         # self.episodeList.create_list()
         log.info("created new list")
         self.episodeList.create_dropdownmenu()
-        ### for now `update_list` will update both the list and the dropdown
-        ### menu, in case they need to be uncoupled use the two functions below
+        # for now `update_list` will update both the list and the dropdown
+        # menu, in case they need to be uncoupled use the two functions below
 
     def get_episodes_in_lists(self):
         """
@@ -273,14 +240,8 @@ class Displayframe(ttk.Frame):
         Update all contents of the Display frame
         """
         log.info("updating DisplayFrame")
-        self.show_filename()
+        # self.show_filename()
         self.show_command_stats()
-
-    def show_filename(self):
-        if self.parent.data_loaded:
-            filename = self.parent.filename.get()
-            log.info('will show filename as "{}"'.format(filename))
-            ttk.Label(self,text = filename).grid(row=0, column=0, pady=10)
 
     def show_command_stats(self):
         if self.parent.data_loaded:
@@ -310,9 +271,13 @@ class MenuBar(tk.Menu):
         # menu
         self.file_menu = tk.Menu(self, tearoff=0)
         self.analysis_menu = tk.Menu(self, tearoff=0)
+        self.plot_menu = tk.Menu(self, tearoff=0)
+        self.histogram_menu = tk.Menu(self, tearoff=0)
 
         self.create_file_cascade()
         self.create_analysis_cascade()
+        self.create_plot_cascade()
+        self.create_histogram_cascade()
 
         # the code below is needed to make the menuBar responsive on Mac OS
         # apple uses window system aqua
@@ -323,6 +288,28 @@ class MenuBar(tk.Menu):
             appmenu.add_command(label='About My Application')
             appmenu.add_separator()
             self.parent.master['menu'] = self
+
+    def create_plot_cascade(self):
+        self.add_cascade(label='Plot', menu=self.plot_menu)
+        self.plot_menu.add_command(label="Set t_zero",
+                                   command=lambda: ZeroTFrame(self.parent))
+        self.plot_menu.add_separator()
+        self.plot_menu.add_checkbutton(label="Show piezo voltage",
+                                       variable=self.parent.show_piezo)
+        self.plot_menu.add_checkbutton(label="Show command voltage",
+                                       variable=self.parent.show_command)
+
+
+    def create_histogram_cascade(self):
+        self.add_cascade(label='Histogram', menu=self.histogram_menu)
+        self.histogram_menu.add_checkbutton(label="Show single episode",
+                                            variable=self.parent.hist_single_ep)
+        self.histogram_menu.add_checkbutton(label="Density",
+                                            variable=self.parent.hist_density)
+        self.histogram_menu.add_separator()
+        self.histogram_menu.add_command(label="Configuration",
+                                        command=lambda:\
+                                        HistogramConfiguration(self.parent))
 
     def create_file_cascade(self):
         """
@@ -337,13 +324,12 @@ class MenuBar(tk.Menu):
         self.file_menu.add_command(label="Quit",command=self.parent.master.quit)
 
     def create_analysis_cascade(self):
-        self.add_cascade(label='Analysis',menu=self.analysis_menu)
+        self.add_cascade(label='Analysis', menu=self.analysis_menu)
         self.analysis_menu.add_command(label="Baseline",
                                        command=lambda: BaselineFrame(self))
         self.analysis_menu.add_command(label="Filter",
                                        command=lambda: FilterFrame(self.parent))
-        self.analysis_menu.add_command(label="Idealize")
-        self.analysis_menu.add_command(label="Set t_zero")
+        # self.analysis_menu.add_command(label="Idealize")
 
     def open_file(self):
         # open the dialog for loading a single file
@@ -366,6 +352,22 @@ class MenuBar(tk.Menu):
     def export(self):
         ExportFileDialog(self.parent)
 
+class ZeroTFrame(tk.Toplevel):
+    """docstring for ZeroTFrame."""
+    def __init__(self, parent):
+        tk.Toplevel.__init__(self, parent)
+        self.parent = parent #parent is main window
+        self.title("Set time offset")
+        entry = ttk.Entry(self, textvariable=self.parent.plot_t_zero, width=7)
+        entry.grid(row=0, column=0, columnspan=3)
+        entry.focus()
+        ttk.Button(self, text="OK", command=self.ok_click\
+                   ).grid(row=1, column=0, columnspan=3)
+
+    def ok_click(self):
+        self.parent.draw_plots()
+        self.destroy()
+
 class FilterFrame(tk.Toplevel):
     """docstring for FilterFrame."""
     def __init__(self, parent):
@@ -374,7 +376,8 @@ class FilterFrame(tk.Toplevel):
         self.title("Filter")
         #filterframe variables
         self.filter_selection = tk.StringVar()
-        self.filter_selection.trace("w",self.create_entry_frame)
+        self.filter_selection.trace("w", self.create_entry_frame)
+        self.filter_selection.set('Gaussian')
         #paramters for gaussian filter
         self.gaussian_fc = tk.StringVar()
         self.gaussian_fc.set('1000')
@@ -384,6 +387,7 @@ class FilterFrame(tk.Toplevel):
         self.lengths_predictors = tk.StringVar()
 
         self.create_widgets()
+        self.create_entry_frame()
 
     def create_widgets(self):
         """
@@ -394,61 +398,57 @@ class FilterFrame(tk.Toplevel):
         log.info("""creating dropdown menu for filter selection""")
         listOptions = ['Gaussian', 'Chung-Kennedy']
         self.menu = tk.OptionMenu(self, self.filter_selection, *listOptions)
-        self.menu.grid(row=0,column=0,columnspan=2,sticky=tk.N)
+        self.menu.grid(row=0, column=0, columnspan=2, sticky=tk.N)
 
         self.entry_frame = ttk.Frame(self)
-        self.entry_frame.grid(row=1,column=0,columnspan=2)
+        self.entry_frame.grid(row=1, column=0, columnspan=2)
 
-        ttk.Button(self, text="OK", command=self.ok_button).grid(row=5)
-        ttk.Button(self, text="Cancel", command=self.cancel_button).grid(row=5,
-                                                                       column=1)
+        ttk.Button(self, text="OK", command=self.ok_click).grid(row=5)
+        ttk.Button(self, text="Cancel", command=self.destroy\
+                   ).grid(row=5, column=1)
 
     def create_entry_frame(self,*args,**kwargs):
         """
         Create a frame for the entry of the filter parameters
         """
         if self.filter_selection.get()=='Gaussian':
-            ttk.Label(self.entry_frame, text="Frequency [Hz]").grid(row=0,
-                                                                    column=0)
-            ttk.Entry(self.entry_frame,textvariable=self.gaussian_fc, width=7).\
-                                                         grid(row = 0, column=1)
+            ttk.Label(self.entry_frame, text="Frequency [Hz]"\
+                      ).grid(row=0, column=0)
+            ttk.Entry(self.entry_frame, textvariable=self.gaussian_fc, width=7\
+                      ).grid(row=0, column=1)
         elif self.filter_selection.get()=='Chung-Kennedy':
-            ttk.Label(self.entry_frame, text="Number of predictors").grid(row=0,
-                                                                    column=0)
-            ttk.Entry(self.entry_frame,textvariable=self.n_predictors,width=7).\
-                                                         grid(row = 0, column=1)
-            ttk.Label(self.entry_frame, text="Weight exponent").grid(row=1,
-                                                                    column=0)
-            ttk.Entry(self.entry_frame,
-                      textvariable=self.weight_exponent,width=7).grid(row = 1,
-                                                                      column=1)
-            ttk.Label(self.entry_frame, text="Lengths of predictors").grid(
-                                                                row=2, column=0)
-            ttk.Entry(self.entry_frame,
-                      textvariable=self.lengths_predictors,width=7).grid(
-                                                              row = 2, column=1)
+            ttk.Label(self.entry_frame, text="Number of predictors"\
+                      ).grid(row=0, column=0)
+            ttk.Entry(self.entry_frame, textvariable=self.n_predictors, width=7\
+                      ).grid(row=0, column=1)
+            ttk.Label(self.entry_frame, text="Weight exponent"\
+                      ).grid(row=1, column=0)
+            ttk.Entry(self.entry_frame, textvariable=self.weight_exponent,
+                      width=7).grid(row=1, column=1)
+            ttk.Label(self.entry_frame, text="Lengths of predictors"\
+                      ).grid(row=2, column=0)
+            ttk.Entry(self.entry_frame, textvariable=self.lengths_predictors,
+                      width=7).grid(row=2, column=1)
+
     def filter_series(self):
         log.info('going to filter all episodes')
         if self.filter_selection.get()=="Gaussian":
             #convert textvar to float
             cutoffFrequency = float(self.gaussian_fc.get())
             log.info("filter frequency is {}".format(cutoffFrequency))
-            if self.parent.data.call_operation('FILTER_',cutoffFrequency):
-                log.info('called operation succesfully')
+            if self.parent.data.gauss_filter_series(cutoffFrequency):
+                log.info('succesfully called gauss filter')
                 self.parent.datakey.set(self.parent.data.currentDatakey)
-                log.info('updating list and plots')
                 self.parent.update_list()
-                self.parent.update_plots()
+                self.parent.draw_plots()
         elif self.filter_selection.get()=="Chung-Kennedy":
             #backend for CK filter is not finished
-            messagebox.showerror("Sorry","Chung-Kennedy filter has not yet been implemented")
+            messagebox.showerror("Sorry","Chung-Kennedy filter has not yet"\
+                                 +"been implemented")
             # time.sleep(5)
 
-    def ok_button(self):
+    def ok_click(self):
         if self.filter_selection.get(): self.filter_series()
-        self.destroy()
-
-    def cancel_button(self):
         self.destroy()
 
 class ExportFileDialog(tk.Toplevel):
@@ -504,11 +504,11 @@ class ExportFileDialog(tk.Toplevel):
             if var.get(): lists_to_save.append(listname)
         filepath = asksaveasfilename()
         if filepath is not None:
-            self.parent.data.export_matlab(filepath = filepath,
-                                           datakey = self.datakey.get(),
-                                           lists = lists_to_save,
-                                           save_piezo = self.save_piezo.get(),
-                                           save_command = self.save_command.get())
+            self.parent.data.export_matlab(filepath=filepath,
+                                           datakey=self.datakey.get(),
+                                           lists=lists_to_save,
+                                           save_piezo=self.save_piezo.get(),
+                                           save_command=self.save_command.get())
         else:
             log.info("User pressed 'Cancel'")
         self.destroy()
@@ -516,17 +516,17 @@ class ExportFileDialog(tk.Toplevel):
     def cancel(self):
         self.destroy()
 
-class HistogramConfiguration(ttk.Frame):
+class HistogramConfiguration(tk.Toplevel):
     """
     A frame in which the setting of the histogram can be configured
     """
     def __init__(self, parent):
-        ttk.Frame.__init__(self, parent)
-        self.parent = parent
+        tk.Toplevel.__init__(self, parent)
+        self.parent = parent #parent is main frame
         self.create_widgets()
 
     def create_widgets(self):
-        ### general options
+        # general options
         ttk.Label(self, text="Number of bins").grid(row=0, column=0)
         ttk.Entry(self,textvariable=self.parent.hist_number_bins, width=7).\
                                                        grid(row = 0, column=1)
@@ -551,7 +551,7 @@ class HistogramConfiguration(ttk.Frame):
         ttk.Entry(self,textvariable=self.parent.hist_piezo_deviation,
                   width=7).grid(row = 3, column=1)
 
-        ### interval selection options
+        # interval selection options
         ttk.Label(self, text="Use intervals").grid(row=1, column=3)
         ttk.Radiobutton(self,variable=self.parent.hist_piezo_interval,
         value=0).grid(row=1,column=4)
@@ -560,58 +560,105 @@ class HistogramConfiguration(ttk.Frame):
         ttk.Entry(self,textvariable=self.parent.hist_interval_entry,
                   width=7).grid(row = 2, column=4)
 
-        ### draw button
-        ttk.Button(self, text="Draw", command=self.draw_histogram).grid(row=5,
+        # draw button
+        ttk.Button(self, text="OK", command=self.ok_click).grid(row=5,
                                                                  columnspan=2)
+        # cancel button
+        ttk.Button(self, text="Cancel", command=self.destroy).grid(row=5,
+                                                                   column=3,
+                                                                   columnspan=2)
 
-        ### checkbox for single histogram
-        ttk.Label(self, text="Show single episode").grid(row=5, column=3)
-        ttk.Checkbutton(self, variable=self.parent.hist_single_ep).\
-                                                                grid(row=5,
-                                                                     column=4)
-
-    def draw_histogram(self):
+    def ok_click(self):
         """
         redraw the histogram (with new settings)
         """
         try:
-            self.parent.hist_intervals=stringList_parser(
-                                        self.parent.hist_interval_entry.get())
+            self.parent.hist_intervals=\
+                stringList_parser(self.parent.hist_interval_entry.get())
         except: pass
         try:
-            self.parent.draw_histogram()
+            self.parent.draw_plots()
         except: pass
+        self.destroy()
 
-class HistogramFrame(ttk.Frame):
-    """
-    Frame for the histograms.
-    """
+class PlotFrame(ttk.Frame):
     def __init__(self, parent):
-        log.info("initializing HistogramFrame")
-
         ttk.Frame.__init__(self, parent)
         self.parent = parent
-        self.fig = plt.figure(1,figsize=(6,5))
-        canvasHist = FigureCanvasTkAgg(self.fig, self)
-        # canvasHist.show()
-        canvasHist.get_tk_widget().grid(row=0,column=0)
-        self.canvas = canvasHist
+        self.fig = plt.figure(figsize=(10,5))
 
-        log.info("initialized HistogramFrame")
+        canvasPlot = FigureCanvasTkAgg(self.fig, master=self)
+        # canvasPlot.show()
+        canvasPlot.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+        self.canvas = canvasPlot
+        self.toolbar = NavigationToolbar2Tk(self.canvas, self)
+        self.toolbar.update()
+        self.canvas._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
 
-    def draw_histogram(self, **kwargs):
+    def plot_traces(self,episode, pgs):
         """
-        draw a histogram of the current episode and a transparent all point hist
-        in the background
+        This method will plot the current, piezo and command voltage traces
+        """
+        t_zero = float(self.parent.plot_t_zero.get())
+        time = episode.time-t_zero
+        n_plot = 1 #counter for plots
+
+        # plot the current trace
+        current_plot = self.fig.add_subplot(pgs[:2,:2])
+        plotting.plotTrace(
+                    ax = current_plot,
+                    time = time,
+                    trace = episode.trace,
+                    ylabel = "Current ["+self.parent.data.currentUnit+"]")
+        if t_zero!=0: plt.axvline(0,c='r')
+        n_plot += 1 #move to next plot
+
+        self.subplots = [current_plot]
+
+        # plot the piezo
+        if self.parent.show_piezo.get():
+            log.info('will plot piezo voltage')
+            piezo_plot = self.fig.add_subplot(pgs[n_plot,:2])
+            plotting.plotTrace(
+                    ax = piezo_plot,
+                    time = time,
+                    trace = episode.piezo,
+                    ylabel = "Piezo ["+self.parent.data.piezoUnit+']',
+                    ybounds = [])
+            if t_zero!=0: plt.axvline(0,c='r')
+            n_plot += 1
+            self.subplots.append(piezo_plot)
+        # plot command voltage
+        if self.parent.show_command.get():
+            log.info('will plot command voltage')
+            command_plot = self.fig.add_subplot(pgs[n_plot,:2])
+            plotting.plotTrace(
+                    ax = command_plot,
+                    time = time,
+                    trace = episode.command,
+                    ylabel = "Command ["+self.parent.data.commandUnit+']')
+            if t_zero!=0: plt.axvline(0,c='r')
+            n_plot += 1
+            self.subplots.append(command_plot)
+
+        ## configure x-axis
+        for plot in self.subplots[:-1]:
+            plot.set_xticklabels([]) #turn off numbering on upper plots
+        # label only the last axis
+        self.subplots[-1].set_xlabel("Time ["+self.parent.data.time_unit+"]")
+
+    def plot_histogram(self,pgs,**kwargs):
+        """
+        this method will draw the histogram next to the current trace
         """
         log.info("drawing histogram")
 
-        ### get histogram parameters
+        # get histogram parameters
         n_bins = int(float(self.parent.hist_number_bins.get()))
         density = bool(self.parent.hist_density.get())
         # time points are selected based on piezo values if the variable
         # 'hist_piezo_interval' is 1
-        piezo_selection = bool(self.parent.hist_piezo_interval.get())
+        select_piezo = bool(self.parent.hist_piezo_interval.get())
         active = bool(self.parent.hist_piezo_active.get())
         deviation = float(self.parent.hist_piezo_deviation.get())
         fs = float(self.parent.sampling_rate.get())
@@ -619,16 +666,16 @@ class HistogramFrame(ttk.Frame):
 
         log.debug("""number of bins = {}
             density = {}
-            piezo_selection = {}
+            select_piezo = {}
             active = {}
-            deviation = {}""".format(n_bins,density,piezo_selection,
+            deviation = {}""".format(n_bins,density,select_piezo,
                                      active,deviation))
-        ### create the plot object so we can delete it later
-        ax = self.fig.add_subplot(111)
+        # create the plot object so we can delete it later
+        ax = self.fig.add_subplot(pgs[:2,2])
 
         if self.parent.data_loaded:
             log.info("found data")
-            ### get data
+            # get data
             series = self.parent.data[self.parent.datakey.get()]
             time = series[0].time
 
@@ -640,7 +687,7 @@ class HistogramFrame(ttk.Frame):
             # get the bins and their values or the current episode
             hist_single = plotting.histogram(time, single_piezo, single_trace,
                                              active=active,
-                                             piezo_selection=piezo_selection,
+                                             select_piezo=select_piezo,
                                              deviation=deviation,
                                              n_bins=n_bins,
                                              density=density,
@@ -666,13 +713,13 @@ class HistogramFrame(ttk.Frame):
 
                 # get the bins and their values for all episodes
                 hist_all = plotting.histogram(time, all_piezos, all_traces,
-                                              active = active,
-                                              piezo_selection = piezo_selection,
+                                              active=active,
+                                              select_piezo=select_piezo,
                                               deviation=deviation,
-                                              n_bins = n_bins,
-                                              density = density,
-                                              intervals = intervals,
-                                              sampling_rate = fs,
+                                              n_bins=n_bins,
+                                              density=density,
+                                              intervals=intervals,
+                                              sampling_rate=fs,
                                               **kwargs)
                 heights_all, bins_all, center_all, width_all = hist_all
                 # draw bar graphs of the histogram values over all episodes
@@ -692,66 +739,6 @@ class HistogramFrame(ttk.Frame):
                 log.info("plotting single episode histogram")
                 ax.barh(center_single, heights_single, width_single,
                         align='center', alpha=1)
-
-            # draw the histogram and clear the ax object to avoid
-            # cluttering memory
-            self.canvas.draw()
-            ax.clear()
-
-class PlotOptions(ttk.Frame):
-    """
-    A frame in which the setting of the histogram can be configured
-    """
-    def __init__(self, parent):
-        ttk.Frame.__init__(self, parent)
-        self.parent = parent
-
-        self.create_widgets()
-        log.info("creating plotOptions")
-
-    def update(self):
-        """
-        For updating the plot options (in case they every do more than just
-        show those two things)
-        """
-        self.create_widgets()
-
-    def create_widgets(self):
-        """
-        If piezo/command voltage data exists create widgets to toggle their
-        displey in the plots
-        """
-        if self.parent.data_loaded:
-            datakey = self.parent.datakey.get()
-            episode = self.parent.data[datakey][self.parent.Nepisode]
-            if episode.piezo is not None:
-                ttk.Label(self, text="Piezo voltage").grid(row=0, column=0)
-                piezo = ttk.Checkbutton(self, variable=self.parent.show_piezo)
-                piezo.grid(row=0, column=1)
-                # if piezo exists, default is to plot it
-                self.parent.show_piezo.set(1)
-
-            if self.parent.data[datakey][0].command is not None:
-                ttk.Label(self, text="Command voltage").grid(row=1, column=0)
-                command = ttk.Checkbutton(self,variable=self.parent.show_command)
-                command.grid(row=1,column=1)
-                # if command exists default is to not plot it
-                self.parent.show_command.set(0)
-
-class PlotFrame(ttk.Frame):
-    def __init__(self, parent):
-        ttk.Frame.__init__(self, parent)
-        self.parent = parent
-        self.fig = plt.figure(figsize=(10,5))
-
-        canvasPlot = FigureCanvasTkAgg(self.fig, master=self)
-        # canvasPlot.show()
-        canvasPlot.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
-        self.canvas = canvasPlot
-        self.toolbar = NavigationToolbar2TkAgg(self.canvas, self)
-        self.toolbar.update()
-        self.canvas._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
-
     def plot(self):
         plt.clf() #clear figure from memory
         datakey = self.parent.datakey.get()
@@ -762,67 +749,18 @@ class PlotFrame(ttk.Frame):
             # decide how many plots there will be
             num_plots = (1 + self.parent.show_command.get()
                           + self.parent.show_piezo.get())
-            n_plot = 1 #counter for plots
 
             # plot grid to make current plot bigger
-            pgs = gs.GridSpec(num_plots+1,1)
+            #arguments are nRows by nCols
+            pgs = gs.GridSpec(num_plots+1,3)
 
             log.info("""`data` exists, will plot episode number {}
             from series {}""".format(self.parent.Nepisode,datakey))
 
-            time = episode.time
+            self.plot_traces(episode, pgs)
+            self.plot_histogram(pgs)
 
-            #get axis bounds
-            # min_A = self.parent.data[datakey].get_min('trace')
-            # max_A = self.parent.data[datakey].get_max('trace')
-
-            # plot the current trace
-            current_plot = self.fig.add_subplot(pgs[:2,:])
-            plotting.plotTrace(
-                        ax = current_plot,
-                        time = time,
-                        trace = episode.trace,
-                        ylabel = "Current ["+self.parent.data.currentUnit+"]")
-                        # ybounds = (min_A, max_A))
-            n_plot += 1 #move to next plot
-
-            self.subplots = [current_plot]
-
-            # plot the piezo
-            if self.parent.show_piezo.get():
-                log.info('will plot piezo voltage')
-                piezo_plot = self.fig.add_subplot(pgs[n_plot,:])
-                plotting.plotTrace(
-                        ax = piezo_plot,
-                        time = time,
-                        trace = episode.piezo,
-                        ylabel = "Piezo ["+self.parent.data.piezoUnit+']',
-                        ybounds = [])
-                n_plot += 1
-                self.subplots.append(piezo_plot)
-            # plot command voltage
-            if self.parent.show_command.get():
-                log.info('will plot command voltage')
-                # try: #get axis bounds
-                #     min_V = self.parent.data[datakey].get_min('command')
-                #     max_V = self.parent.data[datakey].get_max('command')
-                # except: pass
-                command_plot = self.fig.add_subplot(pgs[n_plot,:])
-                plotting.plotTrace(
-                        ax = command_plot,
-                        time = time,
-                        trace = episode.command,
-                        ylabel = "Command ["+self.parent.data.commandUnit+']')
-                        # ybounds = [min_V,max_V])
-                n_plot += 1
-                self.subplots.append(command_plot)
-
-            ## configure x-axis
-            for plot in self.subplots[:-1]:
-                plot.set_xticklabels([]) #turn off numbering on upper plots
-            # label only the last axis
-            self.subplots[-1].set_xlabel("Time ["+self.parent.data.timeUnit+"]")
-            self.canvas.draw() # draw plots
+        self.canvas.draw() # draw plots
 
 class BaselineFrame(tk.Toplevel):
     """
@@ -835,14 +773,14 @@ class BaselineFrame(tk.Toplevel):
         self.title("Baseline correction")
 
         # variables to choose the method
-        self.piezo_selection = tk.IntVar()
-        self.piezo_selection.set(1)
-        self.intervalSelection = tk.IntVar()
-        self.intervalSelection.set(0)
+        self.select_piezo = tk.IntVar()
+        self.select_piezo.set(1)
+        self.select_intvl = tk.IntVar()
+        self.select_intvl.set(0)
 
         ### piezo and interval selection should be mutually exclusive
-        self.piezo_selection.trace("w",self.piezo_NotInterval)
-        self.intervalSelection.trace("w",self.interval_NotPiezo)
+        self.select_piezo.trace("w",self.piezo_NotInterval)
+        self.select_intvl.trace("w",self.interval_NotPiezo)
 
         ### parameters of the baseline procedure
         self.method = tk.StringVar()
@@ -870,49 +808,46 @@ class BaselineFrame(tk.Toplevel):
         Creates all widgets that apply to both modes.
         """
 
-        ### general options
+        # general options
 
-        ttk.Label(self,text='method').grid(column=1,row=0)
-        ############## create dropdown menu
-        ttk.Entry(self,width=7,textvariable=self.method).grid(
-                                                            column=2,row = 0)
+        ttk.Label(self, text='method').grid(column=1, row=0)
+        # create dropdown menu
+        ttk.Entry(self, width=7, textvariable=self.method\
+                  ).grid(column=2, row=0)
 
-        ttk.Label(self,text='degree').grid(column=1,row=1)
-        ttk.Entry(self,width=8,textvariable=self.degree).grid(row = 1,
-                                                                column = 2)
-
-
+        ttk.Label(self, text='degree').grid(column=1, row=1)
+        ttk.Entry(self,width=8, textvariable=self.degree\
+                  ).grid(row=1, column=2)
 
         ### piezo selection options
         ttk.Label(self, text="Select using piezo voltage").grid(row=2,
                                                                 column=0)
-        ttk.Checkbutton(self, variable=self.piezo_selection). grid(row=2,
+        ttk.Checkbutton(self, variable=self.select_piezo). grid(row=2,
                                                                   column=1)
 
         ttk.Label(self, text="Active/Inactive").grid(row=3, column=0)
-        ttk.Checkbutton(self, variable=self.piezo_active).grid(row=3,column=1)
+        ttk.Checkbutton(self, variable=self.piezo_active).grid(row=3, column=1)
 
         ttk.Label(self, text="deviation from max/min").grid(row=4, column=0)
-        ttk.Entry(self,textvariable=self.deviation,
-                  width=7).grid(row = 4, column=1)
+        ttk.Entry(self, textvariable=self.deviation, width=7\
+                  ).grid(row=4, column=1)
 
-        ### interval selection options
+        # interval selection options
         ttk.Label(self, text="Use intervals").grid(row=2, column=3)
-        ttk.Checkbutton(self, variable=self.intervalSelection).grid(row=2,
+        ttk.Checkbutton(self, variable=self.select_intvl).grid(row=2,
                                                                     column=4)
         ttk.Label(self, text="Intervals").grid(row=3, column=3)
-        ttk.Entry(self,textvariable=self.interval_entry,width=7).grid(row = 3,
-                                                                     column=4)
+        ttk.Entry(self, textvariable=self.interval_entry, width=7\
+                  ).grid(row=3, column=4)
 
 
-        ### ok and close
-        ttk.Button(self, text="OK", command=self.ok_button).grid(row=5,
-                                                                 columnspan=2)
-        ttk.Button(self, text="Cancel", command=self.destroy).grid(row=5,
-                                                                  column=3,
-                                                                 columnspan=2)
+        # ok and close
+        ttk.Button(self, text="OK", command=self.ok_click\
+                   ).grid(row=5, columnspan=2)
+        ttk.Button(self, text="Cancel", command=self.destroy\
+                   ).grid(row=5, column=3, columnspan=2)
 
-    def ok_button(self):
+    def ok_click(self):
         """
         redraw the histogram (with new settings) and close the dialog
         """
@@ -922,42 +857,32 @@ class BaselineFrame(tk.Toplevel):
         except: pass
 
         deviation = float(self.deviation.get())
-
-        if self.parent.parent.data.call_operation('BC_',
-                                           method = self.method.get(),
-                                           degree = int(self.degree.get()),
-                                           intervals = self.intervals,
-                                           timeUnit = self.time_unit,
-                                           intervalSelection = (
-                                                self.intervalSelection.get()),
-                                           piezo_selection = (
-                                                self.piezo_selection.get()),
-                                           active = self.piezo_active.get(),
-                                           deviation = deviation
-                                           ):
-            log.info('called operation succesfully')
-            self.parent.parent.datakey.set(
-                                       self.parent.parent.data.currentDatakey)
-            log.info('updating list and plots')
+        if self.parent.parent.data.baseline_correction(
+                method=self.method.get(), poly_degree=int(self.degree.get()),
+                intval=self.intervals, time_unit=self.time_unit,
+                select_intvl=self.select_intvl.get(),
+                select_piezo=self.select_piezo.get(),
+                active_piezo=self.piezo_active.get(),
+                piezo_diff=deviation):
+            log.info('succesfully called baseline_correction')
+            self.parent.parent.datakey.set(self.parent.parent.data.currentDatakey)
             self.parent.parent.update_list()
-            self.parent.parent.update_plots()
-        ## here we should also have that if the operation has been performed
-        ## the selection switches to that operation
+            self.parent.parent.draw_plots()
         self.destroy()
 
     def interval_NotPiezo(self,*args):
         """
         If interval selection is turned on turn off the piezo selection
         """
-        if self.intervalSelection.get() == 1:
-            self.piezo_selection.set(0)
+        if self.select_intvl.get() == 1:
+            self.select_piezo.set(0)
 
     def piezo_NotInterval(self,*args):
         """
         If piezo selection is turned on turn off interval
         """
-        if self.piezo_selection.get() == 1:
-            self.intervalSelection.set(0)
+        if self.select_piezo.get() == 1:
+            self.select_intvl.set(0)
 
 class ListSelection(ttk.Frame):
     def __init__(self, parent):
@@ -1055,7 +980,7 @@ class ListSelection(ttk.Frame):
                 log.debug('added {} to `current_lists'.format(name))
             # when changing lists update the histogram to display only
             # episodes in selected lists
-            self.parent.draw_histogram()
+            self.parent.draw_plots()
         variable.trace("w",trace_variable)
 
     def create_button(self):
@@ -1065,7 +990,7 @@ class ListSelection(ttk.Frame):
         and destroyed several times at different locations in the grid.
         """
         log.info("Creating new checkbox maker button")
-        self.createBoxButton = ttk.Button(self,text='Add',
+        self.createBoxButton = ttk.Button(self,text='new list',
                                           command=lambda: AddListDialog(self))
         self.createBoxButton.pack()
 
@@ -1142,7 +1067,7 @@ class EpisodeList(ttk.Frame):
             selected_episode = int(event.widget.curselection()[0])
             log.info("selected episode number {}".format(selected_episode))
             self.parent.Nepisode = selected_episode
-            self.parent.update_plots()
+            self.parent.draw_plots()
         except IndexError: pass
 
     def create_list(self):
@@ -1206,7 +1131,7 @@ class EpisodeList(ttk.Frame):
         """
         log.info(self.parent.datakey.get()+' selected')
         self.create_list()
-        self.parent.update_plots()
+        self.parent.draw_plots()
 
 class OpenFileDialog(tk.Toplevel):
     """

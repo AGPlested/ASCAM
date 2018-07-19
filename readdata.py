@@ -1,12 +1,16 @@
-import numpy as np
-import subprocess
-from scipy.io import loadmat as scipy_loadmat
-from scipy.io.matlab.mio5 import varmats_from_mat
-import os
-from tools import parse_filename
+import csv
 import json
 import pickle
 import logging as log
+import subprocess
+import os
+
+import numpy as np
+from scipy.io import loadmat as scipy_loadmat
+from scipy.io.matlab.mio5 import varmats_from_mat
+
+from tools import parse_filename
+
 
 def read_metadata(filename):
     """
@@ -33,6 +37,61 @@ def load_pickle(filename):
         data = pickle.load(file)
     return data
 
+def load_tdt(filename):
+    """
+    Load data from a tab-delimited text file
+    the file must have the data stored in columns with the first line
+    containing the names of each column
+    Input:
+        filename [string] - name (including location) of the file to be loaded
+    Output:
+        names [list of strings] - names of the different variables
+        time [1D numpy array] - times of measurement
+        current [list of 1D numpy arrays] - the current recorded from the patch
+        piezo [list of 1D numpy arrays] - voltage of the piezo pipette
+        commandVoltage [list of 1D numpy arrays] - command voltage applied to the
+                                            patch
+    """
+    current = []
+    commandVoltage = []
+    piezo = []
+
+    with open(filename) as datafile:
+        datafile = open(filename)
+        reader = csv.reader(datafile, delimiter='\t')
+        names = next(reader)
+        n_lists = len(names)
+
+        #create a 'list-array' to hold the data, we need to create a list for each timeseries we get before populating them
+        #and they need to be lists because the length is unknown
+        listlist = list()
+        for i in range(n_lists): listlist.append(list())
+
+        #sort the data from the csv reader into the seperate lists
+        for line in reader:
+            for i in range(n_lists):
+                listlist[i].append(line[i])
+
+        #assign the lists with data
+        for i in range(n_lists):
+            if 'Ipatch' in names[i] or 'trace' in names[i]:
+                current.append(np.array(listlist[i],dtype=np.float))
+            elif '10Vm' in names[i] or 'command' in names[i]:
+                commandVoltage.append(np.array(listlist[i],dtype=np.float))
+            elif 'Piezo' in names[i] or 'piezo' in names[i]:
+                piezo.append(np.array(listlist[i],dtype=np.float))
+            elif 'Time' in names[i] or 'time' in names[i]:
+                time = np.array(listlist[i],dtype=np.float)
+
+    names = ['Time [ms]']
+    if current:
+        names.append('Current [A]')
+    if piezo:
+        names.append('Piezo [V]')
+    if commandVoltage:
+        names.append('Command Voltage [V]')
+    return names, time, current, piezo, commandVoltage
+
 def load_matlab(filename):
     """
     Uses `scipy.io.loadmat` to load data from a `.mat` file.
@@ -40,10 +99,10 @@ def load_matlab(filename):
         filename [string] - name (including location) of the file to be loaded
     Output:
         names [list of strings] - names of the different variables
-        time [1D array] - times of measurement
-        current [list of 1D arrays] - the current recorded from the patch
-        piezo [list of 1D arrays] - voltage of the piezo pipette
-        commandVoltage [list of 1D arrays] - command voltage applied to the
+        time [1D numpy array] - times of measurement
+        current [list of 1D numpy arrays] - the current recorded from the patch
+        piezo [list of 1D numpy arrays] - voltage of the piezo pipette
+        commandVoltage [list of 1D numpy arrays] - command voltage applied to the
                                             patch
     Because the data we have comes with strange dictionary keys (i.e.
     including column numbers and hex values) the function loops over the keys
@@ -177,6 +236,8 @@ def load(filename, filetype=False, dtype=None, headerlength=None, fs=None):
         output = load_matlab(filename)
     elif filetype == 'bin':
         output = load_binary(filename,dtype,headerlength,fs)
+    elif filetype == 'tdt':
+        output = load_tdt(filename)
     else:
         print("Filetype not supported.")
         output = False
