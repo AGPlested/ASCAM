@@ -1,19 +1,25 @@
-import tkinter as tk
-from tkinter import ttk
-from tkinter.filedialog import askopenfilename, asksaveasfilename, askdirectory
-import matplotlib
-matplotlib.use('TkAgg')
-from recording import Recording
-import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg,
-                                            NavigationToolbar2TkAgg)
-from matplotlib import gridspec as gs
-import plotting
-from tools import stringList_parser, parse_filename
 import os
 import copy
+import time
 import logging as log
+
+import numpy as np
+import tkinter as tk
+from tkinter import ttk
+from tkinter import messagebox
+from tkinter.filedialog import askopenfilename, asksaveasfilename, askdirectory
+import matplotlib
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.backends.backend_tkagg import NavigationToolbar2TkAgg
+from matplotlib import gridspec as gs
+
+from tools import stringList_parser, parse_filename
+import plotting
+from recording import Recording
+
+matplotlib.use('TkAgg')
+
 
 class GUI(ttk.Frame):
     """
@@ -25,19 +31,8 @@ class GUI(ttk.Frame):
     because then they can be entered in entry fields without problems
     """
     @classmethod
-    def run(cls, axo=False, bin=False, mat=False):
-        # parameters for testing modes
-        global axotest
-        global bintest
-        global mattest
-        axotest = axo
-        bintest = bin
-        mattest = mat
+    def run(cls):
         log.info("Starting ASCAM GUI")
-        log.debug("""Parameters of `run` method:
-                    axotest = {}
-                    bintest = {}
-                    mattest = {}""".format(axo,bin,mat))
         root = tk.Tk()
         root.protocol('WM_DELETE_WINDOW', quit)
         root.title("ASCAM")
@@ -98,8 +93,8 @@ class GUI(ttk.Frame):
         self.show_command.trace("w", self.plot_episode)
 
         ### parameters of the data
-        self.samplingrate = tk.StringVar()
-        self.samplingrate.set("0")
+        self.sampling_rate = tk.StringVar()
+        self.sampling_rate.set("0")
 
         # dictionary for the data
         self.data = Recording()
@@ -111,11 +106,6 @@ class GUI(ttk.Frame):
 
         self.create_widgets()
         self.configure_grid()
-
-        if bintest or axotest or mattest:
-            self.load_for_testing()
-        ## if testing arguments have been given data will be loaded when the
-        ## program starts
 
         self.bind("<Configure>", self.update_plots)
         # this line calls `draw` when it is run
@@ -130,48 +120,11 @@ class GUI(ttk.Frame):
         self.master.title("ASCAM - "+self.filename.get())
 
         # recreate user defined episodelists
-        for name, (episode_numbers, color, key) in self.data.lists.items():
+        for name, (_, color, key) in self.data.lists.items():
             log.debug("""found list {}, color: {}, key: {}""".format(name, color, key))
             self.listSelection.create_checkbox(name = name,
                                                key = key,
                                                color = color)
-            for n_episode in episode_numbers:
-                self.episodeList.episodelist.itemconfig(n_episode, bg=color)
-
-        self.update_all()
-
-    def load_for_testing(self):
-        """
-        this function is called if the program is called with arguments "mat",
-        "bin" or 'axo' and
-        """
-        if bintest:
-        ### testing mode that uses simulated data, the data is copied and
-        ### multiplied with random numbers to create additional episodes
-            log.info('Test mode with binary data')
-            self.data = Recording(os.getcwd()+'/data/sim1600.bin', 4e4,
-                                 'bin', 3072, np.int16)
-            self.data['raw_'][0]['trace']=self.data['raw_'][0]['trace'][:9999]
-            self.data['raw_'][0]['time']=self.data['raw_'][0]['time'][:9999]
-            for i in range(1,25):
-                dummyepisode = copy.deepcopy(self.data['raw_'][0])
-                randommultiplier = np.random.random(
-                                    len(dummyepisode['trace']))
-                dummyepisode['trace'] = dummyepisode['trace']*randommultiplier
-                dummyepisode.nthEpisode = i
-                self.data['raw_'].append(dummyepisode)
-        elif axotest:
-            log.info('Test mode with axograph data')
-            self.data = Recording(filename = 'data/170404 015.axgd',
-                                        filetype = 'axo')
-        elif mattest:
-            log.info('Test mode with matlab data.')
-            self.data = Recording(
-                                filename = 'data/171124 013 Copy Export.mat',
-                                filetype = 'mat',
-                                samplingRate = 4e4)
-        self.samplingrate.set('4e4')
-        self.data_loaded = True
         self.update_all()
 
     def update_all(self, *args):
@@ -191,7 +144,6 @@ class GUI(ttk.Frame):
         log.info("""creating widgets""")
         self.histogramFrame = HistogramFrame(self)
         self.plots = PlotFrame(self)
-        self.manipulations = Manipulations(self)
         self.episodeList = EpisodeList(self)
         self.listSelection = ListSelection(self)
         self.histogramOptions = HistogramConfiguration(self)
@@ -241,9 +193,6 @@ class GUI(ttk.Frame):
             self.episodeList.grid_rowconfigure(i, weight=1)
         # Fourth row
 
-        # Fifth row
-        self.manipulations.grid(row=4, column=0, columnspan=3, padx=5, pady=5,
-                                sticky=tk.S+tk.W)
 
     def plot_episode(self, *args):
         """
@@ -279,7 +228,7 @@ class GUI(ttk.Frame):
 
     def update_list(self):
         log.info('updatin list')
-        self.episodeList.create_list()
+        # self.episodeList.create_list()
         log.info("created new list")
         self.episodeList.create_dropdownmenu()
         ### for now `update_list` will update both the list and the dropdown
@@ -338,7 +287,7 @@ class Displayframe(ttk.Frame):
             datakey = self.parent.datakey.get()
             episode = self.parent.data[datakey][self.parent.Nepisode]
 
-            if episode['command'] is not None:
+            if episode.command is not None:
                 log.info("""showing command stats for {}
                          episode number: {}""".format(datakey,self.parent.Nepisode))
                 mean, std = episode.get_command_stats()
@@ -389,9 +338,12 @@ class MenuBar(tk.Menu):
 
     def create_analysis_cascade(self):
         self.add_cascade(label='Analysis',menu=self.analysis_menu)
-        self.analysis_menu.add_command(label="Baseline",command=lambda: BaselineFrame(self))
-        self.analysis_menu.add_command(label="Filter")
-        # self.analysis_menu.add_command(label="Idealize")
+        self.analysis_menu.add_command(label="Baseline",
+                                       command=lambda: BaselineFrame(self))
+        self.analysis_menu.add_command(label="Filter",
+                                       command=lambda: FilterFrame(self.parent))
+        self.analysis_menu.add_command(label="Idealize")
+        self.analysis_menu.add_command(label="Set t_zero")
 
     def open_file(self):
         # open the dialog for loading a single file
@@ -415,43 +367,89 @@ class MenuBar(tk.Menu):
         ExportFileDialog(self.parent)
 
 class FilterFrame(tk.Toplevel):
-    """TopLevel frame to choose which filter to use and its parameters"""
+    """docstring for FilterFrame."""
     def __init__(self, parent):
-        log.info("""initializing filter frame""")
         tk.Toplevel.__init__(self, parent)
-        self.parent = parent #for now the parent will be the menubar
+        self.parent = parent
         self.title("Filter")
-
-        #parameters for gaussian filter
+        #filterframe variables
+        self.filter_selection = tk.StringVar()
+        self.filter_selection.trace("w",self.create_entry_frame)
+        #paramters for gaussian filter
         self.gaussian_fc = tk.StringVar()
         self.gaussian_fc.set('1000')
+        #parameters for Chung Kennedy filter
+        self.n_predictors = tk.StringVar()
+        self.weight_exponent = tk.StringVar()
+        self.lengths_predictors = tk.StringVar()
 
-        #parameters for chung-kennedy filter
-        self.num_filters = tk.StringVar()
-        sef.num_filters.set('')
+        self.create_widgets()
 
-        create_dropdownmenu()
-
-    def create_dropdownmenu(self):
+    def create_widgets(self):
         """
-        create the dropdown menu that is a list of the available filters
+        create the dropdown menu from which to choose the type of filter
+        placeholder frame for entry fields
+        and 'ok' and 'cancel' buttons
         """
-        log.info("""creating filter dropdown menu""")
+        log.info("""creating dropdown menu for filter selection""")
         listOptions = ['Gaussian', 'Chung-Kennedy']
-        self.menu = tk.OptionMenu(self, "Gaussian", *listOptions)
+        self.menu = tk.OptionMenu(self, self.filter_selection, *listOptions)
         self.menu.grid(row=0,column=0,columnspan=2,sticky=tk.N)
 
-    def gaussian_widgets(self):
-        pass
+        self.entry_frame = ttk.Frame(self)
+        self.entry_frame.grid(row=1,column=0,columnspan=2)
 
-    def ck_widgets(self):
+        ttk.Button(self, text="OK", command=self.ok_button).grid(row=5)
+        ttk.Button(self, text="Cancel", command=self.cancel_button).grid(row=5,
+                                                                       column=1)
+
+    def create_entry_frame(self,*args,**kwargs):
         """
-        Widgets for the parameters of the Chung-Kennedy filter
+        Create a frame for the entry of the filter parameters
         """
-        ttk.Label(self,text='Filter frequency [Hz]').grid(column=1,row=0)
-        ############## create dropdown menu
-        ttk.Entry(self,width=7,textvariable=self.method).grid(
-                                                            column=2,row = 0)
+        if self.filter_selection.get()=='Gaussian':
+            ttk.Label(self.entry_frame, text="Frequency [Hz]").grid(row=0,
+                                                                    column=0)
+            ttk.Entry(self.entry_frame,textvariable=self.gaussian_fc, width=7).\
+                                                         grid(row = 0, column=1)
+        elif self.filter_selection.get()=='Chung-Kennedy':
+            ttk.Label(self.entry_frame, text="Number of predictors").grid(row=0,
+                                                                    column=0)
+            ttk.Entry(self.entry_frame,textvariable=self.n_predictors,width=7).\
+                                                         grid(row = 0, column=1)
+            ttk.Label(self.entry_frame, text="Weight exponent").grid(row=1,
+                                                                    column=0)
+            ttk.Entry(self.entry_frame,
+                      textvariable=self.weight_exponent,width=7).grid(row = 1,
+                                                                      column=1)
+            ttk.Label(self.entry_frame, text="Lengths of predictors").grid(
+                                                                row=2, column=0)
+            ttk.Entry(self.entry_frame,
+                      textvariable=self.lengths_predictors,width=7).grid(
+                                                              row = 2, column=1)
+    def filter_series(self):
+        log.info('going to filter all episodes')
+        if self.filter_selection.get()=="Gaussian":
+            #convert textvar to float
+            cutoffFrequency = float(self.gaussian_fc.get())
+            log.info("filter frequency is {}".format(cutoffFrequency))
+            if self.parent.data.call_operation('FILTER_',cutoffFrequency):
+                log.info('called operation succesfully')
+                self.parent.datakey.set(self.parent.data.currentDatakey)
+                log.info('updating list and plots')
+                self.parent.update_list()
+                self.parent.update_plots()
+        elif self.filter_selection.get()=="Chung-Kennedy":
+            #backend for CK filter is not finished
+            messagebox.showerror("Sorry","Chung-Kennedy filter has not yet been implemented")
+            # time.sleep(5)
+
+    def ok_button(self):
+        if self.filter_selection.get(): self.filter_series()
+        self.destroy()
+
+    def cancel_button(self):
+        self.destroy()
 
 class ExportFileDialog(tk.Toplevel):
     """
@@ -613,17 +611,18 @@ class HistogramFrame(ttk.Frame):
         density = bool(self.parent.hist_density.get())
         # time points are selected based on piezo values if the variable
         # 'hist_piezo_interval' is 1
-        piezoSelection = bool(self.parent.hist_piezo_interval.get())
+        piezo_selection = bool(self.parent.hist_piezo_interval.get())
         active = bool(self.parent.hist_piezo_active.get())
         deviation = float(self.parent.hist_piezo_deviation.get())
-        fs = float(self.parent.samplingrate.get())
+        fs = float(self.parent.sampling_rate.get())
         intervals = self.parent.hist_intervals
 
         log.debug("""number of bins = {}
             density = {}
-            piezoSelection = {}
+            piezo_selection = {}
             active = {}
-            deviation = {}""".format(deviation,n_bins,density,piezoSelection,active))
+            deviation = {}""".format(n_bins,density,piezo_selection,
+                                     active,deviation))
         ### create the plot object so we can delete it later
         ax = self.fig.add_subplot(111)
 
@@ -631,72 +630,71 @@ class HistogramFrame(ttk.Frame):
             log.info("found data")
             ### get data
             series = self.parent.data[self.parent.datakey.get()]
-            time = series[0]['time']
+            time = series[0].time
 
-            ### get current episode values and put them in a list
-            ### because the histogram function expects a list
-            single_piezo = [series[self.parent.Nepisode]['piezo']]
-            single_trace = [series[self.parent.Nepisode]['trace']]
+            # get current episode values and put them in a list
+            # because the histogram function expects a list
+            single_piezo = [series[self.parent.Nepisode].piezo]
+            single_trace = [series[self.parent.Nepisode].trace]
 
-            ### get the bins and their values or the current episode
+            # get the bins and their values or the current episode
             hist_single = plotting.histogram(time, single_piezo, single_trace,
-                                             active = active,
-                                             piezoSelection = piezoSelection,
-                                             deviation = deviation,
-                                             n_bins = n_bins,
-                                             density = density,
-                                             intervals = intervals,
-                                             samplingRate = fs,
+                                             active=active,
+                                             piezo_selection=piezo_selection,
+                                             deviation=deviation,
+                                             n_bins=n_bins,
+                                             density=density,
+                                             intervals=intervals,
+                                             sampling_rate=fs,
                                              **kwargs)
             (heights_single,bins_single,
              center_single, width_single) = hist_single
 
             if self.parent.data.current_lists:
-                log.info("""current lists are: {}""".format(self.parent.data.current_lists))
-                ### get a list of all the currents and all the traces
-                all_piezos = [episode['piezo'] for episode in series ]
-                all_traces = [episode['trace'] for episode in series ]
+                log.info("""current lists are: {}""".format(
+                                                self.parent.data.current_lists))
+                # get a list of all the currents and all the traces
+                all_piezos = [episode.piezo for episode in series ]
+                all_traces = [episode.trace for episode in series ]
 
-                ### get the indices of currently selected lists
+                # get the indices of currently selected lists
                 indices = self.parent.get_episodes_in_lists()
 
-                ### get corresponding piezos and traces
+                # get corresponding piezos and traces
                 all_piezos = [all_piezos[i] for i in indices]
                 all_traces = [all_traces[i] for i in indices]
 
-                ### get the bins and their values for all episodes
+                # get the bins and their values for all episodes
                 hist_all = plotting.histogram(time, all_piezos, all_traces,
                                               active = active,
-                                              piezoSelection = piezoSelection,
+                                              piezo_selection = piezo_selection,
                                               deviation=deviation,
                                               n_bins = n_bins,
                                               density = density,
                                               intervals = intervals,
-                                              samplingRate = fs,
+                                              sampling_rate = fs,
                                               **kwargs)
                 heights_all, bins_all, center_all, width_all = hist_all
-
-
-                ### draw bar graphs of the histogram values over all episodes
-                ax.bar(center_all, heights_all, width = width_all, alpha=.2,
-                         color='orange')
-                ax.plot(center_all,heights_all,color='orange', lw=2)
-                ax.set_xlabel("Current ["+self.parent.data.currentUnit+']')
+                # draw bar graphs of the histogram values over all episodes
+                ax.barh(center_all, heights_all, width_all,
+                        alpha=0.2, color='orange', align='center')
+                ax.plot(heights_all,center_all,color='orange', lw=2)
+                ax.set_ylabel("Current ["+self.parent.data.currentUnit+']')
                 if self.parent.hist_density.get()==1:
                     log.info('setting y-label "Relative frequency"')
-                    ax.set_ylabel("Relative frequency")
+                    ax.set_xlabel("Relative frequency")
                 elif self.parent.hist_density.get()==0:
                     log.info('setting y-label "Count"')
-                    ax.set_ylabel("Count")
+                    ax.set_xlabel("Count")
 
-            ### histogram of single episode
+            # histogram of single episode
             if self.parent.hist_single_ep.get()==1:
                 log.info("plotting single episode histogram")
-                ax.bar(center_single, heights_single, width = width_single,
-                         alpha=1)
+                ax.barh(center_single, heights_single, width_single,
+                        align='center', alpha=1)
 
-            ### draw the histogram and clear the ax object to avoid
-            ### cluttering memory
+            # draw the histogram and clear the ax object to avoid
+            # cluttering memory
             self.canvas.draw()
             ax.clear()
 
@@ -726,14 +724,14 @@ class PlotOptions(ttk.Frame):
         if self.parent.data_loaded:
             datakey = self.parent.datakey.get()
             episode = self.parent.data[datakey][self.parent.Nepisode]
-            if episode['piezo'] is not None:
+            if episode.piezo is not None:
                 ttk.Label(self, text="Piezo voltage").grid(row=0, column=0)
                 piezo = ttk.Checkbutton(self, variable=self.parent.show_piezo)
                 piezo.grid(row=0, column=1)
                 # if piezo exists, default is to plot it
                 self.parent.show_piezo.set(1)
 
-            if self.parent.data[datakey][0]['command'] is not None:
+            if self.parent.data[datakey][0].command is not None:
                 ttk.Label(self, text="Command voltage").grid(row=1, column=0)
                 command = ttk.Checkbutton(self,variable=self.parent.show_command)
                 command.grid(row=1,column=1)
@@ -772,20 +770,20 @@ class PlotFrame(ttk.Frame):
             log.info("""`data` exists, will plot episode number {}
             from series {}""".format(self.parent.Nepisode,datakey))
 
-            time = episode['time']
+            time = episode.time
 
             #get axis bounds
-            min_A = self.parent.data[datakey].get_min('trace')
-            max_A = self.parent.data[datakey].get_max('trace')
+            # min_A = self.parent.data[datakey].get_min('trace')
+            # max_A = self.parent.data[datakey].get_max('trace')
 
             # plot the current trace
             current_plot = self.fig.add_subplot(pgs[:2,:])
             plotting.plotTrace(
                         ax = current_plot,
                         time = time,
-                        trace = episode['trace'],
-                        ylabel = "Current ["+self.parent.data.currentUnit+"]",
-                        ybounds = (min_A, max_A))
+                        trace = episode.trace,
+                        ylabel = "Current ["+self.parent.data.currentUnit+"]")
+                        # ybounds = (min_A, max_A))
             n_plot += 1 #move to next plot
 
             self.subplots = [current_plot]
@@ -797,7 +795,7 @@ class PlotFrame(ttk.Frame):
                 plotting.plotTrace(
                         ax = piezo_plot,
                         time = time,
-                        trace = episode['piezo'],
+                        trace = episode.piezo,
                         ylabel = "Piezo ["+self.parent.data.piezoUnit+']',
                         ybounds = [])
                 n_plot += 1
@@ -805,17 +803,17 @@ class PlotFrame(ttk.Frame):
             # plot command voltage
             if self.parent.show_command.get():
                 log.info('will plot command voltage')
-                try: #get axis bounds
-                    min_V = self.parent.data[datakey].get_min('command')
-                    max_V = self.parent.data[datakey].get_max('command')
-                except: pass
+                # try: #get axis bounds
+                #     min_V = self.parent.data[datakey].get_min('command')
+                #     max_V = self.parent.data[datakey].get_max('command')
+                # except: pass
                 command_plot = self.fig.add_subplot(pgs[n_plot,:])
                 plotting.plotTrace(
                         ax = command_plot,
                         time = time,
-                        trace = episode['command'],
-                        ylabel = "Command ["+self.parent.data.commandUnit+']',
-                        ybounds = [min_V,max_V])
+                        trace = episode.command,
+                        ylabel = "Command ["+self.parent.data.commandUnit+']')
+                        # ybounds = [min_V,max_V])
                 n_plot += 1
                 self.subplots.append(command_plot)
 
@@ -826,40 +824,6 @@ class PlotFrame(ttk.Frame):
             self.subplots[-1].set_xlabel("Time ["+self.parent.data.timeUnit+"]")
             self.canvas.draw() # draw plots
 
-class Manipulations(ttk.Frame):
-    """docstring for Manipulations"""
-    def __init__(self, parent):
-        ttk.Frame.__init__(self, parent)
-        self.parent = parent
-        self.cutoffFrequency = tk.StringVar()
-        self.cutoffFrequency.set(1000)
-        self.create_widgets()
-
-    def create_widgets(self):
-        self.filterallbutton = ttk.Button(self, text="Filter",
-                                     command=self.filter_series)
-        self.filterallbutton.grid(column=1,row=0,sticky=())
-
-        self.cutoffentry = ttk.Entry(self, width=7, textvariable=(
-                                                        self.cutoffFrequency))
-        self.cutoffentry.grid(column=1,row=1)
-        ttk.Label(self, text="Filter Frequency [Hz]:").grid(column=0, row=1,
-                                                            sticky=(tk.W))
-
-    def filter_series(self):
-        log.info('going to filter all episodes')
-        #convert textvar to float
-        cutoffFrequency = float(self.cutoffFrequency.get())
-        log.info("filter frequency is {}".format(cutoffFrequency))
-        if self.parent.data.call_operation('FILTER_',cutoffFrequency):
-            log.info('called operation succesfully')
-            self.parent.datakey.set(self.parent.data.currentDatakey)
-            log.info('updating list and plots')
-            self.parent.update_list()
-            self.parent.update_plots()
-        ## here we should also have that if the operation has been performed
-        ## the selection switches to that operation
-
 class BaselineFrame(tk.Toplevel):
     """
     Temporary frame in which to chose how and based on what points
@@ -868,16 +832,16 @@ class BaselineFrame(tk.Toplevel):
     def __init__(self, parent):
         tk.Toplevel.__init__(self, parent)
         self.parent = parent
-        self.title("Baseline correction.")
+        self.title("Baseline correction")
 
-        ### variables to choose the method
-        self.piezoSelection = tk.IntVar()
-        self.piezoSelection.set(1)
+        # variables to choose the method
+        self.piezo_selection = tk.IntVar()
+        self.piezo_selection.set(1)
         self.intervalSelection = tk.IntVar()
         self.intervalSelection.set(0)
 
         ### piezo and interval selection should be mutually exclusive
-        self.piezoSelection.trace("w",self.piezo_NotInterval)
+        self.piezo_selection.trace("w",self.piezo_NotInterval)
         self.intervalSelection.trace("w",self.interval_NotPiezo)
 
         ### parameters of the baseline procedure
@@ -922,7 +886,7 @@ class BaselineFrame(tk.Toplevel):
         ### piezo selection options
         ttk.Label(self, text="Select using piezo voltage").grid(row=2,
                                                                 column=0)
-        ttk.Checkbutton(self, variable=self.piezoSelection). grid(row=2,
+        ttk.Checkbutton(self, variable=self.piezo_selection). grid(row=2,
                                                                   column=1)
 
         ttk.Label(self, text="Active/Inactive").grid(row=3, column=0)
@@ -966,8 +930,8 @@ class BaselineFrame(tk.Toplevel):
                                            timeUnit = self.time_unit,
                                            intervalSelection = (
                                                 self.intervalSelection.get()),
-                                           piezoSelection = (
-                                                self.piezoSelection.get()),
+                                           piezo_selection = (
+                                                self.piezo_selection.get()),
                                            active = self.piezo_active.get(),
                                            deviation = deviation
                                            ):
@@ -986,13 +950,13 @@ class BaselineFrame(tk.Toplevel):
         If interval selection is turned on turn off the piezo selection
         """
         if self.intervalSelection.get() == 1:
-            self.piezoSelection.set(0)
+            self.piezo_selection.set(0)
 
     def piezo_NotInterval(self,*args):
         """
         If piezo selection is turned on turn off interval
         """
-        if self.piezoSelection.get() == 1:
+        if self.piezo_selection.get() == 1:
             self.intervalSelection.set(0)
 
 class ListSelection(ttk.Frame):
@@ -1079,20 +1043,20 @@ class ListSelection(ttk.Frame):
             self.parent.data.lists[name][1] = color
             self.parent.data.lists[name][2] = key
 
-            # trace the variable to add/removoe the corresponding list to/from
-            # the list of current lists, also update the histogram to immediatly
-            # show the change
-            def trace_variable(*args):
-                if name in self.parent.data.current_lists:
-                    self.parent.data.current_lists.remove(name)
-                    log.debug('removed {} from `current_lists'.format(name))
-                else:
-                    self.parent.data.current_lists.append(name)
-                    log.debug('added {} from `current_lists'.format(name))
-                # when changing lists update the histogram to display only
-                # episodes in selected lists
-                self.parent.draw_histogram()
-            variable.trace("w",trace_variable)
+        # trace the variable to add/removoe the corresponding list to/from
+        # the list of current lists, also update the histogram to immediatly
+        # show the change
+        def trace_variable(*args):
+            if name in self.parent.data.current_lists:
+                self.parent.data.current_lists.remove(name)
+                log.debug('removed {} from `current_lists'.format(name))
+            else:
+                self.parent.data.current_lists.append(name)
+                log.debug('added {} to `current_lists'.format(name))
+            # when changing lists update the histogram to display only
+            # episodes in selected lists
+            self.parent.draw_histogram()
+        variable.trace("w",trace_variable)
 
     def create_button(self):
         """
@@ -1206,8 +1170,8 @@ class EpisodeList(ttk.Frame):
             log.info("found data to fill list with")
             for episode in self.parent.data[self.parent.datakey.get()]:
                 self.episodelist.insert(tk.END, "episode #"
-                                                +str(episode.nthEpisode))
-                log.debug("inserting episode number {}".format(episode.nthEpisode))
+                                                +str(episode.n_episode))
+                log.debug("inserting episode number {}".format(episode.n_episode))
         ### color all episodes according to their list membership
             ### start from second element because white is default bg color
             for name in list(self.parent.data.lists.keys())[1:]:
@@ -1262,7 +1226,7 @@ class OpenFileDialog(tk.Toplevel):
         self.filetypefull = tk.StringVar()
         self.filetype = tk.StringVar()
         self.filename = tk.StringVar()
-        self.samplingrate = tk.StringVar()
+        self.sampling_rate = tk.StringVar()
         self.path = tk.StringVar()
 
         self.filenamefull.set(filename)
@@ -1295,9 +1259,9 @@ class OpenFileDialog(tk.Toplevel):
 
         #fourth row - enter sampling rate
         self.samplingentry = ttk.Entry(self, width=7,
-                                       textvariable=self.samplingrate)
+                                       textvariable=self.sampling_rate)
         self.samplingentry.grid(column=2,row=4)
-        ttk.Label(self, text="Samplingrate (Hz):").grid(column=1,
+        ttk.Label(self, text="sampling_rate (Hz):").grid(column=1,
                                                         row=4, sticky=(tk.W))
 
         #fifth row - Load button to close and go to next window and close button
@@ -1317,11 +1281,11 @@ class OpenFileDialog(tk.Toplevel):
                 ### move variables to parent if data loaded succesfully
                 self.parent.filetype.set(self.filetype.get())
                 self.parent.filename.set(self.filename.get())
-                self.parent.samplingrate.set(self.samplingrate.get())
+                self.parent.sampling_rate.set(self.sampling_rate.get())
                 self.parent.path.set(self.path.get())
 
                 self.parent.data = Recording(self.filenamefull.get(),
-                                             self.samplingrate.get(),
+                                             self.sampling_rate.get(),
                                              self.filetype.get())
                 self.parent.datakey.set(self.parent.data.currentDatakey)
                 self.parent.data_loaded = True
@@ -1374,10 +1338,11 @@ class Binaryquery(tk.Toplevel):
                             #returns a string which numpy doesnt
                             #understand
         self.parent.data = Recording(self.parent.filenamefull.get(),
-                                         self.parent.samplingrate.get(),
+                                         self.parent.sampling_rate.get(),
                                          self.parent.filetype.get(),
                                          self.parent.headerlength.get(),
                                          datatype)
         self.parent.update_all()
+        self.parent.episodeList.create_list()
         self.loadframe.destroy()
         self.destroy()

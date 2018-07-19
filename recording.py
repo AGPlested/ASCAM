@@ -10,7 +10,7 @@ import logging as log
 
 class Recording(dict):
     def __init__(self, filename = '',
-                 samplingRate = 0, filetype = '', headerlength = 0,
+                 sampling_rate = 0, filetype = '', headerlength = 0,
                  dtype = None, timeUnit = 'ms', piezoUnit = 'V',
                  commandUnit = 'V', currentUnit = 'A'):
         log.info("""intializing Recording""")
@@ -22,7 +22,7 @@ class Recording(dict):
         self.dtype = dtype
 
         # attributes of the data
-        self.samplingRate = int(float(samplingRate))
+        self.sampling_rate = int(float(sampling_rate))
         self.timeUnit = timeUnit
         self.commandUnit = commandUnit
         self.currentUnit = currentUnit
@@ -38,13 +38,17 @@ class Recording(dict):
         # element, their color in the GUI in the second and the associated key
         # (i.e. for adding selected episodes to the list in the third element
         # of a tuple that is the value under the list's name (as dict key)
-        self.lists = {'all': (list(range(len(self['raw_']))), 'white', None)}
+        self.lists = dict()
         self.current_lists = ['all']
 
         # if a file is specified load it
         if filename:
             log.info("""`filename` is not empty, will load data""")
             self.load_data()
+
+        #if the lists attribute has not been set while loading the data do it now
+        if not self.lists:
+            self.lists = {'all':(list(range(len(self['raw_']))), 'white', None)}
 
     def load_data(self):
         """
@@ -60,7 +64,7 @@ class Recording(dict):
                              filetype = self.filetype,
                              dtype = self.dtype,
                              headerlength = self.headerlength,
-                             samplingRate = self.samplingRate,
+                             sampling_rate = self.sampling_rate,
                              datakey = 'raw_')
         elif os.path.isdir(self.filename):
             if not self.filename.endswith('/'):
@@ -83,14 +87,14 @@ class Recording(dict):
                                     filetype = metadata['filetype'],
                                     dtype = metadata['dtype'],
                                     headerlength = metadata['headerlength'],
-                                    samplingRate = metadata['samplingRate'],
+                                    sampling_rate = metadata['sampling_rate'],
                                     datakey=datakey)
                         for episode, attributes in zip(self[datakey],
                                             series_metadata[datakey].values()):
                             episode.__dict__ = attributes
 
     def load_series(self, filename, filetype, dtype, headerlength,
-                    samplingRate, datakey):
+                    sampling_rate, datakey):
         """
         Load the data in the file at `self.filename`.
         Accepts `.mat`, `.axgd` and `.bin` files.
@@ -100,37 +104,37 @@ class Recording(dict):
                                             filetype = filetype,
                                             dtype = dtype,
                                             headerlength = headerlength,
-                                            fs = samplingRate)
+                                            fs = sampling_rate)
         ### The `if` accounts for the presence or absence of
         ### piezo and command voltage in the data being loaded
 
         if 'Piezo [V]' in names and 'Command Voltage [V]' in names:
             time = loaded_data[0]
-            self[datakey] = Series([Episode(time, trace, nthEpisode=i,
+            self[datakey] = Series([Episode(time, trace, n_episode=i,
                                             piezo=pTrace,
                                             command=cVtrace,
-                                            samplingRate = self.samplingRate)
+                                            sampling_rate = self.sampling_rate)
                                     for i, (trace, pTrace, cVtrace)
                                     in enumerate(zip(*loaded_data[1:]))])
 
         elif 'Piezo [V]' in names:
             time, current, piezo, _ = loaded_data
-            self[datakey] = Series([Episode(time, current[i], nthEpisode=i,
+            self[datakey] = Series([Episode(time, current[i], n_episode=i,
                                             piezo=piezo[i],
-                                            samplingRate = self.samplingRate)
+                                            sampling_rate = self.sampling_rate)
                                     for i in range(len(current))])
 
         elif 'Command Voltage [V]' in names:
             time, current, _, command = loaded_data
-            self[datakey] = Series([Episode(time, current[i], nthEpisode=i,
+            self[datakey] = Series([Episode(time, current[i], n_episode=i,
                                             command=command[i],
-                                            samplingRate = self.samplingRate)
+                                            sampling_rate = self.sampling_rate)
                                     for i in range(len(current))])
 
         else:
             time, current, _, _ = loaded_data
-            self[datakey] = Series([Episode(time, current[i], nthEpisode=i,
-                                            samplingRate = self.samplingRate)
+            self[datakey] = Series([Episode(time, current[i], n_episode=i,
+                                            sampling_rate = self.sampling_rate)
                                     for i in range(len(current))])
 
     def save_to_pickle(self, filepath):
@@ -159,25 +163,15 @@ class Recording(dict):
 
         # create dict to write matlab file and add the time vector
         export_dict = dict()
-        export_dict['time'] = self['raw_'][0]['time']
+        export_dict['time'] = self['raw_'][0].time
         no_episodes = len(self[datakey])
         fill_length = len(str(no_episodes))
         for i, episode in enumerate(self[datakey]):
             if i in list_exports:
-                for name, value in episode.items():
-                    # the if statements skip the items that do not need to be
-                    # saved
-                    if name == 'time':
-                        continue
-                    elif name == 'piezo' and not save_piezo:
-                        continue
-                    elif name == 'command' and not save_command:
-                        continue
-                    else:
-                    # add data to dictionary
-                        n = str(episode.nthEpisode)
-                        n = n.zfill(fill_length)
-                        export_dict[name+n] = value
+                n = str(episode.n_episode).zfill(fill_length)
+                export_dict['trace'+n] = episode.trace
+                if save_piezo: export_dict['piezo'+n] = episode.piezo
+                if save_command: export_dict['command'+n] = episode.command
         io.savemat(filepath,export_dict)
 
 

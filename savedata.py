@@ -138,7 +138,7 @@ def save_matlab(data, filepath='', save_piezo=True,
                     continue
                 else:
                 # add data to dictionary
-                    n = str(episode.nthEpisode)
+                    n = str(episode.n_episode)
                     n = n.zfill(fill_length)
                     savedict[name+n] = value
         #save to file

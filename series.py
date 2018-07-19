@@ -15,12 +15,12 @@ class Series(list):
         The `reconstruct` input is a placeholder
         """
         list.__init__(self,data)
-
-    def get_min(self,name):
-        return np.min([np.min(episode[name]) for episode in self])
-
-    def get_max(self,name):
-        return np.max([np.max(episode[name]) for episode in self])
+    # 
+    # def get_min(self,name):
+    #     return np.min([np.min(episode[name]) for episode in self])
+    #
+    # def get_max(self,name):
+    #     return np.max([np.max(episode[name]) for episode in self])
 
     def filter_all(self, filterFrequency = 1e3):
         """
@@ -29,7 +29,7 @@ class Series(list):
         """
         output = copy.deepcopy(self)
         for episode in output:
-            episode.filter_episode(filterFrequency, episode.samplingRate)
+            episode.filter_episode(filterFrequency, episode.sampling_rate)
         return output
 
     def baseline_correct_all(self, intervals = [], method = 'poly',
