@@ -1,6 +1,6 @@
 import numpy as np
 
-from filtering import gaussian_filter
+from filtering import gaussian_filter, ChungKennedyFilter
 from analysis import baseline_correction
 from tools import piezo_selection, parse_filename
 
@@ -26,10 +26,6 @@ class Episode():
         time_unit_multiplier = 1
         if timeInputUnit=='ms': time_unit_multiplier = 1000
 
-        self.filterFrequency = np.inf
-        self.baselineCorrected = False
-        self.idealized = False
-
         self.time = time*time_unit_multiplier
         self.trace = trace
         self.piezo = piezo
@@ -38,14 +34,23 @@ class Episode():
         self.sampling_rate = sampling_rate
         self.suspiciousSTD = False
 
-    def filter_episode(self, filterFrequency=1e3, sampling_rate=None,
-                       method='convolution'):
-        if sampling_rate is None:
-            sampling_rate = self.sampling_rate
-        self.trace = gaussian_filter(signal=self.trace, method=method,
+    def gauss_filter_episode(self, filterFrequency=1e3, method='convolution'):
+        """
+        Replace the current trace of the episode by the gauss filtered version
+        of itself
+        """
+        self.trace = gaussian_filter(signal=self.trace,
                                      filterFrequency=filterFrequency,
-                                     sampling_rate=sampling_rate)
-        self.filterFrequency = filterFrequency
+                                     sampling_rate=self.sampling_rate)
+
+    def CK_filter_episode(self, window_lengths, weight_exponent, weight_window,
+				          apriori_f_weights=False, apriori_b_weights=False):
+        """
+        Replace the current trace by the CK fitered version of itself
+        """
+        ck_filter = ChungKennedyFilter(window_lengths, weight_exponent,
+                            weight_window, apriori_f_weights, apriori_b_weights)
+        self.trace = ck_filter.apply_filter(self.trace)
 
     def baseline_correct_episode(self, intervals, method='poly', degree=1,
                                  time_unit='ms', select_intvl=False,
@@ -60,12 +65,10 @@ class Episode():
                                          piezo=self.piezo,
                                          select_piezo=select_piezo,
                                          active=active, deviation=deviation)
-        self.baselineCorrected = True
 
     def idealize(self, thresholds):
         activity, signalmax = threshold_crossing(self.trace, thresholds)
         episode.trace = activity*signalmax
-        self.idealized = True
 
     def check_standarddeviation_all(self, stdthreshold=5e-13):
         """
@@ -86,5 +89,6 @@ class Episode():
         try:
             mean = np.mean(self.command)
             std = np.std(self.command)
-        except: pass
+        except:
+            mean = std = np.nan
         return mean, std

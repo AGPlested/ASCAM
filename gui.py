@@ -9,10 +9,12 @@ from tkinter import ttk
 from tkinter import messagebox
 from tkinter.filedialog import askopenfilename, asksaveasfilename, askdirectory
 import matplotlib
-mpl_ver = (matplotlib.__version__).split('.')
 matplotlib.use('TkAgg')
+#check mpl version because navigation toolbar name has changed
+mpl_ver = (matplotlib.__version__).split('.')
 if int(mpl_ver[0])<2 or int(mpl_ver[1])<2 or int(mpl_ver[2])<2:
-    from matplotlib.backends.backend_tkagg import NavigationToolbar2TkAgg as NavigationToolbar2Tk
+    from matplotlib.backends.backend_tkagg \
+    import NavigationToolbar2TkAgg as NavigationToolbar2Tk
 else: from matplotlib.backends.backend_tkagg import NavigationToolbar2Tk
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
@@ -102,7 +104,7 @@ class GUI(ttk.Frame):
         self.sampling_rate.set("0")
 
         # dictionary for the data
-        self.data = Recording()
+        self.data = Recording('')
         # datakey of the current displayed data
         self.datakey = tk.StringVar()
         self.datakey.set('raw_')
@@ -379,15 +381,17 @@ class FilterFrame(tk.Toplevel):
         self.title("Filter")
         #filterframe variables
         self.filter_selection = tk.StringVar()
-        self.filter_selection.trace("w", self.create_entry_frame)
         self.filter_selection.set('Gaussian')
+        self.filter_selection.trace("w", self.create_entry_frame)
         #paramters for gaussian filter
         self.gaussian_fc = tk.StringVar()
         self.gaussian_fc.set('1000')
         #parameters for Chung Kennedy filter
-        self.n_predictors = tk.StringVar()
         self.weight_exponent = tk.StringVar()
         self.lengths_predictors = tk.StringVar()
+        self.weight_window = tk.StringVar()
+        self.ap_f_weights = tk.StringVar()
+        self.ap_b_weights = tk.StringVar()
 
         self.create_widgets()
         self.create_entry_frame()
@@ -419,19 +423,28 @@ class FilterFrame(tk.Toplevel):
                       ).grid(row=0, column=0)
             ttk.Entry(self.entry_frame, textvariable=self.gaussian_fc, width=7\
                       ).grid(row=0, column=1)
+
         elif self.filter_selection.get()=='Chung-Kennedy':
-            ttk.Label(self.entry_frame, text="Number of predictors"\
+            ttk.Label(self.entry_frame, text="Widths of predictors"\
                       ).grid(row=0, column=0)
-            ttk.Entry(self.entry_frame, textvariable=self.n_predictors, width=7\
+            ttk.Entry(self.entry_frame, textvariable=self.lengths_predictors, width=20\
                       ).grid(row=0, column=1)
-            ttk.Label(self.entry_frame, text="Weight exponent"\
+            ttk.Label(self.entry_frame, text="Weight exponent (p)"\
                       ).grid(row=1, column=0)
             ttk.Entry(self.entry_frame, textvariable=self.weight_exponent,
                       width=7).grid(row=1, column=1)
-            ttk.Label(self.entry_frame, text="Lengths of predictors"\
+            ttk.Label(self.entry_frame, text="weight window (M)"\
                       ).grid(row=2, column=0)
-            ttk.Entry(self.entry_frame, textvariable=self.lengths_predictors,
+            ttk.Entry(self.entry_frame, textvariable=self.weight_window,
                       width=7).grid(row=2, column=1)
+            ttk.Label(self.entry_frame, text="forward pi"\
+                      ).grid(row=3, column=0)
+            ttk.Entry(self.entry_frame, textvariable=self.ap_f_weights,
+                      width=7).grid(row=3, column=1)
+            ttk.Label(self.entry_frame, text="backward pi"\
+                      ).grid(row=4, column=0)
+            ttk.Entry(self.entry_frame, textvariable=self.ap_b_weights,
+                      width=7).grid(row=4, column=1)
 
     def filter_series(self):
         log.info('going to filter all episodes')
@@ -445,10 +458,21 @@ class FilterFrame(tk.Toplevel):
                 self.parent.update_list()
                 self.parent.draw_plots()
         elif self.filter_selection.get()=="Chung-Kennedy":
-            #backend for CK filter is not finished
-            messagebox.showerror("Sorry","Chung-Kennedy filter has not yet"\
-                                 +"been implemented")
-            # time.sleep(5)
+            if self.ap_f_weights:
+                ap_f = [int(x) for x in self.ap_f_weights.get().split()]
+            else: ap_f = False
+            if self.ap_b_weights:
+                ap_b = [int(x) for x in self.ap_b_weights.get().split()]
+            else: ap_b = False
+            if self.parent.data.CK_filter_series(
+                               [int(x) for x in self.lengths_predictors.get().split()],
+                               int(self.weight_exponent.get()),
+                               int(self.weight_window.get()),
+                               ap_b, ap_f):
+                log.info('succesfully called gauss filter')
+                self.parent.datakey.set(self.parent.data.currentDatakey)
+                self.parent.update_list()
+                self.parent.draw_plots()
 
     def ok_click(self):
         if self.filter_selection.get(): self.filter_series()

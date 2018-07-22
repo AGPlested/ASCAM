@@ -24,14 +24,18 @@ class Series(list):
         """
         output = copy.deepcopy(self)
         for episode in output:
-            episode.filter_episode(filterFrequency, episode.sampling_rate)
+            episode.gauss_filter_episode(filterFrequency)
         return output
 
-    def CK_filter(self, filterFrequency=1e3):
-        """DOES NOTHING
+    def CK_filter(self, window_lengths, weight_exponent, weight_window,
+				  apriori_f_weights=False, apriori_b_weights=False):
         """
-        return self
-
+        """
+        output = copy.deepcopy(self)
+        for episode in output:
+            episode.CK_filter_episode(window_lengths, weight_exponent,
+                            weight_window, apriori_f_weights, apriori_b_weights)
+        return output
     def baseline_correct_all(self, intervals=[], method='poly', degree=1,
                              time_unit='ms', select_intvl=False,
                              select_piezo=False, active=False, deviation=0.05):

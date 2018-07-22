@@ -11,7 +11,8 @@ from episode import Episode
 from series import Series
 
 class Recording(dict):
-    def __init__(self, filename='', sampling_rate=0, filetype='',
+    def __init__(self, filename='data/180426 000 Copy Export.mat',
+                 sampling_rate=4e4, filetype='',
                  headerlength=0, dtype=None, time_unit='ms', piezoUnit='V',
                  commandUnit='V', currentUnit='A'):
         log.info("""intializing Recording""")
@@ -201,28 +202,34 @@ class Recording(dict):
         """
         Filter the current series using a gaussian filter
         """
+        fdatakey = f'GFILTER{filter_freq}_'
         if self.currentDatakey == 'raw_':
             #if its the first operation drop the 'raw-'
-            newDatakey = 'GFILTER'+str(filter_freq)+'_'
+            new_key = fdatakey
         else:
             #if operations have been done before combine the names
-            newDatakey = self.currentDatakey+'GFILTER'+str(filter_freq)+'_'
-        self[newDatakey] = self[self.currentDatakey].gaussian_filter(filter_freq)
-        self.currentDatakey = newDatakey
+            new_key = self.currentDatakey+fdatakey
+        self[new_key] = self[self.currentDatakey].gaussian_filter(filter_freq)
+        self.currentDatakey = new_key
         return True
 
-    def filter_series_CK(self, *args, **kwargs):
-        """ DOES NOTHING
+    def CK_filter_series(self, window_lengths, weight_exponent, weight_window,
+				         apriori_f_weights=False, apriori_b_weights=False):
+        """
         Filter the current series using the Chung-Kennedy filter banks
         """
-        # if self.currentDatakey == 'raw_':
-        #     #if its the first operation drop the 'raw-'
-        #     newDatakey = 'CKFILTER_'
-        # else:
-        #     #if operations have been done before combine the names
-        #     newDatakey = self.currentDatakey+'CKFILTER_'
-        # self[newDatakey] = self[self.currentDatakey].CK_filter(*args, **kwargs)
-        # self.currentDatakey = newDatakey
+        n_filters = len(window_lengths)
+        fdatakey = f'CKFILTER_K{n_filters}p{weight_exponent}M{weight_window}_'
+        if self.currentDatakey == 'raw_':
+            #if its the first operation drop the 'raw-'
+            newDatakey = fdatakey
+        else:
+            #if operations have been done before combine the names
+            newDatakey = self.currentDatakey+fdatakey
+        self[newDatakey]\
+        = self[self.currentDatakey].CK_filter(window_lengths, weight_exponent,
+                            weight_window, apriori_f_weights, apriori_b_weights)
+        self.currentDatakey = newDatakey
         return True
 
     def idealize_series(self, thresholds):
