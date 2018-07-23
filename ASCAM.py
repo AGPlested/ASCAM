@@ -2,12 +2,13 @@
 """
 ASCAM for processing and analysis of data from single ion channels.
 """
-from gui import GUI
 import sys
 import os
 import logging
 import datetime
 import getopt
+
+from gui import GUI
 
 def initialize_logger(output_dir,log_level='INFO',silent=False):
     """
@@ -53,8 +54,8 @@ def parse_options():
     silent = True
     logdir = './logfiles'
     try:
-        options, args = getopt.getopt(sys.argv[1:], "l:d:h",
-                                      ["loglevel=", "logdir=","help"])
+        options, args = getopt.getopt(sys.argv[1:], "l:d:th",
+                                      ["loglevel=", "logdir=","help", "test"])
     except getopt.GetoptError as err:
         # print help information and exit:
         print(err)  # will print something like "option -a not recognized"
@@ -66,11 +67,13 @@ def parse_options():
             silent = False
         elif opt in ("-d", "--logdir"):
             logdir = arg
+        elif opt in ("-t", "test"):
+            test = True
         elif opt in ("-h", "--help"):
             usage()
             sys.exit(2)
         else: assert False, "unhandled option"
-    return log_level, silent, logdir
+    return log_level, silent, logdir, test
 
 def usage():
     """
@@ -86,13 +89,13 @@ def usage():
             -h --help : display this message""")
 
 def main():
-    log_level, silent, logdir = parse_options()
+    log_level, silent, logdir, test = parse_options()
 
     #set up the logging module, for now logs are saved in current working
     #directory
-    initialize_logger(logdir,log_level,silent)
+    initialize_logger(logdir, log_level, silent)
     logging.info("-"*20+"Start of new ASCAM session"+"-"*20)
 
-    GUI.run()
+    GUI.run(test)
 
 if __name__ == '__main__': main()
