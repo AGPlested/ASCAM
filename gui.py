@@ -35,17 +35,24 @@ class GUI(ttk.Frame):
     because then they can be entered in entry fields without problems
     """
     @classmethod
-    def run(cls):
+    def run(cls, test=False):
+        """
+        Call this method to start the GUI
+        Initializes root tk window and GUI main frame
+        Parameters:
+            test [bool] - if true load the data in
+                          'ASCAM/data/180426 000 Copy Export.mat'
+        """
         log.info("Starting ASCAM GUI")
         root = tk.Tk()
         root.protocol('WM_DELETE_WINDOW', quit)
         root.title("ASCAM")
         root.grid_columnconfigure(0, weight=1)
         root.grid_rowconfigure(0, weight=1)
-        GUI = cls(root)
+        GUI = cls(root, test)
         root.mainloop()
 
-    def __init__(self, master):
+    def __init__(self, master, test):
         ttk.Frame.__init__(self, master)
         self.master = master
         log.info("initializing main window")
@@ -104,7 +111,8 @@ class GUI(ttk.Frame):
         self.sampling_rate.set("0")
 
         # dictionary for the data
-        self.data = Recording('')
+        if test: self.data = Recording()
+        else: self.data = Recording('')
         # datakey of the current displayed data
         self.datakey = tk.StringVar()
         self.datakey.trace('w',self.change_current_datakey)
