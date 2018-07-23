@@ -1,10 +1,6 @@
 import numpy as np
 
-<<<<<<< HEAD
-def apply_filter(signal, window, *args, **kwargs):
-=======
 def apply_filter(signal, window):
->>>>>>> master
 	"""
 	filename must be a string
 	for now datatype should be using numpy types such as 'np.int16'
