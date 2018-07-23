@@ -107,6 +107,7 @@ class GUI(ttk.Frame):
         self.data = Recording('')
         # datakey of the current displayed data
         self.datakey = tk.StringVar()
+        self.datakey.trace('w',self.change_current_datakey)
         self.datakey.set('raw_')
         # episode number of the currently displayed episode
         self.Nepisode = 0
@@ -116,6 +117,13 @@ class GUI(ttk.Frame):
 
         self.bind("<Configure>", self.draw_plots)
         # this line calls `draw` when it is run
+
+    def change_current_datakey(self,*args,**kwargs):
+        """
+        This function changes the current datakey in the recording object, which
+        is the one that determines what is filtered etc
+        """
+        self.data.currentDatakey = self.datakey.get()
 
     def load_recording(self):
         """ Take a recording object and load it into the GUI.
