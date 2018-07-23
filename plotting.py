@@ -28,7 +28,7 @@ def create_histogram(data, n_bins, density=False):
                 bins={} """.format(hist,bins))
     return hist, bins
 
-def histogram(time, piezos, traces, active = True, piezoSelection=True,
+def histogram(time, piezos, traces, active = True, select_piezo=True,
               deviation=.05, n_bins = 200, density=False, time_unit ='ms',
               intervals=False, sampling_rate=None, **kwargs):
     """
@@ -41,7 +41,7 @@ def histogram(time, piezos, traces, active = True, piezoSelection=True,
         active [boolean] - If true return time points at which piezo
                            voltage is within `deviation` percent of the
                            maximum piezo voltage.
-        piezoSelection [boolean] - If true the points to be included in the
+        select_piezo [boolean] - If true the points to be included in the
                                     histogram are selected based on the piezo
                                     voltage
         deviation [float] - Deviation, as a percentage, from the maximum
@@ -65,14 +65,14 @@ def histogram(time, piezos, traces, active = True, piezoSelection=True,
                 time: {}
                 piezos: {}
                 traces: {}
-                active: {}, piezo_selection:{}, deviation: {}
+                active: {}, select_piezo:{}, deviation: {}
                 n_bins: {}, density:{}, time_unit: {}, sampling_rate: {}
                 intervals: {}
                 and kwars: {}
-                """.format(time,piezos,traces,active,piezoSelection,deviation,
+                """.format(time,piezos,traces,active,select_piezo,deviation,
                       n_bins,density,time_unit,sampling_rate,intervals,kwargs))
     trace_list = []
-    if piezoSelection:
+    if select_piezo:
         for piezo, trace in zip(piezos, traces):
             _, _, trace_points = piezo_selection(time, piezo, trace, active,
                                                  deviation)

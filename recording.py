@@ -1,18 +1,20 @@
+import os
+import logging as log
+import pickle
+
+from scipy import io
+
 import readdata
 import savedata
-import os
 from tools import parse_filename
 from episode import Episode
 from series import Series
-import pickle
-from scipy import io
-import logging as log
 
 class Recording(dict):
-    def __init__(self, filename = '',
-                 sampling_rate = 0, filetype = '', headerlength = 0,
-                 dtype = None, timeUnit = 'ms', piezoUnit = 'V',
-                 commandUnit = 'V', currentUnit = 'A'):
+    def __init__(self, filename='data/180426 000 Copy Export.mat',
+                 sampling_rate=4e4, filetype='',
+                 headerlength=0, dtype=None, time_unit='ms', piezoUnit='V',
+                 commandUnit='V', currentUnit='A'):
         log.info("""intializing Recording""")
 
         # parameters for loading the data
@@ -23,7 +25,7 @@ class Recording(dict):
 
         # attributes of the data
         self.sampling_rate = int(float(sampling_rate))
-        self.timeUnit = timeUnit
+        self.time_unit = time_unit
         self.commandUnit = commandUnit
         self.currentUnit = currentUnit
         self.piezoUnit = piezoUnit
@@ -148,7 +150,7 @@ class Recording(dict):
             pickle.dump(self, save_file)
         return True
 
-    def export_matlab(self,filepath,datakey,lists,save_piezo,save_command):
+    def export_matlab(self, filepath, datakey, lists, save_piezo, save_command):
         """Export all the episodes in the givens list(s) from the given series
         (only one) to a matlab file."""
         if not filepath.endswith('.mat'):
@@ -174,51 +176,72 @@ class Recording(dict):
                 if save_command: export_dict['command'+n] = episode.command
         io.savemat(filepath,export_dict)
 
-
-    def call_operation(self, operation, *args, **kwargs):
-        """
-        Calls an operation to be performed on the data.
-        Valid operations:
-        'BC_' - baseline correction
-        'FILTER_' - filter
-        'TC_' - threshold crossing
-
-        returns TRUE if the operation was called FALSE if not
-        """
-        valid = self.check_operation(operation)
-        if valid:
-            # create new datakey
-            if self.currentDatakey == 'raw_':
-                #if its the first operation drop the 'raw-'
-                newDatakey = operation+str(*args)+'_'
-            else:
-                #if operations have been done before combine the names
-                newDatakey = self.currentDatakey+operation+str(*args)+'_'
-
-            if operation == 'FILTER_':
-                self[newDatakey] = self[self.currentDatakey].filter_all(*args)
-            elif operation == 'BC_':
-                self[newDatakey] = (
-                        self[self.currentDatakey].baseline_correct_all(*args,
-                                                                    **kwargs))
-            elif operation == 'TC_':
-                self[newDatakey]=self[self.currentDatakey].idealize_all(*args)
-            else:
-                print("Uknown operation!")
-            self.currentDatakey = newDatakey
-        return valid
-
-    def check_operation(self, operation):
-        """
-        Check if the requested operatioin is valid, i.e. if it has not already
-        been applied to the current series.
-        The check is to see if the series has been filter or baselined. It
-        does not compare the filter frequency so filtering twice at different
-        frequencies is currently forbidden.
-        """
-        if operation in self.currentDatakey:
-            print(operation+" has already been performed on this series.")
-            print('Current series is '+self.currentDatakey)
-            return False
+    def baseline_correction(self, method='poly', poly_degree=1, intval=[],
+                            time_unit='ms', select_intvl=False,
+                            select_piezo=True, active_piezo=False,
+                            piezo_diff=0.05):
+        log.info("""calling baseline_correction""")
+        # valid = self.check_operation('BC_')
+        if self.currentDatakey=='raw_':
+            #if its the first operation drop the 'raw_'
+            newDatakey = 'BC_'
         else:
-            return True
+            #if operations have been done before combine the names
+            newDatakey = self.currentDatakey+'BC_'
+        log.info("""new datakey is {}""".format(newDatakey))
+        self[newDatakey] = self[self.currentDatakey].baseline_correct_all(
+                            intervals=intval, method=method, degree=poly_degree,
+                            time_unit=time_unit, select_intvl=select_intvl,
+                            select_piezo=select_piezo, active=active_piezo,
+                            deviation=piezo_diff)
+        self.currentDatakey = newDatakey
+        log.debug("""keys of the recording are now {}""".format(self.keys()))
+        return True
+
+    def gauss_filter_series(self, filter_freq):
+        """
+        Filter the current series using a gaussian filter
+        """
+        fdatakey = f'GFILTER{filter_freq}_'
+        if self.currentDatakey == 'raw_':
+            #if its the first operation drop the 'raw-'
+            new_key = fdatakey
+        else:
+            #if operations have been done before combine the names
+            new_key = self.currentDatakey+fdatakey
+        self[new_key] = self[self.currentDatakey].gaussian_filter(filter_freq)
+        self.currentDatakey = new_key
+        return True
+
+    def CK_filter_series(self, window_lengths, weight_exponent, weight_window,
+				         apriori_f_weights=False, apriori_b_weights=False):
+        """
+        Filter the current series using the Chung-Kennedy filter banks
+        """
+        n_filters = len(window_lengths)
+        fdatakey = f'CKFILTER_K{n_filters}p{weight_exponent}M{weight_window}_'
+        if self.currentDatakey == 'raw_':
+            #if its the first operation drop the 'raw-'
+            newDatakey = fdatakey
+        else:
+            #if operations have been done before combine the names
+            newDatakey = self.currentDatakey+fdatakey
+        self[newDatakey]\
+        = self[self.currentDatakey].CK_filter(window_lengths, weight_exponent,
+                            weight_window, apriori_f_weights, apriori_b_weights)
+        self.currentDatakey = newDatakey
+        return True
+
+    def idealize_series(self, thresholds):
+        """
+        DOES NOTHING
+        """
+        # if self.currentDatakey == 'raw_':
+        #     #if its the first operation drop the 'raw-'
+        #     newDatakey = 'TC_'
+        # else:
+        #     #if operations have been done before combine the names
+        #     newDatakey = self.currentDatakey+'TC_'
+        # self[newDatakey] = self[self.currentDatakey].idealize_all(thresholds)
+        # self.currentDatakey = newDatakey
+        return True

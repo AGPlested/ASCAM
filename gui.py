@@ -10,9 +10,14 @@ from tkinter import messagebox
 from tkinter.filedialog import askopenfilename, asksaveasfilename, askdirectory
 import matplotlib
 matplotlib.use('TkAgg')
+#check mpl version because navigation toolbar name has changed
+mpl_ver = (matplotlib.__version__).split('.')
+if int(mpl_ver[0])<2 or int(mpl_ver[1])<2 or int(mpl_ver[2])<2:
+    from matplotlib.backends.backend_tkagg \
+    import NavigationToolbar2TkAgg as NavigationToolbar2Tk
+else: from matplotlib.backends.backend_tkagg import NavigationToolbar2Tk
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from matplotlib.backends.backend_tkagg import NavigationToolbar2Tk
 from matplotlib import gridspec as gs
 
 from tools import stringList_parser, parse_filename
@@ -30,17 +35,24 @@ class GUI(ttk.Frame):
     because then they can be entered in entry fields without problems
     """
     @classmethod
-    def run(cls):
+    def run(cls, test=False):
+        """
+        Call this method to start the GUI
+        Initializes root tk window and GUI main frame
+        Parameters:
+            test [bool] - if true load the data in
+                          'ASCAM/data/180426 000 Copy Export.mat'
+        """
         log.info("Starting ASCAM GUI")
         root = tk.Tk()
         root.protocol('WM_DELETE_WINDOW', quit)
         root.title("ASCAM")
         root.grid_columnconfigure(0, weight=1)
         root.grid_rowconfigure(0, weight=1)
-        GUI = cls(root)
+        GUI = cls(root, test)
         root.mainloop()
 
-    def __init__(self, master):
+    def __init__(self, master, test):
         ttk.Frame.__init__(self, master)
         self.master = master
         log.info("initializing main window")
@@ -99,9 +111,11 @@ class GUI(ttk.Frame):
         self.sampling_rate.set("0")
 
         # dictionary for the data
-        self.data = Recording()
+        if test: self.data = Recording()
+        else: self.data = Recording('')
         # datakey of the current displayed data
         self.datakey = tk.StringVar()
+        self.datakey.trace('w',self.change_current_datakey)
         self.datakey.set('raw_')
         # episode number of the currently displayed episode
         self.Nepisode = 0
@@ -111,6 +125,13 @@ class GUI(ttk.Frame):
 
         self.bind("<Configure>", self.draw_plots)
         # this line calls `draw` when it is run
+
+    def change_current_datakey(self,*args,**kwargs):
+        """
+        This function changes the current datakey in the recording object, which
+        is the one that determines what is filtered etc
+        """
+        self.data.currentDatakey = self.datakey.get()
 
     def load_recording(self):
         """ Take a recording object and load it into the GUI.
@@ -378,16 +399,20 @@ class FilterFrame(tk.Toplevel):
         self.title("Filter")
         #filterframe variables
         self.filter_selection = tk.StringVar()
+        self.filter_selection.set('Gaussian')
         self.filter_selection.trace("w", self.create_entry_frame)
         #paramters for gaussian filter
         self.gaussian_fc = tk.StringVar()
         self.gaussian_fc.set('1000')
         #parameters for Chung Kennedy filter
-        self.n_predictors = tk.StringVar()
         self.weight_exponent = tk.StringVar()
         self.lengths_predictors = tk.StringVar()
+        self.weight_window = tk.StringVar()
+        self.ap_f_weights = tk.StringVar()
+        self.ap_b_weights = tk.StringVar()
 
         self.create_widgets()
+        self.create_entry_frame()
 
     def create_widgets(self):
         """
@@ -403,57 +428,72 @@ class FilterFrame(tk.Toplevel):
         self.entry_frame = ttk.Frame(self)
         self.entry_frame.grid(row=1, column=0, columnspan=2)
 
-        ttk.Button(self, text="OK", command=self.ok_button).grid(row=5)
-        ttk.Button(self, text="Cancel", command=self.cancel_button).grid(row=5,
-                                                                       column=1)
+        ttk.Button(self, text="OK", command=self.ok_click).grid(row=5)
+        ttk.Button(self, text="Cancel", command=self.destroy\
+                   ).grid(row=5, column=1)
 
     def create_entry_frame(self,*args,**kwargs):
         """
         Create a frame for the entry of the filter parameters
         """
         if self.filter_selection.get()=='Gaussian':
-            ttk.Label(self.entry_frame, text="Frequency [Hz]").grid(row=0,
-                                                                    column=0)
-            ttk.Entry(self.entry_frame,textvariable=self.gaussian_fc, width=7).\
-                                                         grid(row = 0, column=1)
+            ttk.Label(self.entry_frame, text="Frequency [Hz]"\
+                      ).grid(row=0, column=0)
+            ttk.Entry(self.entry_frame, textvariable=self.gaussian_fc, width=7\
+                      ).grid(row=0, column=1)
+
         elif self.filter_selection.get()=='Chung-Kennedy':
-            ttk.Label(self.entry_frame, text="Number of predictors").grid(row=0,
-                                                                    column=0)
-            ttk.Entry(self.entry_frame,textvariable=self.n_predictors,width=7).\
-                                                         grid(row = 0, column=1)
-            ttk.Label(self.entry_frame, text="Weight exponent").grid(row=1,
-                                                                    column=0)
-            ttk.Entry(self.entry_frame,
-                      textvariable=self.weight_exponent,width=7).grid(row = 1,
-                                                                      column=1)
-            ttk.Label(self.entry_frame, text="Lengths of predictors").grid(
-                                                                row=2, column=0)
-            ttk.Entry(self.entry_frame,
-                      textvariable=self.lengths_predictors,width=7).grid(
-                                                              row = 2, column=1)
+            ttk.Label(self.entry_frame, text="Widths of predictors"\
+                      ).grid(row=0, column=0)
+            ttk.Entry(self.entry_frame, textvariable=self.lengths_predictors, width=20\
+                      ).grid(row=0, column=1)
+            ttk.Label(self.entry_frame, text="Weight exponent (p)"\
+                      ).grid(row=1, column=0)
+            ttk.Entry(self.entry_frame, textvariable=self.weight_exponent,
+                      width=7).grid(row=1, column=1)
+            ttk.Label(self.entry_frame, text="weight window (M)"\
+                      ).grid(row=2, column=0)
+            ttk.Entry(self.entry_frame, textvariable=self.weight_window,
+                      width=7).grid(row=2, column=1)
+            ttk.Label(self.entry_frame, text="forward pi"\
+                      ).grid(row=3, column=0)
+            ttk.Entry(self.entry_frame, textvariable=self.ap_f_weights,
+                      width=7).grid(row=3, column=1)
+            ttk.Label(self.entry_frame, text="backward pi"\
+                      ).grid(row=4, column=0)
+            ttk.Entry(self.entry_frame, textvariable=self.ap_b_weights,
+                      width=7).grid(row=4, column=1)
+
     def filter_series(self):
         log.info('going to filter all episodes')
         if self.filter_selection.get()=="Gaussian":
             #convert textvar to float
             cutoffFrequency = float(self.gaussian_fc.get())
             log.info("filter frequency is {}".format(cutoffFrequency))
-            if self.parent.data.call_operation('FILTER_',cutoffFrequency):
-                log.info('called operation succesfully')
+            if self.parent.data.gauss_filter_series(cutoffFrequency):
+                log.info('succesfully called gauss filter')
                 self.parent.datakey.set(self.parent.data.currentDatakey)
-                log.info('updating list and plots')
                 self.parent.update_list()
                 self.parent.draw_plots()
         elif self.filter_selection.get()=="Chung-Kennedy":
-            #backend for CK filter is not finished
-            messagebox.showerror("Sorry","Chung-Kennedy filter has not yet"\
-                                 +"been implemented")
-            # time.sleep(5)
+            if self.ap_f_weights:
+                ap_f = [int(x) for x in self.ap_f_weights.get().split()]
+            else: ap_f = False
+            if self.ap_b_weights:
+                ap_b = [int(x) for x in self.ap_b_weights.get().split()]
+            else: ap_b = False
+            if self.parent.data.CK_filter_series(
+                               [int(x) for x in self.lengths_predictors.get().split()],
+                               int(self.weight_exponent.get()),
+                               int(self.weight_window.get()),
+                               ap_b, ap_f):
+                log.info('succesfully called gauss filter')
+                self.parent.datakey.set(self.parent.data.currentDatakey)
+                self.parent.update_list()
+                self.parent.draw_plots()
 
-    def ok_button(self):
+    def ok_click(self):
         if self.filter_selection.get(): self.filter_series()
-        self.destroy()
-
-    def cancel_button(self):
         self.destroy()
 
 class ExportFileDialog(tk.Toplevel):
@@ -650,7 +690,7 @@ class PlotFrame(ttk.Frame):
         for plot in self.subplots[:-1]:
             plot.set_xticklabels([]) #turn off numbering on upper plots
         # label only the last axis
-        self.subplots[-1].set_xlabel("Time ["+self.parent.data.timeUnit+"]")
+        self.subplots[-1].set_xlabel("Time ["+self.parent.data.time_unit+"]")
 
     def plot_histogram(self,pgs,**kwargs):
         """
@@ -663,7 +703,7 @@ class PlotFrame(ttk.Frame):
         density = bool(self.parent.hist_density.get())
         # time points are selected based on piezo values if the variable
         # 'hist_piezo_interval' is 1
-        piezo_selection = bool(self.parent.hist_piezo_interval.get())
+        select_piezo = bool(self.parent.hist_piezo_interval.get())
         active = bool(self.parent.hist_piezo_active.get())
         deviation = float(self.parent.hist_piezo_deviation.get())
         fs = float(self.parent.sampling_rate.get())
@@ -671,9 +711,9 @@ class PlotFrame(ttk.Frame):
 
         log.debug("""number of bins = {}
             density = {}
-            piezo_selection = {}
+            select_piezo = {}
             active = {}
-            deviation = {}""".format(n_bins,density,piezo_selection,
+            deviation = {}""".format(n_bins,density,select_piezo,
                                      active,deviation))
         # create the plot object so we can delete it later
         ax = self.fig.add_subplot(pgs[:2,2])
@@ -692,7 +732,7 @@ class PlotFrame(ttk.Frame):
             # get the bins and their values or the current episode
             hist_single = plotting.histogram(time, single_piezo, single_trace,
                                              active=active,
-                                             piezo_selection=piezo_selection,
+                                             select_piezo=select_piezo,
                                              deviation=deviation,
                                              n_bins=n_bins,
                                              density=density,
@@ -719,7 +759,7 @@ class PlotFrame(ttk.Frame):
                 # get the bins and their values for all episodes
                 hist_all = plotting.histogram(time, all_piezos, all_traces,
                                               active=active,
-                                              piezo_selection=piezo_selection,
+                                              select_piezo=select_piezo,
                                               deviation=deviation,
                                               n_bins=n_bins,
                                               density=density,
@@ -778,14 +818,14 @@ class BaselineFrame(tk.Toplevel):
         self.title("Baseline correction")
 
         # variables to choose the method
-        self.piezo_selection = tk.IntVar()
-        self.piezo_selection.set(1)
-        self.intervalSelection = tk.IntVar()
-        self.intervalSelection.set(0)
+        self.select_piezo = tk.IntVar()
+        self.select_piezo.set(1)
+        self.select_intvl = tk.IntVar()
+        self.select_intvl.set(0)
 
         ### piezo and interval selection should be mutually exclusive
-        self.piezo_selection.trace("w",self.piezo_NotInterval)
-        self.intervalSelection.trace("w",self.interval_NotPiezo)
+        self.select_piezo.trace("w",self.piezo_NotInterval)
+        self.select_intvl.trace("w",self.interval_NotPiezo)
 
         ### parameters of the baseline procedure
         self.method = tk.StringVar()
@@ -813,49 +853,46 @@ class BaselineFrame(tk.Toplevel):
         Creates all widgets that apply to both modes.
         """
 
-        ### general options
+        # general options
 
-        ttk.Label(self,text='method').grid(column=1,row=0)
-        ############## create dropdown menu
-        ttk.Entry(self,width=7,textvariable=self.method).grid(
-                                                            column=2,row = 0)
+        ttk.Label(self, text='method').grid(column=1, row=0)
+        # create dropdown menu
+        ttk.Entry(self, width=7, textvariable=self.method\
+                  ).grid(column=2, row=0)
 
-        ttk.Label(self,text='degree').grid(column=1,row=1)
-        ttk.Entry(self,width=8,textvariable=self.degree).grid(row = 1,
-                                                                column = 2)
-
-
+        ttk.Label(self, text='degree').grid(column=1, row=1)
+        ttk.Entry(self,width=8, textvariable=self.degree\
+                  ).grid(row=1, column=2)
 
         ### piezo selection options
         ttk.Label(self, text="Select using piezo voltage").grid(row=2,
                                                                 column=0)
-        ttk.Checkbutton(self, variable=self.piezo_selection). grid(row=2,
+        ttk.Checkbutton(self, variable=self.select_piezo). grid(row=2,
                                                                   column=1)
 
         ttk.Label(self, text="Active/Inactive").grid(row=3, column=0)
-        ttk.Checkbutton(self, variable=self.piezo_active).grid(row=3,column=1)
+        ttk.Checkbutton(self, variable=self.piezo_active).grid(row=3, column=1)
 
         ttk.Label(self, text="deviation from max/min").grid(row=4, column=0)
-        ttk.Entry(self,textvariable=self.deviation,
-                  width=7).grid(row = 4, column=1)
+        ttk.Entry(self, textvariable=self.deviation, width=7\
+                  ).grid(row=4, column=1)
 
-        ### interval selection options
+        # interval selection options
         ttk.Label(self, text="Use intervals").grid(row=2, column=3)
-        ttk.Checkbutton(self, variable=self.intervalSelection).grid(row=2,
+        ttk.Checkbutton(self, variable=self.select_intvl).grid(row=2,
                                                                     column=4)
         ttk.Label(self, text="Intervals").grid(row=3, column=3)
-        ttk.Entry(self,textvariable=self.interval_entry,width=7).grid(row = 3,
-                                                                     column=4)
+        ttk.Entry(self, textvariable=self.interval_entry, width=7\
+                  ).grid(row=3, column=4)
 
 
-        ### ok and close
-        ttk.Button(self, text="OK", command=self.ok_button).grid(row=5,
-                                                                 columnspan=2)
-        ttk.Button(self, text="Cancel", command=self.destroy).grid(row=5,
-                                                                  column=3,
-                                                                 columnspan=2)
+        # ok and close
+        ttk.Button(self, text="OK", command=self.ok_click\
+                   ).grid(row=5, columnspan=2)
+        ttk.Button(self, text="Cancel", command=self.destroy\
+                   ).grid(row=5, column=3, columnspan=2)
 
-    def ok_button(self):
+    def ok_click(self):
         """
         redraw the histogram (with new settings) and close the dialog
         """
@@ -865,42 +902,32 @@ class BaselineFrame(tk.Toplevel):
         except: pass
 
         deviation = float(self.deviation.get())
-
-        if self.parent.parent.data.call_operation('BC_',
-                                           method = self.method.get(),
-                                           degree = int(self.degree.get()),
-                                           intervals = self.intervals,
-                                           timeUnit = self.time_unit,
-                                           intervalSelection = (
-                                                self.intervalSelection.get()),
-                                           piezo_selection = (
-                                                self.piezo_selection.get()),
-                                           active = self.piezo_active.get(),
-                                           deviation = deviation
-                                           ):
-            log.info('called operation succesfully')
-            self.parent.parent.datakey.set(
-                                       self.parent.parent.data.currentDatakey)
-            log.info('updating list and plots')
+        if self.parent.parent.data.baseline_correction(
+                method=self.method.get(), poly_degree=int(self.degree.get()),
+                intval=self.intervals, time_unit=self.time_unit,
+                select_intvl=self.select_intvl.get(),
+                select_piezo=self.select_piezo.get(),
+                active_piezo=self.piezo_active.get(),
+                piezo_diff=deviation):
+            log.info('succesfully called baseline_correction')
+            self.parent.parent.datakey.set(self.parent.parent.data.currentDatakey)
             self.parent.parent.update_list()
             self.parent.parent.draw_plots()
-        ## here we should also have that if the operation has been performed
-        ## the selection switches to that operation
         self.destroy()
 
     def interval_NotPiezo(self,*args):
         """
         If interval selection is turned on turn off the piezo selection
         """
-        if self.intervalSelection.get() == 1:
-            self.piezo_selection.set(0)
+        if self.select_intvl.get() == 1:
+            self.select_piezo.set(0)
 
     def piezo_NotInterval(self,*args):
         """
         If piezo selection is turned on turn off interval
         """
-        if self.piezo_selection.get() == 1:
-            self.intervalSelection.set(0)
+        if self.select_piezo.get() == 1:
+            self.select_intvl.set(0)
 
 class ListSelection(ttk.Frame):
     def __init__(self, parent):

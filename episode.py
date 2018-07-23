@@ -1,12 +1,12 @@
 import numpy as np
-import filtering
-import analysis
+
+from filtering import gaussian_filter, ChungKennedyFilter
+from analysis import baseline_correction
 from tools import piezo_selection, parse_filename
 
 class Episode():
-    def __init__(self, time, trace, n_episode = 0, piezo = None,
-                 command = None, filterType = None,
-                 sampling_rate = 4e4, timeInputUnit = 'ms'):
+    def __init__(self, time, trace, n_episode=0, piezo=None, command=None,
+                 filterType=None, sampling_rate=4e4, timeInputUnit='ms'):
         """
         Episode objects hold all the information about an epoch and
         should be used to store raw and manipulated data
@@ -19,17 +19,12 @@ class Episode():
                                          Piezo device
             command [1D array of floats] - voltage applied to
                                                   cell
-            nthEp [int] - the number of measurements on this cell that
+            n_episode [int] - the number of measurements on this cell that
                           came before this one
             filterType [string] - type of filter used
         """
         time_unit_multiplier = 1
-        if timeInputUnit == 'ms':
-            time_unit_multiplier = 1000
-
-        self.filterFrequency = np.inf
-        self.baselineCorrected = False
-        self.idealized = False
+        if timeInputUnit=='ms': time_unit_multiplier = 1000
 
         self.time = time*time_unit_multiplier
         self.trace = trace
@@ -39,45 +34,43 @@ class Episode():
         self.sampling_rate = sampling_rate
         self.suspiciousSTD = False
 
-    def filter_episode(self, filterFrequency = 1e3, sampling_rate = None,
-                       method = 'convolution'):
-        if sampling_rate is None:
-            sampling_rate = self.sampling_rate
-        filterLag = 0 #int(1/(2*frequencyOnSamples))
-        self.trace = filtering.gaussian_filter(
-                                            signal = self.trace,
-                                            filterFrequency = filterFrequency,
-                                            sampling_rate = sampling_rate,
-                                            method = method
-                                            )[filterLag:]
-        self.filterFrequency = filterFrequency
+    def gauss_filter_episode(self, filterFrequency=1e3, method='convolution'):
+        """
+        Replace the current trace of the episode by the gauss filtered version
+        of itself
+        """
+        self.trace = gaussian_filter(signal=self.trace,
+                                     filterFrequency=filterFrequency,
+                                     sampling_rate=self.sampling_rate)
 
-    def baseline_correct_episode(self, intervals, method = 'poly', degree = 1,
-                                 timeUnit = 'ms', intervalSelection = False,
-                                 piezoSelection = False, active = False,
-                                 deviation = 0.05):
-        self.trace = analysis.baseline_correction(time = self.time,
-                                                     signal = self.trace,
-                                                     fs = self.sampling_rate,
-                                                     intervals = intervals,
-                                                     degree = degree,
-                                                     method = method,
-                                                     timeUnit = timeUnit,
-                                                     intervalSelection = (
-                                                           intervalSelection),
-                                                     piezo = self.piezo,
-                                                     piezoSelection = (
-                                                              piezoSelection),
-                                                     active = active,
-                                                     deviation = deviation)
-        self.baselineCorrected = True
+    def CK_filter_episode(self, window_lengths, weight_exponent, weight_window,
+				          apriori_f_weights=False, apriori_b_weights=False):
+        """
+        Replace the current trace by the CK fitered version of itself
+        """
+        ck_filter = ChungKennedyFilter(window_lengths, weight_exponent,
+                            weight_window, apriori_f_weights, apriori_b_weights)
+        self.trace = ck_filter.apply_filter(self.trace)
+
+    def baseline_correct_episode(self, intervals, method='poly', degree=1,
+                                 time_unit='ms', select_intvl=False,
+                                 select_piezo=False, active=False,
+                                 deviation=0.05):
+        self.trace = baseline_correction(time=self.time, signal=self.trace,
+                                         fs=self.sampling_rate,
+                                         intervals=intervals,
+                                         degree=degree, method=method,
+                                         time_unit=time_unit,
+                                         select_intvl=select_intvl,
+                                         piezo=self.piezo,
+                                         select_piezo=select_piezo,
+                                         active=active, deviation=deviation)
 
     def idealize(self, thresholds):
         activity, signalmax = threshold_crossing(self.trace, thresholds)
         episode.trace = activity*signalmax
-        self.idealized = True
 
-    def check_standarddeviation_all(self, stdthreshold = 5e-13):
+    def check_standarddeviation_all(self, stdthreshold=5e-13):
         """
         check the standard deviation of the episode against a reference value
         """
@@ -96,5 +89,6 @@ class Episode():
         try:
             mean = np.mean(self.command)
             std = np.std(self.command)
-        except: pass
+        except:
+            mean = std = np.nan
         return mean, std

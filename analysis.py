@@ -1,7 +1,8 @@
 import numpy as np
+
 from tools import interval_selection, piezo_selection
 
-def threshold_crossing(signal,amplitudes):
+def threshold_crossing(signal, amplitudes):
     """
     Given a signal and amplitudes assign to each point in the signal its
     closest amplitude value.
@@ -27,9 +28,8 @@ def threshold_crossing(signal,amplitudes):
                 break
     return idealization
 
-
-def multilevel_threshold(signal,thresholds, maxAmplitude = 0,
-                         relativeThresholds = True):
+def multilevel_threshold(signal, thresholds, maxAmplitude=False,
+                         relativeThresholds=True):
     """
     performs threshold crossing for given thresholds. value should be
     given as fraction of the maximum amplitude of the signal
@@ -73,31 +73,30 @@ def multilevel_threshold(signal,thresholds, maxAmplitude = 0,
     idealization *= signalmax
     return idealization
 
-
-def baseline_correction(time, signal, fs, intervals = None, timeUnit = 'ms',
-                        degree = 1, method = 'poly',intervalSelection = False,
-                        piezo = None, piezoSelection = False, active = False,
-                        deviation = 0.05):
+def baseline_correction(time, signal, fs, intervals=None, time_unit='ms',
+                        degree=1, method='poly',select_intvl=False,
+                        piezo=None, select_piezo=False, active= False,
+                        deviation=0.05):
     """
     Perform baseline correction by offsetting the signal with its mean
     in the selected intervals
     Parameters:
         time - 1D array containing times of the measurements in signal
-               units of `timeUnit`
+               units of `time_unit`
         signal - time series of measurements
         intervals - interval or list of intervals from which to
                    estimate the baseline (in ms)
         fs - sampling frequency (in Hz)
-        timeUnit - units of the time vector, 'ms' or 's'
+        time_unit - units of the time vector, 'ms' or 's'
         method - `baseline` can subtract a fitted polynomial of
                  desired degree OR subtract the mean
         degree - if method is 'poly', the degree of the polynomial
     Returns:
         original signal less the fitted baseline
     """
-    if intervalSelection:
-        t, s = interval_selection(time, signal, intervals, fs, timeUnit)
-    elif piezoSelection:
+    if select_intvl:
+        t, s = interval_selection(time, signal, intervals, fs, time_unit)
+    elif select_piezo:
         t, _, s = piezo_selection(time, piezo, signal, active, deviation)
     else:
         t = time
