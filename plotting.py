@@ -96,7 +96,7 @@ def histogram(time, piezos, traces, active = True, select_piezo=True,
 
 def plot_histogram(fig, pgs, episode, series, n_bins=50, density=False, select_piezo=False,
                    active=True, deviation=0.05, fs=4e4, intervals=[], single_hist=True,
-                   indices=[], allpoint_hist=True, current_unit='A',
+                   indices=[], allpoint_hist=True, current_unit='A', axis=None, episode_inds = [],
                    **kwargs):
     """
     this method will draw the histogram next to the current trace
@@ -114,15 +114,12 @@ def plot_histogram(fig, pgs, episode, series, n_bins=50, density=False, select_p
     #the other plots
     ax.yaxis.set_label_position('right')
     ax.yaxis.tick_right()
-
-
     # get data
     time = episode.time
     # get current episode values and put them in a list
     # because the histogram function expects a list
     single_piezo = [episode.piezo]
     single_trace = [episode.trace]
-
     # get the bins and their values or the current episode
     hist_single = histogram(time, single_piezo, single_trace,
                                      active=active, n_bins=n_bins,
@@ -132,15 +129,13 @@ def plot_histogram(fig, pgs, episode, series, n_bins=50, density=False, select_p
                                      intervals=intervals, **kwargs)
     heights_single, bins_single, center_single, width_single\
     = hist_single
-
     if allpoint_hist:
+        log.info("""will create allpoint histogram""")
         # get a list of all the currents and all the traces
-        all_piezos = [episode.piezo for episode in series ]
-        all_traces = [episode.trace for episode in series ]
-
-        # get corresponding piezos and traces
-        all_piezos = [all_piezos[i] for i in indices]
-        all_traces = [all_traces[i] for i in indices]
+        episode_inds = list(episode_inds)
+        if not episode_inds: episode_inds = list(range(len(series)))
+        all_piezos = [episode.piezo for episode in series if episode.n_episode in episode_inds]
+        all_traces = [episode.trace for episode in series if episode.n_episode in episode_inds]
 
         # get the bins and their values for all episodes
         hist_all = histogram(time, all_piezos, all_traces,
@@ -224,3 +219,4 @@ def plot_traces(fig, pgs, episode, show_piezo=True, show_command=True,
         plot.set_xticklabels([]) #turn off numbering on upper plots
     # label only the last axis
     subplots[-1].set_xlabel(f"Time [{time_unit}]")
+    return subplots
