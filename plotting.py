@@ -132,8 +132,7 @@ def plot_histogram(fig, pgs, episode, series, n_bins=50, density=False, select_p
     if allpoint_hist:
         log.info("""will create allpoint histogram""")
         # get a list of all the currents and all the traces
-        episode_inds = list(episode_inds)
-        if not episode_inds: episode_inds = list(range(len(series)))
+        if episode_inds.size==0: episode_inds = list(range(len(series)))
         all_piezos = [episode.piezo for episode in series if episode.n_episode in episode_inds]
         all_traces = [episode.trace for episode in series if episode.n_episode in episode_inds]
 
@@ -191,6 +190,7 @@ def plot_traces(fig, pgs, episode, show_piezo=True, show_command=True,
         plotTrace(ax=command_plot, time=time,
                            trace=episode.command,
                            ylabel=f"Command [{command_unit}]")
+        command_plot.set_xlabel(f"Time [{time_unit}]")
         if t_zero!=0: plt.axvline(0, c='r', lw=1, ls='--', alpha=.8)
         subplots.append(command_plot)
 
@@ -200,6 +200,9 @@ def plot_traces(fig, pgs, episode, show_piezo=True, show_command=True,
     current_plot = fig.add_subplot(pgs[trace_pos:trace_pos+2,:2])
     plotTrace(ax=current_plot, time=time, trace=episode.trace,
                        ylabel=f"Current [{current_unit}]")
+    # label only the last axis
+    if show_command: current_plot.set_xticklabels([])
+    else: current_plot.set_xlabel(f"Time [{time_unit}]")
     if t_zero!=0: plt.axvline(0, c='r', lw=1, ls='--', alpha=.8)
     subplots.append(current_plot)
 
@@ -210,13 +213,7 @@ def plot_traces(fig, pgs, episode, show_piezo=True, show_command=True,
         piezo_plot = fig.add_subplot(pgs[0,:2])
         plotTrace(ax=piezo_plot, time=time, trace=episode.piezo,
                            ylabel=f"Piezo [{piezo_unit}]")
+        piezo_plot.set_xticklabels([])
         if t_zero!=0: plt.axvline(0, c='r', lw=1, ls='--', alpha=.8)
         subplots.append(piezo_plot)
-
-
-    ## configure x-axis
-    for plot in subplots[:-1]:
-        plot.set_xticklabels([]) #turn off numbering on upper plots
-    # label only the last axis
-    subplots[-1].set_xlabel(f"Time [{time_unit}]")
     return subplots
