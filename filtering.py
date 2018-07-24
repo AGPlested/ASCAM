@@ -12,7 +12,6 @@ def apply_filter(signal, window):
 	method allows for using scipy fft convolve which might be faster
 	for large signal sets
 	"""
-
 	# pad with constant values to reduce boundary effects and keep
 	# original length of array
 	padLength = int((len(window)-1)/2) # `len(window)` is always odd
@@ -21,7 +20,6 @@ def apply_filter(signal, window):
 	signal = signal.flatten()
 	signal = np.hstack((leftPad,signal,rightPad))
 	output = np.convolve(signal, window, mode='valid')
-
 	return output
 
 def gaussian_window(filterFrequency, sampling_rate=4e4):
@@ -43,12 +41,11 @@ def gaussian_window(filterFrequency, sampling_rate=4e4):
 	        								   *np.exp(-index**2
 	        								   /(2*sigma**2)))
 	        negative_ind_coeff = non_neg_ind_coefficients[:0:-1]
-	    coefficients = np.hstack((negative_ind_coeff,
-	    						  non_neg_ind_coefficients))
+	    coefficients = np.hstack((negative_ind_coeff, non_neg_ind_coefficients))
 	else: # light filtering as described in blue book
 		coefficients = np.zeros(3)
 		coefficients[0] = sigma*sigma/2
-		coefficients[1] = 1 - 2*coefficients[0]
+		coefficients[1] = 1-2*coefficients[0]
 		coefficients[2] = coefficients[0]
 
 	return coefficients

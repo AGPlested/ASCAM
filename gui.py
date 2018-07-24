@@ -19,9 +19,11 @@ else: from matplotlib.backends.backend_tkagg import NavigationToolbar2Tk
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib import gridspec as gs
+from matplotlib.widgets import Cursor as PlotCursor
 
 from tools import stringList_parser, parse_filename
-import plotting
+# import plotting
+from plotting import plot_traces, plot_histogram
 from recording import Recording
 
 
@@ -282,9 +284,9 @@ class Displayframe(ttk.Frame):
         else: pass
 
 class MenuBar(tk.Menu):
-    def __init__(self,parent):
+    def __init__(self, parent):
         self.parent = parent #parent is main window
-        tk.Menu.__init__(self, parent.master,tearoff=0)
+        tk.Menu.__init__(self, parent.master, tearoff=0)
         self.parent.master.config(menu=self)
 
         # menu holding all the cascading options
@@ -302,7 +304,7 @@ class MenuBar(tk.Menu):
 
         # the code below is needed to make the menuBar responsive on Mac OS
         # apple uses window system aqua
-        if parent.window_system == 'aqua':
+        if parent.window_system=='aqua':
             log.info("trying to make the menu work on Mac")
             appmenu = tk.Menu(self, name='apple')
             self.add_cascade(menu=appmenu)
@@ -624,174 +626,44 @@ class HistogramConfiguration(tk.Toplevel):
         except: pass
         self.destroy()
 
+class PlotToolbar(NavigationToolbar2Tk):
+    def __init__(self, canvas, parent):
+        # this toolbar is just the standard with fewer buttons
+        self.toolitems = (
+        ('Pan', '', 'move', 'pan'),
+        ('Zoom', '', 'zoom_to_rect', 'zoom')
+        # ('Save', 'save to png', 'filesave', 'save_figure'),
+        )
+        NavigationToolbar2Tk.__init__(self, canvas, parent)
+
 class PlotFrame(ttk.Frame):
     def __init__(self, parent):
         ttk.Frame.__init__(self, parent)
         self.parent = parent
         self.fig = plt.figure(figsize=(10,5))
 
-        canvasPlot = FigureCanvasTkAgg(self.fig, master=self)
-        # canvasPlot.show()
-        canvasPlot.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
-        self.canvas = canvasPlot
-        self.toolbar = NavigationToolbar2Tk(self.canvas, self)
-        self.toolbar.update()
+        self.canvas = FigureCanvasTkAgg(self.fig, master=self)
+        self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+        self.toolbar = PlotToolbar(self.canvas, self)
         self.canvas._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
 
-    def plot_traces(self,episode, pgs):
-        """
-        This method will plot the current, piezo and command voltage traces
-        """
-        t_zero = float(self.parent.plot_t_zero.get())
-        time = episode.time-t_zero
-        n_plot = 1 #counter for plots
+        self.piezo_plot = None
+        self.current_plot = None
+        self.command_plot = None
+        self.histogram = None
 
-        # plot the current trace
-        current_plot = self.fig.add_subplot(pgs[:2,:2])
-        plotting.plotTrace(
-                    ax = current_plot,
-                    time = time,
-                    trace = episode.trace,
-                    ylabel = "Current ["+self.parent.data.currentUnit+"]")
-        if t_zero!=0: plt.axvline(0,c='r')
-        n_plot += 1 #move to next plot
-
-        self.subplots = [current_plot]
-
-        # plot the piezo
-        if self.parent.show_piezo.get():
-            log.info('will plot piezo voltage')
-            piezo_plot = self.fig.add_subplot(pgs[n_plot,:2])
-            plotting.plotTrace(
-                    ax = piezo_plot,
-                    time = time,
-                    trace = episode.piezo,
-                    ylabel = "Piezo ["+self.parent.data.piezoUnit+']',
-                    ybounds = [])
-            if t_zero!=0: plt.axvline(0,c='r')
-            n_plot += 1
-            self.subplots.append(piezo_plot)
-        # plot command voltage
-        if self.parent.show_command.get():
-            log.info('will plot command voltage')
-            command_plot = self.fig.add_subplot(pgs[n_plot,:2])
-            plotting.plotTrace(
-                    ax = command_plot,
-                    time = time,
-                    trace = episode.command,
-                    ylabel = "Command ["+self.parent.data.commandUnit+']')
-            if t_zero!=0: plt.axvline(0,c='r')
-            n_plot += 1
-            self.subplots.append(command_plot)
-
-        ## configure x-axis
-        for plot in self.subplots[:-1]:
-            plot.set_xticklabels([]) #turn off numbering on upper plots
-        # label only the last axis
-        self.subplots[-1].set_xlabel("Time ["+self.parent.data.time_unit+"]")
-
-    def plot_histogram(self,pgs,**kwargs):
-        """
-        this method will draw the histogram next to the current trace
-        """
-        log.info("drawing histogram")
-
-        # get histogram parameters
-        n_bins = int(float(self.parent.hist_number_bins.get()))
-        density = bool(self.parent.hist_density.get())
-        # time points are selected based on piezo values if the variable
-        # 'hist_piezo_interval' is 1
-        select_piezo = bool(self.parent.hist_piezo_interval.get())
-        active = bool(self.parent.hist_piezo_active.get())
-        deviation = float(self.parent.hist_piezo_deviation.get())
-        fs = float(self.parent.sampling_rate.get())
-        intervals = self.parent.hist_intervals
-
-        log.debug("""number of bins = {}
-            density = {}
-            select_piezo = {}
-            active = {}
-            deviation = {}""".format(n_bins,density,select_piezo,
-                                     active,deviation))
-        # create the plot object so we can delete it later
-        ax = self.fig.add_subplot(pgs[:2,2])
-
-        if self.parent.data_loaded:
-            log.info("found data")
-            # get data
-            series = self.parent.data[self.parent.datakey.get()]
-            time = series[0].time
-
-            # get current episode values and put them in a list
-            # because the histogram function expects a list
-            single_piezo = [series[self.parent.Nepisode].piezo]
-            single_trace = [series[self.parent.Nepisode].trace]
-
-            # get the bins and their values or the current episode
-            hist_single = plotting.histogram(time, single_piezo, single_trace,
-                                             active=active,
-                                             select_piezo=select_piezo,
-                                             deviation=deviation,
-                                             n_bins=n_bins,
-                                             density=density,
-                                             intervals=intervals,
-                                             sampling_rate=fs,
-                                             **kwargs)
-            (heights_single,bins_single,
-             center_single, width_single) = hist_single
-
-            if self.parent.data.current_lists:
-                log.info("""current lists are: {}""".format(
-                                                self.parent.data.current_lists))
-                # get a list of all the currents and all the traces
-                all_piezos = [episode.piezo for episode in series ]
-                all_traces = [episode.trace for episode in series ]
-
-                # get the indices of currently selected lists
-                indices = self.parent.get_episodes_in_lists()
-
-                # get corresponding piezos and traces
-                all_piezos = [all_piezos[i] for i in indices]
-                all_traces = [all_traces[i] for i in indices]
-
-                # get the bins and their values for all episodes
-                hist_all = plotting.histogram(time, all_piezos, all_traces,
-                                              active=active,
-                                              select_piezo=select_piezo,
-                                              deviation=deviation,
-                                              n_bins=n_bins,
-                                              density=density,
-                                              intervals=intervals,
-                                              sampling_rate=fs,
-                                              **kwargs)
-                heights_all, bins_all, center_all, width_all = hist_all
-                # draw bar graphs of the histogram values over all episodes
-                ax.barh(center_all, heights_all, width_all,
-                        alpha=0.2, color='orange', align='center')
-                ax.plot(heights_all,center_all,color='orange', lw=2)
-                ax.set_ylabel("Current ["+self.parent.data.currentUnit+']')
-                if self.parent.hist_density.get()==1:
-                    log.info('setting y-label "Relative frequency"')
-                    ax.set_xlabel("Relative frequency")
-                elif self.parent.hist_density.get()==0:
-                    log.info('setting y-label "Count"')
-                    ax.set_xlabel("Count")
-
-            # histogram of single episode
-            if self.parent.hist_single_ep.get()==1:
-                log.info("plotting single episode histogram")
-                ax.barh(center_single, heights_single, width_single,
-                        align='center', alpha=1)
     def plot(self):
         plt.clf() #clear figure from memory
         datakey = self.parent.datakey.get()
         if self.parent.data.filename:
             # get data to plot
-            episode = self.parent.data[datakey][self.parent.Nepisode]
+            series = self.parent.data[datakey]
+            episode = series[self.parent.Nepisode]
 
+            allpoint_hist = bool(self.parent.data.current_lists)
             # decide how many plots there will be
             num_plots = (1 + self.parent.show_command.get()
-                          + self.parent.show_piezo.get())
+                           + self.parent.show_piezo.get())
 
             # plot grid to make current plot bigger
             #arguments are nRows by nCols
@@ -800,9 +672,29 @@ class PlotFrame(ttk.Frame):
             log.info("""`data` exists, will plot episode number {}
             from series {}""".format(self.parent.Nepisode,datakey))
 
-            self.plot_traces(episode, pgs)
-            self.plot_histogram(pgs)
+            plot_traces(self.fig, pgs, episode,
+                        show_command=self.parent.show_command.get(),
+                        show_piezo=self.parent.show_piezo.get(),
+                        t_zero=float(self.parent.plot_t_zero.get()),
+                        piezo_unit=self.parent.data.piezoUnit,
+                        current_unit=self.parent.data.currentUnit,
+                        command_unit=self.parent.data.commandUnit,
+                        time_unit=self.parent.data.time_unit)
 
+            plot_histogram(self.fig, pgs, episode, series,
+                    n_bins=int(float(self.parent.hist_number_bins.get())),
+                    density=bool(self.parent.hist_density.get()),
+                    select_piezo=bool(self.parent.hist_piezo_interval.get()),
+                    active=bool(self.parent.hist_piezo_active.get()),
+                    deviation=float(self.parent.hist_piezo_deviation.get()),
+                    fs=float(self.parent.sampling_rate.get()),
+                    intervals=self.parent.hist_intervals,
+                    single_hist=self.parent.hist_single_ep.get(),
+                    indices=self.parent.get_episodes_in_lists(),
+                    allpoint_hist=allpoint_hist,
+                    current_unit=self.parent.data.currentUnit)
+
+        self.toolbar.update()
         self.canvas.draw() # draw plots
 
 class BaselineFrame(tk.Toplevel):
@@ -1092,9 +984,9 @@ class EpisodeList(ttk.Frame):
         ttk.Frame.__init__(self, parent)
         self.parent = parent
 
-        ### create the variable tracking the current selection, `currentSeries`
-        ### and assign it to call the function `selection_change` when it is
-        ### changed
+        # create the variable tracking the current selection, `currentSeries`
+        # and assign it to call the function `selection_change` when it is
+        # changed
         self.parent.datakey.trace("w", self.selection_change)
         self.create_list()
         self.create_dropdownmenu()
@@ -1145,7 +1037,7 @@ class EpisodeList(ttk.Frame):
             for name in list(self.parent.data.lists.keys())[1:]:
                 for index in self.parent.data.lists[name][0]:
                     self.episodelist.itemconfig(index,
-                                    {'bg':self.parent.data.lists[name][1]})
+                                        {'bg':self.parent.data.lists[name][1]})
 
 
         ### assign the scrollbar its function
