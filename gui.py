@@ -660,7 +660,12 @@ class PlotFrame(ttk.Frame):
             series = self.parent.data[datakey]
             episode = series[self.parent.Nepisode]
 
+            #plot allpoint_hist if lists are selected
             allpoint_hist = bool(self.parent.data.current_lists)
+            log.info(f"allpoint_hist is {allpoint_hist}")
+            #get episodes in current lists
+            episode_inds = self.parent.get_episodes_in_lists()
+
             # decide how many plots there will be
             num_plots = (1 + self.parent.show_command.get()
                            + self.parent.show_piezo.get())
@@ -690,9 +695,9 @@ class PlotFrame(ttk.Frame):
                     fs=float(self.parent.sampling_rate.get()),
                     intervals=self.parent.hist_intervals,
                     single_hist=self.parent.hist_single_ep.get(),
-                    indices=self.parent.get_episodes_in_lists(),
                     allpoint_hist=allpoint_hist,
-                    current_unit=self.parent.data.currentUnit)
+                    current_unit=self.parent.data.currentUnit,
+                    episode_inds=self.parent.get_episodes_in_lists())
 
         self.toolbar.update()
         self.canvas.draw() # draw plots
@@ -824,6 +829,9 @@ class ListSelection(ttk.Frame):
         log.info("""initializing ListSelection frame""")
         ttk.Frame.__init__(self, parent)
         self.parent = parent # parent is mainframe
+        #we need to store the variables, else they are deleted straight after
+        #the call
+        self.variable_store = list()
         self.create_button() #button for adding new lists
 
     def new_checkbox(self, name, key='', color=''):
@@ -862,8 +870,9 @@ class ListSelection(ttk.Frame):
         else:
             button = ttk.Checkbutton(self, text='[{}] {}'.format(key,name),
                                      variable=variable)
-            variable.set(0)
+            variable.set(1)
             button.pack()
+            self.parent.data.current_lists.append(name)
 
             # create new 'add' button underneath the checkbox
             self.create_button()
@@ -909,14 +918,16 @@ class ListSelection(ttk.Frame):
         def trace_variable(*args):
             if name in self.parent.data.current_lists:
                 self.parent.data.current_lists.remove(name)
-                log.debug('removed {} from `current_lists'.format(name))
+                log.info('removed {} from `current_lists'.format(name))
             else:
                 self.parent.data.current_lists.append(name)
-                log.debug('added {} to `current_lists'.format(name))
+                log.info('added {} to `current_lists'.format(name))
             # when changing lists update the histogram to display only
             # episodes in selected lists
             self.parent.draw_plots()
-        variable.trace("w",trace_variable)
+        variable.trace('w', trace_variable)
+        log.debug("""tracing variable to add/remove list""")
+        self.variable_store.append(variable)
 
     def create_button(self):
         """
