@@ -196,8 +196,10 @@ def plot_traces(fig, pgs, episode, show_piezo=True, show_command=True,
 
     #if piezo will be plotted current plot show be in row 1 else in row 0
     trace_pos = 1 if show_piezo else 0
+    #sharex with command if its own
+    x_share = command_plot if show_command else None
     # plot the current trace
-    current_plot = fig.add_subplot(pgs[trace_pos:trace_pos+2,:2])
+    current_plot = fig.add_subplot(pgs[trace_pos:trace_pos+2,:2], sharex=x_share)
     plotTrace(ax=current_plot, time=time, trace=episode.trace,
                        ylabel=f"Current [{current_unit}]")
     # label only the last axis
@@ -205,12 +207,13 @@ def plot_traces(fig, pgs, episode, show_piezo=True, show_command=True,
     else: current_plot.set_xlabel(f"Time [{time_unit}]")
     if t_zero!=0: plt.axvline(0, c='r', lw=1, ls='--', alpha=.8)
     subplots.append(current_plot)
-
+    #sharex with current or command voltage
+    x_share = command_plot if show_command else current_plot
     # plot the piezo
     if show_piezo:
         log.info('will plot piezo voltage')
         #always plots piezo voltage on top
-        piezo_plot = fig.add_subplot(pgs[0,:2])
+        piezo_plot = fig.add_subplot(pgs[0,:2], sharex=x_share)
         plotTrace(ax=piezo_plot, time=time, trace=episode.piezo,
                            ylabel=f"Piezo [{piezo_unit}]")
         piezo_plot.set_xticklabels([])

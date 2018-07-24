@@ -628,6 +628,9 @@ class HistogramConfiguration(tk.Toplevel):
 
 class PlotToolbar(NavigationToolbar2Tk):
     def __init__(self, canvas, parent):
+        self.parent = parent
+        self.canvas = canvas
+
         # this toolbar is just the standard with fewer buttons
         self.toolitems = (
             ('Home', 'Reset original view', 'home', 'home'),
@@ -637,15 +640,32 @@ class PlotToolbar(NavigationToolbar2Tk):
             ('Pan', 'Pan axes with left mouse, zoom with right', 'move', 'pan'),
             ('Zoom', 'Zoom to rectangle', 'zoom_to_rect', 'zoom'),
             (None, None, None, None),
-            ('Subplots', 'Configure subplots', 'subplots', 'configure_subplots'),
+            # ('Subplots', 'Configure subplots', 'subplots', 'configure_subplots'),
             ('Save', 'Save the figure', 'filesave', 'save_figure'),
             )
         NavigationToolbar2Tk.__init__(self, canvas, parent)
 
+    def zoom(self):
+        """
+        Redefine the zoom method of the toolbar to include zooming out on
+        right-click
+        """
+        self_zoom_out_cid = self.canvas.mpl_connect('button_press_event', self.zoom_out)
+        NavigationToolbar2Tk.zoom(self)
+
+    def zoom_out(self, event):
+        """
+        Zoom out in this case is done by calling `back` on right-click to
+        restore the previous view (i.e. undo last zoom)
+        """
+        if self._active=='ZOOM' and event.button==3:
+            NavigationToolbar2Tk.back(self)
+
 class PlotFrame(ttk.Frame):
     def __init__(self, parent):
         ttk.Frame.__init__(self, parent)
-        self.parent = parent
+        self.parent = parent #parent is main frame
+        #initiliaze figure
         self.fig = plt.figure(figsize=(10,5))
 
         self.canvas = FigureCanvasTkAgg(self.fig, master=self)
