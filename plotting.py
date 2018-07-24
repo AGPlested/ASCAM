@@ -187,37 +187,37 @@ def plot_traces(fig, pgs, episode, show_piezo=True, show_command=True,
     This method plots the current, piezo and command voltage traces
     """
     time = episode.time-t_zero
-    n_plot = 0 #counter for plots
     subplots = list()
+    # plot command voltage
+    if show_command:
+        log.info('will plot command voltage')
+        # always plot command voltage on bottom (-1 row)
+        command_plot = fig.add_subplot(pgs[-1,:2])
+        plotTrace(ax=command_plot, time=time,
+                           trace=episode.command,
+                           ylabel=f"Command [{command_unit}]")
+        if t_zero!=0: plt.axvline(0, c='r', lw=1, ls='--', alpha=.8)
+        subplots.append(command_plot)
+
+    #if piezo will be plotted current plot show be in row 1 else in row 0
+    trace_pos = 1 if show_piezo else 0
+    # plot the current trace
+    current_plot = fig.add_subplot(pgs[trace_pos:trace_pos+2,:2])
+    plotTrace(ax=current_plot, time=time, trace=episode.trace,
+                       ylabel=f"Current [{current_unit}]")
+    if t_zero!=0: plt.axvline(0, c='r', lw=1, ls='--', alpha=.8)
+    subplots.append(current_plot)
 
     # plot the piezo
     if show_piezo:
         log.info('will plot piezo voltage')
-        piezo_plot = fig.add_subplot(pgs[n_plot,:2])
+        #always plots piezo voltage on top
+        piezo_plot = fig.add_subplot(pgs[0,:2])
         plotTrace(ax=piezo_plot, time=time, trace=episode.piezo,
                            ylabel=f"Piezo [{piezo_unit}]")
-        if t_zero!=0: plt.axvline(0, c='r')
-        n_plot += 1
+        if t_zero!=0: plt.axvline(0, c='r', lw=1, ls='--', alpha=.8)
         subplots.append(piezo_plot)
 
-    # plot the current trace
-    current_plot = fig.add_subplot(pgs[n_plot:n_plot+2,:2])
-    plotTrace(ax=current_plot, time=time, trace=episode.trace,
-                       ylabel=f"Current [{current_unit}]")
-    if t_zero!=0: plt.axvline(0, c='r')
-    n_plot += 2 #move to next plot
-    subplots.append(current_plot)
-
-    # plot command voltage
-    if show_command:
-        log.info('will plot command voltage')
-        command_plot = fig.add_subplot(pgs[n_plot,:2])
-        plotTrace(ax=command_plot, time=time,
-                           trace=episode.command,
-                           ylabel=f"Command [{command_unit}]")
-        if t_zero!=0: plt.axvline(0, c='r')
-        n_plot += 1
-        subplots.append(command_plot)
 
     ## configure x-axis
     for plot in subplots[:-1]:
