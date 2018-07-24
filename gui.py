@@ -630,10 +630,16 @@ class PlotToolbar(NavigationToolbar2Tk):
     def __init__(self, canvas, parent):
         # this toolbar is just the standard with fewer buttons
         self.toolitems = (
-        ('Pan', '', 'move', 'pan'),
-        ('Zoom', '', 'zoom_to_rect', 'zoom')
-        # ('Save', 'save to png', 'filesave', 'save_figure'),
-        )
+            ('Home', 'Reset original view', 'home', 'home'),
+            # ('Back', 'Back to  previous view', 'back', 'back'),
+            # ('Forward', 'Forward to next view', 'forward', 'forward'),
+            (None, None, None, None),
+            ('Pan', 'Pan axes with left mouse, zoom with right', 'move', 'pan'),
+            ('Zoom', 'Zoom to rectangle', 'zoom_to_rect', 'zoom'),
+            (None, None, None, None),
+            ('Subplots', 'Configure subplots', 'subplots', 'configure_subplots'),
+            ('Save', 'Save the figure', 'filesave', 'save_figure'),
+            )
         NavigationToolbar2Tk.__init__(self, canvas, parent)
 
 class PlotFrame(ttk.Frame):
@@ -663,8 +669,6 @@ class PlotFrame(ttk.Frame):
             #plot allpoint_hist if lists are selected
             allpoint_hist = bool(self.parent.data.current_lists)
             log.info(f"allpoint_hist is {allpoint_hist}")
-            #get episodes in current lists
-            episode_inds = self.parent.get_episodes_in_lists()
 
             # decide how many plots there will be
             num_plots = (1 + self.parent.show_command.get()
