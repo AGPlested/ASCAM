@@ -57,10 +57,10 @@ class Series(list):
         Return `Series` object containing the idealization of the episodes
         in `self`
         """
-        output = copy.deepcopy(self)
-        for episode in output:
+        # output = copy.deepcopy(self)
+        for episode in self:
             episode.idealize(mode, *args, **kwargs)
-        return output
+        # return output
 
     def check_standarddeviation_all(self, stdthreshold=5e-13):
         """

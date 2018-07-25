@@ -163,12 +163,12 @@ def plot_histogram(fig, pgs, episode, series, n_bins=50, density=False, select_p
                 align='center', alpha=1)
     # cursor = PlotCursor(ax, useblit=True, color='black', linewidth=1)
 
-def plotTrace(ax, time, trace, ylabel, ybounds=[]):
+def plotTrace(ax, time, trace, ylabel='', ybounds=[], alpha=1):
     """
     ybounds [tuple or list] (y_min, y_max)
     ax = matplotlib axes object
     """
-    ax.plot(time,trace)
+    ax.plot(time, trace, alpha=alpha)
     ax.set_ylabel(ylabel)
     if ybounds:
         ax.set_ylim(ybounds)
@@ -202,6 +202,8 @@ def plot_traces(fig, pgs, episode, show_piezo=True, show_command=True,
     current_plot = fig.add_subplot(pgs[trace_pos:trace_pos+2,:2], sharex=x_share)
     plotTrace(ax=current_plot, time=time, trace=episode.trace,
                        ylabel=f"Current [{current_unit}]")
+    if episode.idealization is not None:
+        plotTrace(ax=current_plot, time=time, trace=episode.idealization, alpha=.6)
     # label only the last axis
     if show_command: current_plot.set_xticklabels([])
     else: current_plot.set_xlabel(f"Time [{time_unit}]")

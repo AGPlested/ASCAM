@@ -35,6 +35,10 @@ class Recording(dict):
         self.currentDatakey = 'raw_'
         self.currentEpisode = 0
 
+        #store idealization in new series
+        self.idealization = dict()
+        self.idealization['raw_'] = None
+
         # variables for user created lists of episodes
         # `lists` stores the indices of the episodes in the list in the first
         # element, their color in the GUI in the second and the associated key
@@ -236,12 +240,13 @@ class Recording(dict):
         """
         DOES NOTHING
         """
-        if self.currentDatakey == 'raw_':
-            #if its the first operation drop the 'raw-'
-            newDatakey = 'TC_'
-        else:
-            #if operations have been done before combine the names
-            newDatakey = self.currentDatakey+'TC_'
-        self[newDatakey] = self[self.currentDatakey].idealize_all(mode, *args, **kwargs)
-        self.currentDatakey = newDatakey
+        # if self.currentDatakey == 'raw_':
+        #     #if its the first operation drop the 'raw-'
+        #     newDatakey = 'TC_'
+        # else:
+        #     #if operations have been done before combine the names
+        #     newDatakey = self.currentDatakey+'TC_'
+        # self.idealization[self.currentDatakey] \
+        self[self.currentDatakey].idealize_all(mode, *args, **kwargs)
+        # self.currentDatakey = newDatakey
         return True

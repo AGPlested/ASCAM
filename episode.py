@@ -33,6 +33,7 @@ class Episode():
         self.n_episode = int(n_episode)
         self.sampling_rate = sampling_rate
         self.suspiciousSTD = False
+        self.idealization = None
 
     def gauss_filter_episode(self, filterFrequency=1e3, method='convolution'):
         """
@@ -68,9 +69,9 @@ class Episode():
 
     def idealize(self, mode='thresholds', *args, **kwargs):
         if mode=='levels':
-            self.trace = threshold_crossing(self.trace, *args)
+            self.idealization = threshold_crossing(self.trace, *args)
         elif mode=='thresholds':
-            self.trace = multilevel_threshold(self.trace, *args, **kwargs)
+            self.idealization = multilevel_threshold(self.trace, *args, **kwargs)
 
     def check_standarddeviation_all(self, stdthreshold=5e-13):
         """
