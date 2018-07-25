@@ -1,7 +1,7 @@
 import numpy as np
 
 from filtering import gaussian_filter, ChungKennedyFilter
-from analysis import baseline_correction
+from analysis import baseline_correction, threshold_crossing, multilevel_threshold
 from tools import piezo_selection, parse_filename
 
 class Episode():
@@ -66,9 +66,11 @@ class Episode():
                                          select_piezo=select_piezo,
                                          active=active, deviation=deviation)
 
-    def idealize(self, thresholds):
-        activity, signalmax = threshold_crossing(self.trace, thresholds)
-        episode.trace = activity*signalmax
+    def idealize(self, mode='thresholds', *args, **kwargs):
+        if mode=='levels':
+            self.trace = threshold_crossing(self.trace, *args)
+        elif mode=='thresholds':
+            self.trace = multilevel_threshold(self.trace, *args, **kwargs)
 
     def check_standarddeviation_all(self, stdthreshold=5e-13):
         """

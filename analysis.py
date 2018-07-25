@@ -2,7 +2,7 @@ import numpy as np
 
 from tools import interval_selection, piezo_selection
 
-def threshold_crossing(signal, amplitudes):
+def threshold_crossing(signal, amplitudes, **kwargs):
     """
     Given a signal and amplitudes assign to each point in the signal its
     closest amplitude value.
@@ -33,21 +33,6 @@ def multilevel_threshold(signal, thresholds, maxAmplitude=False,
     """
     performs threshold crossing for given thresholds. value should be
     given as fraction of the maximum amplitude of the signal
-    Parameters:
-        signal [1D array of floats] - the signal to be idealized
-        thetas [1D array of floats] - the thresholds seperating the
-                                      different levels
-        maxAmplitude [float] - the number relative to which the
-                               threshold values are given
-        relativeThresholds [bool] - True is thresholds are relative
-                                    to maxAmplitude or not, if false
-                                    use absolute values for thresholds
-    Returns:
-        idealization [1D array of floats] - an array of the same
-                                            length as `signal`
-                                            containing the
-                                            idealization of the trace
-        signalmax [float] - the maximum amplitude of the signal
     """
     if maxAmplitude:
         signalmax = maxAmplitude
@@ -56,7 +41,7 @@ def multilevel_threshold(signal, thresholds, maxAmplitude=False,
         signalmax = signal[maxInd]
         # signalmax = np.max(np.abs(signal))
 
-    thresholds.append(np.inf)
+    thresholds = np.append(thresholds, np.inf)
 
     if relativeThresholds:
         thresholds = signalmax*np.sort(thresholds)

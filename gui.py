@@ -324,7 +324,6 @@ class MenuBar(tk.Menu):
         self.plot_menu.add_checkbutton(label="Show command voltage",
                                        variable=self.parent.show_command)
 
-
     def create_histogram_cascade(self):
         self.add_cascade(label='Histogram', menu=self.histogram_menu)
         self.histogram_menu.add_checkbutton(label="Show single episode",
@@ -345,7 +344,8 @@ class MenuBar(tk.Menu):
         #Submenus under 'File'
         self.file_menu.add_command(label="Open File",command=self.open_file)
         self.file_menu.add_command(label="Save",command=self.save_to_file)
-        self.file_menu.add_command(label="Export",command=self.export)
+        self.file_menu.add_command(label="Export",command=lambda: \
+                                   ExportFileDialog(self.parent))
         self.file_menu.add_command(label="Quit",command=self.parent.master.quit)
 
     def create_analysis_cascade(self):
@@ -354,7 +354,8 @@ class MenuBar(tk.Menu):
                                        command=lambda: BaselineFrame(self))
         self.analysis_menu.add_command(label="Filter",
                                        command=lambda: FilterFrame(self.parent))
-        # self.analysis_menu.add_command(label="Idealize")
+        self.analysis_menu.add_command(label="Idealize", command=lambda: \
+                                       IdealizationFrame(self.parent))
 
     def open_file(self):
         # open the dialog for loading a single file
@@ -374,8 +375,85 @@ class MenuBar(tk.Menu):
         else:
             log.info("User pressed 'Cancel'")
 
-    def export(self):
-        ExportFileDialog(self.parent)
+class IdealizationFrame(tk.Toplevel):
+    def __init__(self, parent):
+        tk.Toplevel.__init__(self, parent)
+        self.parent = parent #parent is main
+        self.title("Threshold Crossing")
+        #mode selection
+        self.tc_mode = tk.StringVar()
+        self.tc_mode.set('Levels')
+        self.tc_mode.trace('w', self.create_entry_frame)
+        self.entry_frame= ttk.Frame()
+        #levels vars
+        self.tc_amps = tk.StringVar()
+        #threshold vars
+        self.tc_thresholds = tk.StringVar()
+        self.tc_max_amp = tk.StringVar()
+        self.tc_relative = tk.IntVar()
+        self.tc_relative.set(1)
+
+        self.create_widgets()
+        self.create_entry_frame()
+
+    def create_widgets(self):
+        listOptions = ['Levels', 'Thresholds']
+        self.menu = tk.OptionMenu(self, self.tc_mode, *listOptions)
+        self.menu.grid(row=0, column=0, columnspan=2, sticky=tk.N)
+
+        ttk.Button(self, text="OK", command=self.ok_click).grid(row=5)
+        ttk.Button(self, text="Cancel", command=self.destroy\
+                   ).grid(row=5, column=1)
+
+    def create_entry_frame(self,*args,**kwargs):
+        """
+        Create a frame for the entry of the filter parameters
+        """
+        self.entry_frame.destroy()
+        self.entry_frame = ttk.Frame(self)
+        self.entry_frame.grid(row=1, column=0, columnspan=2)
+
+        if self.tc_mode.get()=='Levels':
+            ttk.Label(self.entry_frame, text="Amplitudes").grid(row=0, column=0)
+            ttk.Entry(self.entry_frame, textvariable=self.tc_amps, width=20\
+                      ).grid(row=0, column=1)
+
+        elif self.tc_mode.get()=='Thresholds':
+            ttk.Label(self.entry_frame, text="Thresholds relative"\
+                      ).grid(row=0, column=0)
+            ttk.Checkbutton(self.entry_frame, variable=self.tc_relative).grid(row=0, column=1)
+
+            ttk.Label(self.entry_frame, text="Thresholds"\
+                      ).grid(row=1, column=0)
+            ttk.Entry(self.entry_frame, textvariable=self.tc_thresholds,
+                      width=20).grid(row=1, column=1)
+
+            ttk.Label(self.entry_frame, text="Maximum aplitude"\
+                      ).grid(row=2, column=0)
+            ttk.Entry(self.entry_frame, textvariable=self.tc_max_amp,
+                      width=7).grid(row=2, column=1)
+
+    def ok_click(self):
+        mode = self.tc_mode.get().lower()
+        kwargs = dict()
+        if mode=='levels':
+            args = [np.array(self.tc_amps.get().split(),dtype=np.float)]
+        elif mode=='thresholds':
+            args = [np.array(self.tc_thresholds.get().split(),dtype=np.float)]
+            if self.tc_max_amp.get():
+                kwargs['maxAmplitude'] = int(self.tc_max_amp.get())
+            else:
+                kwargs['maxAmplitude'] = False
+            kwargs['relativeThresholds'] = bool(self.tc_relative.get())
+
+        if self.parent.data.idealize_series(mode, *args, **kwargs):
+            log.info("""succesfully called idealization""")
+            self.parent.datakey.set(self.parent.data.currentDatakey)
+            self.parent.update_list()
+            self.parent.draw_plots()
+        else: log.info("""idealization failed""")
+
+        self.destroy()
 
 class ZeroTFrame(tk.Toplevel):
     """docstring for ZeroTFrame."""
@@ -397,12 +475,13 @@ class FilterFrame(tk.Toplevel):
     """docstring for FilterFrame."""
     def __init__(self, parent):
         tk.Toplevel.__init__(self, parent)
-        self.parent = parent
+        self.parent = parent #parent is main
         self.title("Filter")
         #filterframe variables
         self.filter_selection = tk.StringVar()
         self.filter_selection.set('Gaussian')
         self.filter_selection.trace("w", self.create_entry_frame)
+        self.entry_frame = ttk.Frame()
         #paramters for gaussian filter
         self.gaussian_fc = tk.StringVar()
         self.gaussian_fc.set('1000')
@@ -427,9 +506,6 @@ class FilterFrame(tk.Toplevel):
         self.menu = tk.OptionMenu(self, self.filter_selection, *listOptions)
         self.menu.grid(row=0, column=0, columnspan=2, sticky=tk.N)
 
-        self.entry_frame = ttk.Frame(self)
-        self.entry_frame.grid(row=1, column=0, columnspan=2)
-
         ttk.Button(self, text="OK", command=self.ok_click).grid(row=5)
         ttk.Button(self, text="Cancel", command=self.destroy\
                    ).grid(row=5, column=1)
@@ -438,6 +514,9 @@ class FilterFrame(tk.Toplevel):
         """
         Create a frame for the entry of the filter parameters
         """
+        self.entry_frame.destroy()
+        self.entry_frame = ttk.Frame(self)
+        self.entry_frame.grid(row=1, column=0, columnspan=2)
         if self.filter_selection.get()=='Gaussian':
             ttk.Label(self.entry_frame, text="Frequency [Hz]"\
                       ).grid(row=0, column=0)

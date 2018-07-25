@@ -232,16 +232,16 @@ class Recording(dict):
         self.currentDatakey = newDatakey
         return True
 
-    def idealize_series(self, thresholds):
+    def idealize_series(self, mode, *args, **kwargs):
         """
         DOES NOTHING
         """
-        # if self.currentDatakey == 'raw_':
-        #     #if its the first operation drop the 'raw-'
-        #     newDatakey = 'TC_'
-        # else:
-        #     #if operations have been done before combine the names
-        #     newDatakey = self.currentDatakey+'TC_'
-        # self[newDatakey] = self[self.currentDatakey].idealize_all(thresholds)
-        # self.currentDatakey = newDatakey
+        if self.currentDatakey == 'raw_':
+            #if its the first operation drop the 'raw-'
+            newDatakey = 'TC_'
+        else:
+            #if operations have been done before combine the names
+            newDatakey = self.currentDatakey+'TC_'
+        self[newDatakey] = self[self.currentDatakey].idealize_all(mode, *args, **kwargs)
+        self.currentDatakey = newDatakey
         return True
