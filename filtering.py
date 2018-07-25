@@ -185,8 +185,8 @@ class ChungKennedyFilter:
 				#everywhere else the window fits and we can simply use array
 				#arithmetic
 				forward_w[i,self.weight_window:]+=diff[self.weight_window-j:-j]
-			forward_w[:,np.where(forward_w[i]!=0)]=forward_w[:,np.where(forward_w[i]!=0)]**-self.weight_exponent
-			# forward_w[i] = forward_w[i]**-self.weight_exponent
+			forward_w[:,np.where(forward_w[i]<1e-20)]=1
+			forward_w[i] = forward_w[i]**-self.weight_exponent
 			forward_w[i]*=self.apriori_f_weights[i]
 		return forward_w
 
@@ -224,8 +224,8 @@ class ChungKennedyFilter:
 			#simply return up to the last element
 			for j in range(1,self.weight_window):
 				b[i,:-j] += diff[j:len_data+j]
-			b[i, np.where(b[i]!=0)]=b[i, np.where(b[i]!=0)]**-self.weight_exponent
-			# b[i] = b[i]**-self.weight_exponent
+			b[i, np.where(b[i]<1e-20)]=1
+			b[i] = b[i]**-self.weight_exponent
 			b[i]*=self.apriori_b_weights[i]
 		return b
 
