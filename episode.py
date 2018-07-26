@@ -43,7 +43,9 @@ class Episode():
         self.trace = gaussian_filter(signal=self.trace,
                                      filterFrequency=filterFrequency,
                                      sampling_rate=self.sampling_rate)
-
+        #reset idealization
+        self.idealization = None
+        
     def CK_filter_episode(self, window_lengths, weight_exponent, weight_window,
 				          apriori_f_weights=False, apriori_b_weights=False):
         """
@@ -52,6 +54,8 @@ class Episode():
         ck_filter = ChungKennedyFilter(window_lengths, weight_exponent,
                             weight_window, apriori_f_weights, apriori_b_weights)
         self.trace = ck_filter.apply_filter(self.trace)
+        #reset idealization
+        self.idealization = None
 
     def baseline_correct_episode(self, intervals, method='poly', degree=1,
                                  time_unit='ms', select_intvl=False,
@@ -66,6 +70,8 @@ class Episode():
                                          piezo=self.piezo,
                                          select_piezo=select_piezo,
                                          active=active, deviation=deviation)
+        #reset idealization
+        self.idealization = None
 
     def idealize(self, mode='thresholds', *args, **kwargs):
         if mode=='levels':
