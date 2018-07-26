@@ -176,7 +176,7 @@ def plotTrace(ax, time, trace, ylabel='', ybounds=[], alpha=1):
 
 def plot_traces(fig, pgs, episode, show_piezo=True, show_command=True,
                 t_zero=0, piezo_unit='V', current_unit='A',
-                command_unit='V', time_unit='s'):
+                command_unit='V', time_unit='s', show_idealization=True):
     """
     This method plots the current, piezo and command voltage traces
     """
@@ -202,7 +202,7 @@ def plot_traces(fig, pgs, episode, show_piezo=True, show_command=True,
     current_plot = fig.add_subplot(pgs[trace_pos:trace_pos+2,:2], sharex=x_share)
     plotTrace(ax=current_plot, time=time, trace=episode.trace,
                        ylabel=f"Current [{current_unit}]")
-    if episode.idealization is not None:
+    if show_idealization and episode.idealization is not None:
         plotTrace(ax=current_plot, time=time, trace=episode.idealization, alpha=.6)
     # label only the last axis
     if show_command: current_plot.set_xticklabels([])

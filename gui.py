@@ -107,6 +107,9 @@ class GUI(ttk.Frame):
         self.show_command.trace("w", self.draw_plots)
         self.plot_t_zero = tk.StringVar()
         self.plot_t_zero.set("0.00")
+        self.show_idealization = tk.IntVar()
+        self.show_idealization.set(1)
+        self.show_idealization.trace("w", self.draw_plots)
 
         # parameters of the data
         self.sampling_rate = tk.StringVar()
@@ -323,6 +326,8 @@ class MenuBar(tk.Menu):
                                        variable=self.parent.show_piezo)
         self.plot_menu.add_checkbutton(label="Show command voltage",
                                        variable=self.parent.show_command)
+        self.plot_menu.add_checkbutton(label="Show idealization",
+                                       variable=self.parent.show_idealization)
 
     def create_histogram_cascade(self):
         self.add_cascade(label='Histogram', menu=self.histogram_menu)
@@ -789,7 +794,8 @@ class PlotFrame(ttk.Frame):
                         piezo_unit=self.parent.data.piezoUnit,
                         current_unit=self.parent.data.currentUnit,
                         command_unit=self.parent.data.commandUnit,
-                        time_unit=self.parent.data.time_unit)
+                        time_unit=self.parent.data.time_unit,
+                        show_idealization=self.parent.show_idealization.get())
 
             plot_histogram(self.fig, pgs, episode, series,
                     n_bins=int(float(self.parent.hist_number_bins.get())),
