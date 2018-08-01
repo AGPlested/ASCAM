@@ -185,6 +185,8 @@ class ChungKennedyFilter:
 				#everywhere else the window fits and we can simply use array
 				#arithmetic
 				forward_w[i,self.weight_window:]+=diff[self.weight_window-j:-j]
+			#in order to avoid infinities from tiny numers we considering
+			#everyhing <e-20 as 0 when applying weight exponent
 			forward_w[:,np.where(forward_w[i]<1e-20)]=1
 			forward_w[i] = forward_w[i]**-self.weight_exponent
 			forward_w[i]*=self.apriori_f_weights[i]
