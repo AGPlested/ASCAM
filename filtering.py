@@ -61,7 +61,8 @@ class ChungKennedyFilter:
 	https://doi.org/10.1016/0165-0270(91)90118-J
 	"""
 	def __init__(self, window_lengths, weight_exponent, weight_window,
-				 apriori_f_weights=False, apriori_b_weights=False):
+				 apriori_f_weights=False, apriori_b_weights=False,
+				 boundary_mode='increasing'):
 		"""
 		Parameters:
 			window_lengths [list of positive ints] - a python list containing
@@ -73,6 +74,10 @@ class ChungKennedyFilter:
 					the different forward predictors, 'pi_i' in the paper
 			apriori_b_weights [list of positive floats] - apriori confidence in
 					the different backward predictors, 'pi_i' in the paper
+			boundary_mode [string] - how to deal with boundary effects
+					either 'increasing' which will calculate predictions with
+					increasing window widths or 'padded' which will pad the
+					signal with 0s at the edges
 		Note:
 			-window_lengths used for forward and backward prediction are the
 			same
@@ -82,6 +87,8 @@ class ChungKennedyFilter:
 		self.window_lengths = window_lengths
 		self.weight_exponent = weight_exponent
 		self.weight_window = weight_window
+		self.mode = boundary_mode
+
 		n_predictors = len(window_lengths)
 
 		if apriori_f_weights: self.apriori_f_weights = apriori_f_weights
@@ -105,15 +112,23 @@ class ChungKennedyFilter:
 			forward_prediction [1D array] - forward prediciton of the data
 		"""
 		forward_prediction = np.zeros(len(data))
-		#take first prediction equal to real value
-		forward_prediction[0]=data[0]
-		#add points with offsets -1,...,-window_width
-		for i in range(1, window_width+1):
-			forward_prediction[i:] += data[:-i]
-		#take average of values to get prediction
-		for i in range(1, window_width):
-			forward_prediction[i]/=i
-		forward_prediction[window_width:]/=window_width
+		if self.mode is 'increasing':
+			#take first prediction equal to real value
+			forward_prediction[0]=data[0]
+			#add points with offsets -1,...,-window_width
+			for i in range(1, window_width+1):
+				forward_prediction[i:] += data[:-i]
+			#take average of values to get prediction
+			for i in range(1, window_width):
+				forward_prediction[i]/=i
+			forward_prediction[window_width:]/=window_width
+		elif self.mode is 'padded':
+		    data = np.hstack((np.zeros(window_width),data))
+		    for i in range(1, window_width+1):
+		        forward_prediction += data[window_width-i:-i]
+		    forward_prediction/=window_width
+		else: raise ValueError(f"Mode {mode} is an unknown method for dealing\
+								with edges")
 		return forward_prediction
 
 	def predict_backward(self, data, window_width):
@@ -133,17 +148,25 @@ class ChungKennedyFilter:
 		"""
 		len_data = len(data)
 		backward_prediction = np.zeros(len_data)
-		#since we cannot backward predict the last element we set it equal to
-		#the original datapoint
-		backward_prediction[-1] = data[-1]
-		#add to each point in the prediction the original data with offset
-		#1,...,window_width
-		for i in range(1, window_width):
-			backward_prediction[:-i]+=data[i:]
-		#take the means of all the points in prediction
-		for i in range(1, window_width):
-			backward_prediction[-i]/=i
-		backward_prediction[window_width]/=window_width
+		if self.mode is 'increasing':
+			#since we cannot backward predict the last element we set it equal to
+			#the original datapoint
+			backward_prediction[-1] = data[-1]
+			#add to each point in the prediction the original data with offset
+			#1,...,window_width
+			for i in range(1, window_width):
+				backward_prediction[:-i]+=data[i:]
+			#take the means of all the points in prediction
+			for i in range(1, window_width):
+				backward_prediction[-i]/=i
+			backward_prediction[window_width]/=window_width
+		elif self.mode is 'padded':
+			data = np.hstack((data,np.zeros(window_width)))
+			for i in range(1, window_width+1):
+			    backward_prediction += data[i:len(data)-window_width+i]
+			backward_prediction/=window_width
+		else: raise ValueError(f"Mode {mode} is an unknown method for dealing\
+								with edges")
 		return backward_prediction
 
 	def calculate_forward_weights(self, data, predictions):
