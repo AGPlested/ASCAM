@@ -182,8 +182,9 @@ def plot_traces(fig, pgs, episode, show_piezo=True, show_command=True,
     """
     time = episode.time-t_zero
     subplots = list()
+    x_share = None
     # plot command voltage
-    if show_command:
+    if show_command and type(episode.command) is np.ndarray:
         log.info('will plot command voltage')
         # always plot command voltage on bottom (-1 row)
         command_plot = fig.add_subplot(pgs[-1,:2])
@@ -193,11 +194,10 @@ def plot_traces(fig, pgs, episode, show_piezo=True, show_command=True,
         command_plot.set_xlabel(f"Time [{time_unit}]")
         if t_zero!=0: plt.axvline(0, c='r', lw=1, ls='--', alpha=.8)
         subplots.append(command_plot)
-
+        x_share = command_plot
     #if piezo will be plotted current plot show be in row 1 else in row 0
     trace_pos = 1 if show_piezo else 0
-    #sharex with command if its own
-    x_share = command_plot if show_command else None
+
     # plot the current trace
     current_plot = fig.add_subplot(pgs[trace_pos:trace_pos+2,:2], sharex=x_share)
     plotTrace(ax=current_plot, time=time, trace=episode.trace,
@@ -210,9 +210,9 @@ def plot_traces(fig, pgs, episode, show_piezo=True, show_command=True,
     if t_zero!=0: plt.axvline(0, c='r', lw=1, ls='--', alpha=.8)
     subplots.append(current_plot)
     #sharex with current or command voltage
-    x_share = command_plot if show_command else current_plot
+    x_share = x_share if show_command else current_plot
     # plot the piezo
-    if show_piezo:
+    if show_piezo and type(episode.piezo) is np.ndarray:
         log.info('will plot piezo voltage')
         #always plots piezo voltage on top
         piezo_plot = fig.add_subplot(pgs[0,:2], sharex=x_share)

@@ -2,12 +2,12 @@ import os
 import copy
 import time
 import logging as log
-
-import numpy as np
 import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
 from tkinter.filedialog import askopenfilename, asksaveasfilename, askdirectory
+
+import numpy as np
 import matplotlib
 matplotlib.use('TkAgg')
 #check mpl version because navigation toolbar name has changed
@@ -322,9 +322,11 @@ class MenuBar(tk.Menu):
         self.plot_menu.add_command(label="Set t_zero",
                                    command=lambda: ZeroTFrame(self.parent))
         self.plot_menu.add_separator()
-        self.plot_menu.add_checkbutton(label="Show piezo voltage",
+        if self.parent.data.has_piezo:
+            self.plot_menu.add_checkbutton(label="Show piezo voltage",
                                        variable=self.parent.show_piezo)
-        self.plot_menu.add_checkbutton(label="Show command voltage",
+        if self.parent.data.has_command:
+            self.plot_menu.add_checkbutton(label="Show command voltage",
                                        variable=self.parent.show_command)
         self.plot_menu.add_checkbutton(label="Show idealization",
                                        variable=self.parent.show_idealization)
@@ -776,9 +778,10 @@ class PlotFrame(ttk.Frame):
             allpoint_hist = bool(self.parent.data.current_lists)
             log.info(f"allpoint_hist is {allpoint_hist}")
 
+            show_command = self.parent.show_command.get() and self.parent.data.has_command
+            show_piezo = self.parent.show_piezo.get() and self.parent.data.has_piezo
             # decide how many plots there will be
-            num_plots = (1 + self.parent.show_command.get()
-                           + self.parent.show_piezo.get())
+            num_plots = 1+show_command+show_piezo
 
             # plot grid to make current plot bigger
             #arguments are nRows by nCols
@@ -788,8 +791,8 @@ class PlotFrame(ttk.Frame):
             from series {}""".format(self.parent.Nepisode,datakey))
 
             plot_traces(self.fig, pgs, episode,
-                        show_command=self.parent.show_command.get(),
-                        show_piezo=self.parent.show_piezo.get(),
+                        show_command=show_command,
+                        show_piezo=show_piezo,
                         t_zero=float(self.parent.plot_t_zero.get()),
                         piezo_unit=self.parent.data.piezoUnit,
                         current_unit=self.parent.data.currentUnit,
@@ -797,11 +800,13 @@ class PlotFrame(ttk.Frame):
                         time_unit=self.parent.data.time_unit,
                         show_idealization=self.parent.show_idealization.get())
 
+            active = bool(self.parent.hist_piezo_active.get()) and self.parent.data.has_piezo
+            select_piezo = bool(self.parent.hist_piezo_interval.get()) and self.parent.data.has_piezo
             plot_histogram(self.fig, pgs, episode, series,
                     n_bins=int(float(self.parent.hist_number_bins.get())),
                     density=bool(self.parent.hist_density.get()),
-                    select_piezo=bool(self.parent.hist_piezo_interval.get()),
-                    active=bool(self.parent.hist_piezo_active.get()),
+                    select_piezo=select_piezo,
+                    active=active,
                     deviation=float(self.parent.hist_piezo_deviation.get()),
                     fs=float(self.parent.sampling_rate.get()),
                     intervals=self.parent.hist_intervals,

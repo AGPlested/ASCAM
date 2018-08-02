@@ -14,7 +14,8 @@ class Recording(dict):
     def __init__(self, filename='data/180426 000 Copy Export.mat',
                  sampling_rate=4e4, filetype='',
                  headerlength=0, dtype=None, time_unit='ms', piezoUnit='V',
-                 commandUnit='V', currentUnit='A'):
+                 commandUnit='V', currentUnit='A', has_piezo=False,
+                 has_command=False):
         log.info("""intializing Recording""")
 
         # parameters for loading the data
@@ -25,10 +26,14 @@ class Recording(dict):
 
         # attributes of the data
         self.sampling_rate = int(float(sampling_rate))
+        #untis of the data
         self.time_unit = time_unit
-        self.commandUnit = commandUnit
         self.currentUnit = currentUnit
+        self.commandUnit = commandUnit
         self.piezoUnit = piezoUnit
+        #variables to indicate if command and piezo exist in this recording
+        self.has_command = has_command
+        self.has_piezo = has_piezo
 
         # attributes for storing and managing the data
         self['raw_'] = Series()
@@ -115,6 +120,8 @@ class Recording(dict):
         ### piezo and command voltage in the data being loaded
 
         if 'Piezo [V]' in names and 'Command Voltage [V]' in names:
+            self.has_piezo = True
+            self.has_command = True
             time = loaded_data[0]
             self[datakey] = Series([Episode(time, trace, n_episode=i,
                                             piezo=pTrace,
@@ -124,6 +131,7 @@ class Recording(dict):
                                     in enumerate(zip(*loaded_data[1:]))])
 
         elif 'Piezo [V]' in names:
+            self.has_piezo = True
             time, current, piezo, _ = loaded_data
             self[datakey] = Series([Episode(time, current[i], n_episode=i,
                                             piezo=piezo[i],
@@ -131,6 +139,7 @@ class Recording(dict):
                                     for i in range(len(current))])
 
         elif 'Command Voltage [V]' in names:
+            self.has_command = True
             time, current, _, command = loaded_data
             self[datakey] = Series([Episode(time, current[i], n_episode=i,
                                             command=command[i],
