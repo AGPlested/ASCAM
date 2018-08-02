@@ -2,12 +2,12 @@ import os
 import copy
 import time
 import logging as log
-
-import numpy as np
 import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
 from tkinter.filedialog import askopenfilename, asksaveasfilename, askdirectory
+
+import numpy as np
 import matplotlib
 matplotlib.use('TkAgg')
 #check mpl version because navigation toolbar name has changed
