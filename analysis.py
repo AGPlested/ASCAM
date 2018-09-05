@@ -6,28 +6,44 @@ def threshold_crossing(signal, amplitudes, **kwargs):
     """
     Given a signal and amplitudes assign to each point in the signal its
     closest amplitude value.
-    Amplitude of 0 is assumed to be present.
+    Arguments:
+        signal [1D numpy array] - data to be idealized
+        amplitudes [1D numpy array] - supposed true amplitudes of signal
     """
-    if type(amplitudes) in [list, tuple] :
-        amplitudes = list(amplitudes)
-        if not 0 in amplitudes:
-            amplitudes.insert(0,0)
-    elif type(amplitudes) in [int, float]:
-        amplitudes = [0, amplitudes]
-    amplitudes = np.sort(amplitudes)
-    thresholds = []
-    for i, amplitude in enumerate(amplitudes[:-1]):
-        threshold = (amplitudes[i+1]-amplitude)/2+amplitude
-        thresholds.append(threshold)
-
-    idealization = np.zeros(len(signal))
-    for i, point in enumerate(signal):
-        for n, threshold in enumerate(thresholds[:-1]):
-            if threshold<point<thresholds[n+1]:
-                idealization[i]=amplitudes[n]
-                break
+    #get differences between each signal and amplitude value
+    diff = np.abs(signal[:, np.newaxis] - amplitudes)
+    #find index of amplitude value with smallest difference for each signal value
+    inds = np.argmin(diff, axis=1)
+    #create array containing the amplitudes with minimal distance to the signal at each point
+    idealization = amplitudes[inds]
     return idealization
 
+# def threshold_crossing(signal, amplitudes, **kwargs):
+#     """
+#     Given a signal and amplitudes assign to each point in the signal its
+#     closest amplitude value.
+#     Amplitude of 0 is assumed to be present.
+#     """
+#     if type(amplitudes) in [list, tuple] :
+#         amplitudes = list(amplitudes)
+#         if not 0 in amplitudes:
+#             amplitudes.insert(0,0)
+#     elif type(amplitudes) in [int, float]:
+#         amplitudes = [0, amplitudes]
+#     amplitudes = np.sort(amplitudes)
+#     thresholds = []
+#     for i, amplitude in enumerate(amplitudes[:-1]):
+#         threshold = (amplitudes[i+1]-amplitude)/2+amplitude
+#         thresholds.append(threshold)
+#
+#     idealization = np.zeros(len(signal))
+#     for i, point in enumerate(signal):
+#         for n, threshold in enumerate(thresholds[:-1]):
+#             if threshold<point<thresholds[n+1]:
+#                 idealization[i]=amplitudes[n]
+#                 break
+#     return idealization
+#
 def multilevel_threshold(signal, thresholds, maxAmplitude=False,
                          relativeThresholds=True):
     """
