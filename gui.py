@@ -422,7 +422,7 @@ class IdealizationFrame(tk.Toplevel):
 
         if self.tc_mode.get()=='Levels':
             ttk.Label(self.entry_frame, text="Amplitudes").grid(row=0, column=0)
-            ttk.Entry(self.entry_frame, textvariable=self.tc_amps, width=20\
+            ttk.Entry(self.entry_frame, textvariable=self.tc_amps, width=40\
                       ).grid(row=0, column=1)
 
         elif self.tc_mode.get()=='Thresholds':
@@ -444,7 +444,10 @@ class IdealizationFrame(tk.Toplevel):
         mode = self.tc_mode.get().lower()
         kwargs = dict()
         if mode=='levels':
-            args = [np.array(self.tc_amps.get().split(),dtype=np.float)]
+            if ',' in self.tc_amps.get():
+                args = [np.array(self.tc_amps.get().split(','),dtype=np.float)]
+            else:
+                args = [np.array(self.tc_amps.get().split(),dtype=np.float)]
         elif mode=='thresholds':
             args = [np.array(self.tc_thresholds.get().split(),dtype=np.float)]
             if self.tc_max_amp.get():
