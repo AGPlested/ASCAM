@@ -1,5 +1,8 @@
-import axographio, pickle
+import pickle
+
+import axographio
 import numpy as np
+from scipy.io import savemat
 
 def load_file(filename):
 	file = axographio.read(filename)
@@ -9,7 +12,7 @@ def load_file(filename):
 
 def data_to_stdout(file, Nepisodes, episodeLength):
 	"""
-	This prints the data to `stdout` which can be read by the 
+	This prints the data to `stdout` which can be read by the
 	subprocess module in python3.
 	"""
 	print(Nepisodes)
@@ -19,6 +22,9 @@ def data_to_stdout(file, Nepisodes, episodeLength):
 	for i in range(Nepisodes):
 		for j in range(episodeLength):
 			print(file.data[i][j])
+
+def write_mat(file):
+
 
 def write_to_file(file):
 	data = np.asarray(file.data)
