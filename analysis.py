@@ -2,76 +2,31 @@ import numpy as np
 
 from tools import interval_selection, piezo_selection
 
-def threshold_crossing(signal, amplitudes, **kwargs):
+def threshold_crossing(signal, amplitudes, thresholds=np.array([]) **kwargs):
     """
-    Given a signal and amplitudes assign to each point in the signal its
-    closest amplitude value.
+    Perform a threshold-crossing idealization on the signal.
+    We assume that the current through the channel is always negative
+    amplitudes must and thresholds must be given in descending order
+    (i.e. increasing in absolute value) and include the baseline amplitude.
     Arguments:
         signal [1D numpy array] - data to be idealized
         amplitudes [1D numpy array] - supposed true amplitudes of signal
+        thresholds [1D numpy array] - thresholds between the amplitudes
+    If the wrong number of thresholds (or none) are given they will be replaced
+    by the midpoint between the pairs of adjacent amplitudes.
     """
-    #get differences between each signal and amplitude value
-    diff = np.abs(signal[:, np.newaxis] - amplitudes)
-    #find index of amplitude value with smallest difference for each signal value
-    inds = np.argmin(diff, axis=1)
-    #create array containing the amplitudes with minimal distance to the signal at each point
-    idealization = amplitudes[inds]
-    return idealization
 
-# def threshold_crossing(signal, amplitudes, **kwargs):
-#     """
-#     Given a signal and amplitudes assign to each point in the signal its
-#     closest amplitude value.
-#     Amplitude of 0 is assumed to be present.
-#     """
-#     if type(amplitudes) in [list, tuple] :
-#         amplitudes = list(amplitudes)
-#         if not 0 in amplitudes:
-#             amplitudes.insert(0,0)
-#     elif type(amplitudes) in [int, float]:
-#         amplitudes = [0, amplitudes]
-#     amplitudes = np.sort(amplitudes)
-#     thresholds = []
-#     for i, amplitude in enumerate(amplitudes[:-1]):
-#         threshold = (amplitudes[i+1]-amplitude)/2+amplitude
-#         thresholds.append(threshold)
-#
-#     idealization = np.zeros(len(signal))
-#     for i, point in enumerate(signal):
-#         for n, threshold in enumerate(thresholds[:-1]):
-#             if threshold<point<thresholds[n+1]:
-#                 idealization[i]=amplitudes[n]
-#                 break
-#     return idealization
-#
-def multilevel_threshold(signal, thresholds, maxAmplitude=False,
-                         relativeThresholds=True):
-    """
-    performs threshold crossing for given thresholds. value should be
-    given as fraction of the maximum amplitude of the signal
-    """
-    if maxAmplitude:
-        signalmax = maxAmplitude
-    else:
-        maxInd = np.argmax(np.abs(signal))
-        signalmax = signal[maxInd]
-        # signalmax = np.max(np.abs(signal))
+    if thresholds.size!=amplitudes.size-1:
+        thresholds = (amps[1:]+amps[:-1])/2
 
-    thresholds = np.append(thresholds, np.inf)
-
-    if relativeThresholds:
-        thresholds = signalmax*np.sort(thresholds)
-    else:
-        thresholds = np.sort(thresholds)
-    N = len(thresholds)
     idealization = np.zeros(len(signal))
+    #np.where returns a tuple containing array so we have to get the first element to get the indices
+    inds = np.where(signal>thresholds[0])[0]
+    idealization[inds] = amplitudes[0]
 
-    for i, point in enumerate(signal):
-        for n, threshold in enumerate(thresholds[:-1]):
-            if np.abs(threshold)<np.abs(point)<=np.abs(thresholds[n+1]):
-                idealization[i]=(n+1)/N
-                break
-    idealization *= signalmax
+    for t, a in zip(thresholds,amplitudes[1:]):
+        inds = np.where(signal<t)[0]
+        idealization[inds] = a
     return idealization
 
 def baseline_correction(time, signal, fs, intervals=None, time_unit='ms',
