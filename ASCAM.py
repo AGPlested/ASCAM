@@ -87,6 +87,7 @@ def usage():
                             if no level is given nothing will be printed to
                             console
             -d --logdir : directory in which the log file should be saved
+            -t --test : load example data
             -h --help : display this message""")
 
 def main():
