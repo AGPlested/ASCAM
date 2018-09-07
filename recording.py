@@ -245,7 +245,7 @@ class Recording(dict):
         self.currentDatakey = newDatakey
         return True
 
-    def idealize_series(self, mode, *args, **kwargs):
+    def idealize_series(self, amplitudes, thresholds):
         """
         DOES NOTHING
         """
@@ -256,6 +256,6 @@ class Recording(dict):
         #     #if operations have been done before combine the names
         #     newDatakey = self.currentDatakey+'TC_'
         # self.idealization[self.currentDatakey] \
-        self[self.currentDatakey].idealize_all(mode, *args, **kwargs)
+        self[self.currentDatakey].idealize_all(amplitudes, thresholds)
         # self.currentDatakey = newDatakey
         return True

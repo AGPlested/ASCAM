@@ -1,7 +1,7 @@
 import numpy as np
 
 from filtering import gaussian_filter, ChungKennedyFilter
-from analysis import baseline_correction, threshold_crossing, multilevel_threshold
+from analysis import baseline_correction, threshold_crossing
 from tools import piezo_selection, parse_filename
 
 class Episode():
@@ -45,7 +45,7 @@ class Episode():
                                      sampling_rate=self.sampling_rate)
         #reset idealization
         self.idealization = None
-        
+
     def CK_filter_episode(self, window_lengths, weight_exponent, weight_window,
 				          apriori_f_weights=False, apriori_b_weights=False):
         """
@@ -73,11 +73,8 @@ class Episode():
         #reset idealization
         self.idealization = None
 
-    def idealize(self, mode='thresholds', *args, **kwargs):
-        if mode=='levels':
-            self.idealization = threshold_crossing(self.trace, *args)
-        elif mode=='thresholds':
-            self.idealization = multilevel_threshold(self.trace, *args, **kwargs)
+    def idealize(self, amplitudes, thresholds):
+        self.idealization = threshold_crossing(self.trace, amplitudes, thresholds)
 
     def check_standarddeviation_all(self, stdthreshold=5e-13):
         """

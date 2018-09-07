@@ -52,14 +52,14 @@ class Series(list):
                                              active=active, deviation=deviation)
         return output
 
-    def idealize_all(self, mode, *args, **kwargs):
+    def idealize_all(self, amplitudes, thresholds):
         """
         Return `Series` object containing the idealization of the episodes
         in `self`
         """
         # output = copy.deepcopy(self)
         for episode in self:
-            episode.idealize(mode, *args, **kwargs)
+            episode.idealize(amplitudes, thresholds)
         # return output
 
     def check_standarddeviation_all(self, stdthreshold=5e-13):
