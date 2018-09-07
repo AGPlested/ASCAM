@@ -2,7 +2,7 @@ import numpy as np
 
 from tools import interval_selection, piezo_selection
 
-def threshold_crossing(signal, amplitudes, thresholds=np.array([]) **kwargs):
+def threshold_crossing(signal, amplitudes, thresholds=np.array([]), **kwargs):
     """
     Perform a threshold-crossing idealization on the signal.
     We assume that the current through the channel is always negative
@@ -17,7 +17,7 @@ def threshold_crossing(signal, amplitudes, thresholds=np.array([]) **kwargs):
     """
 
     if thresholds.size!=amplitudes.size-1:
-        thresholds = (amps[1:]+amps[:-1])/2
+        thresholds = (amplitudes[1:]+amplitudes[:-1])/2
 
     idealization = np.zeros(len(signal))
     #np.where returns a tuple containing array so we have to get the first element to get the indices
@@ -28,6 +28,36 @@ def threshold_crossing(signal, amplitudes, thresholds=np.array([]) **kwargs):
         inds = np.where(signal<t)[0]
         idealization[inds] = a
     return idealization
+
+# def multilevel_threshold(signal, thresholds, maxAmplitude=False,
+#                          relativeThresholds=True):
+#     """
+#     performs threshold crossing for given thresholds. value should be
+#     given as fraction of the maximum amplitude of the signal
+#     """
+#     if maxAmplitude:
+#         signalmax = maxAmplitude
+#     else:
+#         maxInd = np.argmax(np.abs(signal))
+#         signalmax = signal[maxInd]
+#         # signalmax = np.max(np.abs(signal))
+#
+#     thresholds = np.append(thresholds, np.inf)
+#
+#     if relativeThresholds:
+#         thresholds = signalmax*np.sort(thresholds)
+#     else:
+#         thresholds = np.sort(thresholds)
+#     N = len(thresholds)
+#     idealization = np.zeros(len(signal))
+#
+#     for i, point in enumerate(signal):
+#         for n, threshold in enumerate(thresholds[:-1]):
+#             if np.abs(threshold)<np.abs(point)<=np.abs(thresholds[n+1]):
+#                 idealization[i]=(n+1)/N
+#                 break
+#     idealization *= signalmax
+#     return idealization
 
 def baseline_correction(time, signal, fs, intervals=None, time_unit='ms',
                         degree=1, method='poly',select_intvl=False,
