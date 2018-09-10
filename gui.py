@@ -4,7 +4,6 @@ import time
 import logging as log
 import tkinter as tk
 from tkinter import ttk
-from tkinter import messagebox
 from tkinter.filedialog import askopenfilename, asksaveasfilename, askdirectory
 
 import numpy as np
@@ -22,10 +21,9 @@ from matplotlib import gridspec as gs
 from matplotlib.widgets import Cursor as PlotCursor
 
 from tools import stringList_parser, parse_filename
-# import plotting
 from plotting import plot_traces, plot_histogram
 from recording import Recording
-
+from TC_frame import TC_Frame
 
 class GUI(ttk.Frame):
     """
@@ -362,7 +360,7 @@ class MenuBar(tk.Menu):
         self.analysis_menu.add_command(label="Filter",
                                        command=lambda: FilterFrame(self.parent))
         self.analysis_menu.add_command(label="Idealize", command=lambda: \
-                                       IdealizationFrame(self.parent))
+                                       TC_Frame(self.parent))
 
     def open_file(self):
         # open the dialog for loading a single file
@@ -382,91 +380,8 @@ class MenuBar(tk.Menu):
         else:
             log.info("User pressed 'Cancel'")
 
-class IdealizationFrame(tk.Toplevel):
-    def __init__(self, parent):
-        tk.Toplevel.__init__(self, parent)
-        self.parent = parent #parent is main
-        self.title("Threshold Crossing")
-        #mode selection
-        self.tc_mode = tk.StringVar()
-        self.tc_mode.set('Levels')
-        self.tc_mode.trace('w', self.create_entry_frame)
-        self.entry_frame= ttk.Frame()
-        #levels vars
-        self.tc_amps = tk.StringVar()
-        #threshold vars
-        self.tc_thresholds = tk.StringVar()
-        self.tc_max_amp = tk.StringVar()
-        self.tc_relative = tk.IntVar()
-        self.tc_relative.set(1)
-
-        self.create_widgets()
-        self.create_entry_frame()
-
-    def create_widgets(self):
-        listOptions = ['Levels', 'Thresholds']
-        self.menu = tk.OptionMenu(self, self.tc_mode, *listOptions)
-        self.menu.grid(row=0, column=0, columnspan=2, sticky=tk.N)
-
-        ttk.Button(self, text="OK", command=self.ok_click).grid(row=5)
-        ttk.Button(self, text="Cancel", command=self.destroy\
-                   ).grid(row=5, column=1)
-
-    def create_entry_frame(self,*args,**kwargs):
-        """
-        Create a frame for the entry of the filter parameters
-        """
-        self.entry_frame.destroy()
-        self.entry_frame = ttk.Frame(self)
-        self.entry_frame.grid(row=1, column=0, columnspan=2)
-
-        if self.tc_mode.get()=='Levels':
-            ttk.Label(self.entry_frame, text="Amplitudes").grid(row=0, column=0)
-            ttk.Entry(self.entry_frame, textvariable=self.tc_amps, width=40\
-                      ).grid(row=0, column=1)
-
-        elif self.tc_mode.get()=='Thresholds':
-            ttk.Label(self.entry_frame, text="Thresholds relative"\
-                      ).grid(row=0, column=0)
-            ttk.Checkbutton(self.entry_frame, variable=self.tc_relative).grid(row=0, column=1)
-
-            ttk.Label(self.entry_frame, text="Thresholds"\
-                      ).grid(row=1, column=0)
-            ttk.Entry(self.entry_frame, textvariable=self.tc_thresholds,
-                      width=20).grid(row=1, column=1)
-
-            ttk.Label(self.entry_frame, text="Maximum aplitude"\
-                      ).grid(row=2, column=0)
-            ttk.Entry(self.entry_frame, textvariable=self.tc_max_amp,
-                      width=7).grid(row=2, column=1)
-
-    def ok_click(self):
-        mode = self.tc_mode.get().lower()
-        kwargs = dict()
-        if mode=='levels':
-            if ',' in self.tc_amps.get():
-                args = [np.array(self.tc_amps.get().split(','),dtype=np.float)]
-            else:
-                args = [np.array(self.tc_amps.get().split(),dtype=np.float)]
-        elif mode=='thresholds':
-            args = [np.array(self.tc_thresholds.get().split(),dtype=np.float)]
-            if self.tc_max_amp.get():
-                kwargs['maxAmplitude'] = int(self.tc_max_amp.get())
-            else:
-                kwargs['maxAmplitude'] = False
-            kwargs['relativeThresholds'] = bool(self.tc_relative.get())
-
-        if self.parent.data.idealize_series(mode, *args, **kwargs):
-            log.info("""succesfully called idealization""")
-            self.parent.datakey.set(self.parent.data.currentDatakey)
-            self.parent.update_list()
-            self.parent.draw_plots()
-        else: log.info("""idealization failed""")
-
-        self.destroy()
-
 class ZeroTFrame(tk.Toplevel):
-    """docstring for ZeroTFrame."""
+    """Dialog for entering the offset for the time axis in plots"""
     def __init__(self, parent):
         tk.Toplevel.__init__(self, parent)
         self.parent = parent #parent is main window
@@ -482,7 +397,7 @@ class ZeroTFrame(tk.Toplevel):
         self.destroy()
 
 class FilterFrame(tk.Toplevel):
-    """docstring for FilterFrame."""
+    """Dialog to enter filtering parameters"""
     def __init__(self, parent):
         tk.Toplevel.__init__(self, parent)
         self.parent = parent #parent is main
@@ -589,7 +504,7 @@ class FilterFrame(tk.Toplevel):
 
 class ExportFileDialog(tk.Toplevel):
     """
-    placeholder for a dialog for exporting data
+    dialog for exporting data
     """
     def __init__(self, parent):
         log.info("initializing ExportFileDialog")
@@ -781,8 +696,10 @@ class PlotFrame(ttk.Frame):
             allpoint_hist = bool(self.parent.data.current_lists)
             log.info(f"allpoint_hist is {allpoint_hist}")
 
-            show_command = self.parent.show_command.get() and self.parent.data.has_command
-            show_piezo = self.parent.show_piezo.get() and self.parent.data.has_piezo
+            show_command = self.parent.show_command.get()\
+                           and self.parent.data.has_command
+            show_piezo = self.parent.show_piezo.get()\
+                         and self.parent.data.has_piezo
             # decide how many plots there will be
             num_plots = 1+show_command+show_piezo
 
@@ -803,8 +720,10 @@ class PlotFrame(ttk.Frame):
                         time_unit=self.parent.data.time_unit,
                         show_idealization=self.parent.show_idealization.get())
 
-            active = bool(self.parent.hist_piezo_active.get()) and self.parent.data.has_piezo
-            select_piezo = bool(self.parent.hist_piezo_interval.get()) and self.parent.data.has_piezo
+            active = bool(self.parent.hist_piezo_active.get()) \
+                     and self.parent.data.has_piezo
+            select_piezo = bool(self.parent.hist_piezo_interval.get()) \
+                           and self.parent.data.has_piezo
             plot_histogram(self.fig, pgs, episode, series,
                     n_bins=int(float(self.parent.hist_number_bins.get())),
                     density=bool(self.parent.hist_density.get()),
@@ -838,8 +757,8 @@ class BaselineFrame(tk.Toplevel):
         self.select_intvl.set(0)
 
         ### piezo and interval selection should be mutually exclusive
-        self.select_piezo.trace("w",self.piezo_NotInterval)
-        self.select_intvl.trace("w",self.interval_NotPiezo)
+        self.select_piezo.trace("w", self.piezo_NotInterval)
+        self.select_intvl.trace("w", self.interval_NotPiezo)
 
         ### parameters of the baseline procedure
         self.method = tk.StringVar()
@@ -924,7 +843,8 @@ class BaselineFrame(tk.Toplevel):
                 active_piezo=self.piezo_active.get(),
                 piezo_diff=deviation):
             log.info('succesfully called baseline_correction')
-            self.parent.parent.datakey.set(self.parent.parent.data.currentDatakey)
+            self.parent.parent.datakey.set(
+                                        self.parent.parent.data.currentDatakey)
             self.parent.parent.update_list()
             self.parent.parent.draw_plots()
         self.destroy()
@@ -959,7 +879,8 @@ class ListSelection(ttk.Frame):
         exists
         """
         if name in self.parent.data.lists.keys():
-            log.info("""tried to create list with the name ("{}") of an existing list\n list creation failed""".format(name))
+            log.info(f'tried to create list with the name "{name}" of an \
+                     existing list\n list creation failed')
             pass
         else: self.create_checkbox(name=name, key=key, color=color)
 
@@ -974,7 +895,8 @@ class ListSelection(ttk.Frame):
         another.
         """
 
-        log.info('''Creating checkbox with name "{}" under key "{}"" with color {} '''.format(name,key,color))
+        log.info(f'Creating checkbox with name "{name}" under key "{key}" with \
+                 color {color} ')
 
         # remove old 'add' button
         self.createBoxButton.destroy()
@@ -1008,12 +930,12 @@ class ListSelection(ttk.Frame):
                 list and color them
                 """
                 # get highlighted selection of episode from episode list
-                selected_eps = self.parent.episodeList.episodelist.curselection()
+                selected_ep = self.parent.episodeList.episodelist.curselection()
                 new_list = self.parent.data.lists[name][0]
                 episodelist = self.parent.episodeList.episodelist
-                log.info("Currently selected episodes are {}".format(selected_eps))
+                log.info(f"Currently selected episodes are {selected_ep}")
                 # loop over all currently selected episodes
-                for n_episode in selected_eps:
+                for n_episode in selected_ep:
                     # if episode not in list add it
                     if not (n_episode in new_list):
                         episodelist.itemconfig(n_episode, bg=color)
@@ -1023,8 +945,8 @@ class ListSelection(ttk.Frame):
                     else:
                         episodelist.itemconfig(n_episode, bg='white')
                         new_list.remove(n_episode)
-                        log.info("removed {} from {}".format(n_episode,name))
-                log.debug("""'{}' now contains:\n {}""".format(name,new_list))
+                        log.info(f"removed {n_episode} from {name}")
+                log.debug(f"'{name}' now contains:\n {new_list}")
             # bind coloring function to key press
             self.parent.episodeList.episodelist.bind(key,add_episode)
             # add list attributes to the list dict in the recording instance
@@ -1130,7 +1052,7 @@ class EpisodeList(ttk.Frame):
         #outside the list
         try:
             selected_episode = int(event.widget.curselection()[0])
-            log.info("selected episode number {}".format(selected_episode))
+            log.info(f"selected episode number {selected_episode}")
             self.parent.Nepisode = selected_episode
             self.parent.draw_plots()
         except IndexError: pass
@@ -1151,26 +1073,25 @@ class EpisodeList(ttk.Frame):
                                       yscrollcommand=self.Scrollbar.set,
                                       selectmode=tk.EXTENDED)
         self.episodelist.grid(row=1, rowspan=3, sticky=tk.S+tk.W+tk.N)
-        ### set what should happen when an episode is selected
+        # set what should happen when an episode is selected
         self.episodelist.bind('<<ListboxSelect>>', self.onselect_plot)
 
         self.episodelist.config(height=30)
-        ### only create the list if there is data to fill it with
+        # only create the list if there is data to fill it with
         if self.parent.data:
             log.info("found data to fill list with")
             for episode in self.parent.data[self.parent.datakey.get()]:
-                self.episodelist.insert(tk.END, "episode #"
-                                                +str(episode.n_episode))
-                log.debug("inserting episode number {}".format(episode.n_episode))
-        ### color all episodes according to their list membership
-            ### start from second element because white is default bg color
+                self.episodelist.insert(tk.END, f"episode #{episode.n_episode}")
+                log.debug(f"inserting episode number {episode.n_episode}")
+        # color all episodes according to their list membership
+            # start from second element because white is default bg color
             for name in list(self.parent.data.lists.keys())[1:]:
                 for index in self.parent.data.lists[name][0]:
                     self.episodelist.itemconfig(index,
                                         {'bg':self.parent.data.lists[name][1]})
 
 
-        ### assign the scrollbar its function
+        # assign the scrollbar its function
         self.Scrollbar['command'] = self.episodelist.yview
         self.episodelist.selection_set(self.parent.Nepisode)
 
