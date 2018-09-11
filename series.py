@@ -17,6 +17,8 @@ class Series(list):
         """
         list.__init__(self,data)
 
+        self.idealized = False
+
     def gaussian_filter(self, filterFrequency=1e3):
         """
         Return a Series object in which all episodes are the filtered version
@@ -57,10 +59,9 @@ class Series(list):
         Return `Series` object containing the idealization of the episodes
         in `self`
         """
-        # output = copy.deepcopy(self)
         for episode in self:
             episode.idealize(amplitudes, thresholds)
-        # return output
+        self.idealized = True
 
     def check_standarddeviation_all(self, stdthreshold=5e-13):
         """

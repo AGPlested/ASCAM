@@ -74,7 +74,8 @@ class Episode():
         self.idealization = None
 
     def idealize(self, amplitudes, thresholds):
-        self.idealization = threshold_crossing(self.trace, amplitudes, thresholds)
+        self.idealization = threshold_crossing(self.trace, amplitudes,
+                                               thresholds)
 
     def check_standarddeviation_all(self, stdthreshold=5e-13):
         """

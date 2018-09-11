@@ -3,6 +3,7 @@ import logging as log
 import pickle
 
 from scipy import io
+import numpy as np
 
 import readdata
 import savedata
@@ -40,9 +41,9 @@ class Recording(dict):
         self.currentDatakey = 'raw_'
         self.currentEpisode = 0
 
-        #store idealization in new series
-        self.idealization = dict()
-        self.idealization['raw_'] = None
+        #parameters for idealization
+        self.TC_thresholds = np.array([])
+        self.TC_amplitudes = np.array([])
 
         # variables for user created lists of episodes
         # `lists` stores the indices of the episodes in the list in the first
@@ -245,17 +246,7 @@ class Recording(dict):
         self.currentDatakey = newDatakey
         return True
 
-    def idealize_series(self, amplitudes, thresholds):
-        """
-        DOES NOTHING
-        """
-        # if self.currentDatakey == 'raw_':
-        #     #if its the first operation drop the 'raw-'
-        #     newDatakey = 'TC_'
-        # else:
-        #     #if operations have been done before combine the names
-        #     newDatakey = self.currentDatakey+'TC_'
-        # self.idealization[self.currentDatakey] \
-        self[self.currentDatakey].idealize_all(amplitudes, thresholds)
-        # self.currentDatakey = newDatakey
+    def idealize_series(self):
+        self[self.currentDatakey].idealize_all(self.TC_amplitudes,
+                                               self.TC_thresholds)
         return True
