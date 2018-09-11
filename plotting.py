@@ -17,15 +17,15 @@ def create_histogram(data, n_bins, density=False):
     """
     data = data.flatten()
     log.info("called 'create_histogram'")
-    log.debug(""" histogram will use {} bins
-    normalize histogram to a density is {}
-    the data are of type {},
-    the data are {}
-    """.format(n_bins,density,type(data),data))
+    # log.debug(""" histogram will use {} bins
+    # normalize histogram to a density is {}
+    # the data are of type {},
+    # the data are {}
+    # """.format(n_bins,density,type(data),data))
     hist, bins = np.histogram(data, n_bins, density=density)
-    log.debug("""`np.histogram` returned
-                hist = {}
-                bins={} """.format(hist,bins))
+    # log.debug("""`np.histogram` returned
+    #             hist = {}
+    #             bins={} """.format(hist,bins))
     return hist, bins
 
 def histogram(time, piezos, traces, active = True, select_piezo=True,
@@ -61,16 +61,16 @@ def histogram(time, piezos, traces, active = True, select_piezo=True,
         trace_list [2D array of floats] - Each row contains the current values
                                          at the selected times for an episode.
     """
-    log.debug("""`histogram` called with parameters:
-                time: {}
-                piezos: {}
-                traces: {}
-                active: {}, select_piezo:{}, deviation: {}
-                n_bins: {}, density:{}, time_unit: {}, sampling_rate: {}
-                intervals: {}
-                and kwargs: {}
-                """.format(time,piezos,traces,active,select_piezo,deviation,
-                      n_bins,density,time_unit,sampling_rate,intervals,kwargs))
+    # log.debug("""`histogram` called with parameters:
+    #             time: {}
+    #             piezos: {}
+    #             traces: {}
+    #             active: {}, select_piezo:{}, deviation: {}
+    #             n_bins: {}, density:{}, time_unit: {}, sampling_rate: {}
+    #             intervals: {}
+    #             and kwargs: {}
+    #             """.format(time,piezos,traces,active,select_piezo,deviation,
+    #                   n_bins,density,time_unit,sampling_rate,intervals,kwargs))
     trace_list = []
     if select_piezo:
         for piezo, trace in zip(piezos, traces):
@@ -91,7 +91,7 @@ def histogram(time, piezos, traces, active = True, select_piezo=True,
     centers = (bins[:-1]+bins[1:])/2
     # get the width of a(ll) bin(s)
     width = (bins[1]-bins[0])
-    log.debug("""return width: {}, centers: {}""".format(width,centers))
+    # log.debug("""return width: {}, centers: {}""".format(width,centers))
     return hist, bins, centers, width
 
 def plot_histogram(fig, pgs, episode, series, n_bins=50, density=False, select_piezo=False,
@@ -102,12 +102,12 @@ def plot_histogram(fig, pgs, episode, series, n_bins=50, density=False, select_p
     this method will draw the histogram next to the current trace
     """
     log.info("drawing histogram")
-    log.debug("""number of bins = {}
-        density = {}
-        select_piezo = {}
-        active = {}
-        deviation = {}""".format(n_bins,density,select_piezo,
-                                 active,deviation))
+    # log.debug("""number of bins = {}
+    #     density = {}
+    #     select_piezo = {}
+    #     active = {}
+    #     deviation = {}""".format(n_bins,density,select_piezo,
+    #                              active,deviation))
     # create the plot object so we can delete it later
     ax = fig.add_subplot(pgs[:,2])
     #move the axis label and ticks to the right so they dont lie over
