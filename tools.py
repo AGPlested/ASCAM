@@ -1,6 +1,13 @@
 import logging as log
 
 import numpy as np
+import matplotlib
+#check mpl version because navigation toolbar name has changed
+mpl_ver = (matplotlib.__version__).split('.')
+if int(mpl_ver[0])<2 or int(mpl_ver[1])<2 or int(mpl_ver[2])<2:
+    from matplotlib.backends.backend_tkagg \
+    import NavigationToolbar2TkAgg as NavigationToolbar2Tk
+else: from matplotlib.backends.backend_tkagg import NavigationToolbar2Tk
 
 def parse_filename(filename):
     """
@@ -67,25 +74,25 @@ def piezo_selection(time, piezo, trace, active=True, deviation=0.05):
         trace [1D array of floats] - The current at selected points.
     """
     maxPiezo = np.max(np.abs(piezo))
-    log.debug("""called `select_piezo` with parameters:
-              active = {}, deviation = {}, maxPiezo = {}
-              time: {}
-              piezo: {}
-              trace: {}
-              """.format(active,deviation,maxPiezo,time,piezo,trace))
+    # log.debug("""called `select_piezo` with parameters:
+    #           active = {}, deviation = {}, maxPiezo = {}
+    #           time: {}
+    #           piezo: {}
+    #           trace: {}
+    #           """.format(active,deviation,maxPiezo,time,piezo,trace))
     if active:
-        log.debug("""selecting for active piezo""")
+        # log.debug("""selecting for active piezo""")
         indices = np.where((maxPiezo-np.abs(piezo))/maxPiezo<deviation)
     else:
-        log.debug("""selecting for inactive piezo""")
+        # log.debug("""selecting for inactive piezo""")
         indices = np.where(np.abs(piezo)/maxPiezo<deviation)
     time = time[indices]
     piezo = piezo[indices]
     trace = trace[indices]
-    log.debug("""found indices: {}
-              times: {}
-              piezo: {}
-              trace: {}""".format(indices, time, piezo, trace))
+    # log.debug("""found indices: {}
+    #           times: {}
+    #           piezo: {}
+    #           trace: {}""".format(indices, time, piezo, trace))
     return time, piezo, trace
 
 def interval_selection(time, signal, intervals, fs, time_unit):
@@ -93,10 +100,10 @@ def interval_selection(time, signal, intervals, fs, time_unit):
     return the signal at the times specified in the interval
     """
     log.info("""called `interval_selection`""")
-    log.debug("""parameters are: sampling frequency: {}, time_unit: {}
-              time: {}
-              signal: {}
-              intervals: {}""".format(fs, time_unit, time, signal, intervals))
+    # log.debug("""parameters are: sampling frequency: {}, time_unit: {}
+    #           time: {}
+    #           signal: {}
+    #           intervals: {}""".format(fs, time_unit, time, signal, intervals))
     if time_unit == 'ms':
         time_unit = 1000
     elif time_unit == 's':
@@ -116,8 +123,8 @@ def interval_selection(time, signal, intervals, fs, time_unit):
                    : int(intervals[-1]*fs/time_unit)]
         signal_out = signal[int(intervals[0]*fs/time_unit)
                    : int(intervals[1]*fs/time_unit)]
-    log.debug("""selected times: {}
-                 and signal: {}""".format(time_out,signal_out))
+    # log.debug("""selected times: {}
+    #              and signal: {}""".format(time_out,signal_out))
     return time_out, signal_out
 
 def stringList_parser(list_as_string):
@@ -145,6 +152,41 @@ def stringList_parser(list_as_string):
             whole_list.append(current_list)
         else:
             num_string += char
-    log.debug("""string was: {}
-             returning: {}""".format(list_as_string,whole_list))
+    # log.debug("""string was: {}
+    #          returning: {}""".format(list_as_string,whole_list))
     return whole_list
+
+class PlotToolbar(NavigationToolbar2Tk):
+    def __init__(self, canvas, parent):
+        self.parent = parent
+        self.canvas = canvas
+
+        # this toolbar is just the standard with fewer buttons
+        self.toolitems = (
+            ('Home', 'Reset original view', 'home', 'home'),
+            # ('Back', 'Back to  previous view', 'back', 'back'),
+            # ('Forward', 'Forward to next view', 'forward', 'forward'),
+            (None, None, None, None),
+            ('Pan', 'Pan axes with left mouse, zoom with right', 'move', 'pan'),
+            ('Zoom', 'Zoom to rectangle', 'zoom_to_rect', 'zoom'),
+            (None, None, None, None),
+            # ('Subplots', 'Configure subplots', 'subplots', 'configure_subplots'),
+            ('Save', 'Save the figure', 'filesave', 'save_figure'),
+            )
+        NavigationToolbar2Tk.__init__(self, canvas, parent)
+
+    def zoom(self):
+        """
+        Redefine the zoom method of the toolbar to include zooming out on
+        right-click
+        """
+        self_zoom_out_cid = self.canvas.mpl_connect('button_press_event', self.zoom_out)
+        NavigationToolbar2Tk.zoom(self)
+
+    def zoom_out(self, event):
+        """
+        Zoom out in this case is done by calling `back` on right-click to
+        restore the previous view (i.e. undo last zoom)
+        """
+        if self._active=='ZOOM' and event.button==3:
+            NavigationToolbar2Tk.back(self)
