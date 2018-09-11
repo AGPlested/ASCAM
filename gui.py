@@ -10,17 +10,12 @@ import numpy as np
 import matplotlib
 matplotlib.use('TkAgg')
 #check mpl version because navigation toolbar name has changed
-mpl_ver = (matplotlib.__version__).split('.')
-if int(mpl_ver[0])<2 or int(mpl_ver[1])<2 or int(mpl_ver[2])<2:
-    from matplotlib.backends.backend_tkagg \
-    import NavigationToolbar2TkAgg as NavigationToolbar2Tk
-else: from matplotlib.backends.backend_tkagg import NavigationToolbar2Tk
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib import gridspec as gs
 from matplotlib.widgets import Cursor as PlotCursor
 
-from tools import stringList_parser, parse_filename
+from tools import stringList_parser, parse_filename, PlotToolbar
 from plotting import plot_traces, plot_histogram
 from recording import Recording
 from TC_frame import TC_Frame
@@ -53,9 +48,9 @@ class GUI(ttk.Frame):
         root.mainloop()
 
     def __init__(self, master, test):
+        log.debug("begin GUI.__init__")
         ttk.Frame.__init__(self, master)
         self.master = master
-        log.info("initializing main window")
         # which window system is being used
         self.window_system = master.tk.call('tk', 'windowingsystem')
         log.debug("window system is {}".format(self.window_system))
@@ -109,25 +104,37 @@ class GUI(ttk.Frame):
         self.show_idealization.set(1)
         self.show_idealization.trace("w", self.draw_plots)
 
+        #parameters for idealization
+        self.show_tc = tk.IntVar()
+        self.show_tc.set(0)
+        self.show_amp = tk.IntVar()
+        self.show_amp.set(0)
+
         # parameters of the data
         self.sampling_rate = tk.StringVar()
         self.sampling_rate.set("0")
+        self.tc_amps = tk.StringVar()
+        self.tc_thresholds = tk.StringVar()
+
 
         # dictionary for the data
         if test: self.data = Recording()
         else: self.data = Recording('')
+
         # datakey of the current displayed data
         self.datakey = tk.StringVar()
         self.datakey.trace('w',self.change_current_datakey)
         self.datakey.set('raw_')
         # episode number of the currently displayed episode
-        self.Nepisode = 0
+        self.n_episode = 0
 
         self.create_widgets()
         self.configure_grid()
 
-        self.bind("<Configure>", self.draw_plots)
         # this line calls `draw` when it is run
+        self.bind("<Configure>", self.redraw_plots)
+
+        log.debug(f"end GUI.__init__")
 
     def change_current_datakey(self,*args,**kwargs):
         """
@@ -167,11 +174,11 @@ class GUI(ttk.Frame):
         """
         Create the contents of the main window.
         """
-        log.info("""creating widgets""")
+        log.debug("`GUI.create_widgets`")
         self.plots = PlotFrame(self)
         self.episodeList = EpisodeList(self)
         self.listSelection = ListSelection(self)
-        self.displayFrame = Displayframe(self)
+        self.displayFrame = DiplayFrame(self)
         self.menuBar = MenuBar(self)
 
     def configure_grid(self):
@@ -181,41 +188,40 @@ class GUI(ttk.Frame):
         The values in col/rowconfig refer to the position of the elements
         WITHIN the widgets
         """
-        log.info("""configuring tkinter grid""")
+        log.debug("GUI.configure_grid")
         # Place the main window in the root window
         self.grid(row=0, column=0, sticky=tk.N+tk.S+tk.E+tk.W)
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
 
         # First row
-        self.listSelection.grid(row=0, column=3, rowspan=2, padx=5, pady=5,
+        self.listSelection.grid(row=0, column=4, rowspan=2, padx=5, pady=5,
                                 sticky=tk.N)
 
         # Second row
-        self.plots.grid(row=1, column=0, rowspan=3, columnspan=3, padx=5,
+        self.plots.grid(row=1, column=1, rowspan=3, columnspan=3, padx=5,
                         pady=5, sticky=tk.W)
         self.plots.grid_rowconfigure(0, weight=1)
         self.plots.grid_columnconfigure(0, weight=1)
 
         # Third row
-        self.episodeList.grid(row=2, column=3, rowspan=2)
+        self.episodeList.grid(row=2, column=4, rowspan=2)
         for i in range(2):
             self.episodeList.grid_columnconfigure(i, weight=1)
             self.episodeList.grid_rowconfigure(i, weight=1)
 
-        self.displayFrame.grid(row=3, column=2, padx=5, sticky=tk.S)
+        self.displayFrame.grid(row=3, column=3, padx=5, sticky=tk.S)
+
+    def redraw_plots(self, *args):
+        log.debug(f"GUI.redraw_plots - widget changed size of location")
+        self.draw_plots()
 
     def draw_plots(self, *args):
         """
         Plot the current episode
         """
-        if self.data:
-            log.info('Calling `plot`, `self.data` is `True`')
-            self.plots.plot()
-            self.plots.toolbar.update()
-        else:
-            log.info('Cannot plot, `self.data` is `False`')
-            pass
+        log.debug(f"GUI.draw_plots")
+        self.plots.plot()
         self.displayFrame.update()
 
     def update_list(self):
@@ -231,16 +237,16 @@ class GUI(ttk.Frame):
         return an array of the indices of all the episodes in the currently
         selected lists
         """
-        log.info("getting episodes in currently selected lists")
+        log.debug("GUI.get_episodes_in_lists")
         indices = []
         for listname in self.data.current_lists:
             indices.extend(self.data.lists[listname][0])
-            log.debug('''for list "{}" added:\n {}'''\
-                      .format(listname,self.data.lists[listname][0]))
+            # log.debug('''for list "{}" added:\n {}'''\
+            #           .format(listname,self.data.lists[listname][0]))
         # remove duplicate indices
         indices = np.array(list(set(indices)))
         indices = indices.flatten()
-        log.info("indices in currently selected lists:\n {}".format(indices))
+        # log.info("indices in currently selected lists:\n {}".format(indices))
         return indices
 
     def quit(self):
@@ -248,35 +254,36 @@ class GUI(ttk.Frame):
         self.master.destroy()
         self.master.quit()
 
-class Displayframe(ttk.Frame):
+class DiplayFrame(ttk.Frame):
     """
     This frame is used to display information.
     Currently this means only the mean and standard deviation of the command
     voltage.
     """
     def __init__(self, parent):
-        log.info("initializing DisplayFrame")
+        log.debug(f"begin DisplayFrame.__init__")
         ttk.Frame.__init__(self, parent)
         self.parent = parent
         self.show_command_stats()
-        log.info("initialized DisplayFrame")
+        log.debug(f"end DisplayFrame.__init__")
 
     def update(self):
         """
         Update all contents of the Display frame
         """
-        log.info("updating DisplayFrame")
+        log.debug(f"DisplayFrame.update")
         # self.show_filename()
         self.show_command_stats()
 
     def show_command_stats(self):
+        log.debug(f"DisplayFrame.show_command_stats")
         if self.parent.data_loaded:
             datakey = self.parent.datakey.get()
-            episode = self.parent.data[datakey][self.parent.Nepisode]
+            episode = self.parent.data[datakey][self.parent.n_episode]
 
             if episode.command is not None:
                 log.info("""showing command stats for {}
-                         episode number: {}""".format(datakey,self.parent.Nepisode))
+                         episode number: {}""".format(datakey,self.parent.n_episode))
                 mean, std = episode.get_command_stats()
                 command_stats ="Command Voltage = "
                 command_stats+="{:2f} +/- {:2f}".format(mean,std)
@@ -288,6 +295,7 @@ class Displayframe(ttk.Frame):
 
 class MenuBar(tk.Menu):
     def __init__(self, parent):
+        log.debug(f"begin MenuBar.__init__")
         self.parent = parent #parent is main window
         tk.Menu.__init__(self, parent.master, tearoff=0)
         self.parent.master.config(menu=self)
@@ -314,8 +322,10 @@ class MenuBar(tk.Menu):
             appmenu.add_command(label='About My Application')
             appmenu.add_separator()
             self.parent.master['menu'] = self
+        log.debug(f"end MenuBar.__init__")
 
     def create_plot_cascade(self):
+        log.debug(f"MenuBar.create_plot_cascade")
         self.add_cascade(label='Plot', menu=self.plot_menu)
         self.plot_menu.add_command(label="Set t_zero",
                                    command=lambda: ZeroTFrame(self.parent))
@@ -330,6 +340,7 @@ class MenuBar(tk.Menu):
                                        variable=self.parent.show_idealization)
 
     def create_histogram_cascade(self):
+        log.debug(f"MenuBar.create_histogram_cascade")
         self.add_cascade(label='Histogram', menu=self.histogram_menu)
         self.histogram_menu.add_checkbutton(label="Show single episode",
                                             variable=self.parent.hist_single_ep)
@@ -345,6 +356,7 @@ class MenuBar(tk.Menu):
         Create all the options associated with files in the menu (e.g. 'open',
         'export' and 'save')
         """
+        log.debug(f"MenuBar.create_file_cascade")
         self.add_cascade(label="File", menu=self.file_menu)
         #Submenus under 'File'
         self.file_menu.add_command(label="Open File",command=self.open_file)
@@ -354,24 +366,26 @@ class MenuBar(tk.Menu):
         self.file_menu.add_command(label="Quit",command=self.parent.master.quit)
 
     def create_analysis_cascade(self):
+        log.debug(f"MenuBar.create_analysis_cascade")
         self.add_cascade(label='Analysis', menu=self.analysis_menu)
         self.analysis_menu.add_command(label="Baseline",
                                        command=lambda: BaselineFrame(self))
         self.analysis_menu.add_command(label="Filter",
                                        command=lambda: FilterFrame(self.parent))
-        self.analysis_menu.add_command(label="Idealize", command=lambda: \
-                                       TC_Frame(self.parent))
+        self.analysis_menu.add_command(label="Idealize", command=self.launch_idealization)
 
     def open_file(self):
+        log.debug(f"MenuBar.open_file")
         # open the dialog for loading a single file
         filename = askopenfilename()
-        log.info("selected file: '"+filename+"'")
+        log.info(f"selected file: '{filename}'")
         if filename is not None:
             OpenFileDialog(self.parent, filename)
         else:
             log.info("User pressed 'Cancel'")
 
     def save_to_file(self):
+        log.debug(f"MenuBar.save_to_file")
         # save the current recording object with all its attributes as a
         # pickle file
         filepath = asksaveasfilename()
@@ -380,9 +394,15 @@ class MenuBar(tk.Menu):
         else:
             log.info("User pressed 'Cancel'")
 
+    def launch_idealization(self):
+        log.debug(f"MenuBar.launch_idealization")
+        tc_frame = TC_Frame(self.parent)
+        tc_frame.grid(row=1, column=0)
+
 class ZeroTFrame(tk.Toplevel):
     """Dialog for entering the offset for the time axis in plots"""
     def __init__(self, parent):
+        log.debug(f"begin ZeroTFrame.__init__")
         tk.Toplevel.__init__(self, parent)
         self.parent = parent #parent is main window
         self.title("Set time offset")
@@ -391,8 +411,10 @@ class ZeroTFrame(tk.Toplevel):
         entry.focus()
         ttk.Button(self, text="OK", command=self.ok_click\
                    ).grid(row=1, column=0, columnspan=3)
+        log.debug(f"end ZeroTFrame.__init__")
 
     def ok_click(self):
+        log.debug("ZeroTFrame.ok_click")
         self.parent.draw_plots()
         self.destroy()
 
@@ -400,6 +422,7 @@ class FilterFrame(tk.Toplevel):
     """Dialog to enter filtering parameters"""
     def __init__(self, parent):
         tk.Toplevel.__init__(self, parent)
+        log.debug(f"begin FilterFrame.__init__")
         self.parent = parent #parent is main
         self.title("Filter")
         #filterframe variables
@@ -419,6 +442,7 @@ class FilterFrame(tk.Toplevel):
 
         self.create_widgets()
         self.create_entry_frame()
+        log.debug(f"end FilterFrame.__init__")
 
     def create_widgets(self):
         """
@@ -426,7 +450,8 @@ class FilterFrame(tk.Toplevel):
         placeholder frame for entry fields
         and 'ok' and 'cancel' buttons
         """
-        log.info("""creating dropdown menu for filter selection""")
+        log.debug(f"FilterFrame.create_widgets")
+        log.debug("creating dropdown menu for filter selection")
         listOptions = ['Gaussian', 'Chung-Kennedy']
         self.menu = tk.OptionMenu(self, self.filter_selection, *listOptions)
         self.menu.grid(row=0, column=0, columnspan=2, sticky=tk.N)
@@ -439,6 +464,8 @@ class FilterFrame(tk.Toplevel):
         """
         Create a frame for the entry of the filter parameters
         """
+        log.debug(f"FilterFrame.create_entry_frame")
+        log.debug(f"filter_selection is {self.filter_selection.get()}")
         self.entry_frame.destroy()
         self.entry_frame = ttk.Frame(self)
         self.entry_frame.grid(row=1, column=0, columnspan=2)
@@ -471,7 +498,8 @@ class FilterFrame(tk.Toplevel):
                       width=7).grid(row=4, column=1)
 
     def filter_series(self):
-        log.info('going to filter all episodes')
+        log.debug(f'FilterFrame.filter_series')
+        log.debug(f"filter_selection is {self.filter_selection.get()}")
         if self.filter_selection.get()=="Gaussian":
             #convert textvar to float
             cutoffFrequency = float(self.gaussian_fc.get())
@@ -499,15 +527,13 @@ class FilterFrame(tk.Toplevel):
                 self.parent.draw_plots()
 
     def ok_click(self):
+        log.debug(f"FilterFrame.ok_click")
         if self.filter_selection.get(): self.filter_series()
         self.destroy()
 
 class ExportFileDialog(tk.Toplevel):
-    """
-    dialog for exporting data
-    """
     def __init__(self, parent):
-        log.info("initializing ExportFileDialog")
+        log.debug(f"begin ExportFileDialog.__init__")
         tk.Toplevel.__init__(self,parent)
         self.parent = parent #parent should be main window
 
@@ -521,6 +547,8 @@ class ExportFileDialog(tk.Toplevel):
         self.lists_to_export = list()
 
         self.create_widgets()
+        log.debug(f"end ExportFileDialog.__init__")
+
 
     def create_widgets(self):
         #first row - select the series
@@ -632,43 +660,9 @@ class HistogramConfiguration(tk.Toplevel):
         except: pass
         self.destroy()
 
-class PlotToolbar(NavigationToolbar2Tk):
-    def __init__(self, canvas, parent):
-        self.parent = parent
-        self.canvas = canvas
-
-        # this toolbar is just the standard with fewer buttons
-        self.toolitems = (
-            ('Home', 'Reset original view', 'home', 'home'),
-            # ('Back', 'Back to  previous view', 'back', 'back'),
-            # ('Forward', 'Forward to next view', 'forward', 'forward'),
-            (None, None, None, None),
-            ('Pan', 'Pan axes with left mouse, zoom with right', 'move', 'pan'),
-            ('Zoom', 'Zoom to rectangle', 'zoom_to_rect', 'zoom'),
-            (None, None, None, None),
-            # ('Subplots', 'Configure subplots', 'subplots', 'configure_subplots'),
-            ('Save', 'Save the figure', 'filesave', 'save_figure'),
-            )
-        NavigationToolbar2Tk.__init__(self, canvas, parent)
-
-    def zoom(self):
-        """
-        Redefine the zoom method of the toolbar to include zooming out on
-        right-click
-        """
-        self_zoom_out_cid = self.canvas.mpl_connect('button_press_event', self.zoom_out)
-        NavigationToolbar2Tk.zoom(self)
-
-    def zoom_out(self, event):
-        """
-        Zoom out in this case is done by calling `back` on right-click to
-        restore the previous view (i.e. undo last zoom)
-        """
-        if self._active=='ZOOM' and event.button==3:
-            NavigationToolbar2Tk.back(self)
-
 class PlotFrame(ttk.Frame):
     def __init__(self, parent):
+        log.debug(f"begin PlotFrame.__init__")
         ttk.Frame.__init__(self, parent)
         self.parent = parent #parent is main frame
         #initiliaze figure
@@ -683,14 +677,16 @@ class PlotFrame(ttk.Frame):
         self.current_plot = None
         self.command_plot = None
         self.histogram = None
+        log.debug(f"end PlotFrame.__init__")
 
     def plot(self):
+        log.debug(f"PlotFrame.plot")
         plt.clf() #clear figure from memory
         datakey = self.parent.datakey.get()
         if self.parent.data.filename:
             # get data to plot
             series = self.parent.data[datakey]
-            episode = series[self.parent.Nepisode]
+            episode = series[self.parent.n_episode]
 
             #plot allpoint_hist if lists are selected
             allpoint_hist = bool(self.parent.data.current_lists)
@@ -707,10 +703,11 @@ class PlotFrame(ttk.Frame):
             #arguments are nRows by nCols
             pgs = gs.GridSpec(num_plots+1,3)
 
-            log.info("""`data` exists, will plot episode number {}
-            from series {}""".format(self.parent.Nepisode,datakey))
+            log.info(f"will plot episode number {self.parent.n_episode} from \
+                     series {datakey}")
 
-            plot_traces(self.fig, pgs, episode,
+            #plot voltages and current
+            self.trace_plots = plot_traces(self.fig, pgs, episode,
                         show_command=show_command,
                         show_piezo=show_piezo,
                         t_zero=float(self.parent.plot_t_zero.get()),
@@ -720,6 +717,18 @@ class PlotFrame(ttk.Frame):
                         time_unit=self.parent.data.time_unit,
                         show_idealization=self.parent.show_idealization.get())
 
+            #draw lines for idealization
+            self.current_plot = self.trace_plots[0+self.parent.show_piezo.get()]
+            if self.parent.show_tc.get():
+                log.debug(f"drawing TC amplitudes")
+                for theta in self.parent.data.TC_thresholds:
+                    self.current_plot.axhline(theta, ls='--', c='r', alpha=0.3)
+            if self.parent.show_amp.get():
+                log.debug(f"drawing TC thresholds")
+                for amp in self.parent.data.TC_amplitudes:
+                    self.current_plot.axhline(amp, ls='--', c='b', alpha=0.3)
+
+            #plot histograms
             active = bool(self.parent.hist_piezo_active.get()) \
                      and self.parent.data.has_piezo
             select_piezo = bool(self.parent.hist_piezo_interval.get()) \
@@ -865,7 +874,7 @@ class BaselineFrame(tk.Toplevel):
 
 class ListSelection(ttk.Frame):
     def __init__(self, parent):
-        log.info("""initializing ListSelection frame""")
+        log.debug("__init__ ListSelection")
         ttk.Frame.__init__(self, parent)
         self.parent = parent # parent is mainframe
         #we need to store the variables, else they are deleted straight after
@@ -878,6 +887,7 @@ class ListSelection(ttk.Frame):
         Create a new checkbox but first check if a list by that name already
         exists
         """
+        log.debug(f"ListSelection.new_checkbox")
         if name in self.parent.data.lists.keys():
             log.info(f'tried to create list with the name "{name}" of an \
                      existing list\n list creation failed')
@@ -894,7 +904,7 @@ class ListSelection(ttk.Frame):
         the `pack` which should ensure that they are places underneath one
         another.
         """
-
+        log.debug(f"ListSelection.create_checkbox")
         log.info(f'Creating checkbox with name "{name}" under key "{key}" with \
                  color {color} ')
 
@@ -976,7 +986,7 @@ class ListSelection(ttk.Frame):
         This functions uses `pack` geometry because the button will be created
         and destroyed several times at different locations in the grid.
         """
-        log.info("Creating new checkbox maker button")
+        log.debug("ListSelection.create_button")
         self.createBoxButton = ttk.Button(self,text='new list',
                                           command=lambda: AddListDialog(self))
         self.createBoxButton.pack()
@@ -1035,7 +1045,7 @@ class EpisodeList(ttk.Frame):
     def __init__(self, parent):
         ttk.Frame.__init__(self, parent)
         self.parent = parent
-
+        log.debug(f"__init__ EpisodeList")
         # create the variable tracking the current selection, `currentSeries`
         # and assign it to call the function `selection_change` when it is
         # changed
@@ -1048,14 +1058,17 @@ class EpisodeList(ttk.Frame):
         When a new episode is selected by clicking or with arrow keys get the
         change the number of the current episode and update the plots
         """
+        log.debug(f"EpisodeList.onselect_plot")
         #uses try to catch and ignore the event of the user clickling
         #outside the list
         try:
             selected_episode = int(event.widget.curselection()[0])
             log.info(f"selected episode number {selected_episode}")
-            self.parent.Nepisode = selected_episode
+            self.parent.n_episode = selected_episode
             self.parent.draw_plots()
-        except IndexError: pass
+        except IndexError:
+            log.debug(f"excepted IndexError")
+            pass
 
     def create_list(self):
         """
@@ -1064,11 +1077,12 @@ class EpisodeList(ttk.Frame):
         the last line of scrollbar references episodelist so it has to come
         after the creating of episodelist
         """
-        log.info("creating scrollbar")
+        log.debug(f"`EpisodeList.create_list`")
+        log.debug("creating scrollbar")
         self.Scrollbar = tk.Scrollbar(self, orient=tk.VERTICAL)
         self.Scrollbar.grid(column=1, row=1, rowspan=3, sticky=tk.N+tk.S+tk.E)
 
-        log.info("creating episodelist")
+        log.debug("creating episodelist")
         self.episodelist = tk.Listbox(self, bd=2,
                                       yscrollcommand=self.Scrollbar.set,
                                       selectmode=tk.EXTENDED)
@@ -1077,35 +1091,30 @@ class EpisodeList(ttk.Frame):
         self.episodelist.bind('<<ListboxSelect>>', self.onselect_plot)
 
         self.episodelist.config(height=30)
-        # only create the list if there is data to fill it with
-        if self.parent.data:
-            log.info("found data to fill list with")
-            for episode in self.parent.data[self.parent.datakey.get()]:
-                self.episodelist.insert(tk.END, f"episode #{episode.n_episode}")
-                log.debug(f"inserting episode number {episode.n_episode}")
+
+        for episode in self.parent.data[self.parent.datakey.get()]:
+            self.episodelist.insert(tk.END, f"episode #{episode.n_episode}")
+            # log.debug(f"inserting episode number {episode.n_episode}")
         # color all episodes according to their list membership
-            # start from second element because white is default bg color
-            for name in list(self.parent.data.lists.keys())[1:]:
-                for index in self.parent.data.lists[name][0]:
-                    self.episodelist.itemconfig(index,
-                                        {'bg':self.parent.data.lists[name][1]})
+        # start from second element because white is default bg color
+        for name in list(self.parent.data.lists.keys())[1:]:
+            for index in self.parent.data.lists[name][0]:
+                self.episodelist.itemconfig(index,
+                                    {'bg':self.parent.data.lists[name][1]})
 
 
         # assign the scrollbar its function
         self.Scrollbar['command'] = self.episodelist.yview
-        self.episodelist.selection_set(self.parent.Nepisode)
+        self.episodelist.selection_set(self.parent.n_episode)
 
     def create_dropdownmenu(self):
         """
         create the dropdown menu that is a list of the available series
         """
-        log.info("""creating dropdown menu""")
-        if self.parent.data:
-            log.info("found data")
-            ### the options in the list are all the datakeys
-            listOptions = self.parent.data.keys()
-        else:
-            listOptions = ['']
+        log.debug(f"`EpisodeList.create_dropdownmenu`")
+        # the options in the list are all the datakeys
+        listOptions = self.parent.data.keys()
+
         self.menu = tk.OptionMenu(self, self.parent.datakey, *listOptions)
         self.menu.grid(row=0,column=0,columnspan=2,sticky=tk.N)
 
