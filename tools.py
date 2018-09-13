@@ -158,7 +158,7 @@ def stringList_parser(list_as_string):
 
 class PlotToolbar(NavigationToolbar2Tk):
     def __init__(self, canvas, parent):
-        self.parent = parent
+        self.parent = parent #parent is PlotFrame
         self.canvas = canvas
 
         # this toolbar is just the standard with fewer buttons
@@ -180,6 +180,7 @@ class PlotToolbar(NavigationToolbar2Tk):
         Redefine the zoom method of the toolbar to include zooming out on
         right-click
         """
+        # self.parent.parent.tc_frame.track_on = False
         self_zoom_out_cid = self.canvas.mpl_connect('button_press_event', self.zoom_out)
         NavigationToolbar2Tk.zoom(self)
 
