@@ -94,6 +94,7 @@ class TC_Frame(ttk.Frame):
     def demo_idealization(self):
         log.debug(f"TC_Frame.demo_idealization")
         self.parent.data.idealize_series()
+        self.parent.data[self.parent.data.currentDatakey].idealized = False
         self.parent.plots.plot()
 
     def click_cancel(self):
