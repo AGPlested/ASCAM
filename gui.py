@@ -396,8 +396,8 @@ class MenuBar(tk.Menu):
 
     def launch_idealization(self):
         log.debug(f"MenuBar.launch_idealization")
-        tc_frame = TC_Frame(self.parent)
-        tc_frame.grid(row=1, column=0)
+        self.parent.tc_frame = TC_Frame(self.parent)
+        self.parent.tc_frame.grid(row=1, column=0)
 
 class ZeroTFrame(tk.Toplevel):
     """Dialog for entering the offset for the time axis in plots"""
