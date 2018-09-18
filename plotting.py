@@ -162,6 +162,7 @@ def plot_histogram(fig, pgs, episode, series, n_bins=50, density=False, select_p
         ax.barh(center_single, heights_single, width_single,
                 align='center', alpha=1)
     # cursor = PlotCursor(ax, useblit=True, color='black', linewidth=1)
+    return ax
 
 def plotTrace(ax, time, trace, ylabel='', ybounds=[], alpha=1):
     """
@@ -188,9 +189,8 @@ def plot_traces(fig, pgs, episode, show_piezo=True, show_command=True,
         log.info('will plot command voltage')
         # always plot command voltage on bottom (-1 row)
         command_plot = fig.add_subplot(pgs[-1,:2])
-        plotTrace(ax=command_plot, time=time,
-                           trace=episode.command,
-                           ylabel=f"Command [{command_unit}]")
+        cm_line, = command_plot.plot(time, episode.command)
+        command_plot.set_ylabel(ylabel=f"Command [{command_unit}]")
         command_plot.set_xlabel(f"Time [{time_unit}]")
         if t_zero!=0: plt.axvline(0, c='r', lw=1, ls='--', alpha=.8)
         subplots.append(command_plot)
@@ -200,8 +200,8 @@ def plot_traces(fig, pgs, episode, show_piezo=True, show_command=True,
 
     # plot the current trace
     current_plot = fig.add_subplot(pgs[trace_pos:trace_pos+2,:2], sharex=x_share)
-    plotTrace(ax=current_plot, time=time, trace=episode.trace,
-                       ylabel=f"Current [{current_unit}]")
+    tr_line, = current_plot.plot(time, episode.trace)
+    current_plot.set_ylabel(ylabel=f"Current [{current_unit}]")
     if show_idealization and episode.idealization is not None:
         plotTrace(ax=current_plot, time=time, trace=episode.idealization, alpha=.6)
     # label only the last axis
@@ -216,9 +216,9 @@ def plot_traces(fig, pgs, episode, show_piezo=True, show_command=True,
         log.info('will plot piezo voltage')
         #always plots piezo voltage on top
         piezo_plot = fig.add_subplot(pgs[0,:2], sharex=x_share)
-        plotTrace(ax=piezo_plot, time=time, trace=episode.piezo,
-                           ylabel=f"Piezo [{piezo_unit}]")
+        pi_line, = piezo_plot.plot(time, episode.piezo)
+        piezo_plot.set_ylabel(f"Piezo [{piezo_unit}]")
         piezo_plot.set_xticklabels([])
         if t_zero!=0: plt.axvline(0, c='r', lw=1, ls='--', alpha=.8)
         subplots.append(piezo_plot)
-    return subplots
+    return subplots, [cm_line, tr_line, pi_line]

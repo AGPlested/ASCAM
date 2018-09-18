@@ -9,7 +9,6 @@ from tkinter.filedialog import askopenfilename, asksaveasfilename, askdirectory
 import numpy as np
 import matplotlib
 matplotlib.use('TkAgg')
-#check mpl version because navigation toolbar name has changed
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib import gridspec as gs
@@ -677,9 +676,32 @@ class PlotFrame(ttk.Frame):
         self.current_plot = None
         self.command_plot = None
         self.histogram = None
+
+        self.plotted=False
         log.debug(f"end PlotFrame.__init__")
 
+    def update_plots(self):
+        datakey = self.parent.datakey.get()
+        series = self.parent.data[datakey]
+        episode = series[self.parent.n_episode]
+
+        self.lines[0].set_ydata(episode.command)
+        self.lines[1].set_ydata(episode.trace)
+        self.lines[2].set_ydata(episode.piezo)
+        for ax, line in zip(self.trace_plots,self.lines):
+            ax.draw_artist(ax.patch)
+            ax.draw_artist(line)
+        self.fig.canvas.flush_events()
+        self.canvas.draw()
+        
     def plot(self):
+        if self.plotted:
+            self.update_plots()
+        else:
+            self.init_plot()
+
+    def init_plot(self):
+        self.plotted = True
         log.debug(f"PlotFrame.plot")
         plt.clf() #clear figure from memory
         datakey = self.parent.datakey.get()
@@ -707,7 +729,7 @@ class PlotFrame(ttk.Frame):
                      series {datakey}")
 
             #plot voltages and current
-            self.trace_plots = plot_traces(self.fig, pgs, episode,
+            self.trace_plots, self.lines = plot_traces(self.fig, pgs, episode,
                         show_command=show_command,
                         show_piezo=show_piezo,
                         t_zero=float(self.parent.plot_t_zero.get()),
@@ -733,7 +755,7 @@ class PlotFrame(ttk.Frame):
                      and self.parent.data.has_piezo
             select_piezo = bool(self.parent.hist_piezo_interval.get()) \
                            and self.parent.data.has_piezo
-            plot_histogram(self.fig, pgs, episode, series,
+            self.histogram = plot_histogram(self.fig, pgs, episode, series,
                     n_bins=int(float(self.parent.hist_number_bins.get())),
                     density=bool(self.parent.hist_density.get()),
                     select_piezo=select_piezo,
@@ -1065,7 +1087,8 @@ class EpisodeList(ttk.Frame):
             selected_episode = int(event.widget.curselection()[0])
             log.info(f"selected episode number {selected_episode}")
             self.parent.n_episode = selected_episode
-            self.parent.draw_plots()
+            # self.parent.draw_plots()
+            self.parent.plots.update_plots()
         except IndexError:
             log.debug(f"excepted IndexError")
             pass
