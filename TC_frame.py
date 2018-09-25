@@ -4,8 +4,6 @@ import logging as log
 
 import numpy as np
 
-from recording import Recording
-
 class TC_Frame(ttk.Frame):
     def __init__(self, parent):
         log.debug("being TC_Frame.__init__")
@@ -13,6 +11,14 @@ class TC_Frame(ttk.Frame):
         self.parent = parent #parent is main
         self.parent.show_tc.set(1)
         self.parent.show_amp.set(1)
+
+        self.n_amps = tk.IntVar()
+        self.n_amps.set(0)
+        self.n_amps.trace('w', self.parent.plots.draw_amp_lines)
+        self.n_thetas = tk.IntVar()
+        self.n_thetas.set(0)
+        self.n_thetas.trace('w', self.parent.plots.draw_theta_lines)
+
         self.tracking_on = True
         self.track_cid = self.parent.plots.fig.canvas.mpl_connect(
                                                           'motion_notify_event',
@@ -57,6 +63,7 @@ class TC_Frame(ttk.Frame):
         else:
             self.parent.data.TC_amplitudes \
             = np.array(self.parent.tc_amps.get().split(), dtype=np.float)
+        self.n_amps.set(self.parent.data.TC_amplitudes.size)
         self.demo_idealization()
         self.parent.plots.plot()
 
@@ -78,6 +85,7 @@ class TC_Frame(ttk.Frame):
         else:
             self.parent.data.TC_thresholds = np.array(self.parent.tc_thresholds.get().split(),
                                               dtype=np.float)
+        self.n_thetas.set(self.parent.data.TC_thresholds.size)
         self.demo_idealization()
         self.parent.plots.plot()
 
