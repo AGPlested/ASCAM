@@ -7,13 +7,8 @@ from tkinter import ttk
 from tkinter.filedialog import askopenfilename, asksaveasfilename, askdirectory
 
 import numpy as np
-import matplotlib
-matplotlib.use('TkAgg')
-import matplotlib.pyplot as plt
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from matplotlib import gridspec as gs
-from matplotlib.widgets import Cursor as PlotCursor
 
+from PlotFrame import PlotFrame
 from tools import stringList_parser, parse_filename, PlotToolbar
 from plotting import plot_traces, plot_histogram
 from recording import Recording
@@ -68,24 +63,29 @@ class GUI(ttk.Frame):
         self.filename.trace("w",
                 lambda *args: self.master.title("ASCAM - "+self.filename.get()))
 
-        ### parameters for the histogram
+        # parameters for the histogram
+        self.show_hist = tk.IntVar() #must be true to show any histogram
+        self.show_hist.set(1) #default is to show histograms
         self.hist_number_bins = tk.StringVar()
         self.hist_number_bins.set(50)
-        self.hist_density = tk.IntVar()
-        self.hist_density.set(0)
+        self.hist_density = tk.IntVar() #if true area of histograms is normalized
+        self.hist_density.set(0) #default is to show histogram as counts
         self.hist_density.trace("w", self.draw_plots)
 
-        self.hist_piezo_active = tk.IntVar()
-        self.hist_piezo_active.set(1)
-        self.hist_piezo_deviation = tk.StringVar()
+        self.hist_piezo_active = tk.IntVar() #if true select points in histogram using piezo
+        self.hist_piezo_active.set(1) #default is true
+        self.hist_piezo_deviation = tk.StringVar() #factor by which piezo voltage at a point must differ from 0 to be includede
         self.hist_piezo_deviation.set(0.05)
 
-        self.hist_interval_entry = tk.StringVar()
+        self.hist_interval_entry = tk.StringVar() #if true select points for histogram from given intervals
         self.hist_interval_entry.set('')
         self.hist_intervals = []
-        self.hist_single_ep = tk.IntVar()
+        self.hist_single_ep = tk.IntVar() #if true plot a histogram of the currently selected episode
         self.hist_single_ep.set(1)
         self.hist_single_ep.trace("w", self.draw_plots)
+        self.hist_all = tk.IntVar() #if true plot a histogram of all points
+        self.hist_all.set(1)
+        self.hist_all.trace("w", self.draw_plots)
         # radio button variable to decide how to select points in histogram
         self.hist_piezo_interval = tk.IntVar()
         self.hist_piezo_interval.set(1)
@@ -108,16 +108,15 @@ class GUI(ttk.Frame):
         self.show_tc.set(0)
         self.show_amp = tk.IntVar()
         self.show_amp.set(0)
+        self.tc_amps = tk.StringVar()
+        self.tc_thresholds = tk.StringVar()
 
         # parameters of the data
         self.sampling_rate = tk.StringVar()
         self.sampling_rate.set("0")
-        self.tc_amps = tk.StringVar()
-        self.tc_thresholds = tk.StringVar()
 
-
-        # dictionary for the data
-        if test: self.data = Recording()
+        if test:
+            self.data = Recording()
         else: self.data = Recording('')
 
         # datakey of the current displayed data
@@ -132,6 +131,14 @@ class GUI(ttk.Frame):
 
         # this line calls `draw` when it is run
         self.bind("<Configure>", self.redraw_plots)
+
+        if test:
+            self.data.baseline_correction()
+            self.data.gauss_filter_series(1e3)
+            self.update_all()
+            self.datakey.set('BC_GFILTER1000.0_')
+            self.plots.plot(True)
+            self.menuBar.launch_idealization()
 
         log.debug(f"end GUI.__init__")
 
@@ -212,15 +219,15 @@ class GUI(ttk.Frame):
         self.displayFrame.grid(row=3, column=3, padx=5, sticky=tk.S)
 
     def redraw_plots(self, *args):
-        log.debug(f"GUI.redraw_plots - widget changed size of location")
+        log.debug(f"GUI.redraw_plots - widget changed size or location")
         self.draw_plots()
 
-    def draw_plots(self, *args):
+    def draw_plots(self, new=False, *args):
         """
         Plot the current episode
         """
         log.debug(f"GUI.draw_plots")
-        self.plots.plot()
+        self.plots.plot(new)
         self.displayFrame.update()
 
     def update_list(self):
@@ -659,118 +666,6 @@ class HistogramConfiguration(tk.Toplevel):
         except: pass
         self.destroy()
 
-class PlotFrame(ttk.Frame):
-    def __init__(self, parent):
-        log.debug(f"begin PlotFrame.__init__")
-        ttk.Frame.__init__(self, parent)
-        self.parent = parent #parent is main frame
-        #initiliaze figure
-        self.fig = plt.figure(figsize=(10,5))
-
-        self.canvas = FigureCanvasTkAgg(self.fig, master=self)
-        self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
-        self.toolbar = PlotToolbar(self.canvas, self)
-        self.canvas._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
-
-        self.piezo_plot = None
-        self.current_plot = None
-        self.command_plot = None
-        self.histogram = None
-
-        self.plotted=False
-        log.debug(f"end PlotFrame.__init__")
-
-    def update_plots(self):
-        datakey = self.parent.datakey.get()
-        series = self.parent.data[datakey]
-        episode = series[self.parent.n_episode]
-
-        self.lines[0].set_ydata(episode.command)
-        self.lines[1].set_ydata(episode.trace)
-        self.lines[2].set_ydata(episode.piezo)
-        for ax, line in zip(self.trace_plots,self.lines):
-            ax.draw_artist(ax.patch)
-            ax.draw_artist(line)
-        self.fig.canvas.flush_events()
-        self.canvas.draw()
-        
-    def plot(self):
-        if self.plotted:
-            self.update_plots()
-        else:
-            self.init_plot()
-
-    def init_plot(self):
-        self.plotted = True
-        log.debug(f"PlotFrame.plot")
-        plt.clf() #clear figure from memory
-        datakey = self.parent.datakey.get()
-        if self.parent.data.filename:
-            # get data to plot
-            series = self.parent.data[datakey]
-            episode = series[self.parent.n_episode]
-
-            #plot allpoint_hist if lists are selected
-            allpoint_hist = bool(self.parent.data.current_lists)
-            log.info(f"allpoint_hist is {allpoint_hist}")
-
-            show_command = self.parent.show_command.get()\
-                           and self.parent.data.has_command
-            show_piezo = self.parent.show_piezo.get()\
-                         and self.parent.data.has_piezo
-            # decide how many plots there will be
-            num_plots = 1+show_command+show_piezo
-
-            # plot grid to make current plot bigger
-            #arguments are nRows by nCols
-            pgs = gs.GridSpec(num_plots+1,3)
-
-            log.info(f"will plot episode number {self.parent.n_episode} from \
-                     series {datakey}")
-
-            #plot voltages and current
-            self.trace_plots, self.lines = plot_traces(self.fig, pgs, episode,
-                        show_command=show_command,
-                        show_piezo=show_piezo,
-                        t_zero=float(self.parent.plot_t_zero.get()),
-                        piezo_unit=self.parent.data.piezoUnit,
-                        current_unit=self.parent.data.currentUnit,
-                        command_unit=self.parent.data.commandUnit,
-                        time_unit=self.parent.data.time_unit,
-                        show_idealization=self.parent.show_idealization.get())
-
-            #draw lines for idealization
-            self.current_plot = self.trace_plots[0+self.parent.show_piezo.get()]
-            if self.parent.show_tc.get():
-                log.debug(f"drawing TC amplitudes")
-                for theta in self.parent.data.TC_thresholds:
-                    self.current_plot.axhline(theta, ls='--', c='r', alpha=0.3)
-            if self.parent.show_amp.get():
-                log.debug(f"drawing TC thresholds")
-                for amp in self.parent.data.TC_amplitudes:
-                    self.current_plot.axhline(amp, ls='--', c='b', alpha=0.3)
-
-            #plot histograms
-            active = bool(self.parent.hist_piezo_active.get()) \
-                     and self.parent.data.has_piezo
-            select_piezo = bool(self.parent.hist_piezo_interval.get()) \
-                           and self.parent.data.has_piezo
-            self.histogram = plot_histogram(self.fig, pgs, episode, series,
-                    n_bins=int(float(self.parent.hist_number_bins.get())),
-                    density=bool(self.parent.hist_density.get()),
-                    select_piezo=select_piezo,
-                    active=active,
-                    deviation=float(self.parent.hist_piezo_deviation.get()),
-                    fs=float(self.parent.sampling_rate.get()),
-                    intervals=self.parent.hist_intervals,
-                    single_hist=self.parent.hist_single_ep.get(),
-                    allpoint_hist=allpoint_hist,
-                    current_unit=self.parent.data.currentUnit,
-                    episode_inds=self.parent.get_episodes_in_lists())
-
-        self.toolbar.update()
-        self.canvas.draw() # draw plots
-
 class BaselineFrame(tk.Toplevel):
     """
     Temporary frame in which to chose how and based on what points
@@ -877,7 +772,7 @@ class BaselineFrame(tk.Toplevel):
             self.parent.parent.datakey.set(
                                         self.parent.parent.data.currentDatakey)
             self.parent.parent.update_list()
-            self.parent.parent.draw_plots()
+            self.parent.parent.draw_plots(True)
         self.destroy()
 
     def interval_NotPiezo(self,*args):
