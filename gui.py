@@ -90,24 +90,7 @@ class GUI(ttk.Frame):
         self.hist_piezo_interval = tk.IntVar()
         self.hist_piezo_interval.set(1)
 
-        # parameters for the plots
-        self.show_piezo = tk.IntVar()
-        self.show_piezo.set(1)
-        self.show_piezo.trace("w", self.draw_plots)
-        self.show_command = tk.IntVar()
-        self.show_command.set(1)
-        self.show_command.trace("w", self.draw_plots)
-        self.plot_t_zero = tk.StringVar()
-        self.plot_t_zero.set("0.00")
-        self.show_idealization = tk.IntVar()
-        self.show_idealization.set(1)
-        self.show_idealization.trace("w", self.draw_plots)
 
-        #parameters for idealization
-        self.show_tc = tk.IntVar()
-        self.show_tc.set(0)
-        self.show_amp = tk.IntVar()
-        self.show_amp.set(0)
         self.tc_amps = tk.StringVar()
         self.tc_thresholds = tk.StringVar()
 
@@ -141,6 +124,9 @@ class GUI(ttk.Frame):
             self.menuBar.launch_idealization()
 
         log.debug(f"end GUI.__init__")
+
+    @property
+    def episode(self): return self.data[self.datakey.get()][self.n_episode]
 
     def change_current_datakey(self,*args,**kwargs):
         """
@@ -338,12 +324,12 @@ class MenuBar(tk.Menu):
         self.plot_menu.add_separator()
         if self.parent.data.has_piezo:
             self.plot_menu.add_checkbutton(label="Show piezo voltage",
-                                       variable=self.parent.show_piezo)
+                                       variable=self.parent.plots.show_piezo)
         if self.parent.data.has_command:
             self.plot_menu.add_checkbutton(label="Show command voltage",
-                                       variable=self.parent.show_command)
+                                       variable=self.parent.plots.show_command)
         self.plot_menu.add_checkbutton(label="Show idealization",
-                                       variable=self.parent.show_idealization)
+                                       variable=self.parent.plots.show_idealization)
 
     def create_histogram_cascade(self):
         log.debug(f"MenuBar.create_histogram_cascade")
