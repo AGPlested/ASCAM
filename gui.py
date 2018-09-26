@@ -90,10 +90,6 @@ class GUI(ttk.Frame):
         self.hist_piezo_interval = tk.IntVar()
         self.hist_piezo_interval.set(1)
 
-
-        self.tc_amps = tk.StringVar()
-        self.tc_thresholds = tk.StringVar()
-
         # parameters of the data
         self.sampling_rate = tk.StringVar()
         self.sampling_rate.set("0")
