@@ -9,15 +9,6 @@ class TC_Frame(ttk.Frame):
         log.debug("being TC_Frame.__init__")
         ttk.Frame.__init__(self, parent)
         self.parent = parent #parent is main
-        self.parent.show_tc.set(1)
-        self.parent.show_amp.set(1)
-
-        self.n_amps = tk.IntVar()
-        self.n_amps.set(0)
-        self.n_amps.trace('w', self.parent.plots.draw_amp_lines)
-        self.n_thetas = tk.IntVar()
-        self.n_thetas.set(0)
-        self.n_thetas.trace('w', self.parent.plots.draw_theta_lines)
 
         self.tracking_on = True
         self.track_cid = self.parent.plots.fig.canvas.mpl_connect(
@@ -26,26 +17,36 @@ class TC_Frame(ttk.Frame):
         self.create_widgets()
         log.debug("end TC_Frame.__init__")
 
+    @property
+    def show_amp(self):
+        return self.parent.plots.show_amp.get()
+
+    @property
+    def show_thetas(self):
+        return self.parent.plots.show_thetas.get()
+
     def create_widgets(self):
         log.debug(f"TC_Frame.create_widgets")
         #entry for amplitudes
         self.amp_button = tk.Button(self, text="Amplitudes", width=12,
-                                    relief="sunken", command=self.toggle_amp)
+                                    relief="raised", command=self.toggle_amp)
         self.amp_button.grid(row=4, column=0, columnspan=2)
         amp_entry = ttk.Entry(self, textvariable=self.parent.tc_amps, width=30)
         amp_entry.grid(row=5, column=0, columnspan=2)
-        # amp_entry.bind('<FocusOut>', self.get_amps)
-        amp_entry.bind('<Return>', self.get_amps)
+        amp_entry.bind('<Return>', lambda *args: self.toggle_amp() \
+                                                if not self.show_amp \
+                                                else self.get_amps())
 
         #entry for thresholds
         self.tc_button = tk.Button(self, text="Thresholds", width=12,
-                                   relief="sunken", command=self.toggle_tc)
+                                   relief="raised", command=self.toggle_tc)
         self.tc_button.grid(row=6, column=0, columnspan=2)
         tc_entry = ttk.Entry(self, textvariable=self.parent.tc_thresholds,
                              width=30)
         tc_entry.grid(row=7, column=0, columnspan=2)
-        # tc_entry.bind('<FocusOut>', self.get_thresholds)
-        tc_entry.bind('<Return>', self.get_thresholds)
+        tc_entry.bind('<Return>', lambda *args: self.toggle_tc() \
+                                                if not self.show_thetas \
+                                                else self.get_thresholds())
 
         ttk.Button(self, text="Show", command=lambda: [self.get_amps(),
                                                        self.get_thresholds()]
@@ -55,55 +56,73 @@ class TC_Frame(ttk.Frame):
         ttk.Button(self, text="Cancel", command=self.click_cancel).grid(row=11,
                                                                        column=1)
 
-    def get_amps(self, *args):
+    def get_amps(self, update_plot=True, *args):
         log.debug(f"TC_Frame.get_amps")
+        old_n_amps = self.parent.data.TC_amplitudes.size
         if ',' in self.parent.tc_amps.get():
             self.parent.data.TC_amplitudes \
             = np.array(self.parent.tc_amps.get().split(','), dtype=np.float)
         else:
             self.parent.data.TC_amplitudes \
             = np.array(self.parent.tc_amps.get().split(), dtype=np.float)
-        self.n_amps.set(self.parent.data.TC_amplitudes.size)
+        new_n_amps = self.parent.data.TC_amplitudes.size
+
+        #update the amp lines if command is given and the number didnt change
+        #always draw new lines if the number changed
+        if update_plot:
+            if new_n_amps==old_n_amps:
+                self.parent.plots.update_amp_lines()
+            elif new_n_amps!=old_n_amps:
+                self.parent.plots.draw_amp_lines()
         self.demo_idealization()
-        self.parent.plots.plot()
+
+    def get_thresholds(self, update_plot=True, *args):
+        log.debug(f"TC_Frame.get_thresholds")
+        old_n_thetas = self.parent.data.TC_thresholds.size
+        if ',' in self.parent.tc_amps.get():
+            self.parent.data.TC_thresholds = np.array(
+                                     self.parent.tc_thresholds.get().split(','),
+                                     dtype=np.float)
+        else:
+            self.parent.data.TC_thresholds = np.array(
+                                        self.parent.tc_thresholds.get().split(),
+                                        dtype=np.float)
+        new_n_thetas = self.parent.data.TC_thresholds.size
+        #update the amp lines if command is given and the number didnt change
+        #always draw new lines if the number changed
+        if update_plot:
+            if old_n_thetas==new_n_thetas:
+                self.parent.plots.update_theta_lines()
+            elif old_n_thetas!=new_n_thetas:
+                self.parent.plots.draw_theta_lines()
+        self.demo_idealization()
 
     def toggle_amp(self, *args):
         log.debug(f"TC_Frame.toggle_amp")
-        if self.parent.show_amp.get()==0:
-            self.parent.show_amp.set(1)
+        if self.parent.plots.show_amp.get()==0:
             self.amp_button.config(relief="sunken")
-            self.get_amps()
+            self.get_amps(update_plot=False)
+            self.parent.plots.show_amp.set(1)
         else:
-            self.parent.show_amp.set(0)
+            self.parent.plots.show_amp.set(0)
             self.amp_button.config(relief="raised")
-
-    def get_thresholds(self, *args):
-        log.debug(f"TC_Frame.get_thresholds")
-        if ',' in self.parent.tc_amps.get():
-            self.parent.data.TC_thresholds = np.array(
-                             self.parent.tc_thresholds.get().split(','),dtype=np.float)
-        else:
-            self.parent.data.TC_thresholds = np.array(self.parent.tc_thresholds.get().split(),
-                                              dtype=np.float)
-        self.n_thetas.set(self.parent.data.TC_thresholds.size)
-        self.demo_idealization()
-        self.parent.plots.plot()
 
     def toggle_tc(self, *args):
         log.debug(f"TC_Frame.toggle_tc")
-        if self.parent.show_tc.get()==0:
-            self.parent.show_tc.set(1)
+        if self.parent.plots.show_thetas.get()==0:
             self.tc_button.config(relief="sunken")
-            self.get_thresholds()
+            self.get_thresholds(update_plot=False)
+            self.parent.plots.show_thetas.set(1)
         else:
-            self.parent.show_tc.set(0)
+            self.parent.plots.show_thetas.set(0)
             self.tc_button.config(relief="raised")
 
     def demo_idealization(self):
         log.debug(f"TC_Frame.demo_idealization")
         self.parent.data.idealize_series()
         self.parent.data[self.parent.data.currentDatakey].idealized = False
-        self.parent.plots.plot()
+        # self.parent.plots.plot()
+        #update idealization
 
     def click_cancel(self):
         log.debug(f"TC_Frame.click_cancel")
@@ -122,8 +141,8 @@ class TC_Frame(ttk.Frame):
 
     def close_frame(self):
         log.debug(f"TC_Frame.close_frame")
-        self.parent.show_tc.set(0)
-        self.parent.show_amp.set(0)
+        self.parent.plots.show_thetas.set(0)
+        self.parent.plots.show_amp.set(0)
         self.parent.draw_plots()
         self.parent.plots.fig.canvas.mpl_disconnect(self.track_cid)
         self.destroy()
@@ -143,7 +162,9 @@ class TC_Frame(ttk.Frame):
             ):
             y_pos = event.ydata
 
-            if (self.parent.show_tc.get() and self.parent.show_amp.get()
+            #these conditionals check whether thetas and amps are displayed or
+            #only one and whether or not they exist
+            if (self.parent.plots.show_thetas.get() and self.parent.plots.show_amp.get()
                 and self.parent.data.TC_thresholds.size
                     +self.parent.data.TC_amplitudes.size>0
                 ):
@@ -167,7 +188,7 @@ class TC_Frame(ttk.Frame):
                     split_string = self.parent.tc_amps.get().split(sep)
                     split_string[i] = f"{y_pos:.2e}"
                     self.parent.tc_amps.set(sep.join(split_string))
-            elif (self.parent.show_tc.get()
+            elif (self.parent.plots.show_thetas.get()
                 and self.parent.data.TC_thresholds.size>0
                 ):
                 tc_diff = np.abs(self.parent.data.TC_thresholds-y_pos)
@@ -177,7 +198,7 @@ class TC_Frame(ttk.Frame):
                 split_string = self.parent.tc_thresholds.get().split(sep)
                 split_string[i] = f"{y_pos:.2e}"
                 self.parent.tc_thresholds.set(sep.join(split_string))
-            elif (self.parent.show_amp.get()
+            elif (self.parent.plots.show_amp.get()
                 and self.parent.data.TC_amplitudes.size>0
                 ):
                 amp_diff = np.abs(self.parent.data.TC_amplitudes-y_pos)
@@ -187,4 +208,5 @@ class TC_Frame(ttk.Frame):
                 split_string = self.parent.tc_amps.get().split(sep)
                 split_string[i] = f"{y_pos:.2e}"
                 self.parent.tc_amps.set(sep.join(split_string))
+            self.parent.plots.update_TC_lines()
             self.demo_idealization()

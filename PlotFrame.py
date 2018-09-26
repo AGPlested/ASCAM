@@ -24,23 +24,53 @@ class PlotFrame(ttk.Frame):
         self.toolbar = PlotToolbar(self.canvas, self)
         self.canvas._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
 
-        self.piezo_plot = None
-        self.current_plot = None
-        self.command_plot = None
-        self.histogram = None
-
-        self.tc_lines = list()
-        self.amp_lines = list()
+        self.initiliaze_parameters()
 
         self.plotted = False
 
         log.debug(f"end PlotFrame.__init__")
 
+    def initiliaze_parameters(self):
+        self.piezo_plot = None
+        self.current_plot = None
+        self.command_plot = None
+        self.histogram = None
+
+        # parameters for the plots
+        self.show_piezo = tk.IntVar()
+        self.show_piezo.set(1)
+        self.show_piezo.trace("w", self.plot)
+        self.show_command = tk.IntVar()
+        self.show_command.set(1)
+        self.show_command.trace("w", self.plot)
+        self.plot_t_zero = tk.StringVar()
+        self.plot_t_zero.set("0.00")
+        self.show_idealization = tk.IntVar()
+        self.show_idealization.set(1)
+        self.show_idealization.trace("w", self.plot)
+
+        #idealization related params
+        self.show_thetas = tk.IntVar()
+        self.show_thetas.set(0)
+        self.show_thetas.trace('w', lambda *args: self.draw_theta_lines() \
+                                                if self.show_thetas.get() \
+                                                else self.remove_theta_lines())
+
+        self.show_amp = tk.IntVar()
+        self.show_amp.set(0)
+        self.show_amp.trace('w', lambda *args: self.draw_amp_lines() \
+                                                if self.show_amp.get() \
+                                                else self.remove_amp_lines())
+        #lists to hold references to the lines indicating TC paramters
+        self.theta_lines = list()
+        self.amp_lines = list()
+
+
     def setup_plots(self):
         log.debug(f"plotframe.setup_plots")
-        show_command = self.parent.show_command.get()\
+        show_command = self.show_command.get()\
                        and self.parent.data.has_command
-        show_piezo = self.parent.show_piezo.get()\
+        show_piezo = self.show_piezo.get()\
                      and self.parent.data.has_piezo
         # decide how many plots there will be
         num_plots = 1+show_command+show_piezo
@@ -71,85 +101,114 @@ class PlotFrame(ttk.Frame):
             ax = self.fig.add_subplot(pgs[:,2])
         else: self.histogram = None
 
-    def update_plots(self):
-        log.debug(f"plotframe.update_plots")
-        datakey = self.parent.datakey.get()
-        series = self.parent.data[datakey]
-        episode = series[self.parent.n_episode]
-
-        self.c_line.set_ydata(episode.command)
-        self.t_line.set_ydata(episode.trace)
-        self.p_line.set_ydata(episode.piezo)
-        # self.current_plot.draw_artist(self.current_plot)
-        self.current_plot.draw_artist(self.t_line)
-        # self.current_plot.draw_artist(self.current_plot.yaxis)
-
-        # self.command_plot.draw_artist(self.command_plot)
+    def update_command_plot(self, draw=True):
+        log.debug(f"update_command_plot")
+        self.c_line.set_ydata(self.parent.episode.command)
         self.command_plot.draw_artist(self.c_line)
+        if draw: self.canvas.draw()
+
+    def update_current_plot(self, draw=True):
+        log.debug(f"update_current_plot")
+        self.t_line.set_ydata(self.parent.episode.trace)
+        self.current_plot.draw_artist(self.t_line)
+        if draw: self.canvas.draw()
+
+    def update_piezo_plot(self, draw=True):
+        log.debug(f"update_piezo_plot")
+        self.p_line.set_ydata(self.parent.episode.piezo)
+        self.piezo_plot.draw_artist(self.p_line)
+        if draw: self.canvas.draw()
+
+    def update_plots(self, draw=True):
+        log.debug(f"plotframe.update_plots")
+
+        if self.show_command.get(): self.update_command_plot(draw=False)
+        self.update_current_plot(draw=False)
+        if self.show_piezo.get(): self.update_piezo_plot(draw=False)
+        # self.current_plot.draw_artist(self.current_plot)
+        # self.current_plot.draw_artist(self.current_plot.yaxis)
+        # self.command_plot.draw_artist(self.command_plot)
         # self.command_plot.draw_artist(self.command_plot.yaxis)
         # self.piezo_plot.draw_artist(self.piezo_plot)
-        self.piezo_plot.draw_artist(self.p_line)
         # self.piezo_plot.draw_artist(self.piezo_plot.yaxis)
-
-        if self.parent.show_tc.get():
-            log.debug(f"drawing TC amplitudes")
-            for theta, line in zip(self.parent.data.TC_thresholds, self.tc_lines):
-                line.set_ydata(theta)
-                self.current_plot.draw_artist(line)
-        if self.parent.show_amp.get():
-            log.debug(f"drawing TC thresholds")
-            for amp, line in zip(self.parent.data.TC_amplitudes,self.amp_lines):
-                line.set_ydata(amp)
-                self.current_plot.draw_artist(line)
+        if self.show_amp.get(): self.update_theta_lines(draw=False)
+        if self.show_thetas.get(): self.update_amp_lines(draw=False)
 
         self.fig.canvas.flush_events()
-        self.canvas.draw()
+        if draw: self.canvas.draw()
 
-    def draw_TC_lines(self, *args):
+    def update_TC_lines(self, draw=True):
+        log.debug(f"update_TC_lines")
+        if self.show_amp.get(): self.update_amp_lines(draw=False)
+        if self.show_thetas.get(): self.update_theta_lines(draw=False)
+        if draw: self.canvas.draw()
+
+    def update_amp_lines(self, draw=True):
+        log.debug(f"update_amp_lines")
+        for amp, line in zip(self.parent.data.TC_amplitudes,self.amp_lines):
+            line.set_ydata(amp)
+            self.current_plot.draw_artist(line)
+        if draw: self.canvas.draw()
+
+    def update_theta_lines(self, draw=True):
+        log.debug(f"update_theta_lines")
+        for theta, line in zip(self.parent.data.TC_thresholds, self.theta_lines):
+            line.set_ydata(theta)
+            self.current_plot.draw_artist(line)
+        if draw: self.canvas.draw()
+
+    def draw_TC_lines(self, draw=True, *args):
         log.debug(f"PlotFrame.draw_TC_lines")
-        if self.parent.show_tc.get():
-            self.draw_amp_lines()
-        if self.parent.show_amp.get():
-            self.draw_theta_liens()
+        if self.show_thetas.get():
+            self.draw_amp_lines(draw=False)
+        if self.show_amp.get():
+            self.draw_theta_lines(draw=False)
+        if draw: self.canvas.draw()
 
-    def draw_theta_lines(self, *args):
+    def draw_theta_lines(self, draw=True, *args):
         log.debug(f"PlotFrame.draw_theta_lines")
-        if self.tc_lines:
+        if self.theta_lines:
             self.remove_theta_lines()
-        log.debug(f"drawing TC amplitudes")
         for theta in self.parent.data.TC_thresholds:
             line = self.current_plot.axhline(theta, ls='--', c='r', alpha=0.3)
-            self.tc_lines.append(line)
+            self.theta_lines.append(line)
+        self.canvas.draw()
+        if draw: self.canvas.draw()
 
-    def draw_amp_lines(self, *args):
+    def draw_amp_lines(self, draw=True, *args):
         log.debug(f"PlotFrame.draw_amp_lines")
         if self.amp_lines:
             self.remove_amp_lines()
-        log.debug(f"drawing TC thresholds")
         for amp in self.parent.data.TC_amplitudes:
             line = self.current_plot.axhline(amp, ls='--', c='b', alpha=0.3)
             self.amp_lines.append(line)
+        self.canvas.draw()
+        if draw: self.canvas.draw()
 
-    def remove_TC_lines(self, *args):
+    def remove_TC_lines(self, draw=True, *args):
         log.debug(f"PlotFrame.remove_TC_lines")
-        self.remove_amp_lines()
-        self.remove_theta_lines()
+        self.remove_amp_lines(draw=False)
+        self.remove_theta_lines(draw=False)
+        if draw: self.canvas.draw()
 
-    def remove_amp_lines(self, *args):
-        log.debug(f"PlotFrame.remove_amp_lines")
-        if self.tc_lines:
-            for line in self.tc_lines:
-                line.remove()
-                del line #del to make sure memory is cleared
-            self.tc_lines = list()
-
-    def remove_theta_lines(self, *args):
+    def remove_theta_lines(self, draw=True, *args):
         log.debug(f"PlotFrame.remove_theta_lines")
+        if self.theta_lines:
+            for line in self.theta_lines:
+                line.remove()
+                # del line #del to make sure memory is cleared
+            self.theta_lines = list()
+        if draw: self.canvas.draw()
+
+    def remove_amp_lines(self, draw=True, *args):
+        log.debug(f"PlotFrame.remove_amp_lines")
         if self.amp_lines:
             for line in self.amp_lines:
                 line.remove()
-                del line
+                # del line
             self.amp_lines = list()
+        self.canvas.draw()
+        if draw: self.canvas.draw()
 
     def plot(self, new=False):
         """
@@ -160,7 +219,7 @@ class PlotFrame(ttk.Frame):
         if self.plotted and not new:
             self.update_plots()
         else:
-            self.remove_TC_lines()
+            # self.remove_TC_lines()
             plt.clf()
             self.setup_plots()
             self.init_plot()
@@ -177,6 +236,9 @@ class PlotFrame(ttk.Frame):
             self.c_line, = self.command_plot.plot(time, episode.command)
         if self.current_plot is not None:
             self.t_line, = self.current_plot.plot(time,episode.trace)
+            #create invisble idealization plot as placeholder
+            self.i_line = self.current_plot.plot(time, np.mean(episode.trace)*np.ones(time.size), visible=False)
+
         if self.piezo_plot is not None:
             self.p_line, = self.piezo_plot.plot(time,episode.piezo)
         self.toolbar.update()
