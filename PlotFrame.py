@@ -47,7 +47,7 @@ class PlotFrame(ttk.Frame):
         self.plot_t_zero.set("0.00")
         self.show_idealization = tk.IntVar()
         self.show_idealization.set(1)
-        self.show_idealization.trace("w", self.plot)
+        self.show_idealization.trace("w", self.update_idealization_plot)
 
         #idealization related params
         self.show_thetas = tk.IntVar()
@@ -113,6 +113,17 @@ class PlotFrame(ttk.Frame):
         self.current_plot.draw_artist(self.t_line)
         if draw: self.canvas.draw()
 
+    def update_idealization_plot(self, draw=True):
+        log.debug(f"update_idealization_plot")
+        if self.parent.episode.idealization is not None:
+            if self.show_idealization.get():
+                self.i_line.set_visible(True)
+            else:
+                self.i_line.set_visible(False)
+            self.i_line.set_ydata(self.parent.episode.idealization)
+            self.current_plot.draw_artist(self.i_line)
+            if draw: self.canvas.draw()
+
     def update_piezo_plot(self, draw=True):
         log.debug(f"update_piezo_plot")
         self.p_line.set_ydata(self.parent.episode.piezo)
@@ -124,6 +135,7 @@ class PlotFrame(ttk.Frame):
 
         if self.show_command.get(): self.update_command_plot(draw=False)
         self.update_current_plot(draw=False)
+        if self.show_idealization: self.update_idealization_plot(draw=False)
         if self.show_piezo.get(): self.update_piezo_plot(draw=False)
         # self.current_plot.draw_artist(self.current_plot)
         # self.current_plot.draw_artist(self.current_plot.yaxis)
@@ -207,10 +219,9 @@ class PlotFrame(ttk.Frame):
                 line.remove()
                 # del line
             self.amp_lines = list()
-        self.canvas.draw()
         if draw: self.canvas.draw()
 
-    def plot(self, new=False):
+    def plot(self, new=False, *args):
         """
         Draw the all the plots. If `new` is true everything is drawn from
         scratch, otherwise only the lines in the plots are updated.
@@ -227,24 +238,29 @@ class PlotFrame(ttk.Frame):
     def init_plot(self):
         self.plotted = True
         log.debug(f"PlotFrame.init_plot")
-        datakey = self.parent.datakey.get()
         # get data to plot
-        series = self.parent.data[datakey]
-        episode = series[self.parent.n_episode]
-        time = episode.time
+        episode = self.parent.episode
         if self.command_plot is not None:
-            self.c_line, = self.command_plot.plot(time, episode.command)
-        if self.current_plot is not None:
-            self.t_line, = self.current_plot.plot(time,episode.trace)
-            #create invisble idealization plot as placeholder
-            self.i_line = self.current_plot.plot(time, np.mean(episode.trace)*np.ones(time.size), visible=False)
+            self.c_line, = self.command_plot.plot(episode.time, episode.command)
+        self.t_line, = self.current_plot.plot(episode.time, episode.trace)
+        if episode.idealization is not None:
+            self.i_line,  = self.current_plot.plot(episode.time,
+                                    episode.idealization,
+                                    visible=bool(self.show_idealization.get()))
+        #if idealization not present create invisble idealization plot as placeholder
+        else:
+            self.i_line,  = self.current_plot.plot(episode.time,
+                              np.mean(episode.trace)*np.ones(episode.time.size),
+                              visible=False)
 
         if self.piezo_plot is not None:
-            self.p_line, = self.piezo_plot.plot(time,episode.piezo)
+            self.p_line, = self.piezo_plot.plot(episode.time,episode.piezo)
+
+        self.draw_TC_lines(draw=False)
+
         self.toolbar.update()
         self.canvas.draw() # draw plots
-        #draw lines for idealization
-        self.draw_TC_lines()
+        #draw lines for idealization parameters
 
         # #plot histograms
         # active = bool(self.parent.hist_piezo_active.get()) \

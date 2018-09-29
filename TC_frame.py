@@ -95,6 +95,7 @@ class TC_Frame(ttk.Frame):
         if self.theta_string.get().isspace() or self.theta_string.get():
             self.manual_thetas = False
             self.auto_set_thetas()
+            self.parent.plots.update_theta_lines()
         else:
             self.manual_thetas = True
         log.debug(f"manual_thetas is {self.manual_thetas}")
@@ -155,8 +156,7 @@ class TC_Frame(ttk.Frame):
         log.debug(f"TC_Frame.demo_idealization")
         self.parent.data.idealize_series()
         self.parent.data[self.parent.data.currentDatakey].idealized = False
-        # self.parent.plots.plot()
-        #update idealization
+        self.parent.plots.update_idealization_plot()
 
     def click_cancel(self):
         log.debug(f"TC_Frame.click_cancel")
@@ -177,7 +177,8 @@ class TC_Frame(ttk.Frame):
         log.debug(f"TC_Frame.close_frame")
         self.parent.plots.show_thetas.set(0)
         self.parent.plots.show_amp.set(0)
-        self.parent.draw_plots()
+        self.parent.plots.show_idealization.set(0)
+        self.parent.plots.update_plots()
         self.parent.plots.fig.canvas.mpl_disconnect(self.track_cid)
         self.destroy()
 

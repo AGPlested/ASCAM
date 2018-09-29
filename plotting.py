@@ -6,71 +6,9 @@ import matplotlib.pyplot as plt
 from tools import piezo_selection, interval_selection
 
 
-def create_histogram(data, n_bins, density=False):
-    """
-    Create a histogram of the values in `traces`. Keyword arguments for
-    `np.histogram` can be given as kwargs here.
-    Parameters:
-        traces [numpy array] - Array containing all the values for the
-                               histogram.
-        **kwargs - Keyword arguments for the `numpy.histogram` function
-    """
-    data = data.flatten()
-    log.info("called 'create_histogram'")
-    # log.debug(""" histogram will use {} bins
-    # normalize histogram to a density is {}
-    # the data are of type {},
-    # the data are {}
-    # """.format(n_bins,density,type(data),data))
-    hist, bins = np.histogram(data, n_bins, density=density)
-    # log.debug("""`np.histogram` returned
-    #             hist = {}
-    #             bins={} """.format(hist,bins))
-    return hist, bins
-
 def histogram(time, piezos, traces, active = True, select_piezo=True,
               deviation=.05, n_bins = 200, density=False, time_unit ='ms',
               intervals=False, sampling_rate=None, **kwargs):
-    """
-    Creates an all-point-histogram of selected values in trace. The values
-    are selected based on whether or not the piezo device is active.
-    Parameters:
-        time [1D array of floats] - Vector containing the time points.
-        piezo [array of floats] - Vector of piezo voltages.
-        trace [array of floats] - Vector of current trace.
-        active [boolean] - If true return time points at which piezo
-                           voltage is within `deviation` percent of the
-                           maximum piezo voltage.
-        select_piezo [boolean] - If true the points to be included in the
-                                    histogram are selected based on the piezo
-                                    voltage
-        deviation [float] - Deviation, as a percentage, from the maximum
-                            piezo voltage or threshold below which voltage
-                            should be.
-        density [boolean] - if true the histogram is scaled to sum to one
-        n_bins [int] - number of bins to be used for the histogram
-        time_unit [string] - unit of time in the interval specification
-        intervals [list or list of of lists] - intervals from which to draw
-        sampling_rate [float] - sampling rate of the data
-        **kwargs - Keyword arguments for the `pyplot.bar` function.
-    Returns:
-        plot - Object containing the plot, can be shows by pyplot.`show()`
-        time [1D array of floats] - The timestamps of the selected points.
-        piezo_list [2D array of floats] - Each row contains the piezo values
-                                         at the selected times for an episode.
-        trace_list [2D array of floats] - Each row contains the current values
-                                         at the selected times for an episode.
-    """
-    # log.debug("""`histogram` called with parameters:
-    #             time: {}
-    #             piezos: {}
-    #             traces: {}
-    #             active: {}, select_piezo:{}, deviation: {}
-    #             n_bins: {}, density:{}, time_unit: {}, sampling_rate: {}
-    #             intervals: {}
-    #             and kwargs: {}
-    #             """.format(time,piezos,traces,active,select_piezo,deviation,
-    #                   n_bins,density,time_unit,sampling_rate,intervals,kwargs))
     trace_list = []
     if select_piezo:
         for piezo, trace in zip(piezos, traces):
@@ -84,9 +22,11 @@ def histogram(time, piezos, traces, active = True, select_piezo=True,
             trace_list.extend(trace_points)
     else:
         trace_list = traces
-
     trace_list = np.asarray(trace_list)
-    hist, bins = create_histogram(trace_list, n_bins, density)
+
+    trace_list = trace_list.flatten()
+    hist, bins = np.histogram(trace_list, n_bins, density=density)
+
     # get centers of all the bins
     centers = (bins[:-1]+bins[1:])/2
     # get the width of a(ll) bin(s)
@@ -97,18 +37,7 @@ def histogram(time, piezos, traces, active = True, select_piezo=True,
 def plot_histogram(fig, pgs, episode, series, n_bins=50, density=False, select_piezo=False,
                    active=True, deviation=0.05, fs=4e4, intervals=[], single_hist=True,
                    indices=[], allpoint_hist=True, current_unit='A', axis=None, episode_inds = [],
-                   **kwargs):
-    """
-    this method will draw the histogram next to the current trace
-    """
-    log.info("drawing histogram")
-    # log.debug("""number of bins = {}
-    #     density = {}
-    #     select_piezo = {}
-    #     active = {}
-    #     deviation = {}""".format(n_bins,density,select_piezo,
-    #                              active,deviation))
-    # create the plot object so we can delete it later
+                   **kwargs):   
     ax = fig.add_subplot(pgs[:,2])
     #move the axis label and ticks to the right so they dont lie over
     #the other plots
@@ -162,18 +91,7 @@ def plot_histogram(fig, pgs, episode, series, n_bins=50, density=False, select_p
         ax.barh(center_single, heights_single, width_single,
                 align='center', alpha=1)
     # cursor = PlotCursor(ax, useblit=True, color='black', linewidth=1)
-    return ax
-
-def plotTrace(ax, time, trace, ylabel='', ybounds=[], alpha=1):
-    """
-    ybounds [tuple or list] (y_min, y_max)
-    ax = matplotlib axes object
-    """
-    ax.plot(time, trace, alpha=alpha)
-    ax.set_ylabel(ylabel)
-    if ybounds:
-        ax.set_ylim(ybounds)
-    pass
+    return ax, hist_all
 
 def plot_traces(fig, pgs, episode, show_piezo=True, show_command=True,
                 t_zero=0, piezo_unit='V', current_unit='A',
