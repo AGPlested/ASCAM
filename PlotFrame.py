@@ -82,18 +82,33 @@ class PlotFrame(ttk.Frame):
         if show_command:
             # always plot command voltage on bottom (-1 row)
             self.command_plot = self.fig.add_subplot(pgs[-1,:1+show_hist])
+            command_range = self.parent.series.max_command-self.parent.series.min_command
+            self.command_plot.set_ylim(
+                                    self.parent.series.min_command
+                                    -.1*np.abs(command_range),
+                                    self.parent.series.max_command,
+                                    +.1+np.abs(command_range))
             x_share = self.command_plot
         else: self.command_plot = None
         #if piezo will be plotted current plot show be in row 1 else in row 0
         trace_pos = 1 if show_piezo else 0
 
         self.current_plot = self.fig.add_subplot(pgs[trace_pos:trace_pos+2,:1+show_hist], sharex=x_share)
+        current_range = self.parent.series.max_current-self.parent.series.min_current
+        print(self.parent.series.max_current)
+        print(self.parent.series.min_current)
+        print(current_range)
+        self.current_plot.set_ylim(self.parent.series.min_current-.1*current_range,
+                                    self.parent.series.max_current+.1*current_range)
 
         #sharex with current or command voltage
         x_share = x_share if show_command else self.current_plot
         if show_piezo:
             #always plots piezo voltage on top
             self.piezo_plot = self.fig.add_subplot(pgs[0,:1+show_hist], sharex=x_share)
+            piezo_range = self.parent.series.max_piezo-self.parent.series.min_piezo
+            self.piezo_plot.set_ylim(self.parent.series.min_piezo-.1*piezo_range,
+                                    self.parent.series.max_piezo+.1*piezo_range)
         else: self.piezo_plot = None
 
         if show_hist:
@@ -205,7 +220,6 @@ class PlotFrame(ttk.Frame):
         if self.theta_lines:
             for line in self.theta_lines:
                 line.remove()
-                # del line #del to make sure memory is cleared
         self.theta_lines = list()
         if draw: self.canvas.draw()
 
@@ -214,7 +228,6 @@ class PlotFrame(ttk.Frame):
         if self.amp_lines:
             for line in self.amp_lines:
                 line.remove()
-                # del line
         self.amp_lines = list()
         if draw: self.canvas.draw()
 
@@ -235,7 +248,6 @@ class PlotFrame(ttk.Frame):
     def init_plot(self):
         self.plotted = True
         log.debug(f"PlotFrame.init_plot")
-        # get data to plot
         episode = self.parent.episode
         if self.command_plot is not None:
             self.c_line, = self.command_plot.plot(episode.time, episode.command)
