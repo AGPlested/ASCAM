@@ -618,7 +618,7 @@ class HistogramConfiguration(tk.Toplevel):
                 stringList_parser(self.parent.plots.hist_interval_entry.get())
         except: pass
         try:
-            self.parent.draw_plots()
+            self.parent.draw_plots(new=True)
         except: pass
         self.destroy()
 
@@ -938,7 +938,6 @@ class EpisodeList(ttk.Frame):
             selected_episode = int(event.widget.curselection()[0])
             log.info(f"selected episode number {selected_episode}")
             self.parent.n_episode = selected_episode
-            # self.parent.draw_plots()
             self.parent.plots.update_plots()
         except IndexError:
             log.debug(f"excepted IndexError")

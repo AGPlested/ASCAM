@@ -168,7 +168,7 @@ class PlotFrame(ttk.Frame):
                        time_unit=self.parent.data.time_unit)
         for (rect, h, b) in zip(self.single_hist, heights, bins):
             rect.set_width(h)
-            rect.set_x(b)
+            rect.set_y(b)
         if draw: self.canvas.draw()
 
     def update_all_hist(self, draw=True, *args):
