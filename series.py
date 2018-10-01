@@ -19,6 +19,30 @@ class Series(list):
 
         self.idealized = False
 
+    @property
+    def max_command(self):
+        return np.max([np.max(episode.command) for episode in self])
+
+    @property
+    def min_command(self):
+        return np.min([np.min(episode.command) for episode in self])
+
+    @property
+    def max_current(self):
+        return np.max([np.max(episode.trace) for episode in self])
+
+    @property
+    def min_current(self):
+        return np.min([np.min(episode.trace) for episode in self])
+
+    @property
+    def max_piezo(self):
+        return np.max([np.max(episode.piezo) for episode in self])
+
+    @property
+    def min_piezo(self):
+        return np.min([np.min(episode.piezo) for episode in self])
+
     def gaussian_filter(self, filterFrequency=1e3):
         """
         Return a Series object in which all episodes are the filtered version

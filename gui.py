@@ -124,6 +124,9 @@ class GUI(ttk.Frame):
     @property
     def episode(self): return self.data[self.datakey.get()][self.n_episode]
 
+    @property
+    def series(self): return self.data[self.datakey.get()]
+
     def change_current_datakey(self,*args,**kwargs):
         """
         This function changes the current datakey in the recording object, which
