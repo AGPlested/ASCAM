@@ -19,6 +19,12 @@ class TC_Frame(ttk.Frame):
         self.track_cid = self.parent.plots.fig.canvas.mpl_connect(
                                                           'motion_notify_event',
                                                           self.track_cursor)
+
+        self.previous_show_piezo = self.parent.plots.show_piezo.get()
+        self.previous_show_command = self.parent.plots.show_command.get()
+        self.parent.plots.show_piezo.set(0)
+        self.parent.plots.show_command.set(0)
+
         self.create_widgets()
         log.debug("end TC_Frame.__init__")
 
@@ -74,12 +80,14 @@ class TC_Frame(ttk.Frame):
 
         #update the amp lines if command is given and the number didnt change
         #always draw new lines if the number changed
+        if new_n_amps!=old_n_amps:
+            self.manual_thetas = False
         if not self.manual_thetas:
             self.auto_set_thetas()
             if update_plot:
                 if new_n_amps==old_n_amps:
                     self.parent.plots.update_TC_lines()
-                elif new_n_amps!=old_n_amps:
+                else:
                     self.parent.plots.draw_TC_lines()
         else:
             if update_plot:
@@ -175,6 +183,8 @@ class TC_Frame(ttk.Frame):
 
     def close_frame(self):
         log.debug(f"TC_Frame.close_frame")
+        self.parent.plots.show_command.set(self.previous_show_command)
+        self.parent.plots.show_piezo.set(self.previous_show_piezo)
         self.parent.plots.show_thetas.set(0)
         self.parent.plots.show_amp.set(0)
         self.parent.plots.show_idealization.set(0)
