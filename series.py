@@ -20,6 +20,16 @@ class Series(list):
         self.idealized = False
 
     @property
+    def has_piezo(self):
+        try: return True if self[0].piezo is not None else False
+        except IndexError: return False
+
+    @property
+    def has_command(self):
+        try: return True if self[0].command is not None else False
+        except IndexError: return False
+
+    @property
     def max_command(self):
         return np.max([np.max(episode.command) for episode in self])
 

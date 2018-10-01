@@ -9,7 +9,7 @@ from tkinter.filedialog import askopenfilename, asksaveasfilename, askdirectory
 import numpy as np
 
 from PlotFrame import PlotFrame
-from tools import stringList_parser, parse_filename, PlotToolbar
+from tools import stringList_parser, parse_filename
 from plotting import plot_traces, plot_histogram
 from recording import Recording
 from TC_frame import TC_Frame
@@ -62,33 +62,6 @@ class GUI(ttk.Frame):
         # bind window name updating
         self.filename.trace("w",
                 lambda *args: self.master.title("ASCAM - "+self.filename.get()))
-
-        # parameters for the histogram
-        self.show_hist = tk.IntVar() #must be true to show any histogram
-        self.show_hist.set(1) #default is to show histograms
-        self.hist_number_bins = tk.StringVar()
-        self.hist_number_bins.set(50)
-        self.hist_density = tk.IntVar() #if true area of histograms is normalized
-        self.hist_density.set(0) #default is to show histogram as counts
-        self.hist_density.trace("w", self.draw_plots)
-
-        self.hist_piezo_active = tk.IntVar() #if true select points in histogram using piezo
-        self.hist_piezo_active.set(1) #default is true
-        self.hist_piezo_deviation = tk.StringVar() #factor by which piezo voltage at a point must differ from 0 to be includede
-        self.hist_piezo_deviation.set(0.05)
-
-        self.hist_interval_entry = tk.StringVar() #if true select points for histogram from given intervals
-        self.hist_interval_entry.set('')
-        self.hist_intervals = []
-        self.hist_single_ep = tk.IntVar() #if true plot a histogram of the currently selected episode
-        self.hist_single_ep.set(1)
-        self.hist_single_ep.trace("w", self.draw_plots)
-        self.hist_all = tk.IntVar() #if true plot a histogram of all points
-        self.hist_all.set(1)
-        self.hist_all.trace("w", self.draw_plots)
-        # radio button variable to decide how to select points in histogram
-        self.hist_piezo_interval = tk.IntVar()
-        self.hist_piezo_interval.set(1)
 
         # parameters of the data
         self.sampling_rate = tk.StringVar()
@@ -332,9 +305,9 @@ class MenuBar(tk.Menu):
         log.debug(f"MenuBar.create_histogram_cascade")
         self.add_cascade(label='Histogram', menu=self.histogram_menu)
         self.histogram_menu.add_checkbutton(label="Show single episode",
-                                            variable=self.parent.hist_single_ep)
+                                            variable=self.parent.plots.show_hist_single)
         self.histogram_menu.add_checkbutton(label="Density",
-                                            variable=self.parent.hist_density)
+                                            variable=self.parent.plots.hist_density)
         self.histogram_menu.add_separator()
         self.histogram_menu.add_command(label="Configuration",
                                         command=lambda:\
@@ -596,36 +569,36 @@ class HistogramConfiguration(tk.Toplevel):
     def create_widgets(self):
         # general options
         ttk.Label(self, text="Number of bins").grid(row=0, column=0)
-        ttk.Entry(self,textvariable=self.parent.hist_number_bins, width=7).\
+        ttk.Entry(self,textvariable=self.parent.plots.hist_n_bins, width=7).\
                                                        grid(row = 0, column=1)
 
         ttk.Label(self, text="Plot as density").grid(row=0, column=3)
-        ttk.Checkbutton(self, variable=self.parent.hist_density).grid(row=0,
+        ttk.Checkbutton(self, variable=self.parent.plots.hist_density).grid(row=0,
                                                                      column=4)
 
         # piezo selection options
         ttk.Label(self, text="Select using piezo voltage").grid(row=1,
                                                                 column=0)
-        ttk.Radiobutton(self,variable=self.parent.hist_piezo_interval,
+        ttk.Radiobutton(self,variable=self.parent.plots.hist_piezo_interval,
         value=1).grid(row=1,column=1)
 
 
         ttk.Label(self, text="Active/Inactive").grid(row=2, column=0)
-        ttk.Checkbutton(self, variable=self.parent.hist_piezo_active).\
+        ttk.Checkbutton(self, variable=self.parent.plots.hist_piezo_active).\
                                                                 grid(row=2,
                                                                      column=1)
 
         ttk.Label(self, text="deviation from max/min").grid(row=3, column=0)
-        ttk.Entry(self,textvariable=self.parent.hist_piezo_deviation,
+        ttk.Entry(self,textvariable=self.parent.plots.hist_piezo_deviation,
                   width=7).grid(row = 3, column=1)
 
         # interval selection options
         ttk.Label(self, text="Use intervals").grid(row=1, column=3)
-        ttk.Radiobutton(self,variable=self.parent.hist_piezo_interval,
+        ttk.Radiobutton(self,variable=self.parent.plots.hist_piezo_interval,
         value=0).grid(row=1,column=4)
 
         ttk.Label(self, text="Intervals").grid(row=2, column=3)
-        ttk.Entry(self,textvariable=self.parent.hist_interval_entry,
+        ttk.Entry(self,textvariable=self.parent.plots.hist_interval_entry,
                   width=7).grid(row = 2, column=4)
 
         # draw button
@@ -641,8 +614,8 @@ class HistogramConfiguration(tk.Toplevel):
         redraw the histogram (with new settings)
         """
         try:
-            self.parent.hist_intervals=\
-                stringList_parser(self.parent.hist_interval_entry.get())
+            self.parent.plots.hist_intervals=\
+                stringList_parser(self.parent.plots.hist_interval_entry.get())
         except: pass
         try:
             self.parent.draw_plots()
@@ -1027,7 +1000,7 @@ class EpisodeList(ttk.Frame):
         """
         log.info(self.parent.datakey.get()+' selected')
         self.create_list()
-        self.parent.draw_plots()
+        self.parent.draw_plots(new=True)
 
 class OpenFileDialog(tk.Toplevel):
     """

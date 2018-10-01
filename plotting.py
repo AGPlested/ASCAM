@@ -6,8 +6,8 @@ import matplotlib.pyplot as plt
 from tools import piezo_selection, interval_selection
 
 
-def histogram(time, piezos, traces, active = True, select_piezo=True,
-              deviation=.05, n_bins = 200, density=False, time_unit ='ms',
+def create_histogram(time, piezos, traces, active = True, select_piezo=True,
+              deviation=.05, n_bins = 50, density=False, time_unit ='ms',
               intervals=False, sampling_rate=None, **kwargs):
     trace_list = []
     if select_piezo:
@@ -25,19 +25,19 @@ def histogram(time, piezos, traces, active = True, select_piezo=True,
     trace_list = np.asarray(trace_list)
 
     trace_list = trace_list.flatten()
-    hist, bins = np.histogram(trace_list, n_bins, density=density)
+    heights, bins = np.histogram(trace_list, n_bins, density=density)
 
     # get centers of all the bins
     centers = (bins[:-1]+bins[1:])/2
     # get the width of a(ll) bin(s)
     width = (bins[1]-bins[0])
     # log.debug("""return width: {}, centers: {}""".format(width,centers))
-    return hist, bins, centers, width
+    return heights, bins, centers, width
 
 def plot_histogram(fig, pgs, episode, series, n_bins=50, density=False, select_piezo=False,
                    active=True, deviation=0.05, fs=4e4, intervals=[], single_hist=True,
-                   indices=[], allpoint_hist=True, current_unit='A', axis=None, episode_inds = [],
-                   **kwargs):   
+                   indices=[], allpoint_hist=True, trace_unit='A', axis=None, episode_inds = [],
+                   **kwargs):
     ax = fig.add_subplot(pgs[:,2])
     #move the axis label and ticks to the right so they dont lie over
     #the other plots
@@ -50,7 +50,7 @@ def plot_histogram(fig, pgs, episode, series, n_bins=50, density=False, select_p
     single_piezo = [episode.piezo]
     single_trace = [episode.trace]
     # get the bins and their values or the current episode
-    hist_single = histogram(time, single_piezo, single_trace,
+    hist_single = create_histogram(time, single_piezo, single_trace,
                                      active=active, n_bins=n_bins,
                                      select_piezo=select_piezo,
                                      deviation=deviation,
@@ -66,7 +66,7 @@ def plot_histogram(fig, pgs, episode, series, n_bins=50, density=False, select_p
         all_traces = [episode.trace for episode in series if episode.n_episode in episode_inds]
 
         # get the bins and their values for all episodes
-        hist_all = histogram(time, all_piezos, all_traces,
+        hist_all = create_histogram(time, all_piezos, all_traces,
                                       active=active, n_bins=n_bins,
                                       select_piezo=select_piezo,
                                       deviation=deviation,
@@ -77,7 +77,7 @@ def plot_histogram(fig, pgs, episode, series, n_bins=50, density=False, select_p
         ax.barh(center_all, heights_all, width_all,
                 alpha=0.2, color='orange', align='center')
         ax.plot(heights_all, center_all, color='orange', lw=2)
-        ax.set_ylabel(f"Current [{current_unit}")
+        ax.set_ylabel(f"Current [{trace_unit}")
         if density:
             log.info('setting y-label "Relative frequency"')
             ax.set_xlabel("Relative frequency")
@@ -94,7 +94,7 @@ def plot_histogram(fig, pgs, episode, series, n_bins=50, density=False, select_p
     return ax, hist_all
 
 def plot_traces(fig, pgs, episode, show_piezo=True, show_command=True,
-                t_zero=0, piezo_unit='V', current_unit='A',
+                t_zero=0, piezo_unit='V', trace_unit='A',
                 command_unit='V', time_unit='s', show_idealization=True):
     """
     This method plots the current, piezo and command voltage traces
@@ -119,7 +119,7 @@ def plot_traces(fig, pgs, episode, show_piezo=True, show_command=True,
     # plot the current trace
     current_plot = fig.add_subplot(pgs[trace_pos:trace_pos+2,:2], sharex=x_share)
     tr_line, = current_plot.plot(time, episode.trace)
-    current_plot.set_ylabel(ylabel=f"Current [{current_unit}]")
+    current_plot.set_ylabel(ylabel=f"Current [{trace_unit}]")
     if show_idealization and episode.idealization is not None:
         plotTrace(ax=current_plot, time=time, trace=episode.idealization, alpha=.6)
     # label only the last axis

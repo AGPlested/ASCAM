@@ -1,13 +1,6 @@
 import logging as log
 
 import numpy as np
-import matplotlib
-#check mpl version because navigation toolbar name has changed
-mpl_ver = (matplotlib.__version__).split('.')
-if int(mpl_ver[0])<2 or int(mpl_ver[1])<2 or int(mpl_ver[2])<2:
-    from matplotlib.backends.backend_tkagg \
-    import NavigationToolbar2TkAgg as NavigationToolbar2Tk
-else: from matplotlib.backends.backend_tkagg import NavigationToolbar2Tk
 
 def parse_filename(filename):
     """
@@ -155,39 +148,3 @@ def stringList_parser(list_as_string):
     # log.debug("""string was: {}
     #          returning: {}""".format(list_as_string,whole_list))
     return whole_list
-
-class PlotToolbar(NavigationToolbar2Tk):
-    def __init__(self, canvas, parent):
-        self.parent = parent #parent is PlotFrame
-        self.canvas = canvas
-
-        # this toolbar is just the standard with fewer buttons
-        self.toolitems = (
-            ('Home', 'Reset original view', 'home', 'home'),
-            # ('Back', 'Back to  previous view', 'back', 'back'),
-            # ('Forward', 'Forward to next view', 'forward', 'forward'),
-            (None, None, None, None),
-            ('Pan', 'Pan axes with left mouse, zoom with right', 'move', 'pan'),
-            ('Zoom', 'Zoom to rectangle', 'zoom_to_rect', 'zoom'),
-            (None, None, None, None),
-            # ('Subplots', 'Configure subplots', 'subplots', 'configure_subplots'),
-            ('Save', 'Save the figure', 'filesave', 'save_figure'),
-            )
-        NavigationToolbar2Tk.__init__(self, canvas, parent)
-
-    def zoom(self):
-        """
-        Redefine the zoom method of the toolbar to include zooming out on
-        right-click
-        """
-        # self.parent.parent.tc_frame.track_on = False
-        self_zoom_out_cid = self.canvas.mpl_connect('button_press_event', self.zoom_out)
-        NavigationToolbar2Tk.zoom(self)
-
-    def zoom_out(self, event):
-        """
-        Zoom out in this case is done by calling `back` on right-click to
-        restore the previous view (i.e. undo last zoom)
-        """
-        if self._active=='ZOOM' and event.button==3:
-            NavigationToolbar2Tk.back(self)

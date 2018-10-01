@@ -22,8 +22,10 @@ class TC_Frame(ttk.Frame):
 
         self.previous_show_piezo = self.parent.plots.show_piezo.get()
         self.previous_show_command = self.parent.plots.show_command.get()
+        self.previous_show_hist = self.parent.plots.show_hist.get()
         self.parent.plots.show_piezo.set(0)
         self.parent.plots.show_command.set(0)
+        self.parent.plots.show_hist.set(0)
 
         self.create_widgets()
         log.debug("end TC_Frame.__init__")
@@ -183,11 +185,14 @@ class TC_Frame(ttk.Frame):
 
     def close_frame(self):
         log.debug(f"TC_Frame.close_frame")
+        #return plot to previous settings
         self.parent.plots.show_command.set(self.previous_show_command)
         self.parent.plots.show_piezo.set(self.previous_show_piezo)
+        self.parent.plots.show_hist.set(self.previous_show_hist)
+        #hide TC parameters
         self.parent.plots.show_thetas.set(0)
         self.parent.plots.show_amp.set(0)
-        self.parent.plots.show_idealization.set(0)
+        # self.parent.plots.show_idealization.set(0)
         self.parent.plots.update_plots()
         self.parent.plots.fig.canvas.mpl_disconnect(self.track_cid)
         self.destroy()
