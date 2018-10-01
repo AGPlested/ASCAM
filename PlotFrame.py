@@ -65,7 +65,6 @@ class PlotFrame(ttk.Frame):
         self.theta_lines = list()
         self.amp_lines = list()
 
-
     def setup_plots(self):
         log.debug(f"plotframe.setup_plots")
         show_command = self.show_command.get()\
@@ -101,19 +100,19 @@ class PlotFrame(ttk.Frame):
             ax = self.fig.add_subplot(pgs[:,2])
         else: self.histogram = None
 
-    def update_command_plot(self, draw=True):
+    def update_command_plot(self, draw=True, *args):
         log.debug(f"update_command_plot")
         self.c_line.set_ydata(self.parent.episode.command)
         self.command_plot.draw_artist(self.c_line)
         if draw: self.canvas.draw()
 
-    def update_current_plot(self, draw=True):
+    def update_current_plot(self, draw=True, *args):
         log.debug(f"update_current_plot")
         self.t_line.set_ydata(self.parent.episode.trace)
         self.current_plot.draw_artist(self.t_line)
         if draw: self.canvas.draw()
 
-    def update_idealization_plot(self, draw=True):
+    def update_idealization_plot(self, draw=True, *args):
         log.debug(f"update_idealization_plot")
         if self.parent.episode.idealization is not None:
             if self.show_idealization.get():
@@ -124,13 +123,13 @@ class PlotFrame(ttk.Frame):
             self.current_plot.draw_artist(self.i_line)
             if draw: self.canvas.draw()
 
-    def update_piezo_plot(self, draw=True):
+    def update_piezo_plot(self, draw=True, *args):
         log.debug(f"update_piezo_plot")
         self.p_line.set_ydata(self.parent.episode.piezo)
         self.piezo_plot.draw_artist(self.p_line)
         if draw: self.canvas.draw()
 
-    def update_plots(self, draw=True):
+    def update_plots(self, draw=True, *args):
         log.debug(f"plotframe.update_plots")
 
         if self.show_command.get(): self.update_command_plot(draw=False)
@@ -149,20 +148,20 @@ class PlotFrame(ttk.Frame):
         self.fig.canvas.flush_events()
         if draw: self.canvas.draw()
 
-    def update_TC_lines(self, draw=True):
+    def update_TC_lines(self, draw=True, *args):
         log.debug(f"update_TC_lines")
         if self.show_amp.get(): self.update_amp_lines(draw=False)
         if self.show_thetas.get(): self.update_theta_lines(draw=False)
         if draw: self.canvas.draw()
 
-    def update_amp_lines(self, draw=True):
+    def update_amp_lines(self, draw=True, *args):
         log.debug(f"update_amp_lines")
         for amp, line in zip(self.parent.data.TC_amplitudes,self.amp_lines):
             line.set_ydata(amp)
             self.current_plot.draw_artist(line)
         if draw: self.canvas.draw()
 
-    def update_theta_lines(self, draw=True):
+    def update_theta_lines(self, draw=True, *args):
         log.debug(f"update_theta_lines")
         for theta, line in zip(self.parent.data.TC_thresholds, self.theta_lines):
             line.set_ydata(theta)
@@ -172,9 +171,9 @@ class PlotFrame(ttk.Frame):
     def draw_TC_lines(self, draw=True, *args):
         log.debug(f"PlotFrame.draw_TC_lines")
         if self.show_thetas.get():
-            self.draw_amp_lines(draw=False)
-        if self.show_amp.get():
             self.draw_theta_lines(draw=False)
+        if self.show_amp.get():
+            self.draw_amp_lines(draw=False)
         if draw: self.canvas.draw()
 
     def draw_theta_lines(self, draw=True, *args):
@@ -184,7 +183,6 @@ class PlotFrame(ttk.Frame):
         for theta in self.parent.data.TC_thresholds:
             line = self.current_plot.axhline(theta, ls='--', c='r', alpha=0.3)
             self.theta_lines.append(line)
-        self.canvas.draw()
         if draw: self.canvas.draw()
 
     def draw_amp_lines(self, draw=True, *args):
@@ -194,7 +192,6 @@ class PlotFrame(ttk.Frame):
         for amp in self.parent.data.TC_amplitudes:
             line = self.current_plot.axhline(amp, ls='--', c='b', alpha=0.3)
             self.amp_lines.append(line)
-        self.canvas.draw()
         if draw: self.canvas.draw()
 
     def remove_TC_lines(self, draw=True, *args):
@@ -209,7 +206,7 @@ class PlotFrame(ttk.Frame):
             for line in self.theta_lines:
                 line.remove()
                 # del line #del to make sure memory is cleared
-            self.theta_lines = list()
+        self.theta_lines = list()
         if draw: self.canvas.draw()
 
     def remove_amp_lines(self, draw=True, *args):
@@ -218,7 +215,7 @@ class PlotFrame(ttk.Frame):
             for line in self.amp_lines:
                 line.remove()
                 # del line
-            self.amp_lines = list()
+        self.amp_lines = list()
         if draw: self.canvas.draw()
 
     def plot(self, new=False, *args):
@@ -230,10 +227,10 @@ class PlotFrame(ttk.Frame):
         if self.plotted and not new:
             self.update_plots()
         else:
-            # self.remove_TC_lines()
-            plt.clf()
-            self.setup_plots()
-            self.init_plot()
+            if len(self.parent.data['raw_'])>0:
+                plt.clf()
+                self.setup_plots()
+                self.init_plot()
 
     def init_plot(self):
         self.plotted = True
@@ -251,11 +248,13 @@ class PlotFrame(ttk.Frame):
         else:
             self.i_line,  = self.current_plot.plot(episode.time,
                               np.mean(episode.trace)*np.ones(episode.time.size),
-                              visible=False)
+                              visible=False, alpha=.6)
 
         if self.piezo_plot is not None:
             self.p_line, = self.piezo_plot.plot(episode.time,episode.piezo)
 
+        self.amp_lines = list()
+        self.theta_lines = list()
         self.draw_TC_lines(draw=False)
 
         self.toolbar.update()
