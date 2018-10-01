@@ -14,8 +14,8 @@ from series import Series
 class Recording(dict):
     def __init__(self, filename='data/180426 000 Copy Export.mat',
                  sampling_rate=4e4, filetype='',
-                 headerlength=0, dtype=None, time_unit='ms', piezoUnit='V',
-                 commandUnit='V', currentUnit='A', has_piezo=False,
+                 headerlength=0, dtype=None, time_unit='ms', piezo_unit='V',
+                 command_unit='V', trace_unit='A', has_piezo=False,
                  has_command=False):
         log.info("""intializing Recording""")
 
@@ -29,9 +29,9 @@ class Recording(dict):
         self.sampling_rate = int(float(sampling_rate))
         #untis of the data
         self.time_unit = time_unit
-        self.currentUnit = currentUnit
-        self.commandUnit = commandUnit
-        self.piezoUnit = piezoUnit
+        self.trace_unit = trace_unit
+        self.command_unit = command_unit
+        self.piezo_unit = piezo_unit
         #variables to indicate if command and piezo exist in this recording
         self.has_command = has_command
         self.has_piezo = has_piezo

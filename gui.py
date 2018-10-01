@@ -278,7 +278,7 @@ class DiplayFrame(ttk.Frame):
                 mean, std = episode.get_command_stats()
                 command_stats ="Command Voltage = "
                 command_stats+="{:2f} +/- {:2f}".format(mean,std)
-                command_stats+=self.parent.data.commandUnit
+                command_stats+=self.parent.data.command_unit
                 ttk.Label(self, text=command_stats).grid(row=4, column=0)
             else:
                 log.info("no command voltage found")

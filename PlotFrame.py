@@ -65,56 +65,6 @@ class PlotFrame(ttk.Frame):
         self.theta_lines = list()
         self.amp_lines = list()
 
-    def setup_plots(self):
-        log.debug(f"plotframe.setup_plots")
-        show_command = self.show_command.get()\
-                       and self.parent.data.has_command
-        show_piezo = self.show_piezo.get()\
-                     and self.parent.data.has_piezo
-        # decide how many plots there will be
-        num_plots = 1+show_command+show_piezo
-        show_hist = False
-        x_share = None
-        # show_hist = int(self.parent.hist_single_ep.get() or self.parent.hist_all.get())
-        # plot grid to make current plot bigger
-        #arguments are nRows by nCols
-        pgs = gs.GridSpec(num_plots+1,1+show_hist)
-        if show_command:
-            # always plot command voltage on bottom (-1 row)
-            self.command_plot = self.fig.add_subplot(pgs[-1,:1+show_hist])
-            command_range = self.parent.series.max_command-self.parent.series.min_command
-            self.command_plot.set_ylim(
-                                    self.parent.series.min_command
-                                    -.1*np.abs(command_range),
-                                    self.parent.series.max_command,
-                                    +.1+np.abs(command_range))
-            x_share = self.command_plot
-        else: self.command_plot = None
-        #if piezo will be plotted current plot show be in row 1 else in row 0
-        trace_pos = 1 if show_piezo else 0
-
-        self.current_plot = self.fig.add_subplot(pgs[trace_pos:trace_pos+2,:1+show_hist], sharex=x_share)
-        current_range = self.parent.series.max_current-self.parent.series.min_current
-        print(self.parent.series.max_current)
-        print(self.parent.series.min_current)
-        print(current_range)
-        self.current_plot.set_ylim(self.parent.series.min_current-.1*current_range,
-                                    self.parent.series.max_current+.1*current_range)
-
-        #sharex with current or command voltage
-        x_share = x_share if show_command else self.current_plot
-        if show_piezo:
-            #always plots piezo voltage on top
-            self.piezo_plot = self.fig.add_subplot(pgs[0,:1+show_hist], sharex=x_share)
-            piezo_range = self.parent.series.max_piezo-self.parent.series.min_piezo
-            self.piezo_plot.set_ylim(self.parent.series.min_piezo-.1*piezo_range,
-                                    self.parent.series.max_piezo+.1*piezo_range)
-        else: self.piezo_plot = None
-
-        if show_hist:
-            ax = self.fig.add_subplot(pgs[:,2])
-        else: self.histogram = None
-
     def update_command_plot(self, draw=True, *args):
         log.debug(f"update_command_plot")
         self.c_line.set_ydata(self.parent.episode.command)
@@ -288,5 +238,62 @@ class PlotFrame(ttk.Frame):
         #         intervals=self.parent.hist_intervals,
         #         single_hist=self.parent.hist_single_ep.get(),
         #         allpoint_hist=allpoint_hist,
-        #         current_unit=self.parent.data.currentUnit,
+        #         trace_unit=self.parent.data.trace_unit,
         #         episode_inds=self.parent.get_episodes_in_lists())
+
+    def setup_plots(self):
+        log.debug(f"plotframe.setup_plots")
+        show_command = self.show_command.get()\
+                       and self.parent.data.has_command
+        show_piezo = self.show_piezo.get()\
+                     and self.parent.data.has_piezo
+        # decide how many plots there will be
+        num_plots = 1+show_command+show_piezo
+        show_hist = False
+        x_share = None
+        # show_hist = int(self.parent.hist_single_ep.get() or self.parent.hist_all.get())
+        # plot grid to make current plot bigger
+        #arguments are nRows by nCols
+        pgs = gs.GridSpec(num_plots+1,1+show_hist)
+        if show_command:
+            # always plot command voltage on bottom (-1 row)
+            self.command_plot = self.fig.add_subplot(pgs[-1,:1+show_hist])
+            c_y = self.parent.series.max_command-self.parent.series.min_command
+            self.command_plot.set_ylim(self.parent.series.min_command-.1*c_y,
+                                       self.parent.series.max_command+.1*c_y)
+            self.command_plot.set_ylabel(
+                            ylabel=f"Command [{self.parent.data.command_unit}]")
+            self.command_plot.set_xlabel(f"Time [{self.parent.data.time_unit}]")
+            x_share = self.command_plot
+        else: self.command_plot = None
+        #if piezo will be plotted current plot show be in row 1 else in row 0
+        trace_pos = 1 if show_piezo else 0
+
+        self.current_plot = self.fig.add_subplot(
+                                        pgs[trace_pos:trace_pos+2,:1+show_hist],
+                                        sharex=x_share)
+        trace_y = self.parent.series.max_current-self.parent.series.min_current
+        self.current_plot.set_ylim(self.parent.series.min_current-.1*trace_y,
+                                   self.parent.series.max_current+.1*trace_y)
+        self.current_plot.set_ylabel(f"Current [{self.parent.data.trace_unit}]")
+        if show_command: self.current_plot.set_xticklabels([])
+        else:
+            self.current_plot.set_xlabel(f"Time [{self.parent.data.time_unit}]")
+        #sharex with current or command voltage
+        x_share = x_share if show_command else self.current_plot
+        if show_piezo:
+            #always plots piezo voltage on top
+            self.piezo_plot = self.fig.add_subplot(pgs[0,:1+show_hist],
+                                                   sharex=x_share)
+            piezo_y = self.parent.series.max_piezo-self.parent.series.min_piezo
+            self.piezo_plot.set_ylim(self.parent.series.min_piezo-.1*piezo_y,
+                                    self.parent.series.max_piezo+.1*piezo_y)
+            self.piezo_plot.set_ylabel(f"Piezo [{self.parent.data.piezo_unit}]")
+            self.piezo_plot.set_xticklabels([])
+        else: self.piezo_plot = None
+
+        if show_hist:
+            self.histogram = self.fig.add_subplot(pgs[:,2])
+            self.histogram.set_xlim(self.parent.series.min_current-.1*trace_y,
+                                    self.parent.series.max_current+.1*trace_y)
+        else: self.histogram = None
