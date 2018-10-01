@@ -318,12 +318,10 @@ class MenuBar(tk.Menu):
         self.plot_menu.add_command(label="Set t_zero",
                                    command=lambda: ZeroTFrame(self.parent))
         self.plot_menu.add_separator()
-        if self.parent.data.has_piezo:
-            self.plot_menu.add_checkbutton(label="Show piezo voltage",
-                                       variable=self.parent.plots.show_piezo)
-        if self.parent.data.has_command:
-            self.plot_menu.add_checkbutton(label="Show command voltage",
-                                       variable=self.parent.plots.show_command)
+        self.plot_menu.add_checkbutton(label="Show piezo voltage",
+                                   variable=self.parent.plots.show_piezo)
+        self.plot_menu.add_checkbutton(label="Show command voltage",
+                                   variable=self.parent.plots.show_command)
         self.plot_menu.add_checkbutton(label="Show idealization",
                                        variable=self.parent.plots.show_idealization)
 
