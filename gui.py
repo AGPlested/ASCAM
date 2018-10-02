@@ -483,7 +483,7 @@ class FilterFrame(tk.Toplevel):
                                int(self.weight_exponent.get()),
                                int(self.weight_window.get()),
                                ap_b, ap_f):
-                log.info('succesfully called gauss filter')
+                log.info('succesfully called CK filter')
                 self.parent.datakey.set(self.parent.data.currentDatakey)
                 self.parent.update_list()
                 self.parent.draw_plots()

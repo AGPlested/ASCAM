@@ -62,7 +62,7 @@ class ChungKennedyFilter:
 	"""
 	def __init__(self, window_lengths, weight_exponent, weight_window,
 				 apriori_f_weights=False, apriori_b_weights=False,
-				 boundary_mode='increasing'):
+				 boundary_mode='padded'):
 		"""
 		Parameters:
 			window_lengths [list of positive ints] - a python list containing
@@ -119,8 +119,8 @@ class ChungKennedyFilter:
 			for i in range(1, window_width+1):
 				forward_prediction[i:] += data[:-i]
 			#take average of values to get prediction
-			for i in range(1, window_width):
-				forward_prediction[i]/=i
+			for i in range(window_width):
+				forward_prediction[i]/=(i+1)
 			forward_prediction[window_width:]/=window_width
 		elif self.mode is 'padded':
 		    data = np.hstack((np.zeros(window_width),data))
@@ -159,7 +159,7 @@ class ChungKennedyFilter:
 			#take the means of all the points in prediction
 			for i in range(1, window_width):
 				backward_prediction[-i]/=i
-			backward_prediction[window_width]/=window_width
+			backward_prediction[:len_data-window_width+1]/=window_width
 		elif self.mode is 'padded':
 			data = np.hstack((data,np.zeros(window_width)))
 			for i in range(1, window_width+1):
@@ -210,7 +210,12 @@ class ChungKennedyFilter:
 				forward_w[i,self.weight_window:]+=diff[self.weight_window-j:-j]
 			#in order to avoid infinities from tiny numers we considering
 			#everyhing <e-20 as 0 when applying weight exponent
-			forward_w[:,np.where(forward_w[i]<1e-20)]=1
+			#the corresponding weights are set to 1 befre applying the exponent
+			#in order make them relatively insignificant later on
+			#(this is based on the assumption that such an exact match between
+			#prediction and data is an artefact of the 'increasing' method and
+			#should therefore be discounted)
+			forward_w[i, np.where(forward_w[i]<1e-20)]=1
 			forward_w[i] = forward_w[i]**-self.weight_exponent
 			forward_w[i]*=self.apriori_f_weights[i]
 		return forward_w
