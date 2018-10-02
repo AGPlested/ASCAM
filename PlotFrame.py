@@ -405,7 +405,10 @@ class PlotFrame(ttk.Frame):
             self.histogram.set_ylim(self.parent.series.min_current-.1*trace_y,
                                     self.parent.series.max_current+.1*trace_y)
             self.histogram.yaxis.set_label_position('right')
+            self.histogram.set_ylabel(
+                                     f"Current [{self.parent.data.trace_unit}]")
             self.histogram.yaxis.tick_right()
+            
         else: self.histogram = None
 
 class PlotToolbar(NavigationToolbar2Tk):

@@ -62,7 +62,7 @@ class ChungKennedyFilter:
 	"""
 	def __init__(self, window_lengths, weight_exponent, weight_window,
 				 apriori_f_weights=False, apriori_b_weights=False,
-				 boundary_mode='padded'):
+				 boundary_mode='increasing'):
 		"""
 		Parameters:
 			window_lengths [list of positive ints] - a python list containing
