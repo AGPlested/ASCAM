@@ -325,6 +325,8 @@ class MenuBar(tk.Menu):
         self.file_menu.add_command(label="Save",command=self.save_to_file)
         self.file_menu.add_command(label="Export",command=lambda: \
                                    ExportFileDialog(self.parent))
+        self.file_menu.add_command(label="Export Idealization",
+                                   command=self.export_idealization)#lambda: ExportIdDialog(self.parent))
         self.file_menu.add_command(label="Quit",command=self.parent.master.quit)
 
     def create_analysis_cascade(self):
@@ -356,10 +358,49 @@ class MenuBar(tk.Menu):
         else:
             log.info("User pressed 'Cancel'")
 
+    def export_idealization(self):
+        log.debug(f"MenuBar.save_to_file")
+        # save the current recording object with all its attributes as a
+        # pickle file
+        filepath = asksaveasfilename()
+        if filepath is not None:
+            self.parent.data.export_idealization(filepath)
+        else:
+            log.info("User pressed 'Cancel'")
+
     def launch_idealization(self):
         log.debug(f"MenuBar.launch_idealization")
         self.parent.tc_frame = TC_Frame(self.parent)
         self.parent.tc_frame.grid(row=1, column=0)
+
+class ExportIdDialog(tk.Toplevel):
+    """docstring for ExportIdDialog."""
+    def __init__(self, parent):
+        tk.Toplevel.__init__(self, parent)
+        self.parent = parent #parent is main window
+
+        self.filename = tk.StringVar()
+        self.create_widgets()
+
+    def create_widgets(self):
+        ttk.Label(self,text='Filename: ').grid(row=0)
+        ttk.Entry(self, textvariable=self.filename, width=20).grid(row=0,column=1)
+        ttk.Button(self, text='OK', command=self.ok_click).grid(row=1)
+        ttk.Button(self,text="Cancel", command=self.destroy).grid(row=1,column=1)
+
+    def ok_click(self):
+
+        lists_to_save = list()
+        for (listname, var) in self.lists_to_export:
+            if var.get(): lists_to_save.append(listname)
+        filepath = asksaveasfilename()
+        if filepath is not None:
+            self.parent.data.export_idealization(filepath=filepath,
+                                           datakey=self.datakey.get())
+        else:
+            log.info("User pressed 'Cancel'")
+        self.destroy()
+
 
 class ZeroTFrame(tk.Toplevel):
     """Dialog for entering the offset for the time axis in plots"""

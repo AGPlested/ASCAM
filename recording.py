@@ -59,6 +59,14 @@ class Recording(dict):
             self.lists = {'all':(list(range(len(self['raw_']))), 'white', None)}
 
     @property
+    def series(self):
+        return self[self.currentDatakey]
+
+    @property
+    def episode(self):
+        return self.series[self.currentEpisode]
+
+    @property
     def has_piezo(self):
         return self[self.currentDatakey].has_piezo
 
@@ -189,6 +197,23 @@ class Recording(dict):
                 if save_piezo: export_dict['piezo'+n] = episode.piezo
                 if save_command: export_dict['command'+n] = episode.command
         io.savemat(filepath,export_dict)
+
+    def export_idealization(self, filepath):
+        if not filepath.endswith('.csv'):
+            filepath+='.csv'
+        list_exports = list()
+        # combine the episode numbers to be saved in one list
+        for list_name in self.current_lists:
+            list_exports.extend(self.lists[list_name][0])
+        # filter out duplicate elements
+        list_exports = list(set(list_exports))
+        export_array =  np.zeros(shape=(len(list_exports), self.episode.idealization.size))
+        k=0
+        for i, episode in enumerate(self[self.currentDatakey]):
+            if i in list_exports:
+                export_array[k] = episode.idealization
+                k+=1
+        export_array.tofile(filepath, sep=',')
 
     def baseline_correction(self, method='poly', poly_degree=1, intval=[],
                             time_unit='ms', select_intvl=False,
