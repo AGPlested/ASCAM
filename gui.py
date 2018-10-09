@@ -90,7 +90,7 @@ class GUI(ttk.Frame):
             self.update_all()
             self.datakey.set('BC_GFILTER1000.0_')
             self.plots.plot(True)
-            self.menuBar.launch_idealization()
+            # self.menuBar.launch_idealization()
 
         log.debug(f"end GUI.__init__")
 
@@ -154,9 +154,9 @@ class GUI(ttk.Frame):
         """
         log.debug("GUI.configure_grid")
         # Place the main window in the root window
-        self.grid(row=0, column=0, sticky=tk.N+tk.S+tk.E+tk.W)
-        self.grid_rowconfigure(0, weight=1)
-        self.grid_columnconfigure(0, weight=1)
+        self.grid(row=0, column=0, sticky='NESW')
+        self.grid_rowconfigure(1, weight=1)
+        self.grid_columnconfigure(1, weight=1)
 
         # First row
         self.listSelection.grid(row=0, column=4, rowspan=2, padx=5, pady=5,
@@ -164,7 +164,7 @@ class GUI(ttk.Frame):
 
         # Second row
         self.plots.grid(row=1, column=1, rowspan=3, columnspan=3, padx=5,
-                        pady=5, sticky=tk.W)
+                        pady=5, sticky='NEWS')
         self.plots.grid_rowconfigure(0, weight=1)
         self.plots.grid_columnconfigure(0, weight=1)
 
@@ -172,13 +172,16 @@ class GUI(ttk.Frame):
         self.episodeList.grid(row=2, column=4, rowspan=2)
         for i in range(2):
             self.episodeList.grid_columnconfigure(i, weight=1)
-            self.episodeList.grid_rowconfigure(i, weight=1)
+            # self.episodeList.grid_rowconfigure(i, weight=1)
 
         self.displayFrame.grid(row=3, column=3, padx=5, sticky=tk.S)
 
     def redraw_plots(self, *args):
         log.debug(f"GUI.redraw_plots - widget changed size or location")
         self.draw_plots()
+        # self.plots.fig.set_size_inches(
+        # (int(self.plots.winfo_width()/100), int(self.plots.winfo_height()/100)),
+        # forward=True)
 
     def draw_plots(self, new=False, *args):
         """

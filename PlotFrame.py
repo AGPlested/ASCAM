@@ -23,12 +23,13 @@ class PlotFrame(ttk.Frame):
         ttk.Frame.__init__(self, parent)
         self.parent = parent #parent is main frame
         #initiliaze figure
-        self.fig = plt.figure(figsize=(10,5))
+        #changing the size of the figure only seems to work
+        self.fig = plt.figure(figsize=(10, 5), dpi=100)
 
         self.canvas = FigureCanvasTkAgg(self.fig, master=self)
-        self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+        self.canvas.get_tk_widget().pack(side="top",fill='both',expand=True)
+
         self.toolbar = PlotToolbar(self.canvas, self)
-        self.canvas._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
 
         self.initiliaze_parameters()
 
@@ -401,14 +402,11 @@ class PlotFrame(ttk.Frame):
             # self.histogram = self.fig.add_subplot(pgs[:, -1], sharey=self.current_plot)
             self.histogram = self.fig.add_subplot(pgs[trace_pos:trace_pos+2,-1],
                                                   sharey=self.current_plot)
-
             self.histogram.set_ylim(self.parent.series.min_current-.1*trace_y,
                                     self.parent.series.max_current+.1*trace_y)
+            self.histogram.set_ylabel(f"Current [{self.parent.data.trace_unit}]")                        
             self.histogram.yaxis.set_label_position('right')
-            self.histogram.set_ylabel(
-                                     f"Current [{self.parent.data.trace_unit}]")
             self.histogram.yaxis.tick_right()
-            
         else: self.histogram = None
 
 class PlotToolbar(NavigationToolbar2Tk):
