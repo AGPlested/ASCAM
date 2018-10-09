@@ -81,16 +81,13 @@ class GUI(ttk.Frame):
         self.create_widgets()
         self.configure_grid()
 
-        # this line calls `draw` when it is run
-        self.bind("<Configure>", self.redraw_plots)
-
         if test:
             self.data.baseline_correction()
             self.data.gauss_filter_series(1e3)
             self.update_all()
             self.datakey.set('BC_GFILTER1000.0_')
             self.plots.plot(True)
-            # self.menuBar.launch_idealization()
+            self.menuBar.launch_idealization()
 
         log.debug(f"end GUI.__init__")
 
@@ -148,40 +145,25 @@ class GUI(ttk.Frame):
     def configure_grid(self):
         """
         Geometry management of the elements in the main window.
-
-        The values in col/rowconfig refer to the position of the elements
-        WITHIN the widgets
         """
         log.debug("GUI.configure_grid")
         # Place the main window in the root window
-        self.grid(row=0, column=0, sticky='NESW')
-        self.grid_rowconfigure(1, weight=1)
-        self.grid_columnconfigure(1, weight=1)
-
+        self.grid(sticky='NESW')
         # First row
-        self.listSelection.grid(row=0, column=4, rowspan=2, padx=5, pady=5,
+        self.listSelection.grid(row=1, column=4, padx=5, pady=5,
                                 sticky=tk.N)
-
+        self.grid_rowconfigure(0, weight=0)
         # Second row
         self.plots.grid(row=1, column=1, rowspan=3, columnspan=3, padx=5,
                         pady=5, sticky='NEWS')
-        self.plots.grid_rowconfigure(0, weight=1)
-        self.plots.grid_columnconfigure(0, weight=1)
+        # self.grid_rowconfigure(1, weight=1)
+        self.grid_columnconfigure(1, weight=1)
 
         # Third row
-        self.episodeList.grid(row=2, column=4, rowspan=2)
-        for i in range(2):
-            self.episodeList.grid_columnconfigure(i, weight=1)
-            # self.episodeList.grid_rowconfigure(i, weight=1)
+        self.episodeList.grid(row=2, column=4,sticky='NS')
+        self.grid_rowconfigure(2, weight=1)
 
         self.displayFrame.grid(row=3, column=3, padx=5, sticky=tk.S)
-
-    def redraw_plots(self, *args):
-        log.debug(f"GUI.redraw_plots - widget changed size or location")
-        self.draw_plots()
-        # self.plots.fig.set_size_inches(
-        # (int(self.plots.winfo_width()/100), int(self.plots.winfo_height()/100)),
-        # forward=True)
 
     def draw_plots(self, new=False, *args):
         """
@@ -192,12 +174,7 @@ class GUI(ttk.Frame):
         self.displayFrame.update()
 
     def update_list(self):
-        log.info('updatin list')
-        # self.episodeList.create_list()
-        log.info("created new list")
         self.episodeList.create_dropdownmenu()
-        # for now `update_list` will update both the list and the dropdown
-        # menu, in case they need to be uncoupled use the two functions below
 
     def get_episodes_in_lists(self):
         """
@@ -211,8 +188,7 @@ class GUI(ttk.Frame):
             # log.debug('''for list "{}" added:\n {}'''\
             #           .format(listname,self.data.lists[listname][0]))
         # remove duplicate indices
-        indices = np.array(list(set(indices)))
-        indices = indices.flatten()
+        indices = np.array(set(indices))
         # log.info("indices in currently selected lists:\n {}".format(indices))
         return indices
 
@@ -956,17 +932,17 @@ class EpisodeList(ttk.Frame):
         log.debug(f"`EpisodeList.create_list`")
         log.debug("creating scrollbar")
         self.Scrollbar = tk.Scrollbar(self, orient=tk.VERTICAL)
-        self.Scrollbar.grid(column=1, row=1, rowspan=3, sticky=tk.N+tk.S+tk.E)
+        self.Scrollbar.grid(column=1, row=1, rowspan=3, sticky="NESW")
 
         log.debug("creating episodelist")
         self.episodelist = tk.Listbox(self, bd=2,
                                       yscrollcommand=self.Scrollbar.set,
                                       selectmode=tk.EXTENDED)
-        self.episodelist.grid(row=1, rowspan=3, sticky=tk.S+tk.W+tk.N)
+        self.episodelist.grid(row=1, rowspan=3, sticky="NESW")
         # set what should happen when an episode is selected
         self.episodelist.bind('<<ListboxSelect>>', self.onselect_plot)
 
-        self.episodelist.config(height=30)
+        # self.episodelist.config(height=30)
 
         for episode in self.parent.data[self.parent.datakey.get()]:
             self.episodelist.insert(tk.END, f"episode #{episode.n_episode}")
@@ -978,10 +954,11 @@ class EpisodeList(ttk.Frame):
                 self.episodelist.itemconfig(index,
                                     {'bg':self.parent.data.lists[name][1]})
 
-
         # assign the scrollbar its function
         self.Scrollbar['command'] = self.episodelist.yview
         self.episodelist.selection_set(self.parent.n_episode)
+        #make list and scrollbar expand
+        self.grid_rowconfigure(1, weight=1)
 
     def create_dropdownmenu(self):
         """
