@@ -102,8 +102,10 @@ class PlotFrame(ttk.Frame):
                                                 if self.show_amp.get() \
                                                 else self.remove_amp_lines())
         #lists to hold references to the lines indicating TC paramters
-        self.theta_lines = list()
-        self.amp_lines = list()
+        self.theta_plot_lines = list()
+        self.theta_hist_lines = list()
+        self.amp_plot_lines = list()
+        self.amp_hist_lines = list()
 
     def update_command_plot(self, draw=True, *args):
         log.debug(f"update_command_plot")
@@ -142,7 +144,6 @@ class PlotFrame(ttk.Frame):
 
         if self.show_hist_single.get():
             self.update_single_hist(draw=False)
-            # self.update_histograms(draw=False)
 
         self.fig.canvas.flush_events()
         if draw: self.canvas.draw()
@@ -208,14 +209,20 @@ class PlotFrame(ttk.Frame):
 
     def update_amp_lines(self, draw=True, *args):
         log.debug(f"update_amp_lines")
-        for amp, line in zip(self.parent.data.TC_amplitudes,self.amp_lines):
-            line.set_ydata(amp)
+        for amp, plot_line, hist_line in zip(self.parent.data.TC_amplitudes,
+                                             self.amp_plot_lines,
+                                             self.amp_hist_lines):
+            plot_line.set_ydata(amp)
+            hist_line.set_ydata(amp)
         if draw: self.canvas.draw()
 
     def update_theta_lines(self, draw=True, *args):
         log.debug(f"update_theta_lines")
-        for theta, line in zip(self.parent.data.TC_thresholds, self.theta_lines):
-            line.set_ydata(theta)
+        for theta, plot_line, hist_line in zip(self.parent.data.TC_thresholds,
+                                               self.theta_plot_lines,
+                                               self.theta_hist_lines):
+            plot_line.set_ydata(theta)
+            hist_line.set_ydata(theta)
         if draw: self.canvas.draw()
 
     def draw_TC_lines(self, draw=True, *args):
@@ -228,20 +235,24 @@ class PlotFrame(ttk.Frame):
 
     def draw_theta_lines(self, draw=True, *args):
         log.debug(f"PlotFrame.draw_theta_lines")
-        if self.theta_lines:
+        if self.theta_plot_lines:
             self.remove_theta_lines()
         for theta in self.parent.data.TC_thresholds:
             line = self.current_plot.axhline(theta, ls='--', c='r', alpha=0.3)
-            self.theta_lines.append(line)
+            self.theta_plot_lines.append(line)
+            line = self.histogram.axhline(theta, ls='--', c='r', alpha=0.3)
+            self.theta_hist_lines.append(line)
         if draw: self.canvas.draw()
 
     def draw_amp_lines(self, draw=True, *args):
         log.debug(f"PlotFrame.draw_amp_lines")
-        if self.amp_lines:
+        if self.amp_plot_lines:
             self.remove_amp_lines()
         for amp in self.parent.data.TC_amplitudes:
             line = self.current_plot.axhline(amp, ls='--', c='b', alpha=0.3)
-            self.amp_lines.append(line)
+            self.amp_plot_lines.append(line)
+            line = self.histogram.axhline(amp, ls='--', c='b', alpha=0.3)
+            self.amp_hist_lines.append(line)
         if draw: self.canvas.draw()
 
     def remove_TC_lines(self, draw=True, *args):
@@ -252,18 +263,26 @@ class PlotFrame(ttk.Frame):
 
     def remove_theta_lines(self, draw=True, *args):
         log.debug(f"PlotFrame.remove_theta_lines")
-        if self.theta_lines:
-            for line in self.theta_lines:
+        if self.theta_plot_lines:
+            for line in self.theta_plot_lines:
                 line.remove()
-        self.theta_lines = list()
+        self.theta_plot_lines = list()
+        if self.theta_hist_lines:
+            for line in self.theta_hist_lines:
+                line.remove()
+        self.theta_hist_lines = list()
         if draw: self.canvas.draw()
 
     def remove_amp_lines(self, draw=True, *args):
         log.debug(f"PlotFrame.remove_amp_lines")
-        if self.amp_lines:
-            for line in self.amp_lines:
+        if self.amp_plot_lines:
+            for line in self.amp_plot_lines:
                 line.remove()
-        self.amp_lines = list()
+        self.amp_plot_lines = list()
+        if self.amp_hist_lines:
+            for line in self.amp_hist_lines:
+                line.remove()
+        self.amp_hist_lines = list()
         if draw: self.canvas.draw()
 
     def plot(self, new=False, *args):
@@ -300,8 +319,8 @@ class PlotFrame(ttk.Frame):
         if self.piezo_plot is not None:
             self.p_line, = self.piezo_plot.plot(episode.time, episode.piezo)
 
-        self.amp_lines = list()
-        self.theta_lines = list()
+        self.amp_plot_lines = list()
+        self.theta_plot_lines = list()
         self.draw_TC_lines(draw=False)
 
         if self.histogram is not None:
@@ -355,7 +374,6 @@ class PlotFrame(ttk.Frame):
                      and self.parent.data.has_piezo
         # decide how many plots there will be
         num_plots = 1+show_command+show_piezo
-        show_hist = 1
         x_share = None
         show_hist = int(self.show_hist_single.get() or self.show_hist_all.get())
         # plot grid to make current plot bigger
@@ -399,12 +417,11 @@ class PlotFrame(ttk.Frame):
         else: self.piezo_plot = None
 
         if show_hist:
-            # self.histogram = self.fig.add_subplot(pgs[:, -1], sharey=self.current_plot)
             self.histogram = self.fig.add_subplot(pgs[trace_pos:trace_pos+2,-1],
                                                   sharey=self.current_plot)
             self.histogram.set_ylim(self.parent.series.min_current-.1*trace_y,
                                     self.parent.series.max_current+.1*trace_y)
-            self.histogram.set_ylabel(f"Current [{self.parent.data.trace_unit}]")                        
+            self.histogram.set_ylabel(f"Current [{self.parent.data.trace_unit}]")
             self.histogram.yaxis.set_label_position('right')
             self.histogram.yaxis.tick_right()
         else: self.histogram = None

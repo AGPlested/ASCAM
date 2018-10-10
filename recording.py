@@ -28,9 +28,13 @@ class Recording(dict):
         self.sampling_rate = int(float(sampling_rate))
         #untis of the data
         self.time_unit = time_unit
+        self.time_unit_factors = {'ms':1e-3, 's':1}
         self.trace_unit = trace_unit
+        self.trace_unit_factors = {'fA':1e-15, 'pA':1e-12, 'nA':1e-9, 'uA':1e-6, 'mA':1e-3, 'A':1}
         self.command_unit = command_unit
+        self.command_unit_factors = {'uV':1e-6, 'mV':1e-3, 'V':1}
         self.piezo_unit = piezo_unit
+        self.piezo_unit_factors = {'uV':1e-6, 'mV':1e-3, 'V':1}
 
         # attributes for storing and managing the data
         self['raw_'] = Series()
@@ -59,12 +63,23 @@ class Recording(dict):
             self.lists = {'all':(list(range(len(self['raw_']))), 'white', None)}
 
     @property
-    def has_piezo(self):
-        return self[self.currentDatakey].has_piezo
+    def time_unit_factor(self): return self.time_unit_factors[self.time_unit]
 
     @property
-    def has_command(self):
-        return self[self.currentDatakey].has_command
+    def trace_unit_factor(self): return self.trace_unit_factors[self.trace_unit]
+
+    @property
+    def command_unit_factor(self):
+        return self.command_unit_factors[self.command_unit]
+
+    @property
+    def piezo_unit_factor(self): return self.piezo_unit_factors[self.piezo_unit]
+
+    @property
+    def has_piezo(self): return self[self.currentDatakey].has_piezo
+
+    @property
+    def has_command(self): return self[self.currentDatakey].has_command
 
     def load_data(self):
         """

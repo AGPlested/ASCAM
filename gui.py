@@ -4,15 +4,14 @@ import time
 import logging as log
 import tkinter as tk
 from tkinter import ttk
-from tkinter.filedialog import askopenfilename, asksaveasfilename, askdirectory
+from tkinter.filedialog import askopenfilename, asksaveasfilename
 
 import numpy as np
 
-from PlotFrame import PlotFrame
+from plotframe import PlotFrame
 from tools import stringList_parser, parse_filename
-from plotting import plot_traces, plot_histogram
 from recording import Recording
-from TC_frame import TC_Frame
+from TCframe import TC_Frame
 
 class GUI(ttk.Frame):
     """
