@@ -75,7 +75,10 @@ class GUI(ttk.Frame):
         self.datakey.trace('w',self.change_current_datakey)
         self.datakey.set('raw_')
         # episode number of the currently displayed episode
-        self.n_episode = 0
+        self.n_episode = tk.IntVar()
+        self.n_episode.trace('w', self.change_episode)
+        self.n_episode.set(0)
+
 
         self.create_widgets()
         self.configure_grid()
@@ -90,18 +93,15 @@ class GUI(ttk.Frame):
 
         log.debug(f"end GUI.__init__")
 
-    @property
-    def episode(self): return self.data[self.datakey.get()][self.n_episode]
-
-    @property
-    def series(self): return self.data[self.datakey.get()]
-
     def change_current_datakey(self,*args,**kwargs):
         """
         This function changes the current datakey in the recording object, which
         is the one that determines what is filtered etc
         """
         self.data.currentDatakey = self.datakey.get()
+
+    def change_episode(self, *args):
+        self.data.n_episode = self.n_episode.get()
 
     def load_recording(self):
         """ Take a recording object and load it into the GUI.
@@ -220,12 +220,7 @@ class DiplayFrame(ttk.Frame):
     def show_command_stats(self):
         log.debug(f"DisplayFrame.show_command_stats")
         if self.parent.data_loaded:
-            datakey = self.parent.datakey.get()
-            episode = self.parent.data[datakey][self.parent.n_episode]
-
-            if episode.command is not None:
-                log.info("""showing command stats for {}
-                         episode number: {}""".format(datakey,self.parent.n_episode))
+            if self.parent.data.has_command:
                 mean, std = episode.get_command_stats()
                 command_stats ="Command Voltage = "
                 command_stats+="{:2f} +/- {:2f}".format(mean,std)
@@ -915,8 +910,8 @@ class EpisodeList(ttk.Frame):
         try:
             selected_episode = int(event.widget.curselection()[0])
             log.info(f"selected episode number {selected_episode}")
-            self.parent.n_episode = selected_episode
-            self.parent.plots.update_plots()
+            self.parent.n_episode.set(selected_episode)
+            self.parent.plots.plot()
         except IndexError:
             log.debug(f"excepted IndexError")
             pass
@@ -955,7 +950,7 @@ class EpisodeList(ttk.Frame):
 
         # assign the scrollbar its function
         self.Scrollbar['command'] = self.episodelist.yview
-        self.episodelist.selection_set(self.parent.n_episode)
+        self.episodelist.selection_set(self.parent.data.n_episode)
         #make list and scrollbar expand
         self.grid_rowconfigure(1, weight=1)
 
