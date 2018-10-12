@@ -14,8 +14,7 @@ from series import Series
 class Recording(dict):
     def __init__(self, filename='data/180426 000 Copy Export.mat',
                  sampling_rate=4e4, filetype='',
-                 headerlength=0, dtype=None, time_unit='ms', piezo_unit='V',
-                 command_unit='V', trace_unit='A'):
+                 headerlength=0, dtype=None):
         log.info("""intializing Recording""")
 
         # parameters for loading the data
@@ -26,20 +25,11 @@ class Recording(dict):
 
         # attributes of the data
         self.sampling_rate = int(float(sampling_rate))
-        #untis of the data
-        self.time_unit = time_unit
-        self.time_unit_factors = {'ms':1e-3, 's':1}
-        self.trace_unit = trace_unit
-        self.trace_unit_factors = {'fA':1e-15, 'pA':1e-12, 'nA':1e-9, 'uA':1e-6, 'mA':1e-3, 'A':1}
-        self.command_unit = command_unit
-        self.command_unit_factors = {'uV':1e-6, 'mV':1e-3, 'V':1}
-        self.piezo_unit = piezo_unit
-        self.piezo_unit_factors = {'uV':1e-6, 'mV':1e-3, 'V':1}
 
         # attributes for storing and managing the data
         self['raw_'] = Series()
         self.currentDatakey = 'raw_'
-        self.currentEpisode = 0
+        self.n_episode = 0
 
         #parameters for idealization
         self.TC_thresholds = np.array([])
@@ -59,27 +49,33 @@ class Recording(dict):
             self.load_data()
 
         #if the lists attribute has not been set while loading the data do it now
+        #lists is a dict with key name_of_list and values (episodes, color, key)
         if not self.lists:
             self.lists = {'all':(list(range(len(self['raw_']))), 'white', None)}
 
     @property
-    def time_unit_factor(self): return self.time_unit_factors[self.time_unit]
+    def series(self): return self[self.currentDatakey]
 
     @property
-    def trace_unit_factor(self): return self.trace_unit_factors[self.trace_unit]
-
-    @property
-    def command_unit_factor(self):
-        return self.command_unit_factors[self.command_unit]
-
-    @property
-    def piezo_unit_factor(self): return self.piezo_unit_factors[self.piezo_unit]
+    def episode(self): return self.series[self.n_episode]
 
     @property
     def has_piezo(self): return self[self.currentDatakey].has_piezo
 
     @property
     def has_command(self): return self[self.currentDatakey].has_command
+
+    @property
+    def time_unit(self): return self.episode.time_unit
+
+    @property
+    def trace_unit(self): return self.episode.trace_unit
+
+    @property
+    def piezo_unit(self): return self.episode.piezo_unit
+
+    @property
+    def command_unit(self): return self.episode.command_unit
 
     def load_data(self):
         """
@@ -142,10 +138,10 @@ class Recording(dict):
         if 'Piezo [V]' in names and 'Command Voltage [V]' in names:
             time = loaded_data[0]
             self[datakey] = Series([Episode(time, trace, n_episode=i,
-                                            piezo=pTrace,
-                                            command=cVtrace,
+                                            piezo=piezo,
+                                            command=command,
                                             sampling_rate = self.sampling_rate)
-                                    for i, (trace, pTrace, cVtrace)
+                                    for i, (trace, piezo, command)
                                     in enumerate(zip(*loaded_data[1:]))])
 
         elif 'Piezo [V]' in names:
@@ -206,7 +202,7 @@ class Recording(dict):
         io.savemat(filepath,export_dict)
 
     def baseline_correction(self, method='poly', poly_degree=1, intval=[],
-                            time_unit='ms', select_intvl=False,
+                            select_intvl=False,
                             select_piezo=True, active_piezo=False,
                             piezo_diff=0.05):
         log.info("""calling baseline_correction""")
@@ -220,7 +216,7 @@ class Recording(dict):
         log.info("""new datakey is {}""".format(newDatakey))
         self[newDatakey] = self[self.currentDatakey].baseline_correct_all(
                             intervals=intval, method=method, degree=poly_degree,
-                            time_unit=time_unit, select_intvl=select_intvl,
+                            select_intvl=select_intvl,
                             select_piezo=select_piezo, active=active_piezo,
                             deviation=piezo_diff)
         self.currentDatakey = newDatakey

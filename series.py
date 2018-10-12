@@ -5,15 +5,11 @@ import numpy as np
 from episode import Episode
 
 class Series(list):
-    def __init__(self, data=[], baselineCorrected=False,
-                 baselineIntervals=False, baselineMethod='poly',
-                 baselineDegree=1, idealized=False, reconstruct=False):
+    def __init__(self, data=[], idealized=False):
         """
         `Series` are lists of episodes which also store relevant parameters
         about the recording and operations that have been performed on the
         data.
-
-        The `reconstruct` input is a placeholder
         """
         list.__init__(self,data)
 
@@ -73,7 +69,7 @@ class Series(list):
                             weight_window, apriori_f_weights, apriori_b_weights)
         return output
     def baseline_correct_all(self, intervals=[], method='poly', degree=1,
-                             time_unit='ms', select_intvl=False,
+                             select_intvl=False,
                              select_piezo=False, active=False, deviation=0.05):
         """
         Return a `Series` object in which the episodes stored in `self` are
@@ -82,7 +78,7 @@ class Series(list):
         output = copy.deepcopy(self)
         for episode in output:
             episode.baseline_correct_episode(degree=degree, intervals=intervals,
-                                             method=method, time_unit=time_unit,
+                                             method=method,
                                              select_intvl=select_intvl,
                                              select_piezo=select_piezo,
                                              active=active, deviation=deviation)
