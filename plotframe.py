@@ -23,12 +23,13 @@ class PlotFrame(ttk.Frame):
         ttk.Frame.__init__(self, parent)
         self.parent = parent #parent is main frame
         #initiliaze figure
-        self.fig = plt.figure(figsize=(10,5))
+        #changing the size of the figure only seems to work
+        self.fig = plt.figure(figsize=(10, 5), dpi=100)
 
         self.canvas = FigureCanvasTkAgg(self.fig, master=self)
-        self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+        self.canvas.get_tk_widget().pack(side="top",fill='both',expand=True)
+
         self.toolbar = PlotToolbar(self.canvas, self)
-        self.canvas._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
 
         self.initiliaze_parameters()
 
@@ -101,32 +102,34 @@ class PlotFrame(ttk.Frame):
                                                 if self.show_amp.get() \
                                                 else self.remove_amp_lines())
         #lists to hold references to the lines indicating TC paramters
-        self.theta_lines = list()
-        self.amp_lines = list()
+        self.theta_plot_lines = list()
+        self.theta_hist_lines = list()
+        self.amp_plot_lines = list()
+        self.amp_hist_lines = list()
 
     def update_command_plot(self, draw=True, *args):
         log.debug(f"update_command_plot")
-        self.c_line.set_ydata(self.parent.episode.command)
+        self.c_line.set_ydata(self.parent.data.episode.command)
         if draw: self.canvas.draw()
 
     def update_current_plot(self, draw=True, *args):
         log.debug(f"update_current_plot")
-        self.t_line.set_ydata(self.parent.episode.trace)
+        self.t_line.set_ydata(self.parent.data.episode.trace)
         if draw: self.canvas.draw()
 
     def update_idealization_plot(self, draw=True, *args):
         log.debug(f"update_idealization_plot")
-        if self.parent.episode.idealization is not None:
+        if self.parent.data.episode.idealization is not None:
             if self.show_idealization.get():
                 self.i_line.set_visible(True)
             else:
                 self.i_line.set_visible(False)
-            self.i_line.set_ydata(self.parent.episode.idealization)
+            self.i_line.set_ydata(self.parent.data.episode.idealization)
             if draw: self.canvas.draw()
 
     def update_piezo_plot(self, draw=True, *args):
         log.debug(f"update_piezo_plot")
-        self.p_line.set_ydata(self.parent.episode.piezo)
+        self.p_line.set_ydata(self.parent.data.episode.piezo)
         if draw: self.canvas.draw()
 
     def update_plots(self, draw=True, *args):
@@ -141,7 +144,6 @@ class PlotFrame(ttk.Frame):
 
         if self.show_hist_single.get():
             self.update_single_hist(draw=False)
-            # self.update_histograms(draw=False)
 
         self.fig.canvas.flush_events()
         if draw: self.canvas.draw()
@@ -154,7 +156,7 @@ class PlotFrame(ttk.Frame):
 
     def update_single_hist(self, draw=True, *args):
         log.debug(f"update_single_hist")
-        episode = self.parent.episode
+        episode = self.parent.data.episode
         heights, bins, centers, width \
         = create_histogram(episode.time, [episode.piezo],
                        [episode.trace],
@@ -173,11 +175,11 @@ class PlotFrame(ttk.Frame):
 
     def update_all_hist(self, draw=True, *args):
         log.debug(f"update_all_hist")
-        episode = self.parent.episode
+        episode = self.parent.data.episode
         indices = self.parent.get_episodes_in_lists()
-        piezos = [episode.piezo for episode in self.parent.series \
+        piezos = [episode.piezo for episode in self.parent.data.series \
                                     if episode.n_episode in indices]
-        traces = [episode.trace for episode in self.parent.series \
+        traces = [episode.trace for episode in self.parent.data.series \
                                     if episode.n_episode in indices]
         heights, bins, centers, width \
         = create_histogram(episode.time, piezos, traces,
@@ -207,14 +209,20 @@ class PlotFrame(ttk.Frame):
 
     def update_amp_lines(self, draw=True, *args):
         log.debug(f"update_amp_lines")
-        for amp, line in zip(self.parent.data.TC_amplitudes,self.amp_lines):
-            line.set_ydata(amp)
+        for amp, plot_line, hist_line in zip(self.parent.data.TC_amplitudes,
+                                             self.amp_plot_lines,
+                                             self.amp_hist_lines):
+            plot_line.set_ydata(amp)
+            hist_line.set_ydata(amp)
         if draw: self.canvas.draw()
 
     def update_theta_lines(self, draw=True, *args):
         log.debug(f"update_theta_lines")
-        for theta, line in zip(self.parent.data.TC_thresholds, self.theta_lines):
-            line.set_ydata(theta)
+        for theta, plot_line, hist_line in zip(self.parent.data.TC_thresholds,
+                                               self.theta_plot_lines,
+                                               self.theta_hist_lines):
+            plot_line.set_ydata(theta)
+            hist_line.set_ydata(theta)
         if draw: self.canvas.draw()
 
     def draw_TC_lines(self, draw=True, *args):
@@ -227,20 +235,24 @@ class PlotFrame(ttk.Frame):
 
     def draw_theta_lines(self, draw=True, *args):
         log.debug(f"PlotFrame.draw_theta_lines")
-        if self.theta_lines:
+        if self.theta_plot_lines:
             self.remove_theta_lines()
         for theta in self.parent.data.TC_thresholds:
             line = self.current_plot.axhline(theta, ls='--', c='r', alpha=0.3)
-            self.theta_lines.append(line)
+            self.theta_plot_lines.append(line)
+            line = self.histogram.axhline(theta, ls='--', c='r', alpha=0.3)
+            self.theta_hist_lines.append(line)
         if draw: self.canvas.draw()
 
     def draw_amp_lines(self, draw=True, *args):
         log.debug(f"PlotFrame.draw_amp_lines")
-        if self.amp_lines:
+        if self.amp_plot_lines:
             self.remove_amp_lines()
         for amp in self.parent.data.TC_amplitudes:
             line = self.current_plot.axhline(amp, ls='--', c='b', alpha=0.3)
-            self.amp_lines.append(line)
+            self.amp_plot_lines.append(line)
+            line = self.histogram.axhline(amp, ls='--', c='b', alpha=0.3)
+            self.amp_hist_lines.append(line)
         if draw: self.canvas.draw()
 
     def remove_TC_lines(self, draw=True, *args):
@@ -251,18 +263,26 @@ class PlotFrame(ttk.Frame):
 
     def remove_theta_lines(self, draw=True, *args):
         log.debug(f"PlotFrame.remove_theta_lines")
-        if self.theta_lines:
-            for line in self.theta_lines:
+        if self.theta_plot_lines:
+            for line in self.theta_plot_lines:
                 line.remove()
-        self.theta_lines = list()
+        self.theta_plot_lines = list()
+        if self.theta_hist_lines:
+            for line in self.theta_hist_lines:
+                line.remove()
+        self.theta_hist_lines = list()
         if draw: self.canvas.draw()
 
     def remove_amp_lines(self, draw=True, *args):
         log.debug(f"PlotFrame.remove_amp_lines")
-        if self.amp_lines:
-            for line in self.amp_lines:
+        if self.amp_plot_lines:
+            for line in self.amp_plot_lines:
                 line.remove()
-        self.amp_lines = list()
+        self.amp_plot_lines = list()
+        if self.amp_hist_lines:
+            for line in self.amp_hist_lines:
+                line.remove()
+        self.amp_hist_lines = list()
         if draw: self.canvas.draw()
 
     def plot(self, new=False, *args):
@@ -282,7 +302,7 @@ class PlotFrame(ttk.Frame):
     def init_plot(self):
         self.plotted = True
         log.debug(f"PlotFrame.init_plot")
-        episode = self.parent.episode
+        episode = self.parent.data.episode
         if self.command_plot is not None:
             self.c_line, = self.command_plot.plot(episode.time, episode.command)
         self.t_line, = self.current_plot.plot(episode.time, episode.trace)
@@ -299,12 +319,12 @@ class PlotFrame(ttk.Frame):
         if self.piezo_plot is not None:
             self.p_line, = self.piezo_plot.plot(episode.time, episode.piezo)
 
-        self.amp_lines = list()
-        self.theta_lines = list()
+        self.amp_plot_lines = list()
+        self.theta_plot_lines = list()
         self.draw_TC_lines(draw=False)
 
         if self.histogram is not None:
-            episode = self.parent.episode
+            episode = self.parent.data.episode
 
             if self.show_hist_single.get():
                 heights, _, centers, width \
@@ -323,9 +343,9 @@ class PlotFrame(ttk.Frame):
 
             if self.show_hist_all.get():
                 indices = self.parent.get_episodes_in_lists()
-                piezos = [episode.piezo for episode in self.parent.series \
+                piezos = [episode.piezo for episode in self.parent.data.series \
                                             if episode.n_episode in indices]
-                traces = [episode.trace for episode in self.parent.series \
+                traces = [episode.trace for episode in self.parent.data.series \
                                             if episode.n_episode in indices]
                 heights, _, centers, width \
                 = create_histogram(episode.time, piezos, traces,
@@ -354,7 +374,6 @@ class PlotFrame(ttk.Frame):
                      and self.parent.data.has_piezo
         # decide how many plots there will be
         num_plots = 1+show_command+show_piezo
-        show_hist = 1
         x_share = None
         show_hist = int(self.show_hist_single.get() or self.show_hist_all.get())
         # plot grid to make current plot bigger
@@ -363,9 +382,9 @@ class PlotFrame(ttk.Frame):
         if show_command:
             # always plot command voltage on bottom (-1 row)
             self.command_plot = self.fig.add_subplot(pgs[-1,:1+show_hist])
-            c_y = self.parent.series.max_command-self.parent.series.min_command
-            self.command_plot.set_ylim(self.parent.series.min_command-.1*c_y,
-                                       self.parent.series.max_command+.1*c_y)
+            c_y = self.parent.data.series.max_command-self.parent.data.series.min_command
+            self.command_plot.set_ylim(self.parent.data.series.min_command-.1*c_y,
+                                       self.parent.data.series.max_command+.1*c_y)
             self.command_plot.set_ylabel(
                             ylabel=f"Command [{self.parent.data.command_unit}]")
             self.command_plot.set_xlabel(f"Time [{self.parent.data.time_unit}]")
@@ -377,9 +396,9 @@ class PlotFrame(ttk.Frame):
         self.current_plot = self.fig.add_subplot(
                                         pgs[trace_pos:trace_pos+2,:1+show_hist],
                                         sharex=x_share)
-        trace_y = self.parent.series.max_current-self.parent.series.min_current
-        self.current_plot.set_ylim(self.parent.series.min_current-.1*trace_y,
-                                   self.parent.series.max_current+.1*trace_y)
+        trace_y = self.parent.data.series.max_current-self.parent.data.series.min_current
+        self.current_plot.set_ylim(self.parent.data.series.min_current-.1*trace_y,
+                                   self.parent.data.series.max_current+.1*trace_y)
         self.current_plot.set_ylabel(f"Current [{self.parent.data.trace_unit}]")
         if show_command: self.current_plot.set_xticklabels([])
         else:
@@ -390,25 +409,21 @@ class PlotFrame(ttk.Frame):
             #always plots piezo voltage on top
             self.piezo_plot = self.fig.add_subplot(pgs[0,:1+show_hist],
                                                    sharex=x_share)
-            piezo_y = self.parent.series.max_piezo-self.parent.series.min_piezo
-            self.piezo_plot.set_ylim(self.parent.series.min_piezo-.1*piezo_y,
-                                    self.parent.series.max_piezo+.1*piezo_y)
+            piezo_y = self.parent.data.series.max_piezo-self.parent.data.series.min_piezo
+            self.piezo_plot.set_ylim(self.parent.data.series.min_piezo-.1*piezo_y,
+                                    self.parent.data.series.max_piezo+.1*piezo_y)
             self.piezo_plot.set_ylabel(f"Piezo [{self.parent.data.piezo_unit}]")
             self.piezo_plot.set_xticklabels([])
         else: self.piezo_plot = None
 
         if show_hist:
-            # self.histogram = self.fig.add_subplot(pgs[:, -1], sharey=self.current_plot)
             self.histogram = self.fig.add_subplot(pgs[trace_pos:trace_pos+2,-1],
                                                   sharey=self.current_plot)
-
-            self.histogram.set_ylim(self.parent.series.min_current-.1*trace_y,
-                                    self.parent.series.max_current+.1*trace_y)
+            self.histogram.set_ylim(self.parent.data.series.min_current-.1*trace_y,
+                                    self.parent.data.series.max_current+.1*trace_y)
+            self.histogram.set_ylabel(f"Current [{self.parent.data.trace_unit}]")
             self.histogram.yaxis.set_label_position('right')
-            self.histogram.set_ylabel(
-                                     f"Current [{self.parent.data.trace_unit}]")
             self.histogram.yaxis.tick_right()
-            
         else: self.histogram = None
 
 class PlotToolbar(NavigationToolbar2Tk):

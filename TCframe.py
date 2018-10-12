@@ -43,9 +43,9 @@ class TC_Frame(ttk.Frame):
         #entry for amplitudes
         self.amp_button = tk.Button(self, text="Amplitudes", width=12,
                                     relief="raised", command=self.toggle_amp)
-        self.amp_button.grid(row=4, column=0, columnspan=2)
+        self.amp_button.grid(row=4, column=0, columnspan=2, padx=5, pady=5)
         amp_entry = ttk.Entry(self, textvariable=self.amp_string, width=40)
-        amp_entry.grid(row=5, column=0, columnspan=2)
+        amp_entry.grid(row=5, column=0, columnspan=2, padx=5, pady=5)
         amp_entry.bind('<Return>', lambda *args: self.toggle_amp() \
                                                 if not self.show_amp \
                                                 else self.get_amps())
@@ -53,9 +53,9 @@ class TC_Frame(ttk.Frame):
         #entry for thresholds
         self.tc_button = tk.Button(self, text="Thresholds", width=12,
                                    relief="raised", command=self.toggle_tc)
-        self.tc_button.grid(row=6, column=0, columnspan=2)
+        self.tc_button.grid(row=6, column=0, columnspan=2, padx=5, pady=5)
         theta_entry = ttk.Entry(self, textvariable=self.theta_string, width=40)
-        theta_entry.grid(row=7, column=0, columnspan=2)
+        theta_entry.grid(row=7, column=0, columnspan=2, padx=5, pady=5)
         theta_entry.bind('<Return>', lambda *args: self.toggle_tc() \
                                                 if not self.show_thetas \
                                                 else self.get_thresholds())
@@ -63,11 +63,11 @@ class TC_Frame(ttk.Frame):
 
         ttk.Button(self, text="Show", command=lambda: [self.get_amps(),
                                                        self.get_thresholds()]
-                    ).grid(row=8, columnspan=2)
+                    ).grid(row=8, columnspan=2, padx=5, pady=5)
 
-        ttk.Button(self, text="Apply", command=self.click_apply).grid(row=11)
+        ttk.Button(self, text="Apply", command=self.click_apply).grid(row=11, padx=5, pady=5)
         ttk.Button(self, text="Cancel", command=self.click_cancel).grid(row=11,
-                                                                       column=1)
+                                                                       column=1, padx=5, pady=5)
 
     def get_amps(self, update_plot=True, *args):
         log.debug(f"TC_Frame.get_amps")
@@ -145,8 +145,9 @@ class TC_Frame(ttk.Frame):
     def toggle_amp(self, *args):
         log.debug(f"TC_Frame.toggle_amp")
         if self.parent.plots.show_amp.get()==0:
+            try: self.get_amps(update_plot=False)
+            except IndexError: return
             self.amp_button.config(relief="sunken")
-            self.get_amps(update_plot=False)
             self.parent.plots.show_amp.set(1)
         else:
             self.parent.plots.show_amp.set(0)
@@ -155,8 +156,9 @@ class TC_Frame(ttk.Frame):
     def toggle_tc(self, *args):
         log.debug(f"TC_Frame.toggle_tc")
         if self.parent.plots.show_thetas.get()==0:
+            try: self.get_thresholds(update_plot=False)
+            except IndexError: return
             self.tc_button.config(relief="sunken")
-            self.get_thresholds(update_plot=False)
             self.parent.plots.show_thetas.set(1)
         else:
             self.parent.plots.show_thetas.set(0)

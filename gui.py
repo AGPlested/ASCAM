@@ -4,15 +4,14 @@ import time
 import logging as log
 import tkinter as tk
 from tkinter import ttk
-from tkinter.filedialog import askopenfilename, asksaveasfilename, askdirectory
+from tkinter.filedialog import askopenfilename, asksaveasfilename
 
 import numpy as np
 
-from PlotFrame import PlotFrame
+from plotframe import PlotFrame
 from tools import stringList_parser, parse_filename
-from plotting import plot_traces, plot_histogram
 from recording import Recording
-from TC_frame import TC_Frame
+from TCframe import TC_Frame
 
 class GUI(ttk.Frame):
     """
@@ -76,13 +75,13 @@ class GUI(ttk.Frame):
         self.datakey.trace('w',self.change_current_datakey)
         self.datakey.set('raw_')
         # episode number of the currently displayed episode
-        self.n_episode = 0
+        self.n_episode = tk.IntVar()
+        self.n_episode.trace('w', self.change_episode)
+        self.n_episode.set(0)
+
 
         self.create_widgets()
         self.configure_grid()
-
-        # this line calls `draw` when it is run
-        self.bind("<Configure>", self.redraw_plots)
 
         if test:
             self.data.baseline_correction()
@@ -94,18 +93,15 @@ class GUI(ttk.Frame):
 
         log.debug(f"end GUI.__init__")
 
-    @property
-    def episode(self): return self.data[self.datakey.get()][self.n_episode]
-
-    @property
-    def series(self): return self.data[self.datakey.get()]
-
     def change_current_datakey(self,*args,**kwargs):
         """
         This function changes the current datakey in the recording object, which
         is the one that determines what is filtered etc
         """
         self.data.currentDatakey = self.datakey.get()
+
+    def change_episode(self, *args):
+        self.data.n_episode = self.n_episode.get()
 
     def load_recording(self):
         """ Take a recording object and load it into the GUI.
@@ -148,37 +144,25 @@ class GUI(ttk.Frame):
     def configure_grid(self):
         """
         Geometry management of the elements in the main window.
-
-        The values in col/rowconfig refer to the position of the elements
-        WITHIN the widgets
         """
         log.debug("GUI.configure_grid")
         # Place the main window in the root window
-        self.grid(row=0, column=0, sticky=tk.N+tk.S+tk.E+tk.W)
-        self.grid_rowconfigure(0, weight=1)
-        self.grid_columnconfigure(0, weight=1)
-
+        self.grid(sticky='NESW')
         # First row
-        self.listSelection.grid(row=0, column=4, rowspan=2, padx=5, pady=5,
+        self.listSelection.grid(row=1, column=4, padx=5, pady=5,
                                 sticky=tk.N)
-
+        self.grid_rowconfigure(0, weight=0)
         # Second row
         self.plots.grid(row=1, column=1, rowspan=3, columnspan=3, padx=5,
-                        pady=5, sticky=tk.W)
-        self.plots.grid_rowconfigure(0, weight=1)
-        self.plots.grid_columnconfigure(0, weight=1)
+                        pady=5, sticky='NEWS')
+        # self.grid_rowconfigure(1, weight=1)
+        self.grid_columnconfigure(1, weight=1)
 
         # Third row
-        self.episodeList.grid(row=2, column=4, rowspan=2)
-        for i in range(2):
-            self.episodeList.grid_columnconfigure(i, weight=1)
-            self.episodeList.grid_rowconfigure(i, weight=1)
+        self.episodeList.grid(row=2, column=4,sticky='NS')
+        self.grid_rowconfigure(2, weight=1)
 
         self.displayFrame.grid(row=3, column=3, padx=5, sticky=tk.S)
-
-    def redraw_plots(self, *args):
-        log.debug(f"GUI.redraw_plots - widget changed size or location")
-        self.draw_plots()
 
     def draw_plots(self, new=False, *args):
         """
@@ -189,12 +173,7 @@ class GUI(ttk.Frame):
         self.displayFrame.update()
 
     def update_list(self):
-        log.info('updatin list')
-        # self.episodeList.create_list()
-        log.info("created new list")
         self.episodeList.create_dropdownmenu()
-        # for now `update_list` will update both the list and the dropdown
-        # menu, in case they need to be uncoupled use the two functions below
 
     def get_episodes_in_lists(self):
         """
@@ -208,8 +187,7 @@ class GUI(ttk.Frame):
             # log.debug('''for list "{}" added:\n {}'''\
             #           .format(listname,self.data.lists[listname][0]))
         # remove duplicate indices
-        indices = np.array(list(set(indices)))
-        indices = indices.flatten()
+        indices = np.array(set(indices))
         # log.info("indices in currently selected lists:\n {}".format(indices))
         return indices
 
@@ -242,12 +220,7 @@ class DiplayFrame(ttk.Frame):
     def show_command_stats(self):
         log.debug(f"DisplayFrame.show_command_stats")
         if self.parent.data_loaded:
-            datakey = self.parent.datakey.get()
-            episode = self.parent.data[datakey][self.parent.n_episode]
-
-            if episode.command is not None:
-                log.info("""showing command stats for {}
-                         episode number: {}""".format(datakey,self.parent.n_episode))
+            if self.parent.data.has_command:
                 mean, std = episode.get_command_stats()
                 command_stats ="Command Voltage = "
                 command_stats+="{:2f} +/- {:2f}".format(mean,std)
@@ -978,8 +951,8 @@ class EpisodeList(ttk.Frame):
         try:
             selected_episode = int(event.widget.curselection()[0])
             log.info(f"selected episode number {selected_episode}")
-            self.parent.n_episode = selected_episode
-            self.parent.plots.update_plots()
+            self.parent.n_episode.set(selected_episode)
+            self.parent.plots.plot()
         except IndexError:
             log.debug(f"excepted IndexError")
             pass
@@ -994,17 +967,17 @@ class EpisodeList(ttk.Frame):
         log.debug(f"`EpisodeList.create_list`")
         log.debug("creating scrollbar")
         self.Scrollbar = tk.Scrollbar(self, orient=tk.VERTICAL)
-        self.Scrollbar.grid(column=1, row=1, rowspan=3, sticky=tk.N+tk.S+tk.E)
+        self.Scrollbar.grid(column=1, row=1, rowspan=3, sticky="NESW")
 
         log.debug("creating episodelist")
         self.episodelist = tk.Listbox(self, bd=2,
                                       yscrollcommand=self.Scrollbar.set,
                                       selectmode=tk.EXTENDED)
-        self.episodelist.grid(row=1, rowspan=3, sticky=tk.S+tk.W+tk.N)
+        self.episodelist.grid(row=1, rowspan=3, sticky="NESW")
         # set what should happen when an episode is selected
         self.episodelist.bind('<<ListboxSelect>>', self.onselect_plot)
 
-        self.episodelist.config(height=30)
+        # self.episodelist.config(height=30)
 
         for episode in self.parent.data[self.parent.datakey.get()]:
             self.episodelist.insert(tk.END, f"episode #{episode.n_episode}")
@@ -1016,10 +989,11 @@ class EpisodeList(ttk.Frame):
                 self.episodelist.itemconfig(index,
                                     {'bg':self.parent.data.lists[name][1]})
 
-
         # assign the scrollbar its function
         self.Scrollbar['command'] = self.episodelist.yview
-        self.episodelist.selection_set(self.parent.n_episode)
+        self.episodelist.selection_set(self.parent.data.n_episode)
+        #make list and scrollbar expand
+        self.grid_rowconfigure(1, weight=1)
 
     def create_dropdownmenu(self):
         """

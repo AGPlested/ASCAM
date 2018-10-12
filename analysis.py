@@ -30,7 +30,7 @@ def threshold_crossing(signal, amplitudes, thresholds=np.array([])):
         idealization[inds] = a
     return idealization
 
-def baseline_correction(time, signal, fs, intervals=None, time_unit='ms',
+def baseline_correction(time, signal, fs, intervals=None,
                         degree=1, method='poly',select_intvl=False,
                         piezo=None, select_piezo=False, active= False,
                         deviation=0.05):
@@ -52,7 +52,7 @@ def baseline_correction(time, signal, fs, intervals=None, time_unit='ms',
         original signal less the fitted baseline
     """
     if select_intvl:
-        t, s = interval_selection(time, signal, intervals, fs, time_unit)
+        t, s = interval_selection(time, signal, intervals, fs)
     elif select_piezo:
         t, _, s = piezo_selection(time, piezo, signal, active, deviation)
     else:
