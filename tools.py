@@ -88,34 +88,33 @@ def piezo_selection(time, piezo, trace, active=True, deviation=0.05):
     #           trace: {}""".format(indices, time, piezo, trace))
     return time, piezo, trace
 
-def interval_selection(time, signal, intervals, fs, time_unit):
+def interval_selection(time, signal, intervals, fs):
     """
     return the signal at the times specified in the interval
+    the function assumes `time` and `intervals` to have the same units and
+    fs to have the reciprocal unit (eg. s, s and hz)
     """
     log.info("""called `interval_selection`""")
     # log.debug("""parameters are: sampling frequency: {}, time_unit: {}
     #           time: {}
     #           signal: {}
     #           intervals: {}""".format(fs, time_unit, time, signal, intervals))
-    if time_unit == 'ms':
-        time_unit = 1000
-    elif time_unit == 's':
-        time_unit = 1
+
     time_out = []
     signal_out = []
     if type(intervals[0]) is list:
         log.debug("""`intervals` is a list of intervals""")
         for ival in intervals:
-            time_out.extend(time[ int(ival[0]*fs/time_unit)
-                            : int(ival[-1]*fs/time_unit) ])
-            signal_out.extend(signal[ int(ival[0]*fs/time_unit)
-                              : int(ival[-1]*fs/time_unit)])
+            time_out.extend(time[ int(ival[0]*fs)
+                            : int(ival[-1]*fs) ])
+            signal_out.extend(signal[ int(ival[0]*fs)
+                              : int(ival[-1]*fs)])
     elif type(intervals[0]) in [int, float]:
         log.debug("""`intervals` is just one interval""")
-        time_out = time[ int(intervals[0]*fs/time_unit)
-                   : int(intervals[-1]*fs/time_unit)]
-        signal_out = signal[int(intervals[0]*fs/time_unit)
-                   : int(intervals[1]*fs/time_unit)]
+        time_out = time[ int(intervals[0]*fs)
+                   : int(intervals[-1]*fs)]
+        signal_out = signal[int(intervals[0]*fs)
+                   : int(intervals[1]*fs)]
     # log.debug("""selected times: {}
     #              and signal: {}""".format(time_out,signal_out))
     return time_out, signal_out
