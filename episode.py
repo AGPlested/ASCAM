@@ -6,7 +6,8 @@ from tools import piezo_selection, parse_filename
 
 class Episode():
     def __init__(self, time, trace, n_episode=0, piezo=None, command=None,
-                 filterType=None, sampling_rate=4e4, timeInputUnit='ms'):
+                 sampling_rate=4e4, time_unit='ms', piezo_unit='V',
+                 command_unit='V', trace_unit='A', input_time_unit='ms'):
         """
         Episode objects hold all the information about an epoch and
         should be used to store raw and manipulated data
@@ -23,58 +24,101 @@ class Episode():
                           came before this one
             filterType [string] - type of filter used
         """
-        time_unit_multiplier = 1
-        if timeInputUnit=='ms': time_unit_multiplier = 1000
-
-        self.time = time*time_unit_multiplier
-        self.trace = trace
-        self.piezo = piezo
-        self.command = command
+        #units of the data
+        #the units of the private attributes (eg _time) should be SI units
+        #ie seconds, ampere etc
+        self.time_unit = time_unit
+        self.time_unit_factors = {'ms':1e3, 's':1}
+        self.trace_unit = trace_unit
+        self.trace_unit_factors = {'fA':1e15, 'pA':1e12, 'nA':1e9, 'uA':1e6,
+                                    'mA':1e3, 'A':1}
+        self.command_unit = command_unit
+        self.command_unit_factors = {'uV':1e6, 'mV':1e3, 'V':1}
+        self.piezo_unit = piezo_unit
+        self.piezo_unit_factors = {'uV':1e6, 'mV':1e3, 'V':1}
+        #units when given input
+        input_time_unit_factors = {'ms':1e-3, 's':1}
+        input_time_factor = input_time_unit_factors[input_time_unit]
+        #private attributes storing the actual data
+        self._time = time*input_time_factor
+        self._trace = trace
+        self._piezo = piezo
+        self._command = command
+        self._idealization = None
+        #metadata about the episode
         self.n_episode = int(n_episode)
         self.sampling_rate = sampling_rate
         self.suspiciousSTD = False
-        self.idealization = None
+
+    @property
+    def time(self): return self._time*self.time_unit_factor
+
+    @property
+    def trace(self): return self._trace*self.trace_unit_factor
+
+    @property
+    def piezo(self): return self._piezo*self.piezo_unit_factor
+
+    @property
+    def command(self): return self._command*self.command_unit_factor
+
+    @property
+    def idealization(self):
+        if self._idealization is not None:
+            return self._idealization*self.trace_unit_factor
+        else: return None
+        
+    @property
+    def time_unit_factor(self): return self.time_unit_factors[self.time_unit]
+
+    @property
+    def trace_unit_factor(self): return self.trace_unit_factors[self.trace_unit]
+
+    @property
+    def command_unit_factor(self):
+        return self.command_unit_factors[self.command_unit]
+
+    @property
+    def piezo_unit_factor(self): return self.piezo_unit_factors[self.piezo_unit]
 
     def gauss_filter_episode(self, filterFrequency=1e3, method='convolution'):
         """
         Replace the current trace of the episode by the gauss filtered version
         of itself
         """
-        self.trace = gaussian_filter(signal=self.trace,
+        self._trace = gaussian_filter(signal=self._trace,
                                      filterFrequency=filterFrequency,
                                      sampling_rate=self.sampling_rate)
         #reset idealization
-        self.idealization = None
+        self._idealization = None
 
     def CK_filter_episode(self, window_lengths, weight_exponent, weight_window,
 				          apriori_f_weights=False, apriori_b_weights=False):
         """
-        Replace the current trace by the CK fitered version of itself
+        Replace the current _trace by the CK fitered version of itself
         """
         ck_filter = ChungKennedyFilter(window_lengths, weight_exponent,
                             weight_window, apriori_f_weights, apriori_b_weights)
-        self.trace = ck_filter.apply_filter(self.trace)
-        #reset idealization
-        self.idealization = None
+        self._trace = ck_filter.apply_filter(self._trace)
+        #reset _idealization
+        self._idealization = None
 
     def baseline_correct_episode(self, intervals, method='poly', degree=1,
-                                 time_unit='ms', select_intvl=False,
-                                 select_piezo=False, active=False,
-                                 deviation=0.05):
-        self.trace = baseline_correction(time=self.time, signal=self.trace,
+                                 select_intvl=False, select_piezo=False,
+                                 active=False, deviation=0.05):
+        self._trace = baseline_correction(time=self._time, signal=self._trace,
                                          fs=self.sampling_rate,
                                          intervals=intervals,
                                          degree=degree, method=method,
-                                         time_unit=time_unit,
                                          select_intvl=select_intvl,
-                                         piezo=self.piezo,
+                                         piezo=self._piezo,
                                          select_piezo=select_piezo,
                                          active=active, deviation=deviation)
-        #reset idealization
-        self.idealization = None
+        #reset _idealization
+        self._idealization = None
 
     def idealize(self, amplitudes, thresholds):
-        self.idealization = threshold_crossing(self.trace, amplitudes,
+        self._idealization = threshold_crossing(self.trace, amplitudes,
                                                thresholds)
 
     def check_standarddeviation_all(self, stdthreshold=5e-13):
