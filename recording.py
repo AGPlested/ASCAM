@@ -226,6 +226,23 @@ class Recording(dict):
                 if save_command: export_dict['command'+n] = episode.command
         io.savemat(filepath,export_dict)
 
+    def export_idealization(self, filepath):
+        if not filepath.endswith('.csv'):
+            filepath+='.csv'
+        list_exports = list()
+        # combine the episode numbers to be saved in one list
+        for list_name in self.current_lists:
+            list_exports.extend(self.lists[list_name][0])
+        # filter out duplicate elements
+        list_exports = list(set(list_exports))
+        export_array =  np.zeros(shape=(len(list_exports), self.episode._idealization.size))
+        k=0
+        for i, episode in enumerate(self[self.currentDatakey]):
+            if i in list_exports:
+                export_array[k] = episode._idealization
+                k+=1
+        np.savetxt(filepath, export_array, delimiter=',')
+
     def baseline_correction(self, method='poly', poly_degree=1, intval=[],
                             select_intvl=False,
                             select_piezo=True, active_piezo=False,
