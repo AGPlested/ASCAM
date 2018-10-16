@@ -318,6 +318,8 @@ class PlotFrame(ttk.Frame):
 
         self.amp_plot_lines = list()
         self.theta_plot_lines = list()
+        self.theta_hist_lines = list()
+        self.amp_hist_lines = list()
         self.draw_TC_lines(draw=False)
 
         if self.histogram is not None:
