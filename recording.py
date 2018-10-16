@@ -32,9 +32,11 @@ class Recording(dict):
         self.n_episode = 0
 
         #parameters for idealization
-        self.TC_thresholds = np.array([])
-        self.TC_amplitudes = np.array([])
-
+        self._TC_thresholds = np.array([])
+        self._TC_amplitudes = np.array([])
+        self.tc_unit = 'pA'
+        self.tc_unit_factors = {'fA':1e15, 'pA':1e12, 'nA':1e9, 'µA':1e6,
+                                    'mA':1e3, 'A':1}
         # variables for user created lists of episodes
         # `lists` stores the indices of the episodes in the list in the first
         # element, their color in the GUI in the second and the associated key
@@ -42,16 +44,39 @@ class Recording(dict):
         # of a tuple that is the value under the list's name (as dict key)
         self.lists = dict()
         self.current_lists = ['all']
-
         # if a file is specified load it
         if filename:
             log.info("""`filename` is not empty, will load data""")
             self.load_data()
-
         #if the lists attribute has not been set while loading the data do it now
         #lists is a dict with key name_of_list and values (episodes, color, key)
         if not self.lists:
             self.lists = {'all':(list(range(len(self['raw_']))), 'white', None)}
+
+    @property
+    def TC_amplitudes(self):
+        return self._TC_amplitudes*self.tc_unit_factors[self.tc_unit]
+
+    @TC_amplitudes.setter
+    def TC_amplitudes(self, amps):
+        self._TC_amplitudes = amps/self.tc_unit_factors[self.tc_unit]
+
+    @property
+    def TC_thresholds(self):
+        return self._TC_thresholds*self.tc_unit_factors[self.tc_unit]
+
+    @TC_thresholds.setter
+    def TC_thresholds(self, amps):
+        self._TC_thresholds = amps/self.tc_unit_factors[self.tc_unit]
+
+    @property
+    def selected_episodes(self):
+        indices = []
+        for listname in self.current_lists:
+            indices.extend(self.lists[listname][0])
+        # remove duplicate indices
+        indices = np.array(list(set(indices)))
+        return np.array(self.series)[indices]
 
     @property
     def series(self): return self[self.currentDatakey]
@@ -275,6 +300,9 @@ class Recording(dict):
         return True
 
     def idealize_series(self):
-        self[self.currentDatakey].idealize_all(self.TC_amplitudes,
-                                               self.TC_thresholds)
+        self.series.idealize_all(self._TC_amplitudes, self._TC_thresholds)
+        return True
+
+    def idealize_episode(self):
+        self.episode.idealize(self._TC_amplitudes, self._TC_thresholds)
         return True

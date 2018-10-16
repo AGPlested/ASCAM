@@ -13,8 +13,6 @@ class Series(list):
         """
         list.__init__(self,data)
 
-        self.idealized = False
-
     @property
     def has_piezo(self):
         try: return True if self[0].piezo is not None else False
@@ -91,7 +89,6 @@ class Series(list):
         """
         for episode in self:
             episode.idealize(amplitudes, thresholds)
-        self.idealized = True
 
     def check_standarddeviation_all(self, stdthreshold=5e-13):
         """

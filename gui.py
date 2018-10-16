@@ -56,7 +56,6 @@ class GUI(ttk.Frame):
         self.path = tk.StringVar()
         self.filetypefull = tk.StringVar()
         self.filetype = tk.StringVar()
-        self.data_loaded = False
 
         # bind window name updating
         self.filename.trace("w",
@@ -175,22 +174,6 @@ class GUI(ttk.Frame):
     def update_list(self):
         self.episodeList.create_dropdownmenu()
 
-    def get_episodes_in_lists(self):
-        """
-        return an array of the indices of all the episodes in the currently
-        selected lists
-        """
-        log.debug("GUI.get_episodes_in_lists")
-        indices = []
-        for listname in self.data.current_lists:
-            indices.extend(self.data.lists[listname][0])
-            # log.debug('''for list "{}" added:\n {}'''\
-            #           .format(listname,self.data.lists[listname][0]))
-        # remove duplicate indices
-        indices = np.array(set(indices))
-        # log.info("indices in currently selected lists:\n {}".format(indices))
-        return indices
-
     def quit(self):
         log.info('exiting ASCAM')
         self.master.destroy()
@@ -219,16 +202,14 @@ class DiplayFrame(ttk.Frame):
 
     def show_command_stats(self):
         log.debug(f"DisplayFrame.show_command_stats")
-        if self.parent.data_loaded:
-            if self.parent.data.has_command:
-                mean, std = episode.get_command_stats()
-                command_stats ="Command Voltage = "
-                command_stats+="{:2f} +/- {:2f}".format(mean,std)
-                command_stats+=self.parent.data.command_unit
-                ttk.Label(self, text=command_stats).grid(row=4, column=0)
-            else:
-                log.info("no command voltage found")
-        else: pass
+        if self.parent.data.has_command:
+            mean, std = self.parent.data.episode.get_command_stats()
+            command_stats ="Command Voltage = "
+            command_stats+="{:2f} +/- {:2f}".format(mean,std)
+            command_stats+=self.parent.data.command_unit
+            ttk.Label(self, text=command_stats).grid(row=4, column=0)
+        else:
+            log.info("no command voltage found")
 
 class MenuBar(tk.Menu):
     def __init__(self, parent):
@@ -1096,7 +1077,6 @@ class OpenFileDialog(tk.Toplevel):
                                              self.sampling_rate.get(),
                                              self.filetype.get())
                 self.parent.datakey.set(self.parent.data.currentDatakey)
-                self.parent.data_loaded = True
                 self.parent.load_recording()
             finally:
                 self.destroy()

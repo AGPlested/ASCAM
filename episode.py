@@ -7,7 +7,7 @@ from tools import piezo_selection, parse_filename
 class Episode():
     def __init__(self, time, trace, n_episode=0, piezo=None, command=None,
                  sampling_rate=4e4, time_unit='ms', piezo_unit='V',
-                 command_unit='V', trace_unit='A', input_time_unit='ms'):
+                 command_unit='mV', trace_unit='pA', input_time_unit='ms'):
         """
         Episode objects hold all the information about an epoch and
         should be used to store raw and manipulated data
@@ -30,7 +30,7 @@ class Episode():
         self.time_unit = time_unit
         self.time_unit_factors = {'ms':1e3, 's':1}
         self.trace_unit = trace_unit
-        self.trace_unit_factors = {'fA':1e15, 'pA':1e12, 'nA':1e9, 'uA':1e6,
+        self.trace_unit_factors = {'fA':1e15, 'pA':1e12, 'nA':1e9, 'µA':1e6,
                                     'mA':1e3, 'A':1}
         self.command_unit = command_unit
         self.command_unit_factors = {'uV':1e6, 'mV':1e3, 'V':1}
@@ -67,7 +67,11 @@ class Episode():
         if self._idealization is not None:
             return self._idealization*self.trace_unit_factor
         else: return None
-        
+
+    @idealization.setter
+    def idealization(self, id):
+        self._idealization = id
+
     @property
     def time_unit_factor(self): return self.time_unit_factors[self.time_unit]
 
@@ -118,15 +122,15 @@ class Episode():
         self._idealization = None
 
     def idealize(self, amplitudes, thresholds):
-        self._idealization = threshold_crossing(self.trace, amplitudes,
+        self._idealization = threshold_crossing(self._trace, amplitudes,
                                                thresholds)
 
     def check_standarddeviation_all(self, stdthreshold=5e-13):
         """
         check the standard deviation of the episode against a reference value
         """
-        _, _, trace = piezo_selection(self.time, self.piezo,
-                                      self.trace, active = False,
+        _, _, trace = piezo_selection(self._time, self._piezo,
+                                      self._trace, active = False,
                                       deviation = 0.01)
         tracestd = np.std(trace)
         if tracestd>stdthreshold:
@@ -138,8 +142,8 @@ class Episode():
         episode
         """
         try:
-            mean = np.mean(self.command)
-            std = np.std(self.command)
+            mean = np.mean(self._command)
+            std = np.std(self._command)
         except:
             mean = std = np.nan
         return mean, std
