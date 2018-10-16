@@ -135,8 +135,8 @@ class PlotFrame(ttk.Frame):
     def update_plots(self, draw=True, *args):
         log.debug(f"plotframe.update_plots")
 
-        if self.show_command.get(): self.update_command_plot(draw=False)
         self.update_current_plot(draw=False)
+        if self.show_command.get(): self.update_command_plot(draw=False)
         if self.show_idealization: self.update_idealization_plot(draw=False)
         if self.show_piezo.get(): self.update_piezo_plot(draw=False)
         if self.show_amp.get(): self.update_theta_lines(draw=False)
@@ -194,11 +194,8 @@ class PlotFrame(ttk.Frame):
         for (rect, h, b) in zip(self.all_hist, heights, bins):
             rect.set_width(h)
             rect.set_y(b)
-
         self.all_hist_line.set_xdata(heights)
         self.all_hist_line.set_ydata(centers)
-
-
         if draw: self.canvas.draw()
 
     def update_TC_lines(self, draw=True, *args):
@@ -340,13 +337,9 @@ class PlotFrame(ttk.Frame):
                                time_unit=self.parent.data.time_unit)
                 self.single_hist = self.histogram.barh(centers, heights, width,
                                     align='center')
-
             if self.show_hist_all.get():
-                indices = self.parent.get_episodes_in_lists()
-                piezos = [episode.piezo for episode in self.parent.data.series \
-                                            if episode.n_episode in indices]
-                traces = [episode.trace for episode in self.parent.data.series \
-                                            if episode.n_episode in indices]
+                piezos = [ep.piezo for ep in self.parent.data.selected_episodes]
+                traces = [ep.trace for ep in self.parent.data.selected_episodes]
                 heights, _, centers, width \
                 = create_histogram(episode.time, piezos, traces,
                                active=self.hist_piezo_active.get(),
@@ -357,12 +350,10 @@ class PlotFrame(ttk.Frame):
                                intervals=self.hist_intervals,
                                sampling_rate=self.parent.data.sampling_rate,
                                time_unit=self.parent.data.time_unit)
-
                 self.all_hist = self.histogram.barh(centers, heights, width,
                                     alpha=0.2, color='orange', align='center')
                 self.all_hist_line, = self.histogram.plot(heights, centers,
                                                            color='orange')
-
         self.toolbar.update()
         self.canvas.draw()
 
