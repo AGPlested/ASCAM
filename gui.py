@@ -89,6 +89,8 @@ class GUI(ttk.Frame):
             self.datakey.set('BC_GFILTER1000.0_')
             self.plots.plot(True)
             self.menuBar.launch_idealization()
+            self.tc_frame.amp_string.set('0 -.6 -1 -1.3')
+            self.tc_frame.toogle_amp()
 
         log.debug(f"end GUI.__init__")
 
@@ -354,7 +356,6 @@ class ExportIdDialog(tk.Toplevel):
         else:
             log.info("User pressed 'Cancel'")
         self.destroy()
-
 
 class ZeroTFrame(tk.Toplevel):
     """Dialog for entering the offset for the time axis in plots"""

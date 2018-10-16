@@ -235,13 +235,13 @@ class Recording(dict):
             list_exports.extend(self.lists[list_name][0])
         # filter out duplicate elements
         list_exports = list(set(list_exports))
-        export_array =  np.zeros(shape=(len(list_exports), self.episode.idealization.size))
+        export_array =  np.zeros(shape=(len(list_exports), self.episode._idealization.size))
         k=0
         for i, episode in enumerate(self[self.currentDatakey]):
             if i in list_exports:
-                export_array[k] = episode.idealization
+                export_array[k] = episode._idealization
                 k+=1
-        export_array.tofile(filepath, sep=',')
+        np.savetxt(filepath, export_array, delimiter=',')
 
     def baseline_correction(self, method='poly', poly_degree=1, intval=[],
                             select_intvl=False,
