@@ -57,6 +57,16 @@ class GUI(ttk.Frame):
         self.filetypefull = tk.StringVar()
         self.filetype = tk.StringVar()
 
+        #placeholders for subframes
+        #set to None so existence can be checked is `is not None`
+        self.plots = None
+        self.episodeList = None
+        self.listSelection = None
+        self.displayFrame = None
+        self.menuBar = None
+        self.fa_frame = None
+        self.tc_frame = None
+
         # bind window name updating
         self.filename.trace("w",
                 lambda *args: self.master.title("ASCAM - "+self.filename.get()))
@@ -78,20 +88,22 @@ class GUI(ttk.Frame):
         self.n_episode.trace('w', self.change_episode)
         self.n_episode.set(0)
 
-
         self.create_widgets()
         self.configure_grid()
 
         if test:
+            #basic set up
             self.data.baseline_correction()
             self.data.gauss_filter_series(1e3)
             self.update_all()
             self.datakey.set('BC_GFILTER1000.0_')
             self.plots.plot(True)
-            self.menuBar.launch_idealization()
-            self.tc_frame.amp_string.set('0 -.6 -1 -1.3')
-            self.tc_frame.toogle_amp()
-
+            #test idealization
+            # self.menuBar.launch_idealization()
+            # self.tc_frame.amp_string.set('0 -.6 -1 -1.3')
+            # self.tc_frame.toogle_amp()
+            #test first_activation
+            self.menuBar.launch_fa_mode()
         log.debug(f"end GUI.__init__")
 
     def change_current_datakey(self,*args,**kwargs):
@@ -102,7 +114,9 @@ class GUI(ttk.Frame):
         self.data.currentDatakey = self.datakey.get()
 
     def change_episode(self, *args):
+        log.debug(f"gui.change_episode")
         self.data.n_episode = self.n_episode.get()
+        if self.plots is not None: self.plots.plot()
 
     def load_recording(self):
         """ Take a recording object and load it into the GUI.
@@ -180,6 +194,59 @@ class GUI(ttk.Frame):
         log.info('exiting ASCAM')
         self.master.destroy()
         self.master.quit()
+
+class FirstActivationFrame(tk.Frame):
+    def __init__(self, parent):
+        tk.Frame.__init__(self, parent)
+        self.parent = parent #parent is main window
+        self.fa_threshold = tk.StringVar()
+        self.fa_threshold.trace('w', self.change_threshold)
+
+        if self.parent.data.fa_threshold is None and np.any(parent.data._TC_thresholds):
+            self.fa_threshold.set(str(parent.data._TC_thresholds[0]))
+        else:
+            self.fa_threshold.set(str(np.mean(self.parent.data.episode.trace)))
+        self.create_widgets()
+
+        self.parent.plots.draw_fa_line(draw=False)
+        self.parent.data.detect_fa()
+        self.parent.plots.draw_fa_mark(draw=False)
+        self.parent.n_episode.set(0)
+
+        self.tracking_on = False
+
+    def change_threshold(self, *args):
+        self.parent.data.fa_threshold = float(self.fa_threshold.get())
+
+    def toggle_tracking(self):
+        if not self.tracking_on:
+            self.plot_track_cid = self.parent.plots.fig.canvas.mpl_connect(
+                                                          'motion_notify_event',
+                                                          self.track_cursor)
+        else:
+            self.parent.plots.fig.canvas.mpl_disconnect(self.plot_track_cid)
+        self.tracking_on = not self.tracking_on
+
+    def track_cursor(self, event):
+        if (self.parent.plots.toolbar._active is None
+            and event.button==1
+            and event.inaxes is not None
+            ):
+            self.fa_threshold.set(str(event.ydata))
+            self.parent.data.detect_fa()
+            self.parent.plots.update_fa_mark(draw=False)
+            self.parent.plots.update_fa_line()
+
+    def create_widgets(self):
+        self.toggle_button = ttk.Button(self, text='Set Threshold', command=self.toggle_tracking)
+        self.toggle_button.grid()
+        ttk.Entry(self, textvariable=self.fa_threshold, width=10).grid(row=0,column=1)
+        ttk.Button(self, text='OK', command=self.ok_click).grid(row=1)
+        ttk.Button(self,text="Cancel", command=self.destroy).grid(row=1,column=1)
+
+    def ok_click(self):
+        self.destroy()
+
 
 class DiplayFrame(ttk.Frame):
     """
@@ -292,7 +359,10 @@ class MenuBar(tk.Menu):
                                        command=lambda: BaselineFrame(self))
         self.analysis_menu.add_command(label="Filter",
                                        command=lambda: FilterFrame(self.parent))
-        self.analysis_menu.add_command(label="Idealize", command=self.launch_idealization)
+        self.analysis_menu.add_command(label="Idealize",
+                                        command=self.launch_idealization)
+        self.analysis_menu.add_command(label="First Activation",
+                                        command=self.launch_fa_mode)
 
     def open_file(self):
         log.debug(f"MenuBar.open_file")
@@ -329,8 +399,11 @@ class MenuBar(tk.Menu):
         self.parent.tc_frame = TC_Frame(self.parent)
         self.parent.tc_frame.grid(row=1, column=0)
 
+    def launch_fa_mode(self):
+        self.parent.fa_frame = FirstActivationFrame(self.parent)
+        self.parent.fa_frame.grid(row=5, column=1, columnspan=3, padx=5, pady=5)
+
 class ExportIdDialog(tk.Toplevel):
-    """docstring for ExportIdDialog."""
     def __init__(self, parent):
         tk.Toplevel.__init__(self, parent)
         self.parent = parent #parent is main window
@@ -922,19 +995,18 @@ class EpisodeList(ttk.Frame):
         self.create_list()
         self.create_dropdownmenu()
 
-    def onselect_plot(self, event):
+    def click_list(self, event):
         """
         When a new episode is selected by clicking or with arrow keys get the
-        change the number of the current episode and update the plots
+        change the number of the current episode
         """
-        log.debug(f"EpisodeList.onselect_plot")
+        log.debug(f"EpisodeList.click_list")
         #uses try to catch and ignore the event of the user clickling
         #outside the list
         try:
-            selected_episode = int(event.widget.curselection()[0])
-            log.info(f"selected episode number {selected_episode}")
-            self.parent.n_episode.set(selected_episode)
-            self.parent.plots.plot()
+            n_episode = int(event.widget.curselection()[0])
+            log.debug(f"selected episode number {n_episode}")
+            self.parent.n_episode.set(n_episode)
         except IndexError:
             log.debug(f"excepted IndexError")
             pass
@@ -957,8 +1029,7 @@ class EpisodeList(ttk.Frame):
                                       selectmode=tk.EXTENDED)
         self.episodelist.grid(row=1, rowspan=3, sticky="NESW")
         # set what should happen when an episode is selected
-        self.episodelist.bind('<<ListboxSelect>>', self.onselect_plot)
-
+        self.episodelist.bind('<<ListboxSelect>>', self.click_list)
         # self.episodelist.config(height=30)
 
         for episode in self.parent.data[self.parent.datakey.get()]:
