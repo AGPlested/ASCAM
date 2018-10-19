@@ -31,12 +31,15 @@ class Recording(dict):
         self.currentDatakey = 'raw_'
         self.n_episode = 0
 
-        #parameters for idealization
+        #parameters for analysis
+        #idealization
         self._TC_thresholds = np.array([])
         self._TC_amplitudes = np.array([])
         self.tc_unit = 'pA'
         self.tc_unit_factors = {'fA':1e15, 'pA':1e12, 'nA':1e9, 'µA':1e6,
                                     'mA':1e3, 'A':1}
+        #first activation
+        self._fa_threshold = 0.
         # variables for user created lists of episodes
         # `lists` stores the indices of the episodes in the list in the first
         # element, their color in the GUI in the second and the associated key
@@ -52,6 +55,14 @@ class Recording(dict):
         #lists is a dict with key name_of_list and values (episodes, color, key)
         if not self.lists:
             self.lists = {'all':(list(range(len(self['raw_']))), 'white', None)}
+
+    @property
+    def fa_threshold(self):
+        return self._fa_threshold*self.tc_unit_factors[self.tc_unit]
+
+    @fa_threshold.setter
+    def fa_threshold(self, theta):
+        self._fa_threshold = theta/self.tc_unit_factors[self.tc_unit]
 
     @property
     def TC_amplitudes(self):
@@ -301,8 +312,10 @@ class Recording(dict):
 
     def idealize_series(self):
         self.series.idealize_all(self._TC_amplitudes, self._TC_thresholds)
-        return True
 
     def idealize_episode(self):
         self.episode.idealize(self._TC_amplitudes, self._TC_thresholds)
-        return True
+
+    def detect_fa(self):
+        [episode.detect_first_activation(self._fa_threshold)
+         for episode in self.series]
