@@ -30,6 +30,12 @@ def threshold_crossing(signal, amplitudes, thresholds=np.array([])):
         idealization[inds] = a
     return idealization
 
+def detect_first_activation(time, signal, threshold):
+    """
+    Return the time where a signal first crosses below a threshold.
+    """
+    return time[np.argmax(signal<threshold)]
+
 def baseline_correction(time, signal, fs, intervals=None,
                         degree=1, method='poly',select_intvl=False,
                         piezo=None, select_piezo=False, active= False,
