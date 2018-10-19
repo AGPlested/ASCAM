@@ -106,6 +106,9 @@ class PlotFrame(ttk.Frame):
         self.theta_hist_lines = list()
         self.amp_plot_lines = list()
         self.amp_hist_lines = list()
+        #fa params
+        self.fa_line = None
+        self.fa_mark = None
 
     def update_command_plot(self, draw=True, *args):
         log.debug(f"update_command_plot")
@@ -220,6 +223,33 @@ class PlotFrame(ttk.Frame):
                                                self.theta_hist_lines):
             plot_line.set_ydata(theta)
             hist_line.set_ydata(theta)
+        if draw: self.canvas.draw()
+
+    def draw_fa_line(self, draw=True, *args):
+        self.fa_line = self.current_plot.axhline(self.parent.data.fa_threshold,
+                                                    ls='--', c='r', alpha=0.5)
+        if draw: self.canvas.draw()
+
+    def draw_fa_mark(self, draw=True, *args):
+        self.fa_mark = self.current_plot.axvline(self.parent.data.episode.first_activation,
+                                                     c='g', alpha=.8)
+
+    def update_fa_line(self, draw=True, *args):
+        self.fa_line.set_ydata(self.parent.data.fa_threshold)
+        if draw: self.canvas.draw()
+
+    def update_fa_mark(self, draw=True, *args):
+        self.fa_mark.set_xdata(self.parent.data.episode.first_activation)
+        if draw: self.canvas.draw()
+
+    def remove_fa_line(self, draw=True, *args):
+        self.fa_line.remove()
+        self.fa_line = None
+        if draw: self.canvas.draw()
+
+    def remove_fa_mark(self, draw=True, *args):
+        self.fa_mark.remove()
+        self.fa_mark = None
         if draw: self.canvas.draw()
 
     def draw_TC_lines(self, draw=True, *args):
