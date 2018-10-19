@@ -203,6 +203,8 @@ class TC_Frame(ttk.Frame):
         self.parent.plots.show_amp.set(0)
         self.parent.plots.update_plots()
         self.parent.plots.fig.canvas.mpl_disconnect(self.plot_track_cid)
+        #remove reference in main window
+        self.parent.tc_frame = None
         self.destroy()
 
     def track_cursor(self, event):
@@ -243,7 +245,7 @@ class TC_Frame(ttk.Frame):
                     split_string[i] = f"{y_pos:.2e}"
                     self.theta_string.set(sep.join(split_string))
                     self.manual_thetas = True
-                    self.get_thresholds()
+                    self.get_thresholds(update_plot=False)
                 else:
                     i = np.argmin(amp_diff)
                     self.parent.data.TC_amplitudes[i] = y_pos
@@ -251,7 +253,7 @@ class TC_Frame(ttk.Frame):
                     split_string = self.amp_string.get().split(sep)
                     split_string[i] = f"{y_pos:.2e}"
                     self.amp_string.set(sep.join(split_string))
-                    self.get_amps()
+                    self.get_amps(update_plot=False)
             #if thresholds are shown and are nonempty
             elif (self.parent.plots.show_thetas.get()
                 and self.parent.data.TC_thresholds.size>0
@@ -262,7 +264,7 @@ class TC_Frame(ttk.Frame):
                 split_string = self.theta_string.get().split(sep)
                 split_string[i] = f"{y_pos:.2e}"
                 self.theta_string.set(sep.join(split_string))
-                self.get_thresholds()
+                self.get_thresholds(update_plot=False)
                 self.manual_thetas = True
             #if amplitudes are shown and are nonempty
             elif (self.parent.plots.show_amp.get()
@@ -274,8 +276,8 @@ class TC_Frame(ttk.Frame):
                 split_string = self.amp_string.get().split(sep)
                 split_string[i] = f"{y_pos:.2e}"
                 self.amp_string.set(sep.join(split_string))
-                self.get_amps()
+                self.get_amps(update_plot=False)
             if not self.manual_thetas:
                 self.auto_set_thetas()
-            self.parent.plots.update_TC_lines()
+            self.parent.plots.update_TC_lines(draw=False)
             self.demo_idealization()
