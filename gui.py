@@ -12,6 +12,7 @@ from plotframe import PlotFrame
 from tools import stringList_parser, parse_filename
 from recording import Recording
 from TCframe import TC_Frame
+from firstactivationframe import FirstActivationFrame
 
 class GUI(ttk.Frame):
     """
@@ -194,59 +195,6 @@ class GUI(ttk.Frame):
         log.info('exiting ASCAM')
         self.master.destroy()
         self.master.quit()
-
-class FirstActivationFrame(tk.Frame):
-    def __init__(self, parent):
-        tk.Frame.__init__(self, parent)
-        self.parent = parent #parent is main window
-        self.fa_threshold = tk.StringVar()
-        self.fa_threshold.trace('w', self.change_threshold)
-
-        if self.parent.data.fa_threshold is None and np.any(parent.data._TC_thresholds):
-            self.fa_threshold.set(str(parent.data._TC_thresholds[0]))
-        else:
-            self.fa_threshold.set(str(np.mean(self.parent.data.episode.trace)))
-        self.create_widgets()
-
-        self.parent.plots.draw_fa_line(draw=False)
-        self.parent.data.detect_fa()
-        self.parent.plots.draw_fa_mark(draw=False)
-        self.parent.n_episode.set(0)
-
-        self.tracking_on = False
-
-    def change_threshold(self, *args):
-        self.parent.data.fa_threshold = float(self.fa_threshold.get())
-
-    def toggle_tracking(self):
-        if not self.tracking_on:
-            self.plot_track_cid = self.parent.plots.fig.canvas.mpl_connect(
-                                                          'motion_notify_event',
-                                                          self.track_cursor)
-        else:
-            self.parent.plots.fig.canvas.mpl_disconnect(self.plot_track_cid)
-        self.tracking_on = not self.tracking_on
-
-    def track_cursor(self, event):
-        if (self.parent.plots.toolbar._active is None
-            and event.button==1
-            and event.inaxes is not None
-            ):
-            self.fa_threshold.set(str(event.ydata))
-            self.parent.data.detect_fa()
-            self.parent.plots.update_fa_mark(draw=False)
-            self.parent.plots.update_fa_line()
-
-    def create_widgets(self):
-        self.toggle_button = ttk.Button(self, text='Set Threshold', command=self.toggle_tracking)
-        self.toggle_button.grid()
-        ttk.Entry(self, textvariable=self.fa_threshold, width=10).grid(row=0,column=1)
-        ttk.Button(self, text='OK', command=self.ok_click).grid(row=1)
-        ttk.Button(self,text="Cancel", command=self.destroy).grid(row=1,column=1)
-
-    def ok_click(self):
-        self.destroy()
-
 
 class DiplayFrame(ttk.Frame):
     """
