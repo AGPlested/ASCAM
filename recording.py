@@ -51,7 +51,8 @@ class Recording(dict):
         if filename:
             log.info("""`filename` is not empty, will load data""")
             self.load_data()
-        #if the lists attribute has not been set while loading the data do it now
+        #if the lists attribute has not been set while loading the data do it
+        #now
         #lists is a dict with key name_of_list and values (episodes, color, key)
         if not self.lists:
             self.lists = {'all':(list(range(len(self['raw_']))), 'white', None)}
@@ -246,8 +247,10 @@ class Recording(dict):
             list_exports.extend(self.lists[list_name][0])
         # filter out duplicate elements
         list_exports = list(set(list_exports))
-        export_array =  np.zeros(shape=(len(list_exports), self.episode._idealization.size))
-        k=0
+        export_array =  np.zeros(shape=(len(list_exports)+1,
+                                        self.episode._idealization.size))
+        export_array[0] = self.episode._time
+        k=1
         for i, episode in enumerate(self[self.currentDatakey]):
             if i in list_exports:
                 export_array[k] = episode._idealization

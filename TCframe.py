@@ -47,8 +47,9 @@ class TC_Frame(ttk.Frame):
     def create_widgets(self):
         log.debug(f"TC_Frame.create_widgets")
         #button to toggle display of amplitude lines on plot
-        self.amp_button = tk.Button(self, text="Amplitudes", width=12,
-                                    relief="raised", command=self.toggle_amp)
+        self.amp_button = tk.Button(self,
+                            text=f"Amplitudes [{self.parent.data.trace_unit}]",
+                            width=12, relief="raised", command=self.toggle_amp)
         self.amp_button.grid(row=4, column=0, columnspan=2, padx=5, pady=5)
         #entry for amplitudes
         amp_entry = ttk.Entry(self, textvariable=self.amp_string, width=40)
@@ -58,8 +59,9 @@ class TC_Frame(ttk.Frame):
                                                 else self.get_amps())
 
         #entry for thresholds
-        self.tc_button = tk.Button(self, text="Thresholds", width=12,
-                                   relief="raised", command=self.toggle_tc)
+        self.tc_button = tk.Button(self,
+                            text=f"Thresholds [{self.parent.data.trace_unit}]", 
+                            width=12, relief="raised", command=self.toggle_tc)
         self.tc_button.grid(row=6, column=0, columnspan=2, padx=5, pady=5)
         theta_entry = ttk.Entry(self, textvariable=self.theta_string, width=40)
         theta_entry.grid(row=7, column=0, columnspan=2, padx=5, pady=5)
@@ -194,6 +196,11 @@ class TC_Frame(ttk.Frame):
         #unbind idealization callback from episode list
         self.parent.episodeList.episodelist.unbind('<<ListboxSelect>>',
                                                     self.eplist_track_id)
+        #tkinter isn't perfect and unbinding here actually unbinds all callbacks,
+        #even though it uses the id from binding a specific one, therefore we
+        #have to bind the original one again
+        self.parent.episodeList.episodelist.bind('<<ListboxSelect>>',
+                            self.parent.episodeList.onselect_plot)
         #return plot to previous settings
         self.parent.plots.show_command.set(self.previous_show_command)
         self.parent.plots.show_piezo.set(self.previous_show_piezo)

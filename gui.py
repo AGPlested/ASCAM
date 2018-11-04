@@ -99,12 +99,19 @@ class GUI(ttk.Frame):
             self.update_all()
             self.datakey.set('BC_GFILTER1000.0_')
             self.plots.plot(True)
+<<<<<<< HEAD
             #test idealization
             # self.menuBar.launch_idealization()
             # self.tc_frame.amp_string.set('0 -.6 -1 -1.3')
             # self.tc_frame.toogle_amp()
             #test first_activation
             self.menuBar.launch_fa_mode()
+=======
+            self.menuBar.launch_idealization()
+            self.tc_frame.amp_string.set('0 -.6 -1 -1.3')
+            self.tc_frame.toggle_amp()
+
+>>>>>>> master
         log.debug(f"end GUI.__init__")
 
     def change_current_datakey(self,*args,**kwargs):
@@ -270,15 +277,15 @@ class MenuBar(tk.Menu):
         self.plot_menu.add_checkbutton(label="Show command voltage",
                                    variable=self.parent.plots.show_command)
         self.plot_menu.add_checkbutton(label="Show idealization",
-                                       variable=self.parent.plots.show_idealization)
+                                   variable=self.parent.plots.show_idealization)
 
     def create_histogram_cascade(self):
         log.debug(f"MenuBar.create_histogram_cascade")
         self.add_cascade(label='Histogram', menu=self.histogram_menu)
         self.histogram_menu.add_checkbutton(label="Show single episode",
-                                            variable=self.parent.plots.show_hist_single)
+                                    variable=self.parent.plots.show_hist_single)
         self.histogram_menu.add_checkbutton(label="Density",
-                                            variable=self.parent.plots.hist_density)
+                                        variable=self.parent.plots.hist_density)
         self.histogram_menu.add_separator()
         self.histogram_menu.add_command(label="Configuration",
                                         command=lambda:\
@@ -297,7 +304,7 @@ class MenuBar(tk.Menu):
         self.file_menu.add_command(label="Export",command=lambda: \
                                    ExportFileDialog(self.parent))
         self.file_menu.add_command(label="Export Idealization",
-                                   command=self.export_idealization)#lambda: ExportIdDialog(self.parent))
+                                   command=self.export_idealization)
         self.file_menu.add_command(label="Quit",command=self.parent.master.quit)
 
     def create_analysis_cascade(self):
@@ -308,9 +315,7 @@ class MenuBar(tk.Menu):
         self.analysis_menu.add_command(label="Filter",
                                        command=lambda: FilterFrame(self.parent))
         self.analysis_menu.add_command(label="Idealize",
-                                        command=self.launch_idealization)
-        self.analysis_menu.add_command(label="First Activation",
-                                        command=self.launch_fa_mode)
+                                       command=self.launch_idealization)
 
     def open_file(self):
         log.debug(f"MenuBar.open_file")
@@ -361,9 +366,11 @@ class ExportIdDialog(tk.Toplevel):
 
     def create_widgets(self):
         ttk.Label(self,text='Filename: ').grid(row=0)
-        ttk.Entry(self, textvariable=self.filename, width=20).grid(row=0,column=1)
+        ttk.Entry(self, textvariable=self.filename, width=20)\
+            .grid(row=0,column=1)
         ttk.Button(self, text='OK', command=self.ok_click).grid(row=1)
-        ttk.Button(self,text="Cancel", command=self.destroy).grid(row=1,column=1)
+        ttk.Button(self,text="Cancel", command=self.destroy)\
+            .grid(row=1,column=1)
 
     def ok_click(self):
 
@@ -457,8 +464,8 @@ class FilterFrame(tk.Toplevel):
         elif self.filter_selection.get()=='Chung-Kennedy':
             ttk.Label(self.entry_frame, text="Widths of predictors"\
                       ).grid(row=0, column=0)
-            ttk.Entry(self.entry_frame, textvariable=self.lengths_predictors, width=20\
-                      ).grid(row=0, column=1)
+            ttk.Entry(self.entry_frame, textvariable=self.lengths_predictors,
+                      width=20).grid(row=0, column=1)
             ttk.Label(self.entry_frame, text="Weight exponent (p)"\
                       ).grid(row=1, column=0)
             ttk.Entry(self.entry_frame, textvariable=self.weight_exponent,
@@ -496,10 +503,10 @@ class FilterFrame(tk.Toplevel):
                 ap_b = [int(x) for x in self.ap_b_weights.get().split()]
             else: ap_b = False
             if self.parent.data.CK_filter_series(
-                               [int(x) for x in self.lengths_predictors.get().split()],
-                               int(self.weight_exponent.get()),
-                               int(self.weight_window.get()),
-                               ap_b, ap_f):
+                       [int(x) for x in self.lengths_predictors.get().split()],
+                       int(self.weight_exponent.get()),
+                       int(self.weight_window.get()),
+                       ap_b, ap_f):
                 log.info('succesfully called CK filter')
                 self.parent.datakey.set(self.parent.data.currentDatakey)
                 self.parent.update_list()
@@ -590,20 +597,19 @@ class HistogramConfiguration(tk.Toplevel):
                                                        grid(row = 0, column=1)
 
         ttk.Label(self, text="Plot as density").grid(row=0, column=3)
-        ttk.Checkbutton(self, variable=self.parent.plots.hist_density).grid(row=0,
-                                                                     column=4)
+        ttk.Checkbutton(self, variable=self.parent.plots.hist_density)\
+            .grid(row=0, column=4)
 
         # piezo selection options
-        ttk.Label(self, text="Select using piezo voltage").grid(row=1,
-                                                                column=0)
+        ttk.Label(self, text="Select using piezo voltage")\
+            .grid(row=1, column=0)
         ttk.Radiobutton(self,variable=self.parent.plots.hist_piezo_interval,
         value=1).grid(row=1,column=1)
 
 
         ttk.Label(self, text="Active/Inactive").grid(row=2, column=0)
         ttk.Checkbutton(self, variable=self.parent.plots.hist_piezo_active).\
-                                                                grid(row=2,
-                                                                     column=1)
+            grid(row=2, column=1)
 
         ttk.Label(self, text="deviation from max/min").grid(row=3, column=0)
         ttk.Entry(self,textvariable=self.parent.plots.hist_piezo_deviation,
@@ -619,12 +625,11 @@ class HistogramConfiguration(tk.Toplevel):
                   width=7).grid(row = 2, column=4)
 
         # draw button
-        ttk.Button(self, text="OK", command=self.ok_click).grid(row=5,
-                                                                 columnspan=2)
+        ttk.Button(self, text="OK", command=self.ok_click)\
+            .grid(row=5, columnspan=2)
         # cancel button
-        ttk.Button(self, text="Cancel", command=self.destroy).grid(row=5,
-                                                                   column=3,
-                                                                   columnspan=2)
+        ttk.Button(self, text="Cancel", command=self.destroy)\
+            .grid(row=5, column=3, columnspan=2)
 
     def ok_click(self):
         """
@@ -689,40 +694,38 @@ class BaselineFrame(tk.Toplevel):
 
         ttk.Label(self, text='method').grid(column=1, row=0)
         # create dropdown menu
-        ttk.Entry(self, width=7, textvariable=self.method\
-                  ).grid(column=2, row=0)
+        ttk.Entry(self, width=7, textvariable=self.method).grid(column=2, row=0)
 
         ttk.Label(self, text='degree').grid(column=1, row=1)
-        ttk.Entry(self,width=8, textvariable=self.degree\
-                  ).grid(row=1, column=2)
+        ttk.Entry(self,width=8, textvariable=self.degree)\
+            .grid(row=1, column=2)
 
         ### piezo selection options
-        ttk.Label(self, text="Select using piezo voltage").grid(row=2,
-                                                                column=0)
-        ttk.Checkbutton(self, variable=self.select_piezo). grid(row=2,
-                                                                  column=1)
+        ttk.Label(self, text="Select using piezo voltage")\
+            .grid(row=2, column=0)
+        ttk.Checkbutton(self, variable=self.select_piezo)\
+            .grid(row=2, column=1)
 
         ttk.Label(self, text="Active/Inactive").grid(row=3, column=0)
         ttk.Checkbutton(self, variable=self.piezo_active).grid(row=3, column=1)
 
         ttk.Label(self, text="deviation from max/min").grid(row=4, column=0)
-        ttk.Entry(self, textvariable=self.deviation, width=7\
-                  ).grid(row=4, column=1)
+        ttk.Entry(self, textvariable=self.deviation, width=7)\
+            .grid(row=4, column=1)
 
         # interval selection options
         ttk.Label(self, text="Use intervals").grid(row=2, column=3)
-        ttk.Checkbutton(self, variable=self.select_intvl).grid(row=2,
-                                                                    column=4)
+        ttk.Checkbutton(self, variable=self.select_intvl).grid(row=2, column=4)
         ttk.Label(self, text="Intervals").grid(row=3, column=3)
-        ttk.Entry(self, textvariable=self.interval_entry, width=7\
-                  ).grid(row=3, column=4)
+        ttk.Entry(self, textvariable=self.interval_entry, width=7)\
+            .grid(row=3, column=4)
 
 
         # ok and close
-        ttk.Button(self, text="OK", command=self.ok_click\
-                   ).grid(row=5, columnspan=2)
-        ttk.Button(self, text="Cancel", command=self.destroy\
-                   ).grid(row=5, column=3, columnspan=2)
+        ttk.Button(self, text="OK", command=self.ok_click)\
+            .grid(row=5, columnspan=2)
+        ttk.Button(self, text="Cancel", command=self.destroy)\
+            .grid(row=5, column=3, columnspan=2)
 
     def ok_click(self):
         """

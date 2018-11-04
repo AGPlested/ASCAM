@@ -231,8 +231,8 @@ class PlotFrame(ttk.Frame):
         if draw: self.canvas.draw()
 
     def draw_fa_mark(self, draw=True, *args):
-        self.fa_mark = self.current_plot.axvline(self.parent.data.episode.first_activation,
-                                                     c='g', alpha=.8)
+        self.fa_mark = self.current_plot.axvline(
+                     self.parent.data.episode.first_activation, c='g', alpha=.8)
 
     def update_fa_line(self, draw=True, *args):
         self.fa_line.set_ydata(self.parent.data.fa_threshold)
@@ -466,13 +466,10 @@ class PlotToolbar(NavigationToolbar2Tk):
         # this toolbar is just the standard with fewer buttons
         self.toolitems = (
             ('Home', 'Reset original view', 'home', 'home'),
-            # ('Back', 'Back to  previous view', 'back', 'back'),
-            # ('Forward', 'Forward to next view', 'forward', 'forward'),
             (None, None, None, None),
             ('Pan', 'Pan axes with left mouse, zoom with right', 'move', 'pan'),
             ('Zoom', 'Zoom to rectangle', 'zoom_to_rect', 'zoom'),
             (None, None, None, None),
-            # ('Subplots', 'Configure subplots', 'subplots', 'configure_subplots'),
             ('Save', 'Save the figure', 'filesave', 'save_figure'),
             )
         NavigationToolbar2Tk.__init__(self, canvas, parent)
