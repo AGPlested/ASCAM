@@ -375,9 +375,11 @@ class PlotFrame(ttk.Frame):
         if show_command:
             # always plot command voltage on bottom (-1 row)
             self.command_plot = self.fig.add_subplot(pgs[-1,:1+show_hist])
-            c_y = self.parent.data.series.max_command-self.parent.data.series.min_command
-            self.command_plot.set_ylim(self.parent.data.series.min_command-.1*c_y,
-                                       self.parent.data.series.max_command+.1*c_y)
+            c_y = self.parent.data.series.max_command\
+                  - self.parent.data.series.min_command
+            self.command_plot.set_ylim(
+                                    self.parent.data.series.min_command-.1*c_y,
+                                    self.parent.data.series.max_command+.1*c_y)
             self.command_plot.set_ylabel(
                             ylabel=f"Command [{self.parent.data.command_unit}]")
             self.command_plot.set_xlabel(f"Time [{self.parent.data.time_unit}]")
@@ -389,11 +391,14 @@ class PlotFrame(ttk.Frame):
         self.current_plot = self.fig.add_subplot(
                                         pgs[trace_pos:trace_pos+2,:1+show_hist],
                                         sharex=x_share)
-        trace_y = self.parent.data.series.max_current-self.parent.data.series.min_current
-        self.current_plot.set_ylim(self.parent.data.series.min_current-.1*trace_y,
-                                   self.parent.data.series.max_current+.1*trace_y)
+        trace_y = self.parent.data.series.max_current\
+                  - self.parent.data.series.min_current
+        self.current_plot.set_ylim(
+                                self.parent.data.series.min_current-.1*trace_y,
+                                self.parent.data.series.max_current+.1*trace_y)
         self.current_plot.set_ylabel(f"Current [{self.parent.data.trace_unit}]")
-        if show_command: self.current_plot.set_xticklabels([])
+        if show_command:
+            plt.setp(self.current_plot.get_xticklabels(), visible=False)
         else:
             self.current_plot.set_xlabel(f"Time [{self.parent.data.time_unit}]")
         #sharex with current or command voltage
@@ -402,19 +407,23 @@ class PlotFrame(ttk.Frame):
             #always plots piezo voltage on top
             self.piezo_plot = self.fig.add_subplot(pgs[0,:1+show_hist],
                                                    sharex=x_share)
-            piezo_y = self.parent.data.series.max_piezo-self.parent.data.series.min_piezo
-            self.piezo_plot.set_ylim(self.parent.data.series.min_piezo-.1*piezo_y,
-                                    self.parent.data.series.max_piezo+.1*piezo_y)
+            piezo_y = self.parent.data.series.max_piezo\
+                      - self.parent.data.series.min_piezo
+            self.piezo_plot.set_ylim(
+                                self.parent.data.series.min_piezo-.1*piezo_y,
+                                self.parent.data.series.max_piezo+.1*piezo_y)
             self.piezo_plot.set_ylabel(f"Piezo [{self.parent.data.piezo_unit}]")
-            self.piezo_plot.set_xticklabels([])
+            plt.setp(self.piezo_plot.get_xticklabels(), visible=False)
         else: self.piezo_plot = None
 
         if show_hist:
             self.histogram = self.fig.add_subplot(pgs[trace_pos:trace_pos+2,-1],
                                                   sharey=self.current_plot)
-            self.histogram.set_ylim(self.parent.data.series.min_current-.1*trace_y,
-                                    self.parent.data.series.max_current+.1*trace_y)
-            self.histogram.set_ylabel(f"Current [{self.parent.data.trace_unit}]")
+            self.histogram.set_ylim(
+                                self.parent.data.series.min_current-.1*trace_y,
+                                self.parent.data.series.max_current+.1*trace_y)
+            self.histogram.set_ylabel(
+                                    f"Current [{self.parent.data.trace_unit}]")
             self.histogram.yaxis.set_label_position('right')
             self.histogram.yaxis.tick_right()
         else: self.histogram = None
