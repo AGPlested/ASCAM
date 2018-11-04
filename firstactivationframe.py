@@ -55,18 +55,13 @@ class FirstActivationFrame(tk.Frame):
 
     def close_frame(self):
         log.debug(f"TC_Frame.close_frame")
-        #unbind idealization callback from episode list
-        self.parent.episodeList.episodelist.unbind('<<ListboxSelect>>',
-                                                    self.eplist_track_id)
-        #return plot to previous settings
-        self.parent.plots.show_command.set(self.previous_show_command)
-        self.parent.plots.show_piezo.set(self.previous_show_piezo)
-        self.parent.plots.show_hist.set(self.previous_show_hist)
-        #hide TC parameters
-        self.parent.plots.show_thetas.set(0)
-        self.parent.plots.show_amp.set(0)
-        self.parent.plots.update_plots()
-        self.parent.plots.fig.canvas.mpl_disconnect(self.plot_track_cid)
+
+        # #return plot to previous settings
+        # self.parent.plots.show_command.set(self.previous_show_command)
+        # self.parent.plots.show_piezo.set(self.previous_show_piezo)
+        # self.parent.plots.show_hist.set(self.previous_show_hist)
+        if self.tracking_on:
+            self.parent.plots.fig.canvas.mpl_disconnect(self.plot_track_cid)
         #remove reference in main window
-        self.parent.tc_frame = None
+        self.parent.fa_frame = None
         self.destroy()
