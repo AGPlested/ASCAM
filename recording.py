@@ -252,7 +252,9 @@ class Recording(dict):
             if i in list_exports:
                 export_array[k] = episode._idealization
                 k+=1
-        np.savetxt(filepath, export_array, delimiter=',')
+        #note that we transpose the export array to export the matrix
+        #as time x episode
+        np.savetxt(filepath, export_array.T, delimiter=',')
 
     def baseline_correction(self, method='poly', poly_degree=1, intval=[],
                             select_intvl=False,
