@@ -715,7 +715,7 @@ class BaselineFrame(tk.Toplevel):
         deviation = float(self.deviation.get())
         if self.parent.parent.data.baseline_correction(
                 method=self.method.get(), poly_degree=int(self.degree.get()),
-                intval=self.intervals, time_unit=self.time_unit,
+                intval=self.intervals,
                 select_intvl=self.select_intvl.get(),
                 select_piezo=self.select_piezo.get(),
                 active_piezo=self.piezo_active.get(),
