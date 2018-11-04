@@ -7,7 +7,7 @@ from tools import piezo_selection, parse_filename
 class Episode():
     def __init__(self, time, trace, n_episode=0, piezo=None, command=None,
                  sampling_rate=4e4, time_unit='ms', piezo_unit='V',
-                 command_unit='mV', trace_unit='pA', input_time_unit='ms'):
+                 command_unit='mV', trace_unit='pA', input_time_unit='s'):
         """
         Episode objects hold all the information about an epoch and
         should be used to store raw and manipulated data
