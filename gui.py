@@ -99,19 +99,13 @@ class GUI(ttk.Frame):
             self.update_all()
             self.datakey.set('BC_GFILTER1000.0_')
             self.plots.plot(True)
-<<<<<<< HEAD
             #test idealization
             # self.menuBar.launch_idealization()
             # self.tc_frame.amp_string.set('0 -.6 -1 -1.3')
             # self.tc_frame.toogle_amp()
             #test first_activation
             self.menuBar.launch_fa_mode()
-=======
-            self.menuBar.launch_idealization()
-            self.tc_frame.amp_string.set('0 -.6 -1 -1.3')
-            self.tc_frame.toggle_amp()
 
->>>>>>> master
         log.debug(f"end GUI.__init__")
 
     def change_current_datakey(self,*args,**kwargs):
@@ -124,6 +118,9 @@ class GUI(ttk.Frame):
     def change_episode(self, *args):
         log.debug(f"gui.change_episode")
         self.data.n_episode = self.n_episode.get()
+        if self.episodeList is not None:
+            self.episodeList.episodelist.selection_clear(0, tk.END)
+            self.episodeList.episodelist.selection_set(self.n_episode.get())
         if self.plots is not None: self.plots.plot()
 
     def load_recording(self):
@@ -157,7 +154,7 @@ class GUI(ttk.Frame):
         """
         Create the contents of the main window.
         """
-        log.debug("`GUI.create_widgets`")
+        log.debug("GUI.create_widgets")
         self.plots = PlotFrame(self)
         self.episodeList = EpisodeList(self)
         self.listSelection = ListSelection(self)

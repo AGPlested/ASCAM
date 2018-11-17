@@ -60,7 +60,7 @@ class TC_Frame(ttk.Frame):
 
         #entry for thresholds
         self.tc_button = tk.Button(self,
-                            text=f"Thresholds [{self.parent.data.trace_unit}]", 
+                            text=f"Thresholds [{self.parent.data.trace_unit}]",
                             width=12, relief="raised", command=self.toggle_tc)
         self.tc_button.grid(row=6, column=0, columnspan=2, padx=5, pady=5)
         theta_entry = ttk.Entry(self, textvariable=self.theta_string, width=40)
@@ -193,14 +193,14 @@ class TC_Frame(ttk.Frame):
 
     def close_frame(self):
         log.debug(f"TC_Frame.close_frame")
-        #unbind idealization callback from episode list
+        # #unbind idealization callback from episode list
         self.parent.episodeList.episodelist.unbind('<<ListboxSelect>>',
                                                     self.eplist_track_id)
         #tkinter isn't perfect and unbinding here actually unbinds all callbacks,
         #even though it uses the id from binding a specific one, therefore we
         #have to bind the original one again
         self.parent.episodeList.episodelist.bind('<<ListboxSelect>>',
-                            self.parent.episodeList.onselect_plot)
+                            self.parent.episodeList.click_list)
         #return plot to previous settings
         self.parent.plots.show_command.set(self.previous_show_command)
         self.parent.plots.show_piezo.set(self.previous_show_piezo)
@@ -208,7 +208,6 @@ class TC_Frame(ttk.Frame):
         #hide TC parameters
         self.parent.plots.show_thetas.set(0)
         self.parent.plots.show_amp.set(0)
-        self.parent.plots.update_plots()
         self.parent.plots.fig.canvas.mpl_disconnect(self.plot_track_cid)
         #remove reference in main window
         self.parent.tc_frame = None

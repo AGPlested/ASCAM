@@ -68,6 +68,10 @@ class Episode():
     def first_activation(self):
         return self._first_activation*self.time_unit_factor
 
+    @first_activation.setter
+    def first_activation(self, fa):
+        self._first_activation = fa/self.time_unit_factor
+
     @property
     def idealization(self):
         if self._idealization is not None:

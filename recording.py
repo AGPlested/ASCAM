@@ -321,6 +321,6 @@ class Recording(dict):
     def idealize_episode(self):
         self.episode.idealize(self._TC_amplitudes, self._TC_thresholds)
 
-    def detect_fa(self):
+    def detect_fa(self, exclude=[]):
         [episode.detect_first_activation(self._fa_threshold)
-         for episode in self.series]
+         for episode in self.series if episode.n_episode not in exclude]
