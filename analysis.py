@@ -15,7 +15,9 @@ def threshold_crossing(signal, amplitudes, thresholds=np.array([])):
     If the wrong number of thresholds (or none) are given they will be replaced
     by the midpoint between the pairs of adjacent amplitudes.
     """
-
+    amplitudes = np.asarray(amplitudes)
+    if amplitudes.size==1:
+        return np.ones(signal.size)*amplitudes
     if thresholds.size!=amplitudes.size-1:
         thresholds = (amplitudes[1:]+amplitudes[:-1])/2
 

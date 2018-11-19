@@ -11,6 +11,7 @@ class TC_Frame(ttk.Frame):
         self.parent = parent #parent is main
         #variables for entry
         self.amp_string = tk.StringVar()
+        self.amp_string.set('0')
         self.theta_string = tk.StringVar()
         #variable to keep track of whether thetas have been set manually
         self.manual_thetas = False
@@ -34,6 +35,7 @@ class TC_Frame(ttk.Frame):
                                                 self.demo_idealization, add='+')
 
         self.create_widgets()
+        self.toggle_amp()
         log.debug("end TC_Frame.__init__")
 
     @property
@@ -70,11 +72,11 @@ class TC_Frame(ttk.Frame):
                                                 else self.get_thresholds())
         theta_entry.bind('<Return>', self.toggle_manual_thetas)
 
-        ttk.Button(self, text="Show", command=lambda: [self.get_amps(),
+        ttk.Button(self, text="Demo", command=lambda: [self.get_amps(),
                                                        self.get_thresholds()]
                     ).grid(row=8, columnspan=2, padx=5, pady=5)
 
-        ttk.Button(self, text="Apply", command=self.click_apply)\
+        ttk.Button(self, text="Apply and finish", command=self.click_apply)\
             .grid(row=11, padx=5, pady=5)
         ttk.Button(self, text="Cancel", command=self.click_cancel)\
             .grid(row=11, column=1, padx=5, pady=5)
@@ -153,8 +155,9 @@ class TC_Frame(ttk.Frame):
     def toggle_amp(self, *args):
         log.debug(f"TC_Frame.toggle_amp")
         if self.parent.plots.show_amp.get()==0:
-            try: self.get_amps(update_plot=False)
-            except IndexError: return
+            # try:
+            self.get_amps(update_plot=False)
+            # except IndexError: return
             self.amp_button.config(relief="sunken")
             self.parent.plots.show_amp.set(1)
         else:
