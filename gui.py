@@ -100,7 +100,7 @@ class GUI(ttk.Frame):
             self.datakey.set('BC_GFILTER1000.0_')
             self.plots.plot(True)
             #test idealization
-            self.menuBar.launch_idealization()
+            # self.menuBar.launch_idealization()
             # self.tc_frame.amp_string.set('0 -.6 -1 -1.3')
 
             #test first_activation

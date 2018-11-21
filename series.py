@@ -3,6 +3,8 @@ import copy
 import numpy as np
 
 from episode import Episode
+from tools import piezo_selection, interval_selection
+
 
 class Series(list):
     def __init__(self, data=[], idealized=False):
@@ -12,6 +14,8 @@ class Series(list):
         data.
         """
         list.__init__(self,data)
+
+        self.histogram = None
 
     @property
     def has_piezo(self):
@@ -97,3 +101,34 @@ class Series(list):
         """
         for episode in self:
             episode.check_standarddeviation(stdthreshold)
+
+    def create_histogram(self, active=True, select_piezo=True,
+                  deviation=0.05, n_bins=50, density=False,
+                  intervals=False):
+        time = self[0].time
+        piezos = [episode.piezo for episode in self]
+        traces = [episode.trace for episode in self]
+        trace_list = []
+        if select_piezo:
+            for piezo, trace in zip(piezos, traces):
+                _, _, trace_points = piezo_selection(time, piezo, trace, active,
+                                                     deviation)
+                trace_list.extend(trace_points)
+        elif intervals:
+            for trace in traces:
+                _, trace_points = interval_selection(time, trace, intervals,
+                                                     sampling_rate)
+                trace_list.extend(trace_points)
+        else:
+            trace_list = traces
+        trace_list = np.asarray(trace_list)
+
+        trace_list = trace_list.flatten()
+
+        heights, bins = np.histogram(trace_list, n_bins, density=density)
+
+        # get centers of all the bins
+        centers = (bins[:-1]+bins[1:])/2
+        # get the width of a(ll) bin(s)
+        width = (bins[1]-bins[0])
+        return heights, bins, centers, width

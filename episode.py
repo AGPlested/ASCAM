@@ -1,8 +1,12 @@
+import logging as log
+
 import numpy as np
+import matplotlib.pyplot as plt
 
 from filtering import gaussian_filter, ChungKennedyFilter
-from analysis import baseline_correction, threshold_crossing, detect_first_activation
-from tools import piezo_selection, parse_filename
+from analysis import (baseline_correction, threshold_crossing,
+                        detect_first_activation)
+from tools import piezo_selection, parse_filename, interval_selection
 
 class Episode():
     def __init__(self, time, trace, n_episode=0, piezo=None, command=None,
@@ -159,4 +163,24 @@ class Episode():
         return mean, std
 
     def detect_first_activation(self, threshold):
-        self._first_activation = detect_first_activation(self._time, self._trace, threshold)
+        self._first_activation = detect_first_activation(self._time, threshold,
+                                                         self._trace)
+
+    def create_histogram(self, active=True, select_piezo=True,
+                  deviation=0.05, n_bins=50, density=False,
+                  intervals=False):
+        if select_piezo:
+            _, _, trace_points = piezo_selection(self.time, self.piezo,
+                                                 self.trace, active, deviation)
+        elif intervals:
+            _, trace_points = interval_selection(self.time, self.trace,
+                                                 intervals, self.sampling_rate)
+        else:
+            trace_points = self.trace
+        heights, bins = np.histogram(trace_points, n_bins, density=density)
+        # get centers of all the bins
+        centers = (bins[:-1]+bins[1:])/2
+        # get the width of a(ll) bin(s)
+        width = (bins[1]-bins[0])
+        self.histogram = heights, bins, centers, width
+        return heights, bins, centers, width

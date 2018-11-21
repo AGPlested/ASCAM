@@ -353,6 +353,7 @@ class PlotFrame(ttk.Frame):
         if self.plotted and not new:
             self.update_plots()
         else:
+            #check if there is any data to plot
             if len(self.parent.data['raw_'])>0:
                 plt.clf()
                 self.setup_plots()
@@ -383,37 +384,29 @@ class PlotFrame(ttk.Frame):
         self.theta_hist_lines = list()
         self.amp_hist_lines = list()
         self.draw_TC_lines(draw=False)
+        self.fa_lines = list()
+        self.fa_marks = list()
 
         if self.histogram is not None:
-            episode = self.parent.data.episode
-
             if self.show_hist_single.get():
                 heights, _, centers, width \
-                = create_histogram(episode.time, [episode.piezo],
-                               [episode.trace],
-                               active=self.hist_piezo_active.get(),
-                               select_piezo=self.hist_piezo_interval.get(),
-                               deviation=float(self.hist_piezo_deviation.get()),
-                               n_bins=int(self.hist_n_bins.get()),
-                               density=self.hist_density.get(),
-                               intervals=self.hist_intervals,
-                               sampling_rate=self.parent.data.sampling_rate,
-                               time_unit=self.parent.data.time_unit)
+                = episode.create_histogram(active=self.hist_piezo_active.get(),
+                            select_piezo=self.hist_piezo_interval.get(),
+                            deviation=float(self.hist_piezo_deviation.get()),
+                            n_bins=int(self.hist_n_bins.get()),
+                            density=self.hist_density.get(),
+                            intervals=self.hist_intervals)
                 self.single_hist = self.histogram.barh(centers, heights, width,
-                                    align='center')
+                                                        align='center')
             if self.show_hist_all.get():
-                piezos = [ep.piezo for ep in self.parent.data.selected_episodes]
-                traces = [ep.trace for ep in self.parent.data.selected_episodes]
                 heights, _, centers, width \
-                = create_histogram(episode.time, piezos, traces,
+                = self.parent.data.series.create_histogram(
                                active=self.hist_piezo_active.get(),
                                select_piezo=self.hist_piezo_interval.get(),
                                n_bins=int(self.hist_n_bins.get()),
                                deviation=float(self.hist_piezo_deviation.get()),
                                density=self.hist_density.get(),
-                               intervals=self.hist_intervals,
-                               sampling_rate=self.parent.data.sampling_rate,
-                               time_unit=self.parent.data.time_unit)
+                               intervals=self.hist_intervals)
                 self.all_hist = self.histogram.barh(centers, heights, width,
                                     alpha=0.2, color='orange', align='center')
                 self.all_hist_line, = self.histogram.plot(heights, centers,
@@ -423,10 +416,8 @@ class PlotFrame(ttk.Frame):
 
     def setup_plots(self):
         log.debug(f"plotframe.setup_plots")
-        show_command = self.show_command.get()\
-                       and self.parent.data.has_command
-        show_piezo = self.show_piezo.get()\
-                     and self.parent.data.has_piezo
+        show_command = self.show_command.get() and self.parent.data.has_command
+        show_piezo = self.show_piezo.get() and self.parent.data.has_piezo
         # decide how many plots there will be
         num_plots = 1+show_command+show_piezo
         x_share = None
@@ -460,10 +451,10 @@ class PlotFrame(ttk.Frame):
                                 self.parent.data.series.min_current-.1*trace_y,
                                 self.parent.data.series.max_current+.1*trace_y)
         self.current_plot.set_ylabel(f"Current [{self.parent.data.trace_unit}]")
-        #set axis ticks to intervals of .2
-        loc = plticker.MultipleLocator(base=0.5) # this locator puts ticks at regular intervals
+        #set axis ticks
+        loc = plticker.MultipleLocator(base=0.5)
         self.current_plot.yaxis.set_major_locator(loc)
-        loc = plticker.MultipleLocator(base=0.1) # this locator puts ticks at regular intervals
+        loc = plticker.MultipleLocator(base=0.1)
         self.current_plot.yaxis.set_minor_locator(loc)
 
         if show_command:
