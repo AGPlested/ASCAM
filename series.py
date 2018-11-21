@@ -15,8 +15,6 @@ class Series(list):
         """
         list.__init__(self,data)
 
-        self.histogram = None
-
     @property
     def has_piezo(self):
         try: return True if self[0].piezo is not None else False
@@ -71,8 +69,8 @@ class Series(list):
                             weight_window, apriori_f_weights, apriori_b_weights)
         return output
     def baseline_correct_all(self, intervals=[], method='poly', degree=1,
-                             select_intvl=False,
-                             select_piezo=False, active=False, deviation=0.05):
+                             select_intvl=False, select_piezo=False,
+                             active=False, deviation=0.05):
         """
         Return a `Series` object in which the episodes stored in `self` are
         baseline corrected with the given parameters
@@ -80,10 +78,10 @@ class Series(list):
         output = copy.deepcopy(self)
         for episode in output:
             episode.baseline_correct_episode(degree=degree, intervals=intervals,
-                                             method=method,
+                                             method=method, deviation=deviation,
                                              select_intvl=select_intvl,
                                              select_piezo=select_piezo,
-                                             active=active, deviation=deviation)
+                                             active=active)
         return output
 
     def idealize_all(self, amplitudes, thresholds):
@@ -102,9 +100,8 @@ class Series(list):
         for episode in self:
             episode.check_standarddeviation(stdthreshold)
 
-    def create_histogram(self, active=True, select_piezo=True,
-                  deviation=0.05, n_bins=50, density=False,
-                  intervals=False):
+    def create_histogram(self, active=True, select_piezo=True, deviation=0.05,
+                         n_bins=50, density=False, intervals=False):
         time = self[0].time
         piezos = [episode.piezo for episode in self]
         traces = [episode.trace for episode in self]
