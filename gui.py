@@ -339,7 +339,7 @@ class MenuBar(tk.Menu):
         # save the current recording object with all its attributes as a
         # pickle file
         filepath = asksaveasfilename()
-        if filepath is not None:
+        if isinstance(filepath, str):
             self.parent.data.export_idealization(filepath)
         else:
             log.info("User pressed 'Cancel'")

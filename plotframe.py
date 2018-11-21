@@ -7,6 +7,7 @@ matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib import gridspec as gs
+import matplotlib.ticker as plticker
 #check mpl version because navigation toolbar name has changed
 mpl_ver = (matplotlib.__version__).split('.')
 if int(mpl_ver[0])<2 or int(mpl_ver[1])<2 or int(mpl_ver[2])<2:
@@ -452,12 +453,19 @@ class PlotFrame(ttk.Frame):
         self.current_plot = self.fig.add_subplot(
                                         pgs[trace_pos:trace_pos+2,:1+show_hist],
                                         sharex=x_share)
+        #set axis limits of current plot so all episodes fit
         trace_y = self.parent.data.series.max_current\
                   - self.parent.data.series.min_current
         self.current_plot.set_ylim(
                                 self.parent.data.series.min_current-.1*trace_y,
                                 self.parent.data.series.max_current+.1*trace_y)
         self.current_plot.set_ylabel(f"Current [{self.parent.data.trace_unit}]")
+        #set axis ticks to intervals of .2
+        loc = plticker.MultipleLocator(base=0.5) # this locator puts ticks at regular intervals
+        self.current_plot.yaxis.set_major_locator(loc)
+        loc = plticker.MultipleLocator(base=0.1) # this locator puts ticks at regular intervals
+        self.current_plot.yaxis.set_minor_locator(loc)
+
         if show_command:
             plt.setp(self.current_plot.get_xticklabels(), visible=False)
         else:
