@@ -1,7 +1,7 @@
 import numpy as np
 
 from filtering import gaussian_filter, ChungKennedyFilter
-from analysis import baseline_correction, threshold_crossing
+from analysis import baseline_correction, threshold_crossing, detect_first_activation
 from tools import piezo_selection, parse_filename
 
 class Episode():
@@ -44,6 +44,8 @@ class Episode():
         self._trace = trace
         self._piezo = piezo
         self._command = command
+        #results of analyses
+        self._first_activation = None
         self._idealization = None
         #metadata about the episode
         self.n_episode = int(n_episode)
@@ -61,6 +63,14 @@ class Episode():
 
     @property
     def command(self): return self._command*self.command_unit_factor
+
+    @property
+    def first_activation(self):
+        return self._first_activation*self.time_unit_factor
+
+    @first_activation.setter
+    def first_activation(self, fa):
+        self._first_activation = fa/self.time_unit_factor
 
     @property
     def idealization(self):
@@ -147,3 +157,6 @@ class Episode():
         except:
             mean = std = np.nan
         return mean, std
+
+    def detect_first_activation(self, threshold):
+        self._first_activation = detect_first_activation(self._time, self._trace, threshold)

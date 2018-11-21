@@ -11,6 +11,7 @@ class TC_Frame(ttk.Frame):
         self.parent = parent #parent is main
         #variables for entry
         self.amp_string = tk.StringVar()
+        self.amp_string.set('0')
         self.theta_string = tk.StringVar()
         #variable to keep track of whether thetas have been set manually
         self.manual_thetas = False
@@ -34,6 +35,7 @@ class TC_Frame(ttk.Frame):
                                                 self.demo_idealization, add='+')
 
         self.create_widgets()
+        self.toggle_amp()
         log.debug("end TC_Frame.__init__")
 
     @property
@@ -60,7 +62,7 @@ class TC_Frame(ttk.Frame):
 
         #entry for thresholds
         self.tc_button = tk.Button(self,
-                            text=f"Thresholds [{self.parent.data.trace_unit}]", 
+                            text=f"Thresholds [{self.parent.data.trace_unit}]",
                             width=12, relief="raised", command=self.toggle_tc)
         self.tc_button.grid(row=6, column=0, columnspan=2, padx=5, pady=5)
         theta_entry = ttk.Entry(self, textvariable=self.theta_string, width=40)
@@ -70,11 +72,11 @@ class TC_Frame(ttk.Frame):
                                                 else self.get_thresholds())
         theta_entry.bind('<Return>', self.toggle_manual_thetas)
 
-        ttk.Button(self, text="Show", command=lambda: [self.get_amps(),
+        ttk.Button(self, text="Demo", command=lambda: [self.get_amps(),
                                                        self.get_thresholds()]
                     ).grid(row=8, columnspan=2, padx=5, pady=5)
 
-        ttk.Button(self, text="Apply", command=self.click_apply)\
+        ttk.Button(self, text="Apply and finish", command=self.click_apply)\
             .grid(row=11, padx=5, pady=5)
         ttk.Button(self, text="Cancel", command=self.click_cancel)\
             .grid(row=11, column=1, padx=5, pady=5)
@@ -153,8 +155,9 @@ class TC_Frame(ttk.Frame):
     def toggle_amp(self, *args):
         log.debug(f"TC_Frame.toggle_amp")
         if self.parent.plots.show_amp.get()==0:
-            try: self.get_amps(update_plot=False)
-            except IndexError: return
+            # try:
+            self.get_amps(update_plot=False)
+            # except IndexError: return
             self.amp_button.config(relief="sunken")
             self.parent.plots.show_amp.set(1)
         else:
@@ -193,14 +196,14 @@ class TC_Frame(ttk.Frame):
 
     def close_frame(self):
         log.debug(f"TC_Frame.close_frame")
-        #unbind idealization callback from episode list
+        # #unbind idealization callback from episode list
         self.parent.episodeList.episodelist.unbind('<<ListboxSelect>>',
                                                     self.eplist_track_id)
         #tkinter isn't perfect and unbinding here actually unbinds all callbacks,
         #even though it uses the id from binding a specific one, therefore we
         #have to bind the original one again
         self.parent.episodeList.episodelist.bind('<<ListboxSelect>>',
-                            self.parent.episodeList.onselect_plot)
+                            self.parent.episodeList.click_list)
         #return plot to previous settings
         self.parent.plots.show_command.set(self.previous_show_command)
         self.parent.plots.show_piezo.set(self.previous_show_piezo)
@@ -208,8 +211,9 @@ class TC_Frame(ttk.Frame):
         #hide TC parameters
         self.parent.plots.show_thetas.set(0)
         self.parent.plots.show_amp.set(0)
-        self.parent.plots.update_plots()
         self.parent.plots.fig.canvas.mpl_disconnect(self.plot_track_cid)
+        #remove reference in main window
+        self.parent.tc_frame = None
         self.destroy()
 
     def track_cursor(self, event):
@@ -250,7 +254,7 @@ class TC_Frame(ttk.Frame):
                     split_string[i] = f"{y_pos:.2e}"
                     self.theta_string.set(sep.join(split_string))
                     self.manual_thetas = True
-                    self.get_thresholds()
+                    self.get_thresholds(update_plot=False)
                 else:
                     i = np.argmin(amp_diff)
                     self.parent.data.TC_amplitudes[i] = y_pos
@@ -258,7 +262,7 @@ class TC_Frame(ttk.Frame):
                     split_string = self.amp_string.get().split(sep)
                     split_string[i] = f"{y_pos:.2e}"
                     self.amp_string.set(sep.join(split_string))
-                    self.get_amps()
+                    self.get_amps(update_plot=False)
             #if thresholds are shown and are nonempty
             elif (self.parent.plots.show_thetas.get()
                 and self.parent.data.TC_thresholds.size>0
@@ -269,7 +273,7 @@ class TC_Frame(ttk.Frame):
                 split_string = self.theta_string.get().split(sep)
                 split_string[i] = f"{y_pos:.2e}"
                 self.theta_string.set(sep.join(split_string))
-                self.get_thresholds()
+                self.get_thresholds(update_plot=False)
                 self.manual_thetas = True
             #if amplitudes are shown and are nonempty
             elif (self.parent.plots.show_amp.get()
@@ -281,8 +285,8 @@ class TC_Frame(ttk.Frame):
                 split_string = self.amp_string.get().split(sep)
                 split_string[i] = f"{y_pos:.2e}"
                 self.amp_string.set(sep.join(split_string))
-                self.get_amps()
+                self.get_amps(update_plot=False)
             if not self.manual_thetas:
                 self.auto_set_thetas()
-            self.parent.plots.update_TC_lines()
+            self.parent.plots.update_TC_lines(draw=False)
             self.demo_idealization()

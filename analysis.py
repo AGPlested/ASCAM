@@ -15,7 +15,9 @@ def threshold_crossing(signal, amplitudes, thresholds=np.array([])):
     If the wrong number of thresholds (or none) are given they will be replaced
     by the midpoint between the pairs of adjacent amplitudes.
     """
-
+    amplitudes = np.asarray(amplitudes)
+    if amplitudes.size==1:
+        return np.ones(signal.size)*amplitudes
     if thresholds.size!=amplitudes.size-1:
         thresholds = (amplitudes[1:]+amplitudes[:-1])/2
 
@@ -29,6 +31,12 @@ def threshold_crossing(signal, amplitudes, thresholds=np.array([])):
         inds = np.where(signal<t)[0]
         idealization[inds] = a
     return idealization
+
+def detect_first_activation(time, signal, threshold):
+    """
+    Return the time where a signal first crosses below a threshold.
+    """
+    return time[np.argmax(signal<threshold)]
 
 def baseline_correction(time, signal, fs, intervals=None,
                         degree=1, method='poly',select_intvl=False,
