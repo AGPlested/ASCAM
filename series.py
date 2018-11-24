@@ -3,6 +3,8 @@ import copy
 import numpy as np
 
 from episode import Episode
+from tools import piezo_selection, interval_selection
+
 
 class Series(list):
     def __init__(self, data=[], idealized=False):
@@ -67,8 +69,8 @@ class Series(list):
                             weight_window, apriori_f_weights, apriori_b_weights)
         return output
     def baseline_correct_all(self, intervals=[], method='poly', degree=1,
-                             select_intvl=False,
-                             select_piezo=False, active=False, deviation=0.05):
+                             select_intvl=False, select_piezo=False,
+                             active=False, deviation=0.05):
         """
         Return a `Series` object in which the episodes stored in `self` are
         baseline corrected with the given parameters
@@ -76,10 +78,10 @@ class Series(list):
         output = copy.deepcopy(self)
         for episode in output:
             episode.baseline_correct_episode(degree=degree, intervals=intervals,
-                                             method=method,
+                                             method=method, deviation=deviation,
                                              select_intvl=select_intvl,
                                              select_piezo=select_piezo,
-                                             active=active, deviation=deviation)
+                                             active=active)
         return output
 
     def idealize_all(self, amplitudes, thresholds):
@@ -97,3 +99,33 @@ class Series(list):
         """
         for episode in self:
             episode.check_standarddeviation(stdthreshold)
+
+    def create_histogram(self, active=True, select_piezo=True, deviation=0.05,
+                         n_bins=50, density=False, intervals=False):
+        time = self[0].time
+        piezos = [episode.piezo for episode in self]
+        traces = [episode.trace for episode in self]
+        trace_list = []
+        if select_piezo:
+            for piezo, trace in zip(piezos, traces):
+                _, _, trace_points = piezo_selection(time, piezo, trace, active,
+                                                     deviation)
+                trace_list.extend(trace_points)
+        elif intervals:
+            for trace in traces:
+                _, trace_points = interval_selection(time, trace, intervals,
+                                                     sampling_rate)
+                trace_list.extend(trace_points)
+        else:
+            trace_list = traces
+        trace_list = np.asarray(trace_list)
+
+        trace_list = trace_list.flatten()
+
+        heights, bins = np.histogram(trace_list, n_bins, density=density)
+
+        # get centers of all the bins
+        centers = (bins[:-1]+bins[1:])/2
+        # get the width of a(ll) bin(s)
+        width = (bins[1]-bins[0])
+        return heights, bins, centers, width

@@ -16,7 +16,12 @@ if int(mpl_ver[0])<2 or int(mpl_ver[1])<2 or int(mpl_ver[2])<2:
 else: from matplotlib.backends.backend_tkagg import NavigationToolbar2Tk
 import numpy as np
 
-from plotting import create_histogram
+trace_color = 'xkcd:french blue'
+id_color = 'xkcd:faded orange'
+theta_color = 'red'
+select_color = 'brown'
+fa_tc_color = 'red'
+fa_line_color = 'green'
 
 class PlotFrame(ttk.Frame):
     def __init__(self, parent):
@@ -25,17 +30,12 @@ class PlotFrame(ttk.Frame):
         self.parent = parent #parent is main frame
         #initiliaze figure
         #changing the size of the figure only seems to work
-        self.fig = plt.figure(figsize=(10, 5), dpi=100)
-
+        self.fig = plt.figure(figsize=(10,5), dpi=100)
         self.canvas = FigureCanvasTkAgg(self.fig, master=self)
-        self.canvas.get_tk_widget().pack(side="top",fill='both',expand=True)
-
+        self.canvas.get_tk_widget().pack(side="top", fill='both', expand=True)
         self.toolbar = PlotToolbar(self.canvas, self)
-
         self.initiliaze_parameters()
-
         self.plotted = False
-
         log.debug(f"end PlotFrame.__init__")
 
     def initiliaze_parameters(self):
@@ -176,41 +176,54 @@ class PlotFrame(ttk.Frame):
 
     def update_single_hist(self, draw=True, *args):
         log.debug(f"update_single_hist")
-        episode = self.parent.data.episode
         heights, bins, centers, width \
-        = create_histogram(episode.time, [episode.piezo],
-                       [episode.trace],
-                       active=self.hist_piezo_active.get(),
-                       select_piezo=self.hist_piezo_interval.get(),
-                       deviation=float(self.hist_piezo_deviation.get()),
-                       n_bins=int(self.hist_n_bins.get()),
-                       density=self.hist_density.get(),
-                       intervals=self.hist_intervals,
-                       sampling_rate=self.parent.data.sampling_rate,
-                       time_unit=self.parent.data.time_unit)
+        = self.parent.data.episode.create_histogram(
+                            active=self.hist_piezo_active.get(),
+                            select_piezo=self.hist_piezo_interval.get(),
+                            deviation=float(self.hist_piezo_deviation.get()),
+                            n_bins=int(self.hist_n_bins.get()),
+                            density=self.hist_density.get(),
+                            intervals=self.hist_intervals)
+        for (rect, h, b) in zip(self.single_hist_sel, heights, bins):
+            rect.set_width(h)
+            rect.set_y(b)
+
+        heights, bins, centers, width \
+        = self.parent.data.episode.create_histogram(select_piezo=False,
+                                            n_bins=int(self.hist_n_bins.get()),
+                                            density=self.hist_density.get())
         for (rect, h, b) in zip(self.single_hist, heights, bins):
             rect.set_width(h)
             rect.set_y(b)
+
         if draw: self.canvas.draw()
 
     def update_all_hist(self, draw=True, *args):
         log.debug(f"update_all_hist")
-        episode = self.parent.data.episode
-        indices = self.parent.get_episodes_in_lists()
-        piezos = [episode.piezo for episode in self.parent.data.series \
-                                    if episode.n_episode in indices]
-        traces = [episode.trace for episode in self.parent.data.series \
-                                    if episode.n_episode in indices]
+        # episode = self.parent.data.episode
+        # indices = self.parent.get_episodes_in_lists()
+        # piezos = [episode.piezo for episode in self.parent.data.series \
+        #                             if episode.n_episode in indices]
+        # traces = [episode.trace for episode in self.parent.data.series \
+        #                             if episode.n_episode in indices]
         heights, bins, centers, width \
-        = create_histogram(episode.time, piezos, traces,
-                       active=self.hist_piezo_active.get(),
-                       select_piezo=self.hist_piezo_interval.get(),
-                       n_bins=int(self.hist_n_bins.get()),
-                       deviation=float(self.hist_piezo_deviation.get()),
-                       density=self.hist_density.get(),
-                       intervals=self.hist_intervals,
-                       sampling_rate=self.parent.data.sampling_rate,
-                       time_unit=self.parent.data.time_unit)
+        = self.parent.data.series.create_histogram(
+                            active=self.hist_piezo_active.get(),
+                            select_piezo=self.hist_piezo_interval.get(),
+                            n_bins=int(self.hist_n_bins.get()),
+                            deviation=float(self.hist_piezo_deviation.get()),
+                            density=self.hist_density.get(),
+                            intervals=self.hist_intervals)
+        for (rect, h, b) in zip(self.all_hist_sel, heights, bins):
+            rect.set_width(h)
+            rect.set_y(b)
+        self.all_hist_line_sel.set_xdata(heights)
+        self.all_hist_line_sel.set_ydata(centers)
+
+        heights, bins, centers, width \
+        = self.parent.data.series.create_histogram(select_piezo=False,
+                                           n_bins=int(self.hist_n_bins.get()),
+                                           density=self.hist_density.get())
         for (rect, h, b) in zip(self.all_hist, heights, bins):
             rect.set_width(h)
             rect.set_y(b)
@@ -246,7 +259,7 @@ class PlotFrame(ttk.Frame):
         if self.fa_lines:
             self.remove_fa_lines()
         line = self.current_plot.axhline(self.parent.data.fa_threshold,
-                                        ls='--', c='r', alpha=0.5)
+                                        ls='--', c=fa_tc_color, alpha=0.5)
         self.fa_lines.append(line)
         if draw: self.canvas.draw()
 
@@ -255,7 +268,8 @@ class PlotFrame(ttk.Frame):
         if self.fa_marks:
             self.remove_fa_marks()
         line = self.current_plot.axvline(
-                     self.parent.data.episode.first_activation, c='g', alpha=.8)
+                                      self.parent.data.episode.first_activation,
+                                      c=fa_line_color, alpha=.8)
         self.fa_marks.append(line)
         if draw: self.canvas.draw()
 
@@ -302,9 +316,11 @@ class PlotFrame(ttk.Frame):
         if self.theta_plot_lines:
             self.remove_theta_lines()
         for theta in self.parent.data.TC_thresholds:
-            line = self.current_plot.axhline(theta, ls='--', c='r', alpha=0.3)
+            line = self.current_plot.axhline(theta, ls='--', c=theta_color,
+                                             alpha=0.3)
             self.theta_plot_lines.append(line)
-            line = self.histogram.axhline(theta, ls='--', c='r', alpha=0.3)
+            line = self.histogram.axhline(theta, ls='--', c=theta_color,
+                                          alpha=0.3)
             self.theta_hist_lines.append(line)
         if draw: self.canvas.draw()
 
@@ -313,9 +329,10 @@ class PlotFrame(ttk.Frame):
         if self.amp_plot_lines:
             self.remove_amp_lines()
         for amp in self.parent.data.TC_amplitudes:
-            line = self.current_plot.axhline(amp, ls='--', c='b', alpha=0.3)
+            line = self.current_plot.axhline(amp, ls='--', c=id_color,
+                                             alpha=0.3)
             self.amp_plot_lines.append(line)
-            line = self.histogram.axhline(amp, ls='--', c='b', alpha=0.3)
+            line = self.histogram.axhline(amp, ls='--', c=id_color, alpha=0.3)
             self.amp_hist_lines.append(line)
         if draw: self.canvas.draw()
 
@@ -358,6 +375,7 @@ class PlotFrame(ttk.Frame):
         if self.plotted and not new:
             self.update_plots()
         else:
+            #check if there is any data to plot
             if len(self.parent.data['raw_'])>0:
                 plt.clf()
                 self.setup_plots()
@@ -368,70 +386,78 @@ class PlotFrame(ttk.Frame):
         log.debug(f"PlotFrame.init_plot")
         episode = self.parent.data.episode
         if self.command_plot is not None:
-            self.c_line, = self.command_plot.plot(episode.time, episode.command)
-        self.t_line, = self.current_plot.plot(episode.time, episode.trace)
+            self.c_line, = self.command_plot.plot(episode.time, episode.command,
+                                                  color=trace_color)
+        self.t_line, = self.current_plot.plot(episode.time, episode.trace,
+                                              color=trace_color)
         if episode.idealization is not None:
             self.i_line,  = self.current_plot.plot(episode.time,
-                                    episode.idealization,
+                                    episode.idealization, color=id_color,
                                     visible=bool(self.show_idealization.get()))
         #if idealization not present create invisble plot as placeholder
         else:
             self.i_line,  = self.current_plot.plot(episode.time,
                               np.mean(episode.trace)*np.ones(episode.time.size),
-                              visible=False, alpha=.6)
-                              
+                              visible=False, alpha=.6, color=id_color)
+
         if self.piezo_plot is not None:
-            self.p_line, = self.piezo_plot.plot(episode.time, episode.piezo)
+            self.p_line, = self.piezo_plot.plot(episode.time, episode.piezo,
+                                                color=trace_color)
 
         self.amp_plot_lines = list()
         self.theta_plot_lines = list()
         self.theta_hist_lines = list()
         self.amp_hist_lines = list()
         self.draw_TC_lines(draw=False)
+        self.fa_lines = list()
+        self.fa_marks = list()
 
         if self.histogram is not None:
-            episode = self.parent.data.episode
-
             if self.show_hist_single.get():
                 heights, _, centers, width \
-                = create_histogram(episode.time, [episode.piezo],
-                               [episode.trace],
-                               active=self.hist_piezo_active.get(),
-                               select_piezo=self.hist_piezo_interval.get(),
-                               deviation=float(self.hist_piezo_deviation.get()),
-                               n_bins=int(self.hist_n_bins.get()),
-                               density=self.hist_density.get(),
-                               intervals=self.hist_intervals,
-                               sampling_rate=self.parent.data.sampling_rate,
-                               time_unit=self.parent.data.time_unit)
-                self.single_hist = self.histogram.barh(centers, heights, width,
-                                    align='center')
-            if self.show_hist_all.get():
-                piezos = [ep.piezo for ep in self.parent.data.selected_episodes]
-                traces = [ep.trace for ep in self.parent.data.selected_episodes]
+                = episode.create_histogram(active=self.hist_piezo_active.get(),
+                            select_piezo=self.hist_piezo_interval.get(),
+                            deviation=float(self.hist_piezo_deviation.get()),
+                            n_bins=int(self.hist_n_bins.get()),
+                            density=self.hist_density.get(),
+                            intervals=self.hist_intervals)
+                self.single_hist_sel = self.histogram.barh(centers, heights, width,
+                                                align='center', color=select_color)
                 heights, _, centers, width \
-                = create_histogram(episode.time, piezos, traces,
+                = episode.create_histogram(select_piezo=False,
+                                            n_bins=int(self.hist_n_bins.get()),
+                                            density=self.hist_density.get())
+                self.single_hist = self.histogram.barh(centers, heights, width,
+                                                align='center', color=trace_color)
+            if self.show_hist_all.get():
+                heights, _, centers, width \
+                = self.parent.data.series.create_histogram(
                                active=self.hist_piezo_active.get(),
                                select_piezo=self.hist_piezo_interval.get(),
                                n_bins=int(self.hist_n_bins.get()),
                                deviation=float(self.hist_piezo_deviation.get()),
                                density=self.hist_density.get(),
-                               intervals=self.hist_intervals,
-                               sampling_rate=self.parent.data.sampling_rate,
-                               time_unit=self.parent.data.time_unit)
+                               intervals=self.hist_intervals)
+                self.all_hist_sel = self.histogram.barh(centers, heights, width,
+                                    alpha=0.2, color=select_color, align='center')
+                self.all_hist_line_sel, = self.histogram.plot(heights, centers,
+                                                           color=select_color)
+
+                heights, _, centers, width \
+                = self.parent.data.series.create_histogram(select_piezo=False,
+                                           n_bins=int(self.hist_n_bins.get()),
+                                           density=self.hist_density.get())
                 self.all_hist = self.histogram.barh(centers, heights, width,
-                                    alpha=0.2, color='orange', align='center')
+                                    alpha=0.2, color=trace_color, align='center')
                 self.all_hist_line, = self.histogram.plot(heights, centers,
-                                                           color='orange')
+                                                           color=trace_color)
         self.toolbar.update()
         self.canvas.draw()
 
     def setup_plots(self):
         log.debug(f"plotframe.setup_plots")
-        show_command = self.show_command.get()\
-                       and self.parent.data.has_command
-        show_piezo = self.show_piezo.get()\
-                     and self.parent.data.has_piezo
+        show_command = self.show_command.get() and self.parent.data.has_command
+        show_piezo = self.show_piezo.get() and self.parent.data.has_piezo
         # decide how many plots there will be
         num_plots = 1+show_command+show_piezo
         x_share = None
@@ -465,10 +491,10 @@ class PlotFrame(ttk.Frame):
                                 self.parent.data.series.min_current-.1*trace_y,
                                 self.parent.data.series.max_current+.1*trace_y)
         self.current_plot.set_ylabel(f"Current [{self.parent.data.trace_unit}]")
-        #set axis ticks to intervals of .2
-        loc = plticker.MultipleLocator(base=0.5) # this locator puts ticks at regular intervals
+        #set axis ticks
+        loc = plticker.MultipleLocator(base=0.5)
         self.current_plot.yaxis.set_major_locator(loc)
-        loc = plticker.MultipleLocator(base=0.1) # this locator puts ticks at regular intervals
+        loc = plticker.MultipleLocator(base=0.1)
         self.current_plot.yaxis.set_minor_locator(loc)
 
         if show_command:
