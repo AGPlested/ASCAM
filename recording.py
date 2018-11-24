@@ -236,11 +236,8 @@ class Recording(dict):
         export_array =  np.zeros(shape=(len(self.selected_episodes)+1,
                                         self.episode._idealization.size))
         export_array[0] = self.episode._time
-        k=1
-        for i, episode in enumerate(self[self.currentDatakey]):
-            if i in self.selected_episodes:
-                export_array[k] = episode._idealization
-                k+=1
+        for k, episode in enumerate(self.selected_episodes):
+            export_array[k+1] = episode._idealization
         #note that we transpose the export array to export the matrix
         #as time x episode
         np.savetxt(filepath, export_array.T, delimiter=',')
@@ -248,9 +245,9 @@ class Recording(dict):
     def export_first_activation(self, filepath):
         if not filepath.endswith('.csv'):
             filepath+='.csv'
-        export_array = np.array([episode._first_activation for episode in
-                    self.series if episode.n_episode in self.selected_episodes])
-        np.savetxt(filepath, export_array.T, delimiter=',')
+        export_array = np.array([(episode.n_episode, episode._first_activation)
+                                for episode in self.selected_episodes])
+        np.savetxt(filepath, export_array, delimiter=',')
 
     def baseline_correction(self, method='poly', poly_degree=1, intval=[],
                             select_intvl=False, piezo_diff=0.05,
@@ -314,5 +311,6 @@ class Recording(dict):
         self.episode.idealize(self._TC_amplitudes, self._TC_thresholds)
 
     def detect_fa(self, exclude=[]):
+        log.debug(f"recording.detect_fa")
         [episode.detect_first_activation(self._fa_threshold)
          for episode in self.series if episode.n_episode not in exclude]

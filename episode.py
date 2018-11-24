@@ -163,8 +163,9 @@ class Episode():
         return mean, std
 
     def detect_first_activation(self, threshold):
-        self._first_activation = detect_first_activation(self._time, threshold,
-                                                         self._trace)
+        self._first_activation = detect_first_activation(self._time,
+                                                         self._trace,
+                                                         threshold)
 
     def create_histogram(self, active=True, select_piezo=True,
                   deviation=0.05, n_bins=50, density=False,

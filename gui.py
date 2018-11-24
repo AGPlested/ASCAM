@@ -275,6 +275,8 @@ class MenuBar(tk.Menu):
                                    variable=self.parent.plots.show_command)
         self.plot_menu.add_checkbutton(label="Show idealization",
                                    variable=self.parent.plots.show_idealization)
+        self.plot_menu.add_checkbutton(label="Show first activation",
+                                   variable=self.parent.plots.show_fa_mark)
 
     def create_histogram_cascade(self):
         log.debug(f"MenuBar.create_histogram_cascade")

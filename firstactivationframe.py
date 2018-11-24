@@ -125,15 +125,11 @@ class FirstActivationFrame(tk.Frame):
     def close_frame(self):
         log.debug(f"FirstActivationFrame.close_frame")
         # #return plot to previous settings
-        # self.parent.plots.show_command.set(self.previous_show_command)
-        # self.parent.plots.show_piezo.set(self.previous_show_piezo)
-        # self.parent.plots.show_hist.set(self.previous_show_hist)
         if self.tracking_on:
             self.parent.plots.fig.canvas.mpl_disconnect(self.plot_track_cid)
         if self.manual_mode:
             self.parent.plots.fig.canvas.mpl_disconnect(self.plot_manual_cid)
         self.parent.plots.show_fa_line.set(0)
-        self.parent.plots.show_fa_mark.set(0)
         self.parent.plots.update_plots()
         #remove reference in main window
         self.parent.fa_frame = None
