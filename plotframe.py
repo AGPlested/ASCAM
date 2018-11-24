@@ -89,6 +89,9 @@ class PlotFrame(ttk.Frame):
         self.show_idealization = tk.IntVar()
         self.show_idealization.set(1)
         self.show_idealization.trace("w", self.update_idealization_plot)
+        self.show_first_activation = tk.IntVar()
+        self.show_first_activation.set(1)
+        self.show_idealization.trace("w", self.update_fa_mark)
 
         #idealization related params
         self.show_thetas = tk.IntVar()
@@ -264,9 +267,11 @@ class PlotFrame(ttk.Frame):
 
     def update_fa_mark(self, draw=True, *args):
         log.debug(f"update_fa_mark")
-        for line in self.fa_marks:
-            line.set_xdata(self.parent.data.episode.first_activation)
-        if draw: self.canvas.draw()
+        if self.parent.data.episode.first_activation is not None:
+            if self.show_first_activation.get():
+            for line in self.fa_marks:
+                line.set_xdata(self.parent.data.episode.first_activation)
+            if draw: self.canvas.draw()
 
     def remove_fa_lines(self, draw=True, *args):
         log.debug(f"remove_fa_lines")
@@ -374,7 +379,7 @@ class PlotFrame(ttk.Frame):
             self.i_line,  = self.current_plot.plot(episode.time,
                               np.mean(episode.trace)*np.ones(episode.time.size),
                               visible=False, alpha=.6)
-
+                              
         if self.piezo_plot is not None:
             self.p_line, = self.piezo_plot.plot(episode.time, episode.piezo)
 

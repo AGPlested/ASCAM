@@ -100,11 +100,11 @@ class GUI(ttk.Frame):
             self.datakey.set('BC_GFILTER1000.0_')
             self.plots.plot(True)
             #test idealization
-            self.menuBar.launch_idealization()
+            # self.menuBar.launch_idealization()
             # self.tc_frame.amp_string.set('0 -.6 -1 -1.3')
 
             #test first_activation
-            # self.menuBar.launch_fa_mode()
+            self.menuBar.launch_fa_mode()
 
         log.debug(f"end GUI.__init__")
 
@@ -302,6 +302,8 @@ class MenuBar(tk.Menu):
                                    ExportFileDialog(self.parent))
         self.file_menu.add_command(label="Export Idealization",
                                    command=self.export_idealization)
+        self.file_menu.add_command(label="Export First Activation",
+                                   command=self.export_fa)
         self.file_menu.add_command(label="Quit",command=self.parent.master.quit)
 
     def create_analysis_cascade(self):
@@ -313,6 +315,8 @@ class MenuBar(tk.Menu):
                                        command=lambda: FilterFrame(self.parent))
         self.analysis_menu.add_command(label="Idealize",
                                        command=self.launch_idealization)
+        self.analysis_menu.add_command(label="First Activation",
+                                       command=self.launch_fa_mode)
 
     def open_file(self):
         log.debug(f"MenuBar.open_file")
@@ -329,18 +333,24 @@ class MenuBar(tk.Menu):
         # save the current recording object with all its attributes as a
         # pickle file
         filepath = asksaveasfilename()
-        if filepath is not None:
+        if isinstance(filepath, str):
             self.parent.data.save_to_pickle(filepath)
         else:
             log.info("User pressed 'Cancel'")
 
     def export_idealization(self):
-        log.debug(f"MenuBar.save_to_file")
-        # save the current recording object with all its attributes as a
-        # pickle file
+        log.debug(f"MenuBar.export_idealization")
         filepath = asksaveasfilename()
         if isinstance(filepath, str):
             self.parent.data.export_idealization(filepath)
+        else:
+            log.info("User pressed 'Cancel'")
+
+    def export_fa(self):
+        log.debug(f"MenuBar.export_fa")
+        filepath = asksaveasfilename()
+        if isinstance(filepath, str):
+            self.parent.data.export_first_activation(filepath)
         else:
             log.info("User pressed 'Cancel'")
 

@@ -83,7 +83,7 @@ class Recording(dict):
 
     @property
     def selected_episodes(self):
-        indices = []
+        indices = list()
         for listname in self.current_lists:
             indices.extend(self.lists[listname][0])
         # remove duplicate indices
@@ -157,8 +157,8 @@ class Recording(dict):
                                             series_metadata[datakey].values()):
                             episode.__dict__ = attributes
 
-    def load_series(self, filename, filetype, dtype, headerlength,
-                    sampling_rate, datakey):
+    def load_series(self, filename, filetype, dtype, headerlength, datakey,
+                    sampling_rate):
         """
         Load the data in the file at `self.filename`.
         Accepts `.mat`, `.axgd` and `.bin` files.
@@ -217,21 +217,13 @@ class Recording(dict):
         (only one) to a matlab file."""
         if not filepath.endswith('.mat'):
             filepath+='.mat'
-
-        list_exports = list()
-        # combine the episode numbers to be saved in one list
-        for list_name in lists:
-            list_exports.extend(self.lists[list_name][0])
-        # filter out duplicate elements
-        list_exports = list(set(list_exports))
-
         # create dict to write matlab file and add the time vector
         export_dict = dict()
         export_dict['time'] = self['raw_'][0].time
         no_episodes = len(self[datakey])
         fill_length = len(str(no_episodes))
         for i, episode in enumerate(self[datakey]):
-            if i in list_exports:
+            if i in self.selected_episodes:
                 n = str(episode.n_episode).zfill(fill_length)
                 export_dict['trace'+n] = episode.trace
                 if save_piezo: export_dict['piezo'+n] = episode.piezo
@@ -241,28 +233,28 @@ class Recording(dict):
     def export_idealization(self, filepath):
         if not filepath.endswith('.csv'):
             filepath+='.csv'
-        list_exports = list()
-        # combine the episode numbers to be saved in one list
-        for list_name in self.current_lists:
-            list_exports.extend(self.lists[list_name][0])
-        # filter out duplicate elements
-        list_exports = list(set(list_exports))
-        export_array =  np.zeros(shape=(len(list_exports)+1,
+        export_array =  np.zeros(shape=(len(self.selected_episodes)+1,
                                         self.episode._idealization.size))
         export_array[0] = self.episode._time
         k=1
         for i, episode in enumerate(self[self.currentDatakey]):
-            if i in list_exports:
+            if i in self.selected_episodes:
                 export_array[k] = episode._idealization
                 k+=1
         #note that we transpose the export array to export the matrix
         #as time x episode
         np.savetxt(filepath, export_array.T, delimiter=',')
 
+    def export_first_activation(self, filepath):
+        if not filepath.endswith('.csv'):
+            filepath+='.csv'
+        export_array = np.array([episode._first_activation for episode in
+                    self.series if episode.n_episode in self.selected_episodes])
+        np.savetxt(filepath, export_array.T, delimiter=',')
+
     def baseline_correction(self, method='poly', poly_degree=1, intval=[],
-                            select_intvl=False,
-                            select_piezo=True, active_piezo=False,
-                            piezo_diff=0.05):
+                            select_intvl=False, piezo_diff=0.05,
+                            select_piezo=True, active_piezo=False):
         log.info("""calling baseline_correction""")
         # valid = self.check_operation('BC_')
         if self.currentDatakey=='raw_':
