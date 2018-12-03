@@ -117,6 +117,9 @@ class FirstActivationFrame(tk.Frame):
             self.parent.plots.update_fa_mark()
 
     def click_cancel(self):
+        self.parent.plots.show_fa_mark.set(0)
+        for episode in self.parent.data.series:
+            episode._first_activation = None
         self.close_frame()
 
     def ok_click(self):
@@ -124,7 +127,7 @@ class FirstActivationFrame(tk.Frame):
 
     def close_frame(self):
         log.debug(f"FirstActivationFrame.close_frame")
-        # #return plot to previous settings
+        #return plot to previous settings
         if self.tracking_on:
             self.parent.plots.fig.canvas.mpl_disconnect(self.plot_track_cid)
         if self.manual_mode:
