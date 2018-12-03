@@ -7,7 +7,7 @@ import numpy as np
 
 import readdata
 import savedata
-from tools import parse_filename
+from tools import parse_filename, piezo_selection, interval_selection
 from episode import Episode
 from series import Series
 
@@ -31,6 +31,7 @@ class Recording(dict):
         self.currentDatakey = 'raw_'
         self.n_episode = 0
 
+        self.hist_times=0
         #parameters for analysis
         #idealization
         self._TC_thresholds = np.array([])
@@ -169,8 +170,8 @@ class Recording(dict):
                                             dtype = dtype,
                                             headerlength = headerlength,
                                             fs = sampling_rate)
-        ### The `if` accounts for the presence or absence of
-        ### piezo and command voltage in the data being loaded
+        # The `if` accounts for the presence or absence of
+        # piezo and command voltage in the data being loaded
 
         if 'Piezo [V]' in names and 'Command Voltage [V]' in names:
             time = loaded_data[0]
@@ -314,3 +315,57 @@ class Recording(dict):
         log.debug(f"recording.detect_fa")
         [episode.detect_first_activation(self._fa_threshold)
          for episode in self.series if episode.n_episode not in exclude]
+
+    def series_hist(self, active=True, select_piezo=True, deviation=0.05,
+                    n_bins=50, density=False, intervals=False):
+        piezos = [episode.piezo for episode in self.series]
+        traces = [episode.trace for episode in self.series]
+        trace_list = []
+        if select_piezo:
+            for piezo, trace in zip(piezos, traces):
+                time, trace_points = piezo_selection(self.episode.time, piezo,
+                                                     trace, active, deviation)
+                trace_list.extend(trace_points)
+            self.hist_times = np.array(time)
+        elif intervals:
+            for trace in traces:
+                time, trace_points = interval_selection(self.episode.time,
+                                        trace, intervals, self.sampling_rate)
+                trace_list.extend(trace_points)
+            self.hist_times = np.array(time)
+        else:
+            trace_list = traces
+        trace_list = np.asarray(trace_list)
+
+        trace_list = trace_list.flatten()
+
+        heights, bins = np.histogram(trace_list, n_bins, density=density)
+
+        # get centers of all the bins
+        centers = (bins[:-1]+bins[1:])/2
+        # get the width of a(ll) bin(s)
+        width = (bins[1]-bins[0])
+        return heights, bins, centers, width
+
+
+    def episode_hist(self, active=True, select_piezo=True,
+                  deviation=0.05, n_bins=50, density=False,
+                  intervals=False):
+        if select_piezo:
+            time, trace_points = piezo_selection(self.episode.time,
+                    self.episode.piezo, self.episode.trace, active, deviation)
+            self.hist_times = np.array(time)
+
+        elif intervals:
+            time, trace_points = interval_selection(self.episode.time,
+                    self.episode.trace, intervals, self.episode.sampling_rate)
+            self.hist_times = np.array(time)
+        else:
+            trace_points = self.episode.trace
+        heights, bins = np.histogram(trace_points, n_bins, density=density)
+        # get centers of all the bins
+        centers = (bins[:-1]+bins[1:])/2
+        # get the width of a(ll) bin(s)
+        width = (bins[1]-bins[0])
+        self.histogram = heights, bins, centers, width
+        return heights, bins, centers, width
