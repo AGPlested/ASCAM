@@ -104,7 +104,7 @@ class GUI(ttk.Frame):
             # self.tc_frame.amp_string.set('0 -.6 -1 -1.3')
 
             #test first_activation
-            self.menuBar.launch_fa_mode()
+            # self.menuBar.launch_fa_mode()
 
         log.debug(f"end GUI.__init__")
 
@@ -113,6 +113,7 @@ class GUI(ttk.Frame):
         This function changes the current datakey in the recording object, which
         is the one that determines what is filtered etc
         """
+        log.debug(f"change_current_datakey")
         self.data.currentDatakey = self.datakey.get()
 
     def change_episode(self, *args):
@@ -148,7 +149,7 @@ class GUI(ttk.Frame):
         log.debug("""updating all""")
         self.update_list()
         self.draw_plots()
-        self.displayFrame.update()
+        # self.displayFrame.update()
 
     def create_widgets(self):
         """
@@ -158,7 +159,7 @@ class GUI(ttk.Frame):
         self.plots = PlotFrame(self)
         self.episodeList = EpisodeList(self)
         self.listSelection = ListSelection(self)
-        self.displayFrame = DiplayFrame(self)
+        # self.displayFrame = DiplayFrame(self)
         self.menuBar = MenuBar(self)
 
     def configure_grid(self):
@@ -182,7 +183,7 @@ class GUI(ttk.Frame):
         self.episodeList.grid(row=2, column=4,sticky='NS')
         self.grid_rowconfigure(2, weight=1)
 
-        self.displayFrame.grid(row=3, column=3, padx=5, sticky=tk.S)
+        # self.displayFrame.grid(row=3, column=3, padx=5, sticky=tk.S)
 
     def draw_plots(self, new=False, *args):
         """
@@ -190,7 +191,7 @@ class GUI(ttk.Frame):
         """
         log.debug(f"GUI.draw_plots")
         self.plots.plot(new)
-        self.displayFrame.update()
+        # self.displayFrame.update()
 
     def update_list(self):
         self.episodeList.create_dropdownmenu()
