@@ -62,7 +62,7 @@ def baseline_correction(time, signal, fs, intervals=None,
     if select_intvl:
         t, s = interval_selection(time, signal, intervals, fs)
     elif select_piezo:
-        t, _, s = piezo_selection(time, piezo, signal, active, deviation)
+        t, s = piezo_selection(time, piezo, signal, active, deviation)
     else:
         t = time
         s = signal
