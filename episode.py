@@ -70,7 +70,9 @@ class Episode():
 
     @property
     def first_activation(self):
-        return self._first_activation*self.time_unit_factor
+        if self._first_activation is not None:
+            return self._first_activation*self.time_unit_factor
+        else: return None
 
     @first_activation.setter
     def first_activation(self, fa):

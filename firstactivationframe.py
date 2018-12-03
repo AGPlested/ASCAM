@@ -24,7 +24,8 @@ class FirstActivationFrame(tk.Frame):
 
         #set up plots and switch to first episode
         self.parent.plots.draw_fa_line(draw=False)
-        self.parent.data.detect_fa()
+        if self.parent.data.episode.first_activation is None:
+            self.parent.data.detect_fa()
         self.parent.plots.draw_fa_mark(draw=False)
         self.parent.n_episode.set(0)
         self.parent.plots.show_fa_line.set(1)
