@@ -86,7 +86,7 @@ def piezo_selection(time, piezo, trace, active=True, deviation=0.05):
     #           times: {}
     #           piezo: {}
     #           trace: {}""".format(indices, time, piezo, trace))
-    return time, piezo, trace
+    return time, trace
 
 def interval_selection(time, signal, intervals, fs):
     """
@@ -99,7 +99,7 @@ def interval_selection(time, signal, intervals, fs):
     #           time: {}
     #           signal: {}
     #           intervals: {}""".format(fs, time_unit, time, signal, intervals))
-
+    print(intervals)
     time_out = []
     signal_out = []
     if type(intervals[0]) is list:
