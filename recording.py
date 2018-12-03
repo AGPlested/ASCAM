@@ -223,12 +223,11 @@ class Recording(dict):
         export_dict['time'] = self['raw_'][0].time
         no_episodes = len(self[datakey])
         fill_length = len(str(no_episodes))
-        for i, episode in enumerate(self[datakey]):
-            if i in self.selected_episodes:
-                n = str(episode.n_episode).zfill(fill_length)
-                export_dict['trace'+n] = episode.trace
-                if save_piezo: export_dict['piezo'+n] = episode.piezo
-                if save_command: export_dict['command'+n] = episode.command
+        for episode in self.selected_episodes:
+            n = str(episode.n_episode).zfill(fill_length)
+            export_dict['trace'+n] = episode.trace
+            if save_piezo: export_dict['piezo'+n] = episode.piezo
+            if save_command: export_dict['command'+n] = episode.command
         io.savemat(filepath,export_dict)
 
     def export_idealization(self, filepath):
