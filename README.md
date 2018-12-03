@@ -1,1 +1,2 @@
 ASCAM runs on Python 3. Matplotlib and SciPy are required. A straight-forward installation can be achieved by installing Anaconda first ( https://repo.anaconda.com/archive/Anaconda3-5.3.0-MacOSX-x86_64.pkg for MAC). After succesfull installation clone the ASCAM directory from github on your machine (in Terminal type: git clone https://github.com/AGPlested/ASCAM ). Start ASCAM (in Terminal type: ./ASCAM.py ).
+There is an example file in the ASCAM folder. This recording was sampled at 40 kHz.
