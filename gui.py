@@ -611,24 +611,30 @@ class HistogramConfiguration(tk.Toplevel):
             .grid(row=0, column=4)
 
         # piezo selection options
-        ttk.Label(self, text="Select using piezo voltage")\
-            .grid(row=1, column=0)
-        ttk.Radiobutton(self,variable=self.parent.plots.hist_piezo_interval,
-        value=1).grid(row=1,column=1)
+        piez_int_label = ttk.Label(self, text="Select using piezo voltage")
+        piez_int_label.grid(row=1, column=0)
+        piezo_int_button = ttk.Radiobutton(self,
+                variable=self.parent.plots.hist_piezo_interval,
+                value=1)
+        piezo_int_button.grid(row=1,column=1)
 
 
-        ttk.Label(self, text="Active/Inactive").grid(row=2, column=0)
-        ttk.Checkbutton(self, variable=self.parent.plots.hist_piezo_active).\
-            grid(row=2, column=1)
+        act_label = ttk.Label(self, text="Active/Inactive")
+        act_label.grid(row=2, column=0)
+        act_button = ttk.Checkbutton(self,
+                    variable=self.parent.plots.hist_piezo_active)
+        act_button.grid(row=2, column=1)
 
-        ttk.Label(self, text="deviation from max/min").grid(row=3, column=0)
-        ttk.Entry(self,textvariable=self.parent.plots.hist_piezo_deviation,
-                  width=7).grid(row = 3, column=1)
+        dev_label = ttk.Label(self, text="deviation from max/min")
+        dev_label.grid(row=3, column=0)
+        dev_entry = ttk.Entry(self,
+                textvariable=self.parent.plots.hist_piezo_deviation, width=7)
+        dev_entry.grid(row = 3, column=1)
 
         # interval selection options
         ttk.Label(self, text="Use intervals").grid(row=1, column=3)
         ttk.Radiobutton(self,variable=self.parent.plots.hist_piezo_interval,
-        value=0).grid(row=1,column=4)
+                        value=0).grid(row=1,column=4)
 
         ttk.Label(self, text="Intervals").grid(row=2, column=3)
         ttk.Entry(self,textvariable=self.parent.plots.hist_interval_entry,
@@ -640,6 +646,12 @@ class HistogramConfiguration(tk.Toplevel):
         # cancel button
         ttk.Button(self, text="Cancel", command=self.destroy)\
             .grid(row=5, column=3, columnspan=2)
+
+        if not self.parent.data.has_piezo:
+            for widget in [piez_int_label, piezo_int_button, act_label,
+                            act_button, dev_entry, dev_label]:
+                widget.configure(state='disable')
+            self.parent.plots.hist_piezo_interval.set(0)
 
     def ok_click(self):
         """

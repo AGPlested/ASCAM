@@ -1,4 +1,5 @@
 import copy
+import logging as log
 
 import numpy as np
 
@@ -17,13 +18,17 @@ class Series(list):
 
     @property
     def has_piezo(self):
-        try: return True if self[0].piezo is not None else False
-        except IndexError: return False
+        try: val = True if self[0]._piezo is not None else False
+        except IndexError: val = False
+        log.debug(f"has_piezo returns {val}")
+        return val
 
     @property
     def has_command(self):
-        try: return True if self[0].command is not None else False
-        except IndexError: return False
+        try: val = True if self[0]._command is not None else False
+        except IndexError: val = False
+        log.debug(f"has_command returns {val}")
+        return val
 
     @property
     def max_command(self):

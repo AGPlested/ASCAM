@@ -98,10 +98,10 @@ class Recording(dict):
     def episode(self): return self.series[self.n_episode]
 
     @property
-    def has_piezo(self): return self[self.currentDatakey].has_piezo
+    def has_piezo(self): return self.series.has_piezo
 
     @property
-    def has_command(self): return self[self.currentDatakey].has_command
+    def has_command(self): return self.series.has_command
 
     @property
     def time_unit(self): return self.episode.time_unit
@@ -320,6 +320,12 @@ class Recording(dict):
         piezos = [episode.piezo for episode in self.series]
         traces = [episode.trace for episode in self.series]
         trace_list = []
+        #this is a failsafe, select_piezo should never be true is has_piezo
+        #is false
+        if not self.has_piezo:
+            if select_piezo: log.debug((f"Tried piezo selection even though )",
+                                        ",there is no piezo data!"))
+            select_piezo = False
         if select_piezo:
             for piezo, trace in zip(piezos, traces):
                 time, trace_points = piezo_selection(self.episode.time, piezo,
@@ -350,6 +356,7 @@ class Recording(dict):
     def episode_hist(self, active=True, select_piezo=True,
                   deviation=0.05, n_bins=50, density=False,
                   intervals=False):
+        if not self.has_piezo: select_piezo = False
         if select_piezo:
             time, trace_points = piezo_selection(self.episode.time,
                     self.episode.piezo, self.episode.trace, active, deviation)

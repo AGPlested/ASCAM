@@ -57,17 +57,29 @@ class Episode():
         self.suspiciousSTD = False
 
     @property
-    def time(self): return self._time*self.time_unit_factor
+    def time(self):
+        if self._time is not None:
+            return self._time*self.time_unit_factor
+        else: return None
 
     @property
-    def trace(self): return self._trace*self.trace_unit_factor
+    def trace(self):
+        if self._trace is not None:
+            return self._trace*self.trace_unit_factor
+        else: return None
 
     @property
-    def piezo(self): return self._piezo*self.piezo_unit_factor
+    def piezo(self):
+        if self._piezo is not None:
+            return self._piezo*self.piezo_unit_factor
+        else: return None
 
     @property
-    def command(self): return self._command*self.command_unit_factor
-
+    def command(self):
+        if self._command is not None:
+            return self._command*self.command_unit_factor
+        else: return None
+        
     @property
     def first_activation(self):
         if self._first_activation is not None:
