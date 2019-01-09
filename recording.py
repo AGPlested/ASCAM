@@ -213,7 +213,8 @@ class Recording(dict):
             pickle.dump(self, save_file)
         return True
 
-    def export_matlab(self, filepath, datakey, lists, save_piezo, save_command):
+    def export_matlab(self, filepath, datakey, lists_to_save, save_piezo,
+                      save_command):
         """Export all the episodes in the givens list(s) from the given series
         (only one) to a matlab file."""
         if not filepath.endswith('.mat'):
@@ -223,12 +224,19 @@ class Recording(dict):
         export_dict['time'] = self['raw_'][0].time
         no_episodes = len(self[datakey])
         fill_length = len(str(no_episodes))
-        for episode in self.selected_episodes:
+
+        #get the episodes we want to save
+        indices = list()
+        for listname in lists_to_save:
+            indices.extend(self.lists[listname][0])
+        indices = np.array(list(set(indices)))
+        episodes = np.array(self[datakey])[indices]
+        for episode in episodes:
             n = str(episode.n_episode).zfill(fill_length)
             export_dict['trace'+n] = episode.trace
             if save_piezo: export_dict['piezo'+n] = episode.piezo
             if save_command: export_dict['command'+n] = episode.command
-        io.savemat(filepath,export_dict)
+        io.savemat(filepath, export_dict)
 
     def export_idealization(self, filepath):
         if not filepath.endswith('.csv'):

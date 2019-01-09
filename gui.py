@@ -581,7 +581,7 @@ class ExportFileDialog(tk.Toplevel):
         if filepath is not None:
             self.parent.data.export_matlab(filepath=filepath,
                                            datakey=self.datakey.get(),
-                                           lists=lists_to_save,
+                                           lists_to_save=lists_to_save,
                                            save_piezo=self.save_piezo.get(),
                                            save_command=self.save_command.get())
         else:
