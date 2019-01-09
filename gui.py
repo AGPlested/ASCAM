@@ -1113,6 +1113,8 @@ class OpenFileDialog(tk.Toplevel):
         else:
             try:
                 # move variables to parent if data loaded succesfully
+                self.parent.create_widgets()
+                self.parent.configure_grid()
                 self.parent.filetype.set(self.filetype.get())
                 self.parent.filename.set(self.filename.get())
                 self.parent.sampling_rate.set(self.sampling_rate.get())
