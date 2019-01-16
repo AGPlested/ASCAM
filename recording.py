@@ -119,6 +119,7 @@ class Recording(dict):
         """
         this method is supposed to load data from a file or a directory
         """
+        log.debug(f"load_data")
         if 'pkl' in parse_filename(self.filename)[0]:
             loaded_data = readdata.load_pickle(self.filename)
             self.__dict__ = loaded_data.__dict__
@@ -165,6 +166,7 @@ class Recording(dict):
         Accepts `.mat`, `.axgd` and `.bin` files.
         (`.bin` files are for simulated data only at the moment.)
         """
+        log.debug(f"load_series")
         names, *loaded_data = readdata.load(filename = filename,
                                             filetype = filetype,
                                             dtype = dtype,
@@ -207,6 +209,7 @@ class Recording(dict):
         save data using the pickle module
         useful for saving data that is to be used in ASCAM again
         """
+        log.debug(f"save_to_pickle")
         if not filepath.endswith('.pkl'):
             filepath+='.pkl'
         with open(filepath, 'wb') as save_file:
@@ -217,6 +220,7 @@ class Recording(dict):
                       save_command):
         """Export all the episodes in the givens list(s) from the given series
         (only one) to a matlab file."""
+        log.debug(f"export_matlab")
         if not filepath.endswith('.mat'):
             filepath+='.mat'
         # create dict to write matlab file and add the time vector
@@ -233,12 +237,13 @@ class Recording(dict):
         episodes = np.array(self[datakey])[indices]
         for episode in episodes:
             n = str(episode.n_episode).zfill(fill_length)
-            export_dict['trace'+n] = episode.trace
-            if save_piezo: export_dict['piezo'+n] = episode.piezo
-            if save_command: export_dict['command'+n] = episode.command
+            export_dict['trace'+n] = episode._trace
+            if save_piezo: export_dict['piezo'+n] = episode._piezo
+            if save_command: export_dict['command'+n] = episode._command
         io.savemat(filepath, export_dict)
 
     def export_idealization(self, filepath):
+        log.debug(f"export_idealization")
         if not filepath.endswith('.csv'):
             filepath+='.csv'
         export_array = np.zeros(shape=(len(self.selected_episodes)+1,
@@ -292,6 +297,7 @@ class Recording(dict):
         np.savetxt(filepath, event_list, delimiter=',')
 
     def export_first_activation(self, filepath):
+        log.debug(f"export_first_activation")
         if not filepath.endswith('.csv'):
             filepath+='.csv'
         export_array = np.array([(episode.n_episode, episode._first_activation)
@@ -301,7 +307,7 @@ class Recording(dict):
     def baseline_correction(self, method='poly', poly_degree=1, intval=[],
                             select_intvl=False, piezo_diff=0.05,
                             select_piezo=True, active_piezo=False):
-        log.info("""calling baseline_correction""")
+        log.debug(f"baseline_correction")
         # valid = self.check_operation('BC_')
         if self.currentDatakey=='raw_':
             #if its the first operation drop the 'raw_'
@@ -323,6 +329,7 @@ class Recording(dict):
         """
         Filter the current series using a gaussian filter
         """
+        log.debug(f"gaussian_filter")
         fdatakey = f'GFILTER{filter_freq}_'
         if self.currentDatakey == 'raw_':
             #if its the first operation drop the 'raw-'
@@ -339,6 +346,7 @@ class Recording(dict):
         """
         Filter the current series using the Chung-Kennedy filter banks
         """
+        log.debug(f"CK_filter_series")
         n_filters = len(window_lengths)
         fdatakey = f'CKFILTER_K{n_filters}p{weight_exponent}M{weight_window}_'
         if self.currentDatakey == 'raw_':
@@ -354,18 +362,21 @@ class Recording(dict):
         return True
 
     def idealize_series(self):
+        log.debug(f"idealize_series")
         self.series.idealize_all(self._TC_amplitudes, self._TC_thresholds)
 
     def idealize_episode(self):
+        log.debug(f"idealize_episode")
         self.episode.idealize(self._TC_amplitudes, self._TC_thresholds)
 
     def detect_fa(self, exclude=[]):
-        log.debug(f"recording.detect_fa")
+        log.debug(f"detect_fa")
         [episode.detect_first_activation(self._fa_threshold)
          for episode in self.series if episode.n_episode not in exclude]
 
     def series_hist(self, active=True, select_piezo=True, deviation=0.05,
                     n_bins=50, density=False, intervals=False):
+        log.debug(f"series_hist")
         piezos = [episode.piezo for episode in self.series]
         traces = [episode.trace for episode in self.series]
         trace_list = []
@@ -405,6 +416,7 @@ class Recording(dict):
     def episode_hist(self, active=True, select_piezo=True,
                   deviation=0.05, n_bins=50, density=False,
                   intervals=False):
+        log.debug(f"episode_hist")
         if not self.has_piezo: select_piezo = False
         if select_piezo:
             time, trace_points = piezo_selection(self.episode.time,

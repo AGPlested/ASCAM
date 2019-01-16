@@ -102,10 +102,10 @@ class PlotFrame(ttk.Frame):
 
         # parameters for the plots
         self.show_piezo = tk.IntVar()
-        self.show_piezo.set(0)
+        self.show_piezo.set(1)
         self.show_piezo.trace("w", self.show_piezo_cb)
         self.show_command = tk.IntVar()
-        self.show_command.set(0)
+        self.show_command.set(1)
         self.show_command.trace("w", self.show_command_cb)
         self.plot_t_zero = tk.StringVar()
         self.plot_t_zero.set("0.00")
@@ -282,6 +282,7 @@ class PlotFrame(ttk.Frame):
         if draw: self.canvas.draw()
 
     def draw_fa_line(self, draw=True, *args):
+        log.debug(f"draw_fa_line")
         if self.fa_lines:
             self.remove_fa_lines()
         line = self.current_plot.axhline(self.parent.data.fa_threshold,
@@ -417,6 +418,7 @@ class PlotFrame(ttk.Frame):
         if episode.idealization is not None:
             self.i_line,  = self.current_plot.plot(episode.time,
                                     episode.idealization, color=id_color,
+                                    alpha=.6,
                                     visible=bool(self.show_idealization.get()))
         #if idealization not present create invisble plot as placeholder
         else:
@@ -439,6 +441,7 @@ class PlotFrame(ttk.Frame):
         if self.show_fa_line.get(): self.draw_fa_line(draw=False)
 
         if self.histogram is not None:
+            log.debug(f"init_plot: self.histogram is not None")
             if self.show_hist_single.get():
                 heights, _, centers, width \
                 = self.parent.data.episode_hist(active=self.hist_piezo_active.get(),
