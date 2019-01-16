@@ -341,22 +341,27 @@ class Recording(dict):
         self.episode.idealize(self._TC_amplitudes, self._TC_thresholds)
 
     def detect_fa(self, exclude=[]):
+        """Apply first event detection to all episodes in the selected series"""
         log.debug(f"detect_fa")
         [episode.detect_first_activation(self._fa_threshold)
          for episode in self.series if episode.n_episode not in exclude]
 
     def series_hist(self, active=True, select_piezo=True, deviation=0.05,
                     n_bins=50, density=False, intervals=False):
+        """Create a histogram of all episodes in the presently selected series
+        """
         log.debug(f"series_hist")
+        #put all piezo traces and all current traces in lists
         piezos = [episode.piezo for episode in self.series]
         traces = [episode.trace for episode in self.series]
         trace_list = []
-        #this is a failsafe, select_piezo should never be true if has_piezo
-        #is false
         if not self.has_piezo:
+            #this is a failsafe, select_piezo should never be true if has_piezo
+            #is false
             if select_piezo: log.debug((f"Tried piezo selection even though )",
                                         ",there is no piezo data!"))
             select_piezo = False
+        #select the time points that are used for the histogram
         if select_piezo:
             for piezo, trace in zip(piezos, traces):
                 time, trace_points = piezo_selection(self.episode.time, piezo,
@@ -371,12 +376,11 @@ class Recording(dict):
             self.hist_times = np.array(time)
         else:
             trace_list = traces
+        #turn the collected traces into a 1D numpy array for the histogram
+        #function
         trace_list = np.asarray(trace_list)
-
         trace_list = trace_list.flatten()
-
         heights, bins = np.histogram(trace_list, n_bins, density=density)
-
         # get centers of all the bins
         centers = (bins[:-1]+bins[1:])/2
         # get the width of a(ll) bin(s)
@@ -384,16 +388,18 @@ class Recording(dict):
         return heights, bins, centers, width
 
 
-    def episode_hist(self, active=True, select_piezo=True,
-                  deviation=0.05, n_bins=50, density=False,
-                  intervals=False):
+    def episode_hist(self, active=True, select_piezo=True, deviation=0.05,
+                     n_bins=50, density=False, intervals=False):
+        """Create a histogram of the current in the presently selected episode.
+        """
         log.debug(f"episode_hist")
+        #failsafe for piezo selection
         if not self.has_piezo: select_piezo = False
+        #select time points to include in histogram
         if select_piezo:
             time, trace_points = piezo_selection(self.episode.time,
                     self.episode.piezo, self.episode.trace, active, deviation)
             self.hist_times = np.array(time)
-
         elif intervals:
             time, trace_points = interval_selection(self.episode.time,
                     self.episode.trace, intervals, self.episode.sampling_rate)
@@ -405,5 +411,5 @@ class Recording(dict):
         centers = (bins[:-1]+bins[1:])/2
         # get the width of a(ll) bin(s)
         width = (bins[1]-bins[0])
-        self.histogram = heights, bins, centers, width
+        # self.histogram = heights, bins, centers, width
         return heights, bins, centers, width
