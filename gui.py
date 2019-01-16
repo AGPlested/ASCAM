@@ -182,7 +182,6 @@ class GUI(ttk.Frame):
         # Third row
         self.episodeList.grid(row=2, column=4,sticky='NS')
         self.grid_rowconfigure(2, weight=1)
-
         # self.displayFrame.grid(row=3, column=3, padx=5, sticky=tk.S)
 
     def draw_plots(self, new=False, *args):
@@ -299,12 +298,14 @@ class MenuBar(tk.Menu):
         log.debug(f"MenuBar.create_file_cascade")
         self.add_cascade(label="File", menu=self.file_menu)
         #Submenus under 'File'
-        self.file_menu.add_command(label="Open File",command=self.open_file)
-        self.file_menu.add_command(label="Save",command=self.save_to_file)
-        self.file_menu.add_command(label="Export",command=lambda: \
+        self.file_menu.add_command(label="Open File", command=self.open_file)
+        self.file_menu.add_command(label="Save", command=self.save_to_file)
+        self.file_menu.add_command(label="Export", command=lambda: \
                                    ExportFileDialog(self.parent))
         self.file_menu.add_command(label="Export Idealization",
                                    command=self.export_idealization)
+        self.file_menu.add_command(label="Export Events",
+                                   command=self.export_events)
         self.file_menu.add_command(label="Export First Activation",
                                    command=self.export_fa)
         self.file_menu.add_command(label="Quit",command=self.parent.master.quit)
@@ -338,6 +339,14 @@ class MenuBar(tk.Menu):
         filepath = asksaveasfilename()
         if isinstance(filepath, str):
             self.parent.data.save_to_pickle(filepath)
+        else:
+            log.info("User pressed 'Cancel'")
+
+    def export_events(self):
+        log.debug(f"MenuBar.export_events")
+        filepath = asksaveasfilename()
+        if isinstance(filepath, str):
+            self.parent.data.export_events(filepath)
         else:
             log.info("User pressed 'Cancel'")
 
