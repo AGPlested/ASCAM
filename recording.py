@@ -233,9 +233,9 @@ class Recording(dict):
         episodes = np.array(self[datakey])[indices]
         for episode in episodes:
             n = str(episode.n_episode).zfill(fill_length)
-            export_dict['trace'+n] = episode.trace
-            if save_piezo: export_dict['piezo'+n] = episode.piezo
-            if save_command: export_dict['command'+n] = episode.command
+            export_dict['trace'+n] = episode._trace
+            if save_piezo: export_dict['piezo'+n] = episode._piezo
+            if save_command: export_dict['command'+n] = episode._command
         io.savemat(filepath, export_dict)
 
     def export_idealization(self, filepath):
