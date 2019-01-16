@@ -256,45 +256,16 @@ class Recording(dict):
         np.savetxt(filepath, export_array.T, delimiter=',')
 
     def export_events(self, filepath):
+        """Export a table of events in the current (idealized) series and
+        duration to a csv file.
+        """
+        log.debug(f"export_events")
         if not filepath.endswith('.csv'):
             filepath+='.csv'
-
-
-        time = self.episode._time
-        idealization_array = np.zeros(shape=(len(self.selected_episodes),
-                                      self.episode._idealization.size))
-        for k, episode in enumerate(self.selected_episodes):
-            idealization_array[k] = episode._idealization
-
-        #extract the levels from the idealization
-        levels = np.array(list(set(idealization_array[0])))
-        levels.sort()
-        print(levels)
-        #get an array of differences between the adjacent values
-        diff = idealization_array[0][1:]-idealization_array[0][:-1]
-        #the jumps occur at the positions where the difference vectors is nonzero
-        events = np.where(diff!=0)[0]
-        #diff+1 marks the indices of the first time point of a new event starting
-        #from 0 to diff[0] is the first event, and from diff[-1] to t_end is the last event, hence
-        n_events = events.size+1
-        #init the array they will be final output table, events in rows and
-        #amplitude, start, end and duration in columns
-        event_list = np.zeros((n_events,4))
-        #fill the array
-        event_list[0][0] = levels[0]
-        event_list[0][1] = 0
-        event_list[0][2] = time[int(events[0])]
-        for i, t in enumerate(events[:-1]):
-            event_list[i+1][0] = levels[int(t)+1]
-            event_list[i+1][1] = time[int(t)+1]
-            event_list[i+1][2] = time[int(events[i+1])]
-        event_list[-1][0] = levels[int(events[-1])]
-        event_list[-1][1] = time[(int(events[-1]))]
-        event_list[-1][2] = time[-1]
-        #get the last column
-        event_list[:,3]=event_list[:,2]-event_list[:,1]
-
-        np.savetxt(filepath, event_list, delimiter=',')
+        export_array = np.zeros((0,2))
+        for episode in self.series:
+            export_array = np.vstack((export_array,episode.get_events()))
+        np.savetxt(filepath, export_array, delimiter=',')
 
     def export_first_activation(self, filepath):
         log.debug(f"export_first_activation")

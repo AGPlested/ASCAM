@@ -79,7 +79,7 @@ class Episode():
         if self._command is not None:
             return self._command*self.command_unit_factor
         else: return None
-        
+
     @property
     def first_activation(self):
         if self._first_activation is not None:
@@ -180,3 +180,35 @@ class Episode():
         self._first_activation = detect_first_activation(self._time,
                                                          self._trace,
                                                          threshold)
+
+    def get_events(self):
+        """Get the events (i.e. states) from the idealized trace.
+        Assumes time and trace to be of equal length and time to start not at 0
+        Returns:
+            a table containing the amplitude of an opening, its start and end
+            time and its duration
+        """
+        diff = self.idealization[1:]-self.idealization[:-1]
+        events = np.where(diff!=0)[0]
+        #diff+1 marks the indices of the first time point of a new event
+        #starting from 0 to diff[0] is the first event, and from diff[-1] to
+        #t_end is the last event, hence
+        n_events = events.size+1
+        #init the array they will be final output table, events in rows and
+        #amplitude, start, end and duration in columns
+        event_list = np.zeros((n_events,4))
+        #fill the array
+        event_list[0][0] = self.idealization[0]
+        event_list[0][1] = self.time[0]-(self.time[1]-self.time[0])
+        event_list[0][2] = self.time[int(events[0])]
+        for i, t in enumerate(events[:-1]):
+            event_list[i+1][0] = self.idealization[int(t)+1]
+            event_list[i+1][1] = self.time[int(events[i])]
+            event_list[i+1][2] = self.time[int(events[i+1])]
+        event_list[-1][0] = self.idealization[int(events[-1])+1]
+        event_list[-1][1] = self.time[(int(events[-1]))]
+        event_list[-1][2] = self.time[-1]
+        #get the last column
+        event_list[:,3]=event_list[:,2]-event_list[:,1]
+        event_list = np.array([event_list[:,0],event_list[:,3]]).T
+        return event_list
