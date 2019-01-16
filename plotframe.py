@@ -282,6 +282,7 @@ class PlotFrame(ttk.Frame):
         if draw: self.canvas.draw()
 
     def draw_fa_line(self, draw=True, *args):
+        log.debug(f"draw_fa_line")
         if self.fa_lines:
             self.remove_fa_lines()
         line = self.current_plot.axhline(self.parent.data.fa_threshold,
@@ -417,6 +418,7 @@ class PlotFrame(ttk.Frame):
         if episode.idealization is not None:
             self.i_line,  = self.current_plot.plot(episode.time,
                                     episode.idealization, color=id_color,
+                                    alpha=.6,
                                     visible=bool(self.show_idealization.get()))
         #if idealization not present create invisble plot as placeholder
         else:
