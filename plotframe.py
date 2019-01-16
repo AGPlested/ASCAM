@@ -102,10 +102,10 @@ class PlotFrame(ttk.Frame):
 
         # parameters for the plots
         self.show_piezo = tk.IntVar()
-        self.show_piezo.set(0)
+        self.show_piezo.set(1)
         self.show_piezo.trace("w", self.show_piezo_cb)
         self.show_command = tk.IntVar()
-        self.show_command.set(0)
+        self.show_command.set(1)
         self.show_command.trace("w", self.show_command_cb)
         self.plot_t_zero = tk.StringVar()
         self.plot_t_zero.set("0.00")

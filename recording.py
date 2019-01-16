@@ -217,6 +217,7 @@ class Recording(dict):
                       save_command):
         """Export all the episodes in the givens list(s) from the given series
         (only one) to a matlab file."""
+        print(filepath)
         if not filepath.endswith('.mat'):
             filepath+='.mat'
         # create dict to write matlab file and add the time vector
