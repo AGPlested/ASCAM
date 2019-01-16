@@ -441,6 +441,7 @@ class PlotFrame(ttk.Frame):
         if self.show_fa_line.get(): self.draw_fa_line(draw=False)
 
         if self.histogram is not None:
+            log.debug(f"init_plot: self.histogram is not None")
             if self.show_hist_single.get():
                 heights, _, centers, width \
                 = self.parent.data.episode_hist(active=self.hist_piezo_active.get(),
