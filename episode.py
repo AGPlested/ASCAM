@@ -183,6 +183,7 @@ class Episode():
 
     def get_events(self):
         """Get the events (i.e. states) from the idealized trace.
+
         Assumes time and trace to be of equal length and time to start not at 0
         Returns:
             a table containing the amplitude of an opening, its start and end
@@ -198,17 +199,21 @@ class Episode():
         #amplitude, start, end and duration in columns
         event_list = np.zeros((n_events,4))
         #fill the array
-        event_list[0][0] = self.idealization[0]
-        event_list[0][1] = self.time[0]-(self.time[1]-self.time[0])
-        event_list[0][2] = self.time[int(events[0])]
-        for i, t in enumerate(events[:-1]):
-            event_list[i+1][0] = self.idealization[int(t)+1]
-            event_list[i+1][1] = self.time[int(events[i])]
-            event_list[i+1][2] = self.time[int(events[i+1])]
-        event_list[-1][0] = self.idealization[int(events[-1])+1]
-        event_list[-1][1] = self.time[(int(events[-1]))]
-        event_list[-1][2] = self.time[-1]
-        #get the last column
-        event_list[:,3]=event_list[:,2]-event_list[:,1]
-        event_list = np.array([event_list[:,0],event_list[:,3]]).T
+        if n_events == 1:
+            event_list[0][0] = self.idealization[0]
+            event_list[0][2] = self.time[0]-(self.time[1]-self.time[0])
+            event_list[0][3] = self.time[-1]
+        else:
+            event_list[0][0] = self.idealization[0]
+            event_list[0][2] = self.time[0]-(self.time[1]-self.time[0])
+            event_list[0][3] = self.time[int(events[0])]
+            for i, t in enumerate(events[:-1]):
+                event_list[i+1][0] = self.idealization[int(t)+1]
+                event_list[i+1][2] = self.time[int(events[i])]
+                event_list[i+1][3] = self.time[int(events[i+1])]
+            event_list[-1][0] = self.idealization[int(events[-1])+1]
+            event_list[-1][2] = self.time[(int(events[-1]))]
+            event_list[-1][3] = self.time[-1]
+        #get the duration column
+        event_list[:,1]=event_list[:,3]-event_list[:,2]
         return event_list
