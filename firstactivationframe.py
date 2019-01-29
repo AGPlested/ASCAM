@@ -10,16 +10,20 @@ class FirstActivationFrame(tk.Frame):
         tk.Frame.__init__(self, parent)
         self.parent = parent #parent is main window
         self.fa_threshold = tk.StringVar()
-        self.fa_threshold.trace('w', self.change_threshold)
-
         self.click_to_next = tk.IntVar()
         self.click_to_next.set(1)
 
-        if self.parent.data.fa_threshold is None \
-           and np.any(parent.data._TC_thresholds):
-            self.fa_threshold.set(str(parent.data._TC_thresholds[0]))
+        #mainly cosmetic, if threshold_crossing idealization has been performed
+        #we can use the smallest threshold value as initial value for the first
+        #event threshold
+        if (self.parent.data.fa_threshold is None \
+            and np.any(parent.data._TC_thresholds)
+           ):
+            self.parent.data.fa_threshold = parent.data._TC_thresholds[0]
         else:
-            self.fa_threshold.set(str(np.mean(self.parent.data.episode.trace)))
+            self.parent.data.fa_threshold \
+            = np.mean(self.parent.data.episode.trace)
+        self.fa_threshold.set(f"{self.parent.data.fa_threshold:.5f}")
         self.create_widgets()
 
         #set up plots and switch to first episode
@@ -36,9 +40,12 @@ class FirstActivationFrame(tk.Frame):
         self.manually_set_eps = set()
 
     def change_threshold(self, *args):
-        self.parent.data.fa_threshold = float(self.fa_threshold.get())
+        log.debug(f"change_threshold")
+        #update the string showing the threshold value
+        self.fa_threshold.set(f"{self.parent.data.fa_threshold:.5f}")
 
     def toggle_tracking(self):
+        log.debug(f"toggle_tracking")
         if not self.tracking_on:
             if self.manual_mode: self.toggle_manual_mode()
             if self.manually_set_eps:
@@ -50,8 +57,9 @@ class FirstActivationFrame(tk.Frame):
                                         'automatic detection to the remaining '
                                         'episodes?')).grid(columnspan=2)
                 tk.Button(warning, text='Detect for all episodes',
-                            command=lambda *args: [self.manually_set_eps.clear(),
-                                                    warning.destroy()]).grid(row=1)
+                          command=lambda *args: [self.manually_set_eps.clear(),
+                                                 warning.destroy()]
+                         ).grid(row=1)
                 tk.Button(warning, text='Detect for remaining episodes',
                             command=warning.destroy).grid(row=1, column=1)
 
@@ -65,21 +73,27 @@ class FirstActivationFrame(tk.Frame):
         self.tracking_on = not self.tracking_on
 
     def track_cursor(self, event):
+        #while dragging the threshold line on the plot get the position
+        #of the cursor and update the plot
         if (self.parent.plots.toolbar._active is None
             and event.button==1
             and event.inaxes is not None
             ):
-            self.fa_threshold.set(str(event.ydata))
+            self.parent.data.fa_threshold = event.ydata
+            self.change_threshold()
             self.parent.data.detect_fa(exclude=self.manually_set_eps)
             self.parent.plots.update_fa_mark(draw=False)
             self.parent.plots.update_fa_line()
 
     def create_widgets(self):
+        log.debug(f"create_widgets")
         self.toggle_button = tk.Button(self, text='Set Threshold',
                                         command=self.toggle_tracking)
         self.toggle_button.grid()
         ttk.Entry(self, textvariable=self.fa_threshold, width=10)\
             .grid(row=0, column=1)
+        ttk.Label(self, text=f"[{self.parent.data.tc_unit}]")\
+            .grid(row=0, column=2)
 
         self.manual_button = tk.Button(self, text="Mark events manually",
                                         command=self.toggle_manual_mode)
@@ -94,6 +108,7 @@ class FirstActivationFrame(tk.Frame):
             .grid(row=5, column=1)
 
     def toggle_manual_mode(self):
+        log.debug(f"toggle_manual_mode")
         if not self.manual_mode:
             if self.tracking_on: self.toggle_tracking()
             self.plot_manual_cid = self.parent.plots.fig.canvas.mpl_connect(
@@ -106,6 +121,7 @@ class FirstActivationFrame(tk.Frame):
         self.manual_mode = not self.manual_mode
 
     def manual_fa_selection(self, event):
+        log.debug(f"manual_fa_selection")
         if (self.parent.plots.toolbar._active is None
             and event.button==1
             and event.inaxes is not None
@@ -118,16 +134,18 @@ class FirstActivationFrame(tk.Frame):
             self.parent.plots.update_fa_mark()
 
     def click_cancel(self):
+        log.debug(f"click_cancel")
         self.parent.plots.show_fa_mark.set(0)
         for episode in self.parent.data.series:
             episode._first_activation = None
         self.close_frame()
 
     def ok_click(self):
+        log.debug(f"ok_click")
         self.close_frame()
 
     def close_frame(self):
-        log.debug(f"FirstActivationFrame.close_frame")
+        log.debug(f"close_frame")
         #return plot to previous settings
         if self.tracking_on:
             self.parent.plots.fig.canvas.mpl_disconnect(self.plot_track_cid)
