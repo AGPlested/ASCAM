@@ -4,6 +4,7 @@ import pickle
 
 from scipy import io
 import numpy as np
+import pandas as pd
 
 import readdata
 import savedata
@@ -259,7 +260,6 @@ class Recording(dict):
         """Export a table of events in the current (idealized) series and
         duration to a csv file.
         """
-        import pandas as pd
         log.debug(f"export_events")
         if not filepath.endswith('.csv'):
             filepath+='.csv'

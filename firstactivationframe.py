@@ -53,7 +53,7 @@ class FirstActivationFrame(tk.Frame):
                 tk.Label(warning, text=('You have manually located the first '
                                         'event for some episode(s).\n \n'
                                         'Do you wish to overwrite these events '
-                                        'or would you like to only apply \n'
+                                        'or would you like to only apply '
                                         'automatic detection to the remaining '
                                         'episodes?')).grid(columnspan=2)
                 tk.Button(warning, text='Detect for all episodes',

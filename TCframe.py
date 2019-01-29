@@ -9,6 +9,10 @@ class TC_Frame(ttk.Frame):
         log.debug("being TC_Frame.__init__")
         ttk.Frame.__init__(self, parent)
         self.parent = parent #parent is main
+        #if idealization has already been performed store the parameters
+        #to recreate if cancel is clicked
+        # if self.parent.series.is_idealized: pass
+
         #variables for entry
         self.amp_string = tk.StringVar()
         self.amp_string.set('0')
