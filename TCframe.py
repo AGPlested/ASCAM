@@ -191,6 +191,7 @@ class TC_Frame(ttk.Frame):
         log.debug(f"TC_Frame.click_apply")
         #when clicking 'ok' apply the idealization with the last settings
         #to the actual data in the main window
+        self.get_amps(update_plot=False)
         self.parent.data.idealize_series()
         self.close_frame()
 

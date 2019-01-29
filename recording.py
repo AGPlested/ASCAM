@@ -259,13 +259,24 @@ class Recording(dict):
         """Export a table of events in the current (idealized) series and
         duration to a csv file.
         """
+        import pandas as pd
         log.debug(f"export_events")
         if not filepath.endswith('.csv'):
             filepath+='.csv'
-        export_array = np.zeros((0,2))
+        export_array = np.zeros((0,5)).astype(object)
+        header = ["episode number", f"amplitude [{self.trace_unit}]",
+                    f"duration [{self.time_unit}]",
+                    f"t_start", "t_stop"]
         for episode in self.series:
-            export_array = np.vstack((export_array,episode.get_events()))
-        np.savetxt(filepath, export_array, delimiter=',')
+            #create a column containing the episode number
+            ep_events = episode.get_events()
+            episode_number = episode.n_episode*np.ones(len(ep_events[:,0]))
+            #glue that column to the event
+            ep_events = np.concatenate((ep_events,
+                                        episode_number[:, np.newaxis]), axis=1)
+            export_array = np.concatenate((export_array, ep_events), axis=0)
+        pd.DataFrame(export_array).to_csv(filepath, header=header, index=False)
+        # np.savetxt(filepath, export_array, delimiter=',')
 
     def export_first_activation(self, filepath):
         log.debug(f"export_first_activation")
