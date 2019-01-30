@@ -22,11 +22,8 @@ def parse_filename(filename):
             break
     path = filename[:slash]
     filetype = filename[period+1:]
-    log.debug("""filename length: {}
-                period (.) at position: {}
-                slash (/) at position: {}
-                path: {}
-                filetype: {}""".format(N, period, slash, path, filetype))
+    log.debug("""path: {}
+                 filetype: {}""".format(path, filetype))
     if filetype == 'axgd':
         filetype = 'axo'
         filetype_long = 'axograph'

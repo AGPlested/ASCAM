@@ -116,22 +116,22 @@ class Recording(dict):
     def command_unit(self): return self.episode.command_unit
 
     def load_data(self):
+        """this method is supposed to load data from a file or a directory
         """
-        this method is supposed to load data from a file or a directory
-        """
-        log.debug(f"load_data")
+        log.debug(f"Recording.load_data")
+
         if 'pkl' in parse_filename(self.filename)[0]:
             loaded_data = readdata.load_pickle(self.filename)
             self.__dict__ = loaded_data.__dict__
             for key, value in loaded_data.items():
                 self[key] = value
         elif os.path.isfile(self.filename):
-            self.load_series(filename = self.filename,
-                             filetype = self.filetype,
-                             dtype = self.dtype,
-                             headerlength = self.headerlength,
-                             sampling_rate = self.sampling_rate,
-                             datakey = 'raw_')
+            self.load_series(filename=self.filename,
+                             filetype=self.filetype,
+                             dtype=self.dtype,
+                             headerlength=self.headerlength,
+                             sampling_rate=self.sampling_rate,
+                             datakey='raw_')
         elif os.path.isdir(self.filename):
             if not self.filename.endswith('/'):
                 self.filename+='/'
@@ -161,17 +161,17 @@ class Recording(dict):
 
     def load_series(self, filename, filetype, dtype, headerlength, datakey,
                     sampling_rate):
-        """
-        Load the data in the file at `self.filename`.
+        """Load the data in the file at `self.filename`.
         Accepts `.mat`, `.axgd` and `.bin` files.
         (`.bin` files are for simulated data only at the moment.)
         """
         log.debug(f"load_series")
-        names, *loaded_data = readdata.load(filename = filename,
-                                            filetype = filetype,
-                                            dtype = dtype,
-                                            headerlength = headerlength,
-                                            fs = sampling_rate)
+
+        names, *loaded_data = readdata.load(filename=filename,
+                                            filetype=filetype,
+                                            dtype=dtype,
+                                            headerlength=headerlength,
+                                            fs=sampling_rate)
         # The `if` accounts for the presence or absence of
         # piezo and command voltage in the data being loaded
 
@@ -180,7 +180,7 @@ class Recording(dict):
             self[datakey] = Series([Episode(time, trace, n_episode=i,
                                             piezo=piezo,
                                             command=command,
-                                            sampling_rate = self.sampling_rate)
+                                            sampling_rate=self.sampling_rate)
                                     for i, (trace, piezo, command)
                                     in enumerate(zip(*loaded_data[1:]))])
 
@@ -188,20 +188,20 @@ class Recording(dict):
             time, current, piezo, _ = loaded_data
             self[datakey] = Series([Episode(time, current[i], n_episode=i,
                                             piezo=piezo[i],
-                                            sampling_rate = self.sampling_rate)
+                                            sampling_rate=self.sampling_rate)
                                     for i in range(len(current))])
 
         elif 'Command Voltage [V]' in names:
             time, current, _, command = loaded_data
             self[datakey] = Series([Episode(time, current[i], n_episode=i,
                                             command=command[i],
-                                            sampling_rate = self.sampling_rate)
+                                            sampling_rate=self.sampling_rate)
                                     for i in range(len(current))])
 
         else:
             time, current, _, _ = loaded_data
             self[datakey] = Series([Episode(time, current[i], n_episode=i,
-                                            sampling_rate = self.sampling_rate)
+                                            sampling_rate=self.sampling_rate)
                                     for i in range(len(current))])
 
     def save_to_pickle(self, filepath):
@@ -221,6 +221,7 @@ class Recording(dict):
         """Export all the episodes in the givens list(s) from the given series
         (only one) to a matlab file."""
         log.debug(f"export_matlab")
+
         if not filepath.endswith('.mat'):
             filepath+='.mat'
         # create dict to write matlab file and add the time vector

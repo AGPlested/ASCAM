@@ -49,14 +49,7 @@ class GUI(ttk.Frame):
         self.window_system = master.tk.call('tk', 'windowingsystem')
         log.debug("window system is {}".format(self.window_system))
 
-        ### parameters for loading of a file
-        self.filenamefull = tk.StringVar()
-        self.filename = tk.StringVar()
-        self.headerlength = tk.StringVar()
-        self.datatype = tk.StringVar()
-        self.path = tk.StringVar()
-        self.filetypefull = tk.StringVar()
-        self.filetype = tk.StringVar()
+        self._init_fileparams()
 
         #placeholders for subframes
         #set to None so existence can be checked is `is not None`
@@ -70,20 +63,21 @@ class GUI(ttk.Frame):
 
         # bind window name updating
         self.filename.trace("w",
-                lambda *args: self.master.title("ASCAM - "+self.filename.get()))
+            lambda *args: self.master.title(f"ASCAM - {self.filename.get()}"))
 
         # parameters of the data
         self.sampling_rate = tk.StringVar()
-        self.sampling_rate.set("0")
+        # self.sampling_rate.set("0")
 
         if test:
             self.data = Recording()
-        else: self.data = Recording('')
+        else:
+            self.data = Recording('')
 
         # datakey of the current displayed data
         self.datakey = tk.StringVar()
-        self.datakey.trace('w',self.change_current_datakey)
-        self.datakey.set('raw_')
+        self.datakey.set(self.data.currentDatakey)
+        self.datakey.trace('w', self.change_current_datakey)
         # episode number of the currently displayed episode
         self.n_episode = tk.IntVar()
         self.n_episode.trace('w', self.change_episode)
@@ -108,48 +102,17 @@ class GUI(ttk.Frame):
 
         log.debug(f"end GUI.__init__")
 
-    def change_current_datakey(self,*args,**kwargs):
+    def _init_fileparams(self):
+        """initialize parameters for loading of a file
         """
-        This function changes the current datakey in the recording object, which
-        is the one that determines what is filtered etc
-        """
-        log.debug(f"change_current_datakey")
-        self.data.currentDatakey = self.datakey.get()
-
-    def change_episode(self, *args):
-        log.debug(f"gui.change_episode")
-        self.data.n_episode = self.n_episode.get()
-        if self.episodeList is not None:
-            self.episodeList.episodelist.selection_clear(0, tk.END)
-            self.episodeList.episodelist.selection_set(self.n_episode.get())
-        if self.plots is not None: self.plots.plot()
-
-    def load_recording(self):
-        """ Take a recording object and load it into the GUI.
-        """
-        log.info("""loading recording...""")
-        # get filename and set GUI title
-        # _, _, _, filename = parse_filename(self.data.filename)
-        # self.master.title("ASCAM - "+filename)
-        self.master.title("ASCAM - "+self.filename.get())
-
-        # recreate user defined episodelists
-        for name, (_, color, key) in self.data.lists.items():
-            log.debug("""found list {}, color: {}, key: {}"""\
-                        .format(name, color, key))
-            self.listSelection.create_checkbox(name = name,
-                                               key = key,
-                                               color = color)
-        self.update_all()
-
-    def update_all(self, *args):
-        """
-        Use to update all data dependent widgets in the main window
-        """
-        log.debug("""updating all""")
-        self.update_list()
-        self.draw_plots()
-        # self.displayFrame.update()
+        self.filenamefull = tk.StringVar()
+        self.filename = tk.StringVar()
+        self.path = tk.StringVar()
+        self.filetypefull = tk.StringVar()
+        self.filetype = tk.StringVar()
+        #old params that were used for binary files
+        self.headerlength = tk.StringVar()
+        self.datatype = tk.StringVar()
 
     def create_widgets(self):
         """
@@ -182,18 +145,73 @@ class GUI(ttk.Frame):
         # Third row
         self.episodeList.grid(row=2, column=4,sticky='NS')
         self.grid_rowconfigure(2, weight=1)
-        # self.displayFrame.grid(row=3, column=3, padx=5, sticky=tk.S)
+
+    def set_filename(self, filepath):
+        """Take a path and set filename and type variables.
+        """
+        self.filenamefull.set(filepath)
+        filetype, path, filetypefull, filename = parse_filename(filepath)
+        self.filename.set(filename)
+        self.path.set(path)
+        self.filetype.set(filetype)
+        self.filetypefull.set(filetypefull)
+
+    def load_recording(self):
+        """ Take a recording object and load it into the GUI.
+        """
+        log.debug("""load_recording""")
+
+        # set ASCAM title
+        self.master.title("ASCAM - "+self.filename.get())
+
+        self.data = Recording(self.filenamefull.get(),
+                                     self.sampling_rate.get(),
+                                     self.filetype.get())
+        self.datakey.set(self.data.currentDatakey)
+        # recreate user defined episodelists
+        for name, (_, color, key) in self.data.lists.items():
+            log.debug("""found list {}, color: {}, key: {}"""\
+            .format(name, color, key))
+            self.listSelection.create_checkbox(name=name, key=key, color=color)
+            self.update_all()
+
+    def change_current_datakey(self, *args, **kwargs):
+        """This function changes the current datakey in the recording object, which
+        is the one that determines what is filtered etc
+        """
+        log.debug(f"GUI.change_current_datakey")
+
+        self.data.currentDatakey = self.datakey.get()
+        self.episodeList.create_list()
+        self.plots.plot(new=True)
+        self.episodeList.episodelist.select_set(self.parent.n_episode.get())
+
+    def change_episode(self, *args):
+        log.debug(f"gui.change_episode")
+        self.data.n_episode = self.n_episode.get()
+        if self.episodeList is not None:
+            self.episodeList.episodelist.selection_clear(0, tk.END)
+            self.episodeList.episodelist.selection_set(self.n_episode.get())
+            if self.plots is not None: self.plots.plot()
+
+    def update_all(self, *args):
+        """Use to update all data dependent widgets in the main window
+        """
+        log.debug("""update_all""")
+
+        self.update_episodelist()
+        self.draw_plots()
 
     def draw_plots(self, new=False, *args):
+        """Plot the current episode
         """
-        Plot the current episode
-        """
-        log.debug(f"GUI.draw_plots")
-        self.plots.plot(new)
-        # self.displayFrame.update()
+        log.debug(f"draw_plots")
 
-    def update_list(self):
+        self.plots.plot(new)
+
+    def update_episodelist(self):
         self.episodeList.create_dropdownmenu()
+        self.episodeList.create_list()
 
     def quit(self):
         log.info('exiting ASCAM')
@@ -328,7 +346,8 @@ class MenuBar(tk.Menu):
         filename = askopenfilename()
         log.info(f"selected file: '{filename}'")
         if filename is not None:
-            OpenFileDialog(self.parent, filename)
+            self.parent.set_filename(filename)
+            OpenFileDialog(self.parent)
         else:
             log.info("User pressed 'Cancel'")
 
@@ -512,7 +531,7 @@ class FilterFrame(tk.Toplevel):
             if self.parent.data.gauss_filter_series(cutoffFrequency):
                 log.info('succesfully called gauss filter')
                 self.parent.datakey.set(self.parent.data.currentDatakey)
-                self.parent.update_list()
+                self.parent.update_episodelist()
                 self.parent.draw_plots()
         elif self.filter_selection.get()=="Chung-Kennedy":
             if self.ap_f_weights:
@@ -528,7 +547,7 @@ class FilterFrame(tk.Toplevel):
                        ap_b, ap_f):
                 log.info('succesfully called CK filter')
                 self.parent.datakey.set(self.parent.data.currentDatakey)
-                self.parent.update_list()
+                self.parent.update_episodelist()
                 self.parent.draw_plots()
 
     def ok_click(self):
@@ -778,7 +797,7 @@ class BaselineFrame(tk.Toplevel):
             log.info('succesfully called baseline_correction')
             self.parent.parent.datakey.set(
                                         self.parent.parent.data.currentDatakey)
-            self.parent.parent.update_list()
+            self.parent.parent.update_episodelist()
             self.parent.parent.draw_plots(True)
         self.destroy()
 
@@ -962,10 +981,10 @@ class AddListDialog(tk.Toplevel):
         self.destroy()
 
 class EpisodeList(ttk.Frame):
-    """
-    Frame that holds a scrollable list of all the episodes in the currently
+    """Frame that holds a scrollable list of all the episodes in the currently
     selected series.
     """
+
     def __init__(self, parent):
         ttk.Frame.__init__(self, parent)
         self.parent = parent
@@ -973,39 +992,34 @@ class EpisodeList(ttk.Frame):
         # create the variable tracking the current selection, `currentSeries`
         # and assign it to call the function `selection_change` when it is
         # changed
-        self.parent.datakey.trace("w", self.selection_change)
         self.create_list()
         self.create_dropdownmenu()
 
     def click_list(self, event):
-        """
-        When a new episode is selected by clicking or with arrow keys get the
+        """When a new episode is selected by clicking or with arrow keys get the
         change the number of the current episode
         """
-        log.debug(f"EpisodeList.click_list")
+
         #uses try to catch and ignore the event of the user clickling
         #outside the list
         try:
             n_episode = int(event.widget.curselection()[0])
+            log.debug(f"EpisodeList.click_list")
             log.debug(f"selected episode number {n_episode}")
             self.parent.n_episode.set(n_episode)
-        except IndexError:
-            log.debug(f"excepted IndexError")
-            pass
+        except IndexError: pass
 
     def create_list(self):
-        """
-        create the list of episodes and a scroll bar
+        """create the list of episodes and a scroll bar
         scroll bar is created first because episodelist references it
         the last line of scrollbar references episodelist so it has to come
         after the creating of episodelist
         """
-        log.debug(f"`EpisodeList.create_list`")
-        log.debug("creating scrollbar")
+        log.debug(f"create_list")
+
         self.Scrollbar = tk.Scrollbar(self, orient=tk.VERTICAL)
         self.Scrollbar.grid(column=1, row=1, rowspan=3, sticky="NESW")
 
-        log.debug("creating episodelist")
         self.episodelist = tk.Listbox(self, bd=2,
                                       yscrollcommand=self.Scrollbar.set,
                                       selectmode=tk.EXTENDED)
@@ -1016,7 +1030,6 @@ class EpisodeList(ttk.Frame):
 
         for episode in self.parent.data[self.parent.datakey.get()]:
             self.episodelist.insert(tk.END, f"episode #{episode.n_episode}")
-            # log.debug(f"inserting episode number {episode.n_episode}")
         # color all episodes according to their list membership
         # start from second element because white is default bg color
         for name in list(self.parent.data.lists.keys())[1:]:
@@ -1031,25 +1044,15 @@ class EpisodeList(ttk.Frame):
         self.grid_rowconfigure(1, weight=1)
 
     def create_dropdownmenu(self):
-        """
-        create the dropdown menu that is a list of the available series
+        """create the dropdown menu that is a list of the available series
         """
         log.debug(f"`EpisodeList.create_dropdownmenu`")
+
         # the options in the list are all the datakeys
         listOptions = self.parent.data.keys()
 
         self.menu = tk.OptionMenu(self, self.parent.datakey, *listOptions)
         self.menu.grid(row=0,column=0,columnspan=2,sticky=tk.N)
-
-    def selection_change(self, *args):
-        """
-        when the `currentSeries` variable changes this function will be called
-        it needs the `*args` arguments because tkinter passes some arguments
-        to it (we currently dont need those)
-        """
-        log.info(self.parent.datakey.get()+' selected')
-        self.create_list()
-        self.parent.draw_plots(new=True)
 
 class OpenFileDialog(tk.Toplevel):
     """
@@ -1057,52 +1060,39 @@ class OpenFileDialog(tk.Toplevel):
     Select file and load it by clicking 'ok' button, in case of binary
     file another window pops up to ask for additional parameters.
     """
-    def __init__(self, parent, filename):
+    def __init__(self, parent):
         log.info("initializing OpenFileDialog")
 
         tk.Toplevel.__init__(self,parent)
         self.parent = parent
         self.title("Select file")
 
-        log.info("creating StringVars for parameter entry")
-        self.filenamefull = tk.StringVar()
-        self.filetypefull = tk.StringVar()
-        self.filetype = tk.StringVar()
-        self.filename = tk.StringVar()
-        self.sampling_rate = tk.StringVar()
-        self.path = tk.StringVar()
-
-        self.filenamefull.set(filename)
-        filetype, path, filetypefull, filename = parse_filename(filename)
-        self.filename.set(filename)
-        self.path.set(path)
-        self.filetype.set(filetype)
-        self.filetypefull.set(filetypefull)
-
         self.create_widgets()
         self.samplingentry.focus()
         log.info("OpenFileDialog initialized")
 
     def create_widgets(self):
+        #TODO: check if these 'local' variables can be replaced by the main
+        #gui variables
         log.info("creating OpenFileDialog widgets")
         # first row - filename and button for choosing file
         ttk.Label(self, text='File:').grid(column=1,row=1,sticky=(tk.N, tk.W))
 
-        filenamelabel = ttk.Label(self, textvariable=self.filename)
+        filenamelabel = ttk.Label(self, textvariable=self.parent.filename)
         filenamelabel.grid(column=2, row=1, sticky=tk.N)
 
         #second row - show filepath
         ttk.Label(self, text='Path:').grid(column=1, row=2, sticky = tk.W)
-        ttk.Label(self, textvariable=self.path).grid(column=2, row=2)
+        ttk.Label(self, textvariable=self.parent.path).grid(column=2, row=2)
 
         #third row - show filetype
         ttk.Label(self, text='Filetype:').grid(column=1, row=3, sticky = tk.W)
-        ttk.Label(self, textvariable=self.filetypefull).grid(column=2,
+        ttk.Label(self, textvariable=self.parent.filetypefull).grid(column=2,
                                                    row=3, sticky=(tk.W, tk.E))
 
         #fourth row - enter sampling rate
         self.samplingentry = ttk.Entry(self, width=7,
-                                       textvariable=self.sampling_rate)
+                                       textvariable=self.parent.sampling_rate)
         self.samplingentry.grid(column=2,row=4)
         ttk.Label(self, text="sampling_rate (Hz):").grid(column=1,
                                                         row=4, sticky=(tk.W))
@@ -1117,27 +1107,16 @@ class OpenFileDialog(tk.Toplevel):
         self.closebutton.grid(column=3, row=5, sticky=(tk.S, tk.E))
 
     def load_button(self):
-        if self.filetype.get() == 'bin':
+        log.debug(f"OpenFileDialog.load_button")
+        if self.parent.filetype.get() == 'bin':
             binframe = Binaryquery(self)
         else:
-            try:
-                # move variables to parent if data loaded succesfully
-                self.parent.create_widgets()
-                self.parent.configure_grid()
-                self.parent.filetype.set(self.filetype.get())
-                self.parent.filename.set(self.filename.get())
-                self.parent.sampling_rate.set(self.sampling_rate.get())
-                self.parent.path.set(self.path.get())
-
-                self.parent.data = Recording(self.filenamefull.get(),
-                                             self.sampling_rate.get(),
-                                             self.filetype.get())
-                self.parent.datakey.set(self.parent.data.currentDatakey)
-                self.parent.load_recording()
-            finally:
-                self.destroy()
+            self.parent.load_recording()
+            self.destroy()
 
 class Binaryquery(tk.Toplevel):
+    #this is basically deprecated!
+    #probably does not work any more
     """
     If the filetype is '.bin' this asks for the additional parameters
     such as the length of the header (can be zero) and the datatype

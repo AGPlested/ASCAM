@@ -125,7 +125,7 @@ class PlotFrame(ttk.Frame):
         self.show_amp.trace('w', lambda *args: self.draw_amp_lines() \
                                                 if self.show_amp.get() \
                                                 else self.remove_amp_lines())
-        #fa params
+        #first activation params
         self.show_fa_line = tk.IntVar()
         self.show_fa_line.set(0)
         self.show_fa_line.trace('w', lambda *args: self.draw_fa_line() \
@@ -401,13 +401,12 @@ class PlotFrame(ttk.Frame):
             self.update_plots()
         else:
             #check if there is any data to plot
-            if len(self.parent.data['raw_'])>0:
+            if len(self.parent.data['raw_']) > 0:
                 plt.clf()
                 self.setup_plots()
                 self.init_plot()
 
     def init_plot(self):
-        self.plotted = True
         log.debug(f"PlotFrame.init_plot")
         episode = self.parent.data.episode
         if self.command_plot is not None:
