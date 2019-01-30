@@ -9,17 +9,22 @@ from tools import piezo_selection, interval_selection
 
 class Series(list):
     def __init__(self, data=[], idealized=False):
-        """
-        `Series` are lists of episodes which also store relevant parameters
+        """`Series` are lists of episodes which also store relevant parameters
         about the recording and operations that have been performed on the
         data.
         """
+
         list.__init__(self, data)
+
+        self._TC_thresholds = np.array([])
+        self._TC_amplitudes = np.array([])
+
+        self._fa_threshold = 0.
 
     @property
     def is_idealized(self):
         return any([episode._idealization is not None for episode in self])
-        
+
     @property
     def has_piezo(self):
         try: val = True if (self[0]._piezo is not None) else False
@@ -98,8 +103,16 @@ class Series(list):
         Return `Series` object containing the idealization of the episodes
         in `self`
         """
+        self._TC_amplitudes = amplitudes
+        self._TC_thresholds = thresholds
         for episode in self:
             episode.idealize(amplitudes, thresholds)
+
+    def remove_idealization(self):
+        """Reset the idealization of each episode to None
+        """
+        for episode in self:
+            episode.idealization = None
 
     def check_standarddeviation_all(self, stdthreshold=5e-13):
         """
