@@ -16,6 +16,8 @@ def threshold_crossing(signal, amplitudes, thresholds=np.array([])):
     by the midpoint between the pairs of adjacent amplitudes.
     """
     amplitudes = np.asarray(amplitudes)
+    amplitudes.sort()
+    amplitudes = amplitudes[::-1]
     if amplitudes.size==1:
         return np.ones(signal.size)*amplitudes
     if thresholds.size!=amplitudes.size-1:

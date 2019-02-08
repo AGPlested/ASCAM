@@ -482,6 +482,8 @@ class PlotFrame(ttk.Frame):
         self.plotted = True
 
     def setup_plots(self):
+        """Create all the plot objects"""
+
         log.debug(f"plotframe.setup_plots")
         show_command = self.show_command.get() and self.parent.data.has_command
         show_piezo = self.show_piezo.get() and self.parent.data.has_piezo
@@ -518,7 +520,7 @@ class PlotFrame(ttk.Frame):
                                 self.parent.data.series.min_current-.1*trace_y,
                                 self.parent.data.series.max_current+.1*trace_y)
         self.current_plot.set_ylabel(f"Current [{self.parent.data.trace_unit}]")
-        #set axis ticks
+        # set axis ticks
         # loc = plticker.MultipleLocator(base=0.5)
         # self.current_plot.yaxis.set_major_locator(loc)
         # loc = plticker.MultipleLocator(base=0.1)
@@ -528,10 +530,10 @@ class PlotFrame(ttk.Frame):
             plt.setp(self.current_plot.get_xticklabels(), visible=False)
         else:
             self.current_plot.set_xlabel(f"Time [{self.parent.data.time_unit}]")
-        #sharex with current or command voltage
+        # sharex with current or command voltage
         x_share = x_share if show_command else self.current_plot
         if show_piezo:
-            #always plots piezo voltage on top
+            # always plots piezo voltage on top
             self.piezo_plot = self.fig.add_subplot(pgs[0,:1+show_hist],
                                                    sharex=x_share)
             piezo_y = self.parent.data.series.max_piezo\
