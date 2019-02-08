@@ -8,12 +8,7 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib import gridspec as gs
 import matplotlib.ticker as plticker
-#check mpl version because navigation toolbar name has changed
-mpl_ver = (matplotlib.__version__).split('.')
-if int(mpl_ver[0])<2 or int(mpl_ver[1])<2 or int(mpl_ver[2])<2:
-    from matplotlib.backends.backend_tkagg \
-    import NavigationToolbar2TkAgg as NavigationToolbar2Tk
-else: from matplotlib.backends.backend_tkagg import NavigationToolbar2Tk
+from matplotlib.backends.backend_tkagg import NavigationToolbar2Tk
 import numpy as np
 
 trace_color = 'xkcd:french blue'

@@ -1,4 +1,7 @@
-ASCAM runs on Python 3. Matplotlib and SciPy are required. ASCAM has been built on Linux to run on a Mac. But it could well work on Windows too. 
+ASCAM can be used to browse, organize and analize episodic recordings of single ion channel currents.
+
+It has been built and requires python>=3.6. Further requirements can be found in 'requirements.txt' and installed with 
+`pip install -r requirements.txt`.
 
 A straightforward installation can be achieved by first installing Anaconda to get the necessary libraries. At the time of writing, a working version for Mac is https://repo.anaconda.com/archive/Anaconda3-5.3.0-MacOSX-x86_64.pkg 
 
