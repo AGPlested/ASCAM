@@ -370,8 +370,8 @@ class Recording(dict):
         if not self.has_piezo:
             #this is a failsafe, select_piezo should never be true if has_piezo
             #is false
-            if select_piezo: log.debug((f"Tried piezo selection even though )",
-                                        ",there is no piezo data!"))
+            if select_piezo: log.debug((f"Tried piezo selection even though ",
+                                        "there is no piezo data!"))
             select_piezo = False
         #select the time points that are used for the histogram
         if select_piezo:
@@ -388,6 +388,7 @@ class Recording(dict):
             self.hist_times = np.array(time)
         else:
             trace_list = traces
+            self.hist_times = np.array(self.episode.time)
         #turn the collected traces into a 1D numpy array for the histogram
         #function
         trace_list = np.asarray(trace_list)
@@ -418,6 +419,7 @@ class Recording(dict):
             self.hist_times = np.array(time)
         else:
             trace_points = self.episode.trace
+            self.hist_times = np.array(self.episode.time)
         heights, bins = np.histogram(trace_points, n_bins, density=density)
         # get centers of all the bins
         centers = (bins[:-1]+bins[1:])/2

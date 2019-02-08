@@ -184,9 +184,10 @@ class GUI(ttk.Frame):
         self.data.currentDatakey = self.datakey.get()
         self.episodeList.create_list()
         self.plots.plot(new=True)
-        self.episodeList.episodelist.select_set(self.parent.n_episode.get())
+        self.episodeList.episodelist.select_set(self.n_episode.get())
 
     def change_episode(self, *args):
+        
         log.debug(f"gui.change_episode")
         self.data.n_episode = self.n_episode.get()
         if self.episodeList is not None:
@@ -195,25 +196,29 @@ class GUI(ttk.Frame):
             if self.plots is not None: self.plots.plot()
 
     def update_all(self, *args):
-        """Use to update all data dependent widgets in the main window
-        """
-        log.debug("""update_all""")
+        """Use to update all data dependent widgets in the main window"""
+
+        log.debug("""gui.update_all""")
 
         self.update_episodelist()
         self.draw_plots()
 
     def draw_plots(self, new=False, *args):
-        """Plot the current episode
-        """
-        log.debug(f"draw_plots")
+        """Plot the current episode"""
+
+        log.debug(f"gui.draw_plots")
 
         self.plots.plot(new)
 
     def update_episodelist(self):
+        """Update the list of episodes by recreating them"""
+
         self.episodeList.create_dropdownmenu()
         self.episodeList.create_list()
 
     def quit(self):
+        """Close ASCAM completely"""
+
         log.info('exiting ASCAM')
         self.master.destroy()
         self.master.quit()
