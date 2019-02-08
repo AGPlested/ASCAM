@@ -265,9 +265,9 @@ class Recording(dict):
         if not filepath.endswith('.csv'):
             filepath+='.csv'
         export_array = np.zeros((0,5)).astype(object)
-        header = ["episode number", f"amplitude [{self.trace_unit}]",
+        header = [f"amplitude [{self.trace_unit}]",
                     f"duration [{self.time_unit}]",
-                    f"t_start", "t_stop"]
+                    f"t_start", "t_stop", "episode number"]
         for episode in self.series:
             #create a column containing the episode number
             ep_events = episode.get_events()
