@@ -387,11 +387,13 @@ class PlotFrame(ttk.Frame):
         if draw: self.canvas.draw()
 
     def plot(self, new=False, *args):
-        """
-        Draw the all the plots. If `new` is true everything is drawn from
-        scratch, otherwise only the lines in the plots are updated.
-        """
+        """Draw the all the plots.
+
+        If `new` is true everything is drawn from
+        scratch, otherwise only the lines in the plots are updated."""
+
         log.debug(f"plotframe.plot")
+        log.debug(f"new={new}, plotted={self.plotted}")
         if self.plotted and not new:
             self.update_plots()
         else:
@@ -477,6 +479,7 @@ class PlotFrame(ttk.Frame):
                 self.draw_hist_indicator(draw=False)
         self.toolbar.update()
         self.canvas.draw()
+        self.plotted = True
 
     def setup_plots(self):
         log.debug(f"plotframe.setup_plots")
