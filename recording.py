@@ -326,6 +326,10 @@ class Recording(dict):
         """Filter the current series using a gaussian filter"""
 
         logging.debug(f"gaussian_filter")
+        logging.got(ANALYSIS_LEVELV_NUM,
+                    f"gauss filtering series '{self.currentDatakey}'\n"
+                    f"with frequency {filter_freq}")
+
         fdatakey = f'GFILTER{filter_freq}_'
         if self.currentDatakey == 'raw_':
             # if its the first operation drop the 'raw-'
@@ -339,10 +343,18 @@ class Recording(dict):
 
     def CK_filter_series(self, window_lengths, weight_exponent, weight_window,
 				         apriori_f_weights=False, apriori_b_weights=False):
-        """
-        Filter the current series using the Chung-Kennedy filter banks
-        """
+        """Filter the current series using the Chung-Kennedy filter banks"""
+
         logging.debug(f"CK_filter_series")
+        logging.got(ANALYSIS_LEVELV_NUM,
+                    f"Chung-Kennedy filtering on series "
+                    f"'{self.currentDatakey}'\n"
+                    f"window_lengths: {window_lengths}\n"
+                    f"weight_exponent: {weight_exponent}\n"
+                    f"weight_window: {weight_window}\n"
+                    f"apriori_f_weights: {apriori_f_weights}\n"
+                    f"apriori_b_weights: {apriori_b_weights}")
+
         n_filters = len(window_lengths)
         fdatakey = f'CKFILTER_K{n_filters}p{weight_exponent}M{weight_window}_'
         if self.currentDatakey == 'raw_':
@@ -358,15 +370,30 @@ class Recording(dict):
         return True
 
     def idealize_series(self):
+        """Idealize the current series."""
+
         logging.debug(f"idealize_series")
+        logging.got(ANALYSIS_LEVELV_NUM,
+                    f"idealizing series '{self.currentDatakey}'\n"
+                    f"amplitudes: {self._TC_amplitudes}\n"
+                    f"thresholds: {self._TC_thresholds}")
+
         self.series.idealize_all(self._TC_amplitudes, self._TC_thresholds)
 
     def idealize_episode(self):
+        """Idealize current episode."""
+
         logging.debug(f"idealize_episode")
+        logging.got(ANALYSIS_LEVELV_NUM,
+                    f"idealizing episode '{self.n_episode}'\n"
+                    f"amplitudes: {self._TC_amplitudes}\n"
+                    f"thresholds: {self._TC_thresholds}")
+
         self.episode.idealize(self._TC_amplitudes, self._TC_thresholds)
 
     def detect_fa(self, exclude=[]):
         """Apply first event detection to all episodes in the selected series"""
+        
         logging.debug(f"detect_fa")
         [episode.detect_first_activation(self._fa_threshold)
          for episode in self.series if episode.n_episode not in exclude]
