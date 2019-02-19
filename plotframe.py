@@ -97,9 +97,11 @@ class PlotFrame(ttk.Frame):
 
         # parameters for the plots
         self.show_piezo = tk.IntVar()
+        self.show_piezo.trace("w", self.show_piezo_sc)
         self.show_piezo.set(1)
         self.show_piezo.trace("w", self.show_piezo_cb)
         self.show_command = tk.IntVar()
+        self.show_command.trace("w", self.show_command_sc)
         self.show_command.set(1)
         self.show_command.trace("w", self.show_command_cb)
         self.plot_t_zero = tk.StringVar()
@@ -574,8 +576,23 @@ class PlotFrame(ttk.Frame):
         self.plot(new=True)
 
     def show_command_cb(self, *args):
-        log.debug(f"show_command_cb")
-        self.plot(new=True)
+        if self.show_command.get():
+            log.debug(f"show_command_cb")
+            self.plot(new=True)
+
+    def show_command_sc(self, *args):
+        """Sanity check for show command, prevent show_command being true if
+        there is no command voltage data."""
+
+        if not self.parent.data.has_command:
+            self.show_command.set(0)
+
+    def show_piezo_sc(self, *args):
+        """Sanity check for show piezo, prevent show_command being true if
+        there is no piezo voltage data."""
+
+        if not self.parent.data.has_piezo:
+            self.show_piezo.set(0)
 
 class PlotToolbar(NavigationToolbar2Tk):
     def __init__(self, canvas, parent):
