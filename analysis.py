@@ -3,18 +3,15 @@ import numpy as np
 from tools import interval_selection, piezo_selection
 
 def threshold_crossing(signal, amplitudes, thresholds=np.array([])):
-    """
-    Perform a threshold-crossing idealization on the signal.
-    We assume that the current through the channel is always negative
-    amplitudes must and thresholds must be given in descending order
-    (i.e. increasing in absolute value) and include the baseline amplitude.
+    """Perform a threshold-crossing idealization on the signal.
+
     Arguments:
         signal [1D numpy array] - data to be idealized
         amplitudes [1D numpy array] - supposed true amplitudes of signal
         thresholds [1D numpy array] - thresholds between the amplitudes
     If the wrong number of thresholds (or none) are given they will be replaced
-    by the midpoint between the pairs of adjacent amplitudes.
-    """
+    by the midpoint between the pairs of adjacent amplitudes."""
+
     amplitudes = np.asarray(amplitudes)
     amplitudes.sort()
     amplitudes = amplitudes[::-1]
@@ -24,8 +21,8 @@ def threshold_crossing(signal, amplitudes, thresholds=np.array([])):
         thresholds = (amplitudes[1:]+amplitudes[:-1])/2
 
     idealization = np.zeros(len(signal))
-    #np.where returns a tuple containing array so we have to get the first
-    #element to get the indices
+    # np.where returns a tuple containing array so we have to get the first
+    # element to get the indices
     inds = np.where(signal>thresholds[0])[0]
     idealization[inds] = amplitudes[0]
 
@@ -35,18 +32,16 @@ def threshold_crossing(signal, amplitudes, thresholds=np.array([])):
     return idealization
 
 def detect_first_activation(time, signal, threshold):
-    """
-    Return the time where a signal first crosses below a threshold.
-    """
+    """Return the time where a signal first crosses below a threshold."""
+
     return time[np.argmax(signal<threshold)]
 
 def baseline_correction(time, signal, fs, intervals=None,
                         degree=1, method='poly',select_intvl=False,
                         piezo=None, select_piezo=False, active= False,
                         deviation=0.05):
-    """
-    Perform baseline correction by offsetting the signal with its mean
-    in the selected intervals
+    """Perform polynomial/offset baseline correction on the given signal.
+
     Parameters:
         time - 1D array containing times of the measurements in signal
                units of `time_unit`
@@ -59,8 +54,8 @@ def baseline_correction(time, signal, fs, intervals=None,
                  desired degree OR subtract the mean
         degree - if method is 'poly', the degree of the polynomial
     Returns:
-        original signal less the fitted baseline
-    """
+        original signal less the fitted baseline"""
+
     if select_intvl:
         t, s = interval_selection(time, signal, intervals, fs)
     elif select_piezo:

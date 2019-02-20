@@ -494,7 +494,7 @@ class PlotFrame(ttk.Frame):
         x_share = None
         show_hist = int(self.show_hist_single.get() or self.show_hist_all.get())
         # plot grid to make current plot bigger
-        #arguments are nRows by nCols
+        # arguments are nRows by nCols
         pgs = gs.GridSpec(num_plots+1,1+2*show_hist)
         if show_command:
             # always plot command voltage on bottom (-1 row)
