@@ -560,22 +560,33 @@ class PlotFrame(ttk.Frame):
         else: self.histogram = None
 
     def hist_density_cb(self, *args):
+        """Redraw plots if histogram as density toggled"""
+
         logging.debug(f"hist_density_cb")
         self.plot(new=True)
 
     def show_hist_single_cb(self, *args):
+        """Redraw plots if showing of single episode histogram is toggled"""
+
         logging.debug(f"show_hist_single_cb")
         self.plot(new=True)
 
     def show_hist_all_cb(self, *args):
+        """Redraw plots if showing of histogram of all episodes is toggled"""
+
         logging.debug(f"show_hist_all_cb")
         self.plot(new=True)
 
     def show_piezo_cb(self, *args):
-        logging.debug(f"show_piezo_cb")
-        self.plot(new=True)
+        """Redraw plots if showing of piezo votlage is toggled"""
+
+        if self.show_piezo.get():
+            logging.debug(f"show_piezo_cb")
+            self.plot(new=True)
 
     def show_command_cb(self, *args):
+        """Redraw plots if showing of command votlage is toggled"""
+
         if self.show_command.get():
             logging.debug(f"show_command_cb")
             self.plot(new=True)
@@ -597,7 +608,7 @@ class PlotFrame(ttk.Frame):
 
 class PlotToolbar(NavigationToolbar2Tk):
     def __init__(self, canvas, parent):
-        self.parent = parent #parent is PlotFrame
+        self.parent = parent # parent is PlotFrame
         self.canvas = canvas
         # this toolbar is just the standard with fewer buttons
         self.toolitems = (
