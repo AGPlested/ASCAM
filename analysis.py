@@ -15,10 +15,10 @@ def threshold_crossing(signal, amplitudes, thresholds=np.array([])):
     amplitudes = np.asarray(amplitudes)
     amplitudes.sort()
     amplitudes = amplitudes[::-1]
-    if amplitudes.size==1:
+    if amplitudes.size == 1:
         return np.ones(signal.size)*amplitudes
-    if thresholds.size!=amplitudes.size-1:
-        thresholds = (amplitudes[1:]+amplitudes[:-1])/2
+    if thresholds.size != amplitudes.size - 1:
+        thresholds = (amplitudes[1:]+amplitudes[:-1]) / 2
 
     idealization = np.zeros(len(signal))
     # np.where returns a tuple containing array so we have to get the first
@@ -26,9 +26,9 @@ def threshold_crossing(signal, amplitudes, thresholds=np.array([])):
     inds = np.where(signal>thresholds[0])[0]
     idealization[inds] = amplitudes[0]
 
-    for t, a in zip(thresholds,amplitudes[1:]):
-        inds = np.where(signal<t)[0]
-        idealization[inds] = a
+    for thresh, amp in zip(thresholds, amplitudes[1:]):
+        inds = np.where(signal<thresh)[0]
+        idealization[inds] = amp
     return idealization
 
 def detect_first_activation(time, signal, threshold):
@@ -68,9 +68,9 @@ def baseline_correction(time, signal, fs, intervals=None,
         offset = np.mean(s)
         output = signal - offset
     elif method == 'poly':
-        coeffs = np.polyfit(t,s,degree)
+        coeffs = np.polyfit(t, s, degree)
         baseline = np.zeros_like(time)
         for i in range(degree+1):
-            baseline+=coeffs[i]*(time**(degree-i))
+            baseline += coeffs[i] * (time**(degree-i))
         output = signal - baseline
     return output

@@ -44,7 +44,7 @@ class Episode():
         input_time_unit_factors = {'ms':1e-3, 's':1}
         input_time_factor = input_time_unit_factors[input_time_unit]
         # private attributes storing the actual data
-        self._time = time*input_time_factor
+        self._time = time * input_time_factor
         self._trace = trace
         self._piezo = piezo
         self._command = command
@@ -59,41 +59,41 @@ class Episode():
     @property
     def time(self):
         if self._time is not None:
-            return self._time*self.time_unit_factor
+            return self._time * self.time_unit_factor
         else: return None
 
     @property
     def trace(self):
         if self._trace is not None:
-            return self._trace*self.trace_unit_factor
+            return self._trace * self.trace_unit_factor
         else: return None
 
     @property
     def piezo(self):
         if self._piezo is not None:
-            return self._piezo*self.piezo_unit_factor
+            return self._piezo * self.piezo_unit_factor
         else: return None
 
     @property
     def command(self):
         if self._command is not None:
-            return self._command*self.command_unit_factor
+            return self._command * self.command_unit_factor
         else: return None
 
     @property
     def first_activation(self):
         if self._first_activation is not None:
-            return self._first_activation*self.time_unit_factor
+            return self._first_activation * self.time_unit_factor
         else: return None
 
     @first_activation.setter
     def first_activation(self, fa):
-        self._first_activation = fa/self.time_unit_factor
+        self._first_activation = fa / self.time_unit_factor
 
     @property
     def idealization(self):
         if self._idealization is not None:
-            return self._idealization*self.trace_unit_factor
+            return self._idealization * self.trace_unit_factor
         else: return None
 
     @idealization.setter
@@ -139,13 +139,13 @@ class Episode():
         """Apply a baseline correction to the episode."""
 
         self._trace = baseline_correction(time=self._time, signal=self._trace,
-                                         fs=self.sampling_rate,
-                                         intervals=intervals,
-                                         degree=degree, method=method,
-                                         select_intvl=select_intvl,
-                                         piezo=self._piezo,
-                                         select_piezo=select_piezo,
-                                         active=active, deviation=deviation)
+                                          fs=self.sampling_rate,
+                                          intervals=intervals,
+                                          degree=degree, method=method,
+                                          select_intvl=select_intvl,
+                                          piezo=self._piezo,
+                                          select_piezo=select_piezo,
+                                          active=active, deviation=deviation)
         # reset _idealization
         self._idealization = None
 
