@@ -4,8 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from filtering import gaussian_filter, ChungKennedyFilter
-from analysis import (baseline_correction, threshold_crossing,
-                        detect_first_activation)
+from analysis import (baseline_correction, detect_first_activation, Idealizer)
 from tools import piezo_selection, parse_filename, interval_selection
 
 class Episode():
@@ -152,8 +151,8 @@ class Episode():
     def idealize(self, amplitudes, thresholds):
         """Idealize the episode using threshold crossing."""
 
-        self._idealization = threshold_crossing(self._trace, amplitudes,
-                                                thresholds)
+        self._idealization = Idealizer.idealize_episode(self._trace, amplitudes,
+                                                        thresholds)
 
     def check_standarddeviation_all(self, stdthreshold=5e-13):
         """Check the standard deviation of the episode against a reference
@@ -192,31 +191,32 @@ class Episode():
             a table containing the amplitude of an opening, its start and end
             time and its duration"""
 
-        diff = self.idealization[1:]-self.idealization[:-1]
-        events = np.where(diff!=0)[0]
-        # diff+1 marks the indices of the first time point of a new event
-        # starting from 0 to diff[0] is the first event, and from diff[-1] to
-        # t_end is the last event, hence
-        n_events = events.size+1
-        # init the array they will be final output table, events in rows and
-        # amplitude, start, end and duration in columns
-        event_list = np.zeros((n_events,4))
-        # fill the array
-        if n_events == 1:
-            event_list[0][0] = self.idealization[0]
-            event_list[0][2] = self.time[0]-(self.time[1]-self.time[0])
-            event_list[0][3] = self.time[-1]
-        else:
-            event_list[0][0] = self.idealization[0]
-            event_list[0][2] = self.time[0]-(self.time[1]-self.time[0])
-            event_list[0][3] = self.time[int(events[0])]
-            for i, t in enumerate(events[:-1]):
-                event_list[i+1][0] = self.idealization[int(t)+1]
-                event_list[i+1][2] = self.time[int(events[i])]
-                event_list[i+1][3] = self.time[int(events[i+1])]
-            event_list[-1][0] = self.idealization[int(events[-1])+1]
-            event_list[-1][2] = self.time[(int(events[-1]))]
-            event_list[-1][3] = self.time[-1]
-        # get the duration column
-        event_list[:,1]=event_list[:,3]-event_list[:,2]
-        return event_list
+        return Idealizer.extract_events(self.idealization, self.time)
+        # diff = self.idealization[1:]-self.idealization[:-1]
+        # events = np.where(diff!=0)[0]
+        # # diff+1 marks the indices of the first time point of a new event
+        # # starting from 0 to diff[0] is the first event, and from diff[-1] to
+        # # t_end is the last event, hence
+        # n_events = events.size+1
+        # # init the array they will be final output table, events in rows and
+        # # amplitude, start, end and duration in columns
+        # event_list = np.zeros((n_events,4))
+        # # fill the array
+        # if n_events == 1:
+        #     event_list[0][0] = self.idealization[0]
+        #     event_list[0][2] = self.time[0]-(self.time[1]-self.time[0])
+        #     event_list[0][3] = self.time[-1]
+        # else:
+        #     event_list[0][0] = self.idealization[0]
+        #     event_list[0][2] = self.time[0]-(self.time[1]-self.time[0])
+        #     event_list[0][3] = self.time[int(events[0])]
+        #     for i, t in enumerate(events[:-1]):
+        #         event_list[i+1][0] = self.idealization[int(t)+1]
+        #         event_list[i+1][2] = self.time[int(events[i])]
+        #         event_list[i+1][3] = self.time[int(events[i+1])]
+        #     event_list[-1][0] = self.idealization[int(events[-1])+1]
+        #     event_list[-1][2] = self.time[(int(events[-1]))]
+        #     event_list[-1][3] = self.time[-1]
+        # # get the duration column
+        # event_list[:,1]=event_list[:,3]-event_list[:,2]
+        # return event_list

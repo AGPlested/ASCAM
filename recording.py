@@ -217,7 +217,6 @@ class Recording(dict):
             filepath+='.pkl'
         with open(filepath, 'wb') as save_file:
             pickle.dump(self, save_file)
-        return True
 
     def export_matlab(self, filepath, datakey, lists_to_save, save_piezo,
                       save_command):
@@ -320,13 +319,12 @@ class Recording(dict):
                             deviation=piezo_diff)
         self.currentDatakey = newDatakey
         logging.debug("""keys of the recording are now {}""".format(self.keys()))
-        return True
 
     def gauss_filter_series(self, filter_freq):
         """Filter the current series using a gaussian filter"""
 
         logging.debug(f"gaussian_filter")
-        logging.got(ANALYSIS_LEVELV_NUM,
+        logging.log(ANALYSIS_LEVELV_NUM,
                     f"gauss filtering series '{self.currentDatakey}'\n"
                     f"with frequency {filter_freq}")
 
@@ -339,14 +337,13 @@ class Recording(dict):
             new_key = self.currentDatakey+fdatakey
         self[new_key] = self[self.currentDatakey].gaussian_filter(filter_freq)
         self.currentDatakey = new_key
-        return True
 
     def CK_filter_series(self, window_lengths, weight_exponent, weight_window,
 				         apriori_f_weights=False, apriori_b_weights=False):
         """Filter the current series using the Chung-Kennedy filter banks"""
 
         logging.debug(f"CK_filter_series")
-        logging.got(ANALYSIS_LEVELV_NUM,
+        logging.log(ANALYSIS_LEVELV_NUM,
                     f"Chung-Kennedy filtering on series "
                     f"'{self.currentDatakey}'\n"
                     f"window_lengths: {window_lengths}\n"
@@ -367,13 +364,12 @@ class Recording(dict):
         = self[self.currentDatakey].CK_filter(window_lengths, weight_exponent,
                             weight_window, apriori_f_weights, apriori_b_weights)
         self.currentDatakey = newDatakey
-        return True
 
     def idealize_series(self):
         """Idealize the current series."""
 
         logging.debug(f"idealize_series")
-        logging.got(ANALYSIS_LEVELV_NUM,
+        logging.log(ANALYSIS_LEVELV_NUM,
                     f"idealizing series '{self.currentDatakey}'\n"
                     f"amplitudes: {self._TC_amplitudes}\n"
                     f"thresholds: {self._TC_thresholds}")
@@ -384,7 +380,7 @@ class Recording(dict):
         """Idealize current episode."""
 
         logging.debug(f"idealize_episode")
-        logging.got(ANALYSIS_LEVELV_NUM,
+        logging.log(ANALYSIS_LEVELV_NUM,
                     f"idealizing episode '{self.n_episode}'\n"
                     f"amplitudes: {self._TC_amplitudes}\n"
                     f"thresholds: {self._TC_thresholds}")
@@ -393,7 +389,7 @@ class Recording(dict):
 
     def detect_fa(self, exclude=[]):
         """Apply first event detection to all episodes in the selected series"""
-        
+
         logging.debug(f"detect_fa")
         [episode.detect_first_activation(self._fa_threshold)
          for episode in self.series if episode.n_episode not in exclude]
