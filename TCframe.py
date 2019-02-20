@@ -1,12 +1,12 @@
 import tkinter as tk
 from tkinter import ttk
-import logging as log
+import logging
 
 import numpy as np
 
 class TC_Frame(ttk.Frame):
     def __init__(self, parent):
-        log.debug("being TC_Frame.__init__")
+        logging.debug("being TC_Frame.__init__")
         ttk.Frame.__init__(self, parent)
         self.parent = parent #parent is main
         #variables for entry
@@ -36,7 +36,7 @@ class TC_Frame(ttk.Frame):
 
         self.create_widgets()
         self.toggle_amp()
-        log.debug("end TC_Frame.__init__")
+        logging.debug("end TC_Frame.__init__")
 
     @property
     def show_amp(self):
@@ -47,7 +47,7 @@ class TC_Frame(ttk.Frame):
         return self.parent.plots.show_thetas.get()
 
     def create_widgets(self):
-        log.debug(f"TC_Frame.create_widgets")
+        logging.debug(f"TC_Frame.create_widgets")
         #button to toggle display of amplitude lines on plot
         self.amp_button = tk.Button(self,
                             text=f"Amplitudes [{self.parent.data.trace_unit}]",
@@ -82,7 +82,7 @@ class TC_Frame(ttk.Frame):
             .grid(row=11, column=1, padx=5, pady=5)
 
     def get_amps(self, update_plot=True, *args):
-        log.debug(f"TC_Frame.get_amps")
+        logging.debug(f"TC_Frame.get_amps")
         old_n_amps = self.parent.data.TC_amplitudes.size
         if ',' in self.amp_string.get():
             self.parent.data.TC_amplitudes \
@@ -112,7 +112,7 @@ class TC_Frame(ttk.Frame):
         self.demo_idealization()
 
     def toggle_manual_thetas(self, *args):
-        log.debug(f"toggle_manual_thetas")
+        logging.debug(f"toggle_manual_thetas")
         #check if theta string is empty or conists only of whitespaces
         if self.theta_string.get().isspace() or self.theta_string.get():
             self.manual_thetas = False
@@ -120,10 +120,10 @@ class TC_Frame(ttk.Frame):
             self.parent.plots.update_theta_lines()
         else:
             self.manual_thetas = True
-        log.debug(f"manual_thetas is {self.manual_thetas}")
+        logging.debug(f"manual_thetas is {self.manual_thetas}")
 
     def auto_set_thetas(self):
-        log.debug(f"auto_set_thetas")
+        logging.debug(f"auto_set_thetas")
         #automatically set the thresholds to the midpoint between the amps
         self.parent.data.TC_thresholds \
         = (self.parent.data.TC_amplitudes[1:]\
@@ -134,7 +134,7 @@ class TC_Frame(ttk.Frame):
                   sep.join(np.char.mod('%.2e', self.parent.data.TC_thresholds)))
 
     def get_thresholds(self, update_plot=True, *args):
-        log.debug(f"TC_Frame.get_thresholds")
+        logging.debug(f"TC_Frame.get_thresholds")
         old_n_thetas = self.parent.data.TC_thresholds.size
         if ',' in self.amp_string.get():
             self.parent.data.TC_thresholds \
@@ -153,7 +153,7 @@ class TC_Frame(ttk.Frame):
         self.demo_idealization()
 
     def toggle_amp(self, *args):
-        log.debug(f"TC_Frame.toggle_amp")
+        logging.debug(f"TC_Frame.toggle_amp")
         if self.parent.plots.show_amp.get()==0:
             # try:
             self.get_amps(update_plot=False)
@@ -165,7 +165,7 @@ class TC_Frame(ttk.Frame):
             self.amp_button.config(relief="raised")
 
     def toggle_tc(self, *args):
-        log.debug(f"TC_Frame.toggle_tc")
+        logging.debug(f"TC_Frame.toggle_tc")
         if self.parent.plots.show_thetas.get()==0:
             try: self.get_thresholds(update_plot=False)
             except IndexError: return
@@ -176,19 +176,19 @@ class TC_Frame(ttk.Frame):
             self.tc_button.config(relief="raised")
 
     def demo_idealization(self, *args):
-        log.debug(f"TC_Frame.demo_idealization")
+        logging.debug(f"TC_Frame.demo_idealization")
         self.parent.data.idealize_episode()
         self.parent.plots.update_idealization_plot()
 
     def click_cancel(self):
-        log.debug(f"TC_Frame.click_cancel")
+        logging.debug(f"TC_Frame.click_cancel")
         for series in self.parent.data.values():
             for episode in series:
                 episode.idealization = None
         self.close_frame()
 
     def click_apply(self):
-        log.debug(f"TC_Frame.click_apply")
+        logging.debug(f"TC_Frame.click_apply")
         #when clicking 'ok' apply the idealization with the last settings
         #to the actual data in the main window
         self.get_amps(update_plot=False)
@@ -196,7 +196,7 @@ class TC_Frame(ttk.Frame):
         self.close_frame()
 
     def close_frame(self):
-        log.debug(f"TC_Frame.close_frame")
+        logging.debug(f"TC_Frame.close_frame")
         # #unbind idealization callback from episode list
         self.parent.episodeList.episodelist.unbind('<<ListboxSelect>>',
                                                     self.eplist_track_id)

@@ -1,4 +1,4 @@
-import logging as log
+import logging
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -28,9 +28,9 @@ class Episode():
                           came before this one
             filterType [string] - type of filter used
         """
-        #units of the data
-        #the units of the private attributes (eg _time) should be SI units
-        #ie seconds, ampere etc
+        # units of the data
+        # the units of the private attributes (eg _time) should be SI units
+        # ie seconds, ampere etc
         self.time_unit = time_unit
         self.time_unit_factors = {'ms':1e3, 's':1}
         self.trace_unit = trace_unit
@@ -40,18 +40,18 @@ class Episode():
         self.command_unit_factors = {'uV':1e6, 'mV':1e3, 'V':1}
         self.piezo_unit = piezo_unit
         self.piezo_unit_factors = {'uV':1e6, 'mV':1e3, 'V':1}
-        #units when given input
+        # units when given input
         input_time_unit_factors = {'ms':1e-3, 's':1}
         input_time_factor = input_time_unit_factors[input_time_unit]
-        #private attributes storing the actual data
+        # private attributes storing the actual data
         self._time = time*input_time_factor
         self._trace = trace
         self._piezo = piezo
         self._command = command
-        #results of analyses
+        # results of analyses
         self._first_activation = None
         self._idealization = None
-        #metadata about the episode
+        # metadata about the episode
         self.n_episode = int(n_episode)
         self.sampling_rate = sampling_rate
         self.suspiciousSTD = False
@@ -113,13 +113,13 @@ class Episode():
     @property
     def piezo_unit_factor(self): return self.piezo_unit_factors[self.piezo_unit]
 
-    def gauss_filter_episode(self, filterFrequency=1e3, method='convolution'):
+    def gauss_filter_episode(self, filter_frequency=1e3, method='convolution'):
         """
         Replace the current trace of the episode by the gauss filtered version
         of itself
         """
         self._trace = gaussian_filter(signal=self._trace,
-                                     filterFrequency=filterFrequency,
+                                     filter_frequency=filter_frequency,
                                      sampling_rate=self.sampling_rate)
         #reset idealization
         self._idealization = None

@@ -1,4 +1,4 @@
-import logging as log
+import logging
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -31,7 +31,7 @@ def create_histogram(time, piezos, traces, active = True, select_piezo=True,
     centers = (bins[:-1]+bins[1:])/2
     # get the width of a(ll) bin(s)
     width = (bins[1]-bins[0])
-    # log.debug("""return width: {}, centers: {}""".format(width,centers))
+    # logging.debug("""return width: {}, centers: {}""".format(width,centers))
     return heights, bins, centers, width
 
 def plot_histogram(fig, pgs, episode, series, n_bins=50, density=False, select_piezo=False,
@@ -59,7 +59,7 @@ def plot_histogram(fig, pgs, episode, series, n_bins=50, density=False, select_p
     heights_single, bins_single, center_single, width_single\
     = hist_single
     if allpoint_hist:
-        log.info("""will create allpoint histogram""")
+        logging.info("""will create allpoint histogram""")
         # get a list of all the currents and all the traces
         if episode_inds.size==0: episode_inds = list(range(len(series)))
         all_piezos = [episode.piezo for episode in series if episode.n_episode in episode_inds]
@@ -79,15 +79,15 @@ def plot_histogram(fig, pgs, episode, series, n_bins=50, density=False, select_p
         ax.plot(heights_all, center_all, color='orange', lw=2)
         ax.set_ylabel(f"Current [{trace_unit}")
         if density:
-            log.info('setting y-label "Relative frequency"')
+            logging.info('setting y-label "Relative frequency"')
             ax.set_xlabel("Relative frequency")
         else:
-            log.info('setting y-label "Count"')
+            logging.info('setting y-label "Count"')
             ax.set_xlabel("Count")
 
     # histogram of single episode
     if single_hist:
-        log.info("plotting single episode histogram")
+        logging.info("plotting single episode histogram")
         ax.barh(center_single, heights_single, width_single,
                 align='center', alpha=1)
     # cursor = PlotCursor(ax, useblit=True, color='black', linewidth=1)
@@ -104,7 +104,7 @@ def plot_traces(fig, pgs, episode, show_piezo=True, show_command=True,
     x_share = None
     # plot command voltage
     if show_command and type(episode.command) is np.ndarray:
-        log.info('will plot command voltage')
+        logging.info('will plot command voltage')
         # always plot command voltage on bottom (-1 row)
         command_plot = fig.add_subplot(pgs[-1,:2])
         cm_line, = command_plot.plot(time, episode.command)
@@ -131,7 +131,7 @@ def plot_traces(fig, pgs, episode, show_piezo=True, show_command=True,
     x_share = x_share if show_command else current_plot
     # plot the piezo
     if show_piezo and type(episode.piezo) is np.ndarray:
-        log.info('will plot piezo voltage')
+        logging.info('will plot piezo voltage')
         #always plots piezo voltage on top
         piezo_plot = fig.add_subplot(pgs[0,:2], sharex=x_share)
         pi_line, = piezo_plot.plot(time, episode.piezo)

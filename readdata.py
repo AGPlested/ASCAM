@@ -1,7 +1,7 @@
 import csv
 import json
 import pickle
-import logging as log
+import logging
 import subprocess
 import os
 
@@ -32,7 +32,7 @@ def load_pickle(filename):
     """
     read a recording object from a pickle file
     """
-    log.info("""reading pickle""")
+    logging.info("""reading pickle""")
     with open(filename,'rb') as file:
         data = pickle.load(file)
     return data

@@ -1,4 +1,4 @@
-import logging as log
+import logging
 
 import numpy as np
 
@@ -8,7 +8,7 @@ def parse_filename(filename):
     works by walking through the filename in reverse order and considering
     the filetype to be whatever comes before the first '.' it encounters
     """
-    log.info("""called `parse_filename` on: {}""".format(filename))
+    logging.info("""called `parse_filename` on: {}""".format(filename))
     N = len(filename)
     period = False
     slash = False
@@ -22,7 +22,7 @@ def parse_filename(filename):
             break
     path = filename[:slash]
     filetype = filename[period+1:]
-    log.debug("""path: {}
+    logging.debug("""path: {}
                  filetype: {}""".format(path, filetype))
     if filetype == 'axgd':
         filetype = 'axo'
@@ -35,7 +35,7 @@ def parse_filename(filename):
         filetype_long = 'tab-delimited-text'
     else: log.warning("Could not detect filetype!")
     filename = filename[slash+1:]
-    log.debug("""filetype_long : {}"
+    logging.debug("""filetype_long : {}"
                filename: {} """.format(filetype_long,filename))
     return filetype, path, filetype_long, filename
 
@@ -64,22 +64,22 @@ def piezo_selection(time, piezo, trace, active=True, deviation=0.05):
         trace [1D array of floats] - The current at selected points.
     """
     maxPiezo = np.max(np.abs(piezo))
-    # log.debug("""called `select_piezo` with parameters:
+    # logging.debug("""called `select_piezo` with parameters:
     #           active = {}, deviation = {}, maxPiezo = {}
     #           time: {}
     #           piezo: {}
     #           trace: {}
     #           """.format(active,deviation,maxPiezo,time,piezo,trace))
     if active:
-        # log.debug("""selecting for active piezo""")
+        # logging.debug("""selecting for active piezo""")
         indices = np.where((maxPiezo-np.abs(piezo))/maxPiezo<deviation)
     else:
-        # log.debug("""selecting for inactive piezo""")
+        # logging.debug("""selecting for inactive piezo""")
         indices = np.where(np.abs(piezo)/maxPiezo<deviation)
     time = time[indices]
     piezo = piezo[indices]
     trace = trace[indices]
-    # log.debug("""found indices: {}
+    # logging.debug("""found indices: {}
     #           times: {}
     #           piezo: {}
     #           trace: {}""".format(indices, time, piezo, trace))
@@ -91,8 +91,8 @@ def interval_selection(time, signal, intervals, fs):
     the function assumes `time` and `intervals` to have the same units and
     fs to have the reciprocal unit (eg. s, s and hz)
     """
-    log.info("""called `interval_selection`""")
-    # log.debug("""parameters are: sampling frequency: {}, time_unit: {}
+    logging.info("""called `interval_selection`""")
+    # logging.debug("""parameters are: sampling frequency: {}, time_unit: {}
     #           time: {}
     #           signal: {}
     #           intervals: {}""".format(fs, time_unit, time, signal, intervals))
@@ -100,19 +100,19 @@ def interval_selection(time, signal, intervals, fs):
     time_out = []
     signal_out = []
     if type(intervals[0]) is list:
-        log.debug("""`intervals` is a list of intervals""")
+        logging.debug("""`intervals` is a list of intervals""")
         for ival in intervals:
             time_out.extend(time[ int(ival[0]*fs)
                             : int(ival[-1]*fs) ])
             signal_out.extend(signal[ int(ival[0]*fs)
                               : int(ival[-1]*fs)])
     elif type(intervals[0]) in [int, float]:
-        log.debug("""`intervals` is just one interval""")
+        logging.debug("""`intervals` is just one interval""")
         time_out = time[ int(intervals[0]*fs)
                    : int(intervals[-1]*fs)]
         signal_out = signal[int(intervals[0]*fs)
                    : int(intervals[1]*fs)]
-    # log.debug("""selected times: {}
+    # logging.debug("""selected times: {}
     #              and signal: {}""".format(time_out,signal_out))
     return time_out, signal_out
 
@@ -125,7 +125,7 @@ def stringList_parser(list_as_string):
     Returns:
         whole_list (list of lists of integers)
     """
-    log.info("""called `stringList_parser`""")
+    logging.info("""called `stringList_parser`""")
     whole_list = []
     current_list = []
     num_string = ''
@@ -141,6 +141,6 @@ def stringList_parser(list_as_string):
             whole_list.append(current_list)
         else:
             num_string += char
-    # log.debug("""string was: {}
+    # logging.debug("""string was: {}
     #          returning: {}""".format(list_as_string,whole_list))
     return whole_list
