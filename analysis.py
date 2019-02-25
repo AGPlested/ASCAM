@@ -71,16 +71,21 @@ class Idealizer():
 
         for i, dur in enumerate(events[:,1]):
             if dur < resolution:
-                # add the first but not the last event to the next, otherwise,
-                # flip a coin
                 i_start = int(np.where(time==events[i,2])[0])
                 i_end = int(np.where(time==events[i,3])[0])
+                # add the first but not the last event to the next, otherwise,
+                # flip a coin
                 if ((np.random.binomial(1, .5) or i == 0)
                     and i != len(events[:,1])-1
                     ):
                     idealization[i_start:i_end+1] = events[i+1,0]
+                    events[i,0] = events[i+1,0]
+                    events[i+1,1] += events[i,1] # the event is joined to the
+                    # next event so their combined duration needs to be
+                    # considered
                 else:
                     idealization[i_start:i_end+1] = events[i-1,0]
+                    events[i,0] = events[i-1,0]
         return idealization
 
     @staticmethod
