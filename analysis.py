@@ -22,14 +22,14 @@ class Idealizer():
         Arguments:
             amplitudes [1D numpy array] - supposed true amplitudes of signal
             thresholds [1D numpy array] - thresholds between the amplitudes
-        If the wrong number of thresholds (or none) are given they will be replaced
-        by the midpoint between the pairs of adjacent amplitudes."""
+        If the wrong number of thresholds (or none) are given they will be
+        replaced by the midpoint between the pairs of adjacent amplitudes."""
 
         self.amplitudes = np.asarray(amplitudes)
+        #sort amplitudes in descending order
         self.amplitudes.sort()
         self.amplitudes = self.amplitudes[::-1]
-        if self.amplitudes.size == 1:
-            return np.ones(signal.size)*self.amplitudes
+
         if thresholds.size != self.amplitudes.size - 1:
             self.thresholds = (self.amplitudes[1:]+self.amplitudes[:-1]) / 2
         else: self.thresholds = thresholds
@@ -40,23 +40,18 @@ class Idealizer():
         Arguments:
             signal [1D numpy array] - data to be idealized"""
 
-        self.amplitudes = np.asarray(self.amplitudes)
-        self.amplitudes.sort()
-        self.amplitudes = self.amplitudes[::-1]
         if self.amplitudes.size == 1:
-            return np.ones(signal.size)*self.amplitudes
-        if self.thresholds.size != self.amplitudes.size - 1:
-            self.thresholds = (self.amplitudes[1:]+self.amplitudes[:-1]) / 2
+            idealization = np.ones(signal.size)*self.amplitudes
+        else:
+            idealization = np.zeros(len(signal))
+            # np.where returns a tuple containing array so we have to get the
+            # first element to get the indices
+            inds = np.where(signal>self.thresholds[0])[0]
+            idealization[inds] = self.amplitudes[0]
+            for thresh, amp in zip(self.thresholds, self.amplitudes[1:]):
+                inds = np.where(signal<thresh)[0]
+                idealization[inds] = amp
 
-        idealization = np.zeros(len(signal))
-        # np.where returns a tuple containing array so we have to get the first
-        # element to get the indices
-        inds = np.where(signal>self.thresholds[0])[0]
-        idealization[inds] = self.amplitudes[0]
-
-        for thresh, amp in zip(self.thresholds, self.amplitudes[1:]):
-            inds = np.where(signal<thresh)[0]
-            idealization[inds] = amp
         return idealization
 
     def apply_resolution(self, idealization, time, resolution):
@@ -93,6 +88,9 @@ class Idealizer():
                         events[i-1, 1] += events[i, 1]
                         # set end_time
                         events[i-1, 3] = events[i, 3]
+                        #delete current event
+                        events = np.delete(events, i, axis=0)
+                        i -= 1 
                     # now one less event to iterate over
                     end_ind -= 1
                 i += 1
