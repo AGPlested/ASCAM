@@ -87,14 +87,14 @@ class Series(list):
                                              active=active)
         return output
 
-    def idealize_all(self, amplitudes, thresholds):
+    def idealize_all(self, amplitudes, thresholds, resolution):
         """Return `Series` object containing the idealization of the episodes
         in `self`."""
 
         logging.debug(f"idealize_all")
 
         for episode in self:
-            episode.idealize(amplitudes, thresholds)
+            episode.idealize(amplitudes, thresholds, resolution)
 
     def check_standarddeviation_all(self, stdthreshold=5e-13):
         """Check the standard deviation of the each episode in `self` against the

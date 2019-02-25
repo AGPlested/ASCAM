@@ -148,11 +148,12 @@ class Episode():
         # reset _idealization
         self._idealization = None
 
-    def idealize(self, amplitudes, thresholds):
+    def idealize(self, amplitudes, thresholds, resolution):
         """Idealize the episode using threshold crossing."""
 
         self._idealization = Idealizer.idealize_episode(self._trace, amplitudes,
-                                                        thresholds)
+                                                        thresholds, resolution,
+                                                        self._time)
 
     def check_standarddeviation_all(self, stdthreshold=5e-13):
         """Check the standard deviation of the episode against a reference
