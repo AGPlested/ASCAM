@@ -1,4 +1,4 @@
-import logging as log
+import logging
 import tkinter as tk
 from tkinter import ttk
 
@@ -40,12 +40,12 @@ class FirstActivationFrame(tk.Frame):
         self.manually_set_eps = set()
 
     def change_threshold(self, *args):
-        log.debug(f"change_threshold")
+        logging.debug(f"change_threshold")
         #update the string showing the threshold value
         self.fa_threshold.set(f"{self.parent.data.fa_threshold:.5f}")
 
     def toggle_tracking(self):
-        log.debug(f"toggle_tracking")
+        logging.debug(f"toggle_tracking")
         if not self.tracking_on:
             if self.manual_mode: self.toggle_manual_mode()
             if self.manually_set_eps:
@@ -86,7 +86,7 @@ class FirstActivationFrame(tk.Frame):
             self.parent.plots.update_fa_line()
 
     def create_widgets(self):
-        log.debug(f"create_widgets")
+        logging.debug(f"create_widgets")
         self.toggle_button = tk.Button(self, text='Set Threshold',
                                         command=self.toggle_tracking)
         self.toggle_button.grid()
@@ -108,7 +108,7 @@ class FirstActivationFrame(tk.Frame):
             .grid(row=5, column=1)
 
     def toggle_manual_mode(self):
-        log.debug(f"toggle_manual_mode")
+        logging.debug(f"toggle_manual_mode")
         if not self.manual_mode:
             if self.tracking_on: self.toggle_tracking()
             self.plot_manual_cid = self.parent.plots.fig.canvas.mpl_connect(
@@ -121,7 +121,7 @@ class FirstActivationFrame(tk.Frame):
         self.manual_mode = not self.manual_mode
 
     def manual_fa_selection(self, event):
-        log.debug(f"manual_fa_selection")
+        logging.debug(f"manual_fa_selection")
         if (self.parent.plots.toolbar._active is None
             and event.button==1
             and event.inaxes is not None
@@ -134,18 +134,18 @@ class FirstActivationFrame(tk.Frame):
             self.parent.plots.update_fa_mark()
 
     def click_cancel(self):
-        log.debug(f"click_cancel")
+        logging.debug(f"click_cancel")
         self.parent.plots.show_fa_mark.set(0)
         for episode in self.parent.data.series:
             episode._first_activation = None
         self.close_frame()
 
     def ok_click(self):
-        log.debug(f"ok_click")
+        logging.debug(f"ok_click")
         self.close_frame()
 
     def close_frame(self):
-        log.debug(f"close_frame")
+        logging.debug(f"close_frame")
         #return plot to previous settings
         if self.tracking_on:
             self.parent.plots.fig.canvas.mpl_disconnect(self.plot_track_cid)

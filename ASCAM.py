@@ -5,46 +5,17 @@ ASCAM for processing and analysis of data from single ion channels.
 import sys
 import os
 import logging
-import datetime
+# import datetime
 import getopt
 
 from gui import GUI
+from logging_setup import initialize_logger
 
-def initialize_logger(output_dir,log_level='INFO',silent=False):
-    """
-    Set up the logging module to write INFO level output to the console and
-    write everything to a file with timestamps and module name
-    """
-    date = datetime.datetime.now().strftime("%Y-%m-%d-%H:%M")
-
-    logger = logging.getLogger()
-    logger.setLevel(logging.DEBUG)
-
-    if not silent:
-        # create console handler and set level to info
-        handler = logging.StreamHandler()
-        if log_level=='INFO':
-            handler.setLevel(logging.INFO)
-        elif log_level=='DEBUG':
-            handler.setLevel(logging.DEBUG)
-        formatter = logging.Formatter("%(levelname)s:%(module)s:"
-                                       "%(lineno)d - %(message)s")
-        handler.setFormatter(formatter)
-        logger.addHandler(handler)
-
-    # create debug file handler and set level to debug
-    if not os.path.exists(output_dir): os.makedirs(output_dir)
-    handler = logging.FileHandler(
-                           os.path.join(output_dir,'ASCAM'+'_'+date+'.log'),"w")
-    handler.setLevel(logging.DEBUG)
-    formatter = logging.Formatter('%(asctime)s:%(levelname)s:%(module)s:'
-                                   '%(lineno)d:%(message)s')
-    handler.setFormatter(formatter)
-    logger.addHandler(handler)
 
 def parse_options():
     """
     Parse the command line options when launching ASCAM.
+
     Returns:
         log_level (string) - which level of logging should be printed to console
         silent (bool) - if true no logs will be printed to the console
@@ -71,12 +42,12 @@ def parse_options():
         elif opt in ("-t", "test"):
             test = True
         elif opt in ("-h", "--help"):
-            usage()
+            display_help()
             sys.exit(2)
         else: assert False, "unhandled option"
     return log_level, silent, logdir, test
 
-def usage():
+def display_help():
     """
     Print a manual for calling ASCAM to the commandline.
     """

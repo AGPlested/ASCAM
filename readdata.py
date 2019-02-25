@@ -1,7 +1,7 @@
 import csv
 import json
 import pickle
-import logging as log
+import logging
 import subprocess
 import os
 
@@ -32,7 +32,7 @@ def load_pickle(filename):
     """
     read a recording object from a pickle file
     """
-    log.info("""reading pickle""")
+    logging.info("""reading pickle""")
     with open(filename,'rb') as file:
         data = pickle.load(file)
     return data
@@ -123,7 +123,9 @@ def load_matlab(filename):
         value = scipy_loadmat(variable[1])[variable[0]]
         # the first possibility is the name in files we get, the second
         # comes from the ASCAM data structure
-        if 'Ipatch' in variable[0] or 'trace' in variable[0]:
+        if ('Ipatch' in variable[0]
+            or 'trace' in variable[0]
+            or "Column" in variable[0]):
             current.append(value.flatten())
         elif '10Vm' in variable[0] or 'command' in variable[0]:
             commandVoltage.append(value.flatten())
