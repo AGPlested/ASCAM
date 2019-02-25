@@ -326,7 +326,7 @@ class Recording(dict):
         """Filter the current series using a gaussian filter"""
 
         logging.debug(f"gaussian_filter")
-        logging.got(ANALYSIS_LEVELV_NUM,
+        logging.log(ANALYSIS_LEVELV_NUM,
                     f"gauss filtering series '{self.currentDatakey}'\n"
                     f"with frequency {filter_freq}")
 
@@ -342,11 +342,11 @@ class Recording(dict):
         return True
 
     def CK_filter_series(self, window_lengths, weight_exponent, weight_window,
-				         apriori_f_weights=False, apriori_b_weights=False):
+	apriori_f_weights=False, apriori_b_weights=False):
         """Filter the current series using the Chung-Kennedy filter banks"""
 
         logging.debug(f"CK_filter_series")
-        logging.got(ANALYSIS_LEVELV_NUM,
+        logging.log(ANALYSIS_LEVELV_NUM,
                     f"Chung-Kennedy filtering on series "
                     f"'{self.currentDatakey}'\n"
                     f"window_lengths: {window_lengths}\n"
@@ -373,7 +373,7 @@ class Recording(dict):
         """Idealize the current series."""
 
         logging.debug(f"idealize_series")
-        logging.got(ANALYSIS_LEVELV_NUM,
+        logging.log(ANALYSIS_LEVELV_NUM,
                     f"idealizing series '{self.currentDatakey}'\n"
                     f"amplitudes: {self._TC_amplitudes}\n"
                     f"thresholds: {self._TC_thresholds}")
@@ -384,7 +384,7 @@ class Recording(dict):
         """Idealize current episode."""
 
         logging.debug(f"idealize_episode")
-        logging.got(ANALYSIS_LEVELV_NUM,
+        logging.log(ANALYSIS_LEVELV_NUM,
                     f"idealizing episode '{self.n_episode}'\n"
                     f"amplitudes: {self._TC_amplitudes}\n"
                     f"thresholds: {self._TC_thresholds}")
