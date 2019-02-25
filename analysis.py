@@ -69,27 +69,33 @@ class Idealizer():
 
         events = self.extract_events(idealization, time)
         while np.any(events[:,1] < resolution):
-            for i, dur in enumerate(events[:,1]):
-                if dur < resolution:
+            i = 0
+            end_ind = len(events[:,1])
+            while i < end_ind:
+                if events[i, 1] < resolution:
                     i_start = int(np.where(time==events[i,2])[0])
-                    i_end = int(np.where(time==events[i,3])[0])
+                    i_end = int(np.where(time==events[i,3])[0]) + 1
                     # add the first but not the last event to the next, otherwise,
                     # flip a coin
-                    if ((np.random.binomial(1, .5) or i == 0)
-                        and i != len(events[:,1])-1
-                        and events[i+1,1] >= resolution
-                        ):
-                        idealization[i_start:i_end+1] = events[i+1,0]
-                        events[i,0] = events[i+1,0]
-                        events[i+1,1] += events[i,1]
-                        events[i,1] = events[i+1,1]  # the event is joined to the
-                        # next event so their combined duration needs to be
-                        # considered
+                    if (np.random.binomial(1, .5) or i == 0) and i != end_ind:
+                        idealization[i_start:i_end] = events[i+1, 0]
+                        # set amplitude
+                        events[i, 0] = events[i+1, 0]
+                        # add duration
+                        events[i, 1] += events[i+1, 1]
+                        # set end_time
+                        events[i, 3] = events[i+1, 3]
+                        # delete next event
+                        events = np.delete(events, i+1, axis=0)
                     elif events[i-1,1] >= resolution:
-                        idealization[i_start:i_end+1] = events[i-1,0]
-                        events[i,0] = events[i-1,0]
-                        events[i,1] += events[i-1,1]
-                        events[i-1,1] = events[i,1]
+                        idealization[i_start:i_end] = events[i-1, 0]
+                        # add duration
+                        events[i-1, 1] += events[i, 1]
+                        # set end_time
+                        events[i-1, 3] = events[i, 3]
+                    # now one less event to iterate over
+                    end_ind -= 1
+                i += 1
         return idealization
 
     @staticmethod
