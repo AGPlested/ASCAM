@@ -322,7 +322,7 @@ class TC_Frame(ttk.Frame):
                 self.update_number_in_string(y_pos, self.theta_string)
                 self.get_thresholds(update_plot=False)
                 self.manual_thetas = True
-            else:
+            elif self.parent.plots.show_amp.get():
                 self.update_number_in_string(y_pos, self.amp_string)
                 self.get_amps(update_plot=False)
                 if not self.manual_thetas:
