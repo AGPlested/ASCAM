@@ -21,6 +21,7 @@ class TC_Frame(ttk.Frame):
 
         # if idealization has already been performed store the parameters
         # to recreate if cancel is clicked
+        self.previous_params = dict()
         if self.parent.data.series.is_idealized:
             self.previous_params = {self.parent.datakey.get(): (
                                         self.parent.data.series._TC_amplitudes,
@@ -250,9 +251,12 @@ class TC_Frame(ttk.Frame):
         for datakey, series in self.parent.data.items():
             #check if the series was previously idealized, if so repeat the
             #idealization with previously used parameters
-            if datakey in self.previous_params.keys():
-                series.idealize_all(self.previous_params[datakey][0],
-                                    self.previous_params[datakey][1])
+            amps, thetas = self.previous_params.get(datakey, (None, None))
+            #if datakey in self.previous_params.keys():
+                #series.idealize_all(self.previous_params[datakey][0],
+                 #                   self.previous_params[datakey][1])
+            if amps:
+                series.idealize_all(amps, thetas)
             else:
                 series.remove_idealization()
         self.close_frame()
