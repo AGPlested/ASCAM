@@ -28,7 +28,6 @@ class TC_Frame(ttk.Frame):
         self.previous_show_hist = self.parent.plots.show_hist.get()
         self.parent.plots.show_piezo.set(0)
         self.parent.plots.show_command.set(0)
-        self.parent.plots.show_hist.set(0)
         # trace episode switching in episodeList to idealize when selecting new
         # episode
         self.eplist_track_id = self.parent.episodeList.episodelist.bind(
@@ -89,7 +88,7 @@ class TC_Frame(ttk.Frame):
 
         # frame closing buttons
         ttk.Button(self, text="Apply and finish", command=self.click_apply
-                    ).grid(row=12, padx=5, pady=5)
+                    ).grid(row=13, padx=5, pady=5)
         ttk.Button(self, text="Cancel", command=self.click_cancel
                     ).grid(row=13, column=1, padx=5, pady=5)
 
