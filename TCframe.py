@@ -9,23 +9,31 @@ class TC_Frame(ttk.Frame):
         logging.debug("being TC_Frame.__init__")
         ttk.Frame.__init__(self, parent)
         self.parent = parent #parent is main
-        # if idealization has already been performed store the parameters
-        # to recreate if cancel is clicked
-        if self.parent.data.series.is_idealized:
-            self.previous_params = {self.parent.datakey.get(): (
-                                        self.parent.data.series._TC_amplitudes,
-                                        self.parent.data.series._TC_thresholds)}
+
         # TODO implement a callback for switching between different series
         # while in idealization mode, keeping track of different idealization\
         # parameters for each series
 
         # variables for entry
         self.amp_string = tk.StringVar() # string holding the amplitudes
-        self.amp_string.set('0')
         self.theta_string = tk.StringVar() # string holding the thresholds
         self.res_string = tk.StringVar() # string holding the resolution
-        # variable to keep track of whether thetas have been set manually
-        self.manual_thetas = False
+
+        # if idealization has already been performed store the parameters
+        # to recreate if cancel is clicked
+        if self.parent.data.series.is_idealized:
+            self.previous_params = {self.parent.datakey.get(): (
+                                        self.parent.data.series._TC_amplitudes,
+                                        self.parent.data.series._TC_thresholds)}
+            self.array_into_tkstring(self.parent.data.series._TC_amplitudes,
+                                     self.amp_string)
+            self.array_into_tkstring(self.parent.data.series._TC_thresholds,
+                                     self.theta_string)
+            self.manual_thetas = True
+        else:
+            self.amp_string.set('0')
+            self.manual_thetas = False
+
         # variables for moving the lines on the plots with the mouse
         self.tracking_on = True
         self.plot_track_cid = self.parent.plots.fig.canvas.mpl_connect(
@@ -160,9 +168,9 @@ class TC_Frame(ttk.Frame):
         = (self.parent.data.TC_amplitudes[1:]\
            +self.parent.data.TC_amplitudes[:-1])/2
         # seperate the threshold string the same way as the amp string
-        sep = ' ,' if ',' in self.amp_string.get() else ' '
-        self.theta_string.set(
-                  sep.join(np.char.mod('%.2e', self.parent.data.TC_thresholds)))
+        sep = ', ' if ',' in self.amp_string.get() else ' '
+        self.array_into_tkstring(self.parent.data.TC_thresholds,
+                                 self.theta_string, sep=sep)
 
     def get_thresholds(self, update_plot=True, *args):
         """Get the thresholds from the entry field."""
@@ -342,5 +350,11 @@ class TC_Frame(ttk.Frame):
             array = np.array(tk_string.get().split(','), dtype=np.float)
         else:
             array = np.array(tk_string.get().split(), dtype=np.float)
-
         return array
+
+    @staticmethod
+    def array_into_tkstring(array, tk_string, sep=' '):
+        """Take a numpy array and enter it in to a TK.StringVar as a list of
+        values seperated by commas."""
+
+        tk_string.set(sep.join(np.char.mod('%.2e', array)))
