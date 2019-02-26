@@ -12,17 +12,17 @@ class TC_Frame(ttk.Frame):
         #if idealization has already been performed store the parameters
         #to recreate if cancel is clicked
         if self.parent.data.series.is_idealized:
-            self.previous_params = {self.parent.datakey.get():
-                                (self.parent.data.series._TC_amplitudes,
-                                self.parent.data.series._TC_thresholds)}
+            self.previous_params = {self.parent.datakey.get(): (
+                                        self.parent.data.series._TC_amplitudes,
+                                        self.parent.data.series._TC_thresholds)}
         #TODO implement a callback for switching between different series
         #while in idealization mode, keeping track of different idealization\
         #parameters for each series
 
         #variables for entry
         self.amp_string = tk.StringVar()
-        self.amp_string.set('0')
         self.theta_string = tk.StringVar()
+        self.amp_string.set('0')
         #variable to keep track of whether thetas have been set manually
         self.manual_thetas = False
         #variables for moving the lines on the plots with the mouse
@@ -94,12 +94,7 @@ class TC_Frame(ttk.Frame):
     def get_amps(self, update_plot=True, *args):
         logging.debug(f"TC_Frame.get_amps")
         old_n_amps = self.parent.data.TC_amplitudes.size
-        if ',' in self.amp_string.get():
-            self.parent.data.TC_amplitudes \
-            = np.array(self.amp_string.get().split(','), dtype=np.float)
-        else:
-            self.parent.data.TC_amplitudes \
-            = np.array(self.amp_string.get().split(), dtype=np.float)
+        self.parent.data.TC_amplitudes = self.tk_string_to_array(self.amp_string)
         new_n_amps = self.parent.data.TC_amplitudes.size
 
         #update the amp lines if command is given and the number didnt change
@@ -146,12 +141,8 @@ class TC_Frame(ttk.Frame):
     def get_thresholds(self, update_plot=True, *args):
         logging.debug(f"TC_Frame.get_thresholds")
         old_n_thetas = self.parent.data.TC_thresholds.size
-        if ',' in self.amp_string.get():
-            self.parent.data.TC_thresholds \
-            = np.array(self.theta_string.get().split(','), dtype=np.float)
-        else:
-            self.parent.data.TC_thresholds \
-            = np.array(self.theta_string.get().split(), dtype=np.float)
+        self.parent.data.TC_thresholds = self.tk_string_to_array(
+                                                              self.theta_string)
         new_n_thetas = self.parent.data.TC_thresholds.size
         #update the amp lines if command is given and the number didnt change
         #always draw new lines if the number changed
@@ -264,45 +255,47 @@ class TC_Frame(ttk.Frame):
                 else: amp_diff = np.inf
                 #update the closest line
                 if np.min(tc_diff)<np.min(amp_diff):
-                    i = np.argmin(tc_diff)
-                    sep = ',' if ',' in self.theta_string.get() else ' '
-                    split_string = self.theta_string.get().split(sep)
-                    split_string[i] = f"{y_pos:.2e}"
-                    self.theta_string.set(sep.join(split_string))
-                    self.manual_thetas = True
+                    self.update_number_in_string(y_pos, self.theta_string)
                     self.get_thresholds(update_plot=False)
                 else:
-                    i = np.argmin(amp_diff)
-                    self.parent.data.TC_amplitudes[i] = y_pos
-                    sep = ',' if ',' in self.amp_string.get() else ' '
-                    split_string = self.amp_string.get().split(sep)
-                    split_string[i] = f"{y_pos:.2e}"
-                    self.amp_string.set(sep.join(split_string))
+                    self.update_number_in_string(y_pos, self.amp_string)
                     self.get_amps(update_plot=False)
             #if thresholds are shown and are nonempty
             elif (self.parent.plots.show_thetas.get()
                 and self.parent.data.TC_thresholds.size>0
                 ):
-                tc_diff = np.abs(self.parent.data.TC_thresholds-y_pos)
-                i = np.argmin(tc_diff)
-                sep = ',' if ',' in self.theta_string.get() else ' '
-                split_string = self.theta_string.get().split(sep)
-                split_string[i] = f"{y_pos:.2e}"
-                self.theta_string.set(sep.join(split_string))
-                self.get_thresholds(update_plot=False)
+                self.update_number_in_string(y_pos, self.theta_string)
                 self.manual_thetas = True
             #if amplitudes are shown and are nonempty
             elif (self.parent.plots.show_amp.get()
                 and self.parent.data.TC_amplitudes.size>0
                 ):
-                amp_diff = np.abs(self.parent.data.TC_amplitudes-y_pos)
-                i = np.argmin(amp_diff)
-                sep = ',' if ',' in self.amp_string.get() else ' '
-                split_string = self.amp_string.get().split(sep)
-                split_string[i] = f"{y_pos:.2e}"
-                self.amp_string.set(sep.join(split_string))
+                self.update_number_in_string(y_pos, self.amp_string)
                 self.get_amps(update_plot=False)
             if not self.manual_thetas:
                 self.auto_set_thetas()
             self.parent.plots.update_TC_lines(draw=False)
             self.demo_idealization()
+
+    @staticmethod
+    def update_number_in_string(new_val, tk_string):
+        """Update a list of floats held in a TK.StringVar so that the value
+        closest to new_val becomes new_val."""
+        array = TC_Frame.tk_string_to_array(tk_string)
+        differences = np.abs(array-new_val)
+        i = np.argmin(differences)
+        sep = ',' if ',' in tk_string.get() else ' '
+        split_string = tk_string.get().split(sep)
+        split_string[i] = f"{new_val:.2e}"
+        tk_string.set(sep.join(split_string))
+
+    @staticmethod
+    def tk_string_to_array(tk_string):
+        """Take a TK.StringVar containing floats and return an numpy array."""
+
+        if ',' in tk_string.get():
+            array = np.array(tk_string.get().split(','), dtype=np.float)
+        else:
+            array = np.array(tk_string.get().split(), dtype=np.float)
+
+        return array
