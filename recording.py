@@ -43,6 +43,7 @@ class Recording(dict):
         self.tc_unit = 'pA'
         self.tc_unit_factors = {'fA':1e15, 'pA':1e12, 'nA':1e9, 'µA':1e6,
                                     'mA':1e3, 'A':1}
+        self._tc_resolution = None
         #first activation
         self._fa_threshold = 0.
         # variables for user created lists of episodes
@@ -64,27 +65,41 @@ class Recording(dict):
 
     @property
     def fa_threshold(self):
-        return self._fa_threshold*self.tc_unit_factors[self.tc_unit]
+        return self._fa_threshold * self.tc_unit_factors[self.tc_unit]
 
     @fa_threshold.setter
     def fa_threshold(self, theta):
-        self._fa_threshold = theta/self.tc_unit_factors[self.tc_unit]
+        self._fa_threshold = theta / self.tc_unit_factors[self.tc_unit]
 
     @property
     def TC_amplitudes(self):
-        return self._TC_amplitudes*self.tc_unit_factors[self.tc_unit]
+        return self._TC_amplitudes * self.tc_unit_factors[self.tc_unit]
 
     @TC_amplitudes.setter
     def TC_amplitudes(self, amps):
-        self._TC_amplitudes = amps/self.tc_unit_factors[self.tc_unit]
+        self._TC_amplitudes = amps / self.tc_unit_factors[self.tc_unit]
 
     @property
     def TC_thresholds(self):
-        return self._TC_thresholds*self.tc_unit_factors[self.tc_unit]
+        return self._TC_thresholds * self.tc_unit_factors[self.tc_unit]
 
     @TC_thresholds.setter
     def TC_thresholds(self, amps):
-        self._TC_thresholds = amps/self.tc_unit_factors[self.tc_unit]
+        self._TC_thresholds = amps / self.tc_unit_factors[self.tc_unit]
+
+    @property
+    def tc_resolution(self):
+        if self._tc_resolution:
+            return self._tc_resolution * self.episode.time_unit_factor
+        else:
+            return None
+
+    @tc_resolution.setter
+    def tc_resolution(self, resolution):
+        if resolution is not None:
+            self._tc_resolution = resolution / self.episode.time_unit_factor
+        else:
+            self._tc_resolution = None
 
     @property
     def selected_episodes(self):
@@ -94,6 +109,7 @@ class Recording(dict):
         # remove duplicate indices
         indices = np.array(list(set(indices)))
         return np.array(self.series)[indices]
+
 
     @property
     def series(self): return self[self.currentDatakey]
@@ -121,7 +137,6 @@ class Recording(dict):
 
     def load_data(self):
         """this method is supposed to load data from a file or a directory"""
-
         logging.debug(f"Recording.load_data")
 
         if 'pkl' in parse_filename(self.filename)[0]:
@@ -138,7 +153,7 @@ class Recording(dict):
                              datakey='raw_')
         elif os.path.isdir(self.filename):
             if not self.filename.endswith('/'):
-                self.filename+='/'
+                self.filename += '/'
             # loop once to find the json file and extract the datakeys
             for file in os.listdir(self.filename):
                 if file.endswith('json'):
@@ -153,7 +168,7 @@ class Recording(dict):
                 for datakey in series_metadata.keys():
                     if datakey in file:
                         self.load_series(
-                                    filename = self.filename+file,
+                                    filename = self.filename + file,
                                     filetype = metadata['filetype'],
                                     dtype = metadata['dtype'],
                                     headerlength = metadata['headerlength'],
@@ -168,7 +183,6 @@ class Recording(dict):
         """Load the data in the file at `self.filename`.
         Accepts `.mat`, `.axgd` and `.bin` files.
         (`.bin` files are for simulated data only at the moment.)"""
-
         logging.debug(f"load_series")
 
         names, *loaded_data = readdata.load(filename=filename,
@@ -211,13 +225,12 @@ class Recording(dict):
     def save_to_pickle(self, filepath):
         """save data using the pickle module
         useful for saving data that is to be used in ASCAM again"""
-
         logging.debug(f"save_to_pickle")
+
         if not filepath.endswith('.pkl'):
-            filepath+='.pkl'
+            filepath += '.pkl'
         with open(filepath, 'wb') as save_file:
             pickle.dump(self, save_file)
-        return True
 
     def export_matlab(self, filepath, datakey, lists_to_save, save_piezo,
                       save_command):
@@ -226,7 +239,7 @@ class Recording(dict):
         logging.debug(f"export_matlab")
 
         if not filepath.endswith('.mat'):
-            filepath+='.mat'
+            filepath += '.mat'
         # create dict to write matlab file and add the time vector
         export_dict = dict()
         export_dict['time'] = self['raw_'][0].time
@@ -248,8 +261,9 @@ class Recording(dict):
 
     def export_idealization(self, filepath):
         logging.debug(f"export_idealization")
+
         if not filepath.endswith('.csv'):
-            filepath+='.csv'
+            filepath += '.csv'
         export_array = np.zeros(shape=(len(self.selected_episodes)+1,
                                         self.episode._idealization.size))
         export_array[0] = self.episode._time
@@ -262,31 +276,30 @@ class Recording(dict):
     def export_events(self, filepath):
         """Export a table of events in the current (idealized) series and
         duration to a csv file."""
-
         logging.debug(f"export_events")
+
         if not filepath.endswith('.csv'):
-            filepath+='.csv'
-        export_array = np.zeros((0,5)).astype(object)
+            filepath += '.csv'
+        export_array = np.zeros((0, 5)).astype(object)
         header = [f"amplitude [{self.trace_unit}]",
                     f"duration [{self.time_unit}]",
                     f"t_start", "t_stop", "episode number"]
         for episode in self.series:
-            #create a column containing the episode number
+            # create a column containing the episode number
             ep_events = episode.get_events()
-            episode_number = episode.n_episode*np.ones(len(ep_events[:,0]))
-            #glue that column to the event
+            episode_number = episode.n_episode*np.ones(len(ep_events[:, 0]))
+            # glue that column to the event
             ep_events = np.concatenate((ep_events,
                                         episode_number[:, np.newaxis]), axis=1)
             export_array = np.concatenate((export_array, ep_events), axis=0)
         pd.DataFrame(export_array).to_csv(filepath, header=header, index=False)
-        # np.savetxt(filepath, export_array, delimiter=',')
 
     def export_first_activation(self, filepath):
         """Export csv file of first activation times."""
-
         logging.debug(f"export_first_activation")
+
         if not filepath.endswith('.csv'):
-            filepath+='.csv'
+            filepath += '.csv'
         export_array = np.array([(episode.n_episode, episode._first_activation)
                                 for episode in self.selected_episodes])
         np.savetxt(filepath, export_array, delimiter=',')
@@ -295,8 +308,8 @@ class Recording(dict):
                             select_intvl=False, piezo_diff=0.05,
                             select_piezo=True, active_piezo=False):
         """Apply a baseline correction to the current series."""
-
         logging.debug(f"baseline_correction")
+
         logging.log(ANALYSIS_LEVELV_NUM,
                     f"baseline_correction on series '{self.currentDatakey}',"
                     f"using method '{method}' with degree {poly_degree}\n"
@@ -306,12 +319,12 @@ class Recording(dict):
                     f"select where piezo is active is {active_piezo}; the "
                     f"difference to piezo baseline is {piezo_diff}")
         # valid = self.check_operation('BC_')
-        if self.currentDatakey=='raw_':
+        if self.currentDatakey == 'raw_':
             # if its the first operation drop the 'raw_'
             newDatakey = 'BC_'
         else:
             # if operations have been done before combine the names
-            newDatakey = self.currentDatakey+'BC_'
+            newDatakey = self.currentDatakey + 'BC_'
         logging.info(f"new datakey is {newDatakey}")
         self[newDatakey] = self[self.currentDatakey].baseline_correct_all(
                             intervals=intval, method=method, degree=poly_degree,
@@ -320,12 +333,11 @@ class Recording(dict):
                             deviation=piezo_diff)
         self.currentDatakey = newDatakey
         logging.debug("""keys of the recording are now {}""".format(self.keys()))
-        return True
 
     def gauss_filter_series(self, filter_freq):
         """Filter the current series using a gaussian filter"""
-
         logging.debug(f"gaussian_filter")
+
         logging.log(ANALYSIS_LEVELV_NUM,
                     f"gauss filtering series '{self.currentDatakey}'\n"
                     f"with frequency {filter_freq}")
@@ -339,13 +351,12 @@ class Recording(dict):
             new_key = self.currentDatakey+fdatakey
         self[new_key] = self[self.currentDatakey].gaussian_filter(filter_freq)
         self.currentDatakey = new_key
-        return True
 
     def CK_filter_series(self, window_lengths, weight_exponent, weight_window,
 	apriori_f_weights=False, apriori_b_weights=False):
         """Filter the current series using the Chung-Kennedy filter banks"""
-
         logging.debug(f"CK_filter_series")
+
         logging.log(ANALYSIS_LEVELV_NUM,
                     f"Chung-Kennedy filtering on series "
                     f"'{self.currentDatakey}'\n"
@@ -363,38 +374,42 @@ class Recording(dict):
         else:
             #if operations have been done before combine the names
             newDatakey = self.currentDatakey+fdatakey
-        self[newDatakey]\
-        = self[self.currentDatakey].CK_filter(window_lengths, weight_exponent,
-                            weight_window, apriori_f_weights, apriori_b_weights)
+        self[newDatakey] = (
+        self[self.currentDatakey].CK_filter(window_lengths, weight_exponent,
+                           weight_window, apriori_f_weights, apriori_b_weights))
         self.currentDatakey = newDatakey
-        return True
 
     def idealize_series(self):
         """Idealize the current series."""
-
         logging.debug(f"idealize_series")
+
         logging.log(ANALYSIS_LEVELV_NUM,
                     f"idealizing series '{self.currentDatakey}'\n"
                     f"amplitudes: {self._TC_amplitudes}\n"
-                    f"thresholds: {self._TC_thresholds}")
+                    f"thresholds: {self._TC_thresholds}\n"
+                    f"resolution: {self._tc_resolution}")
 
-        self.series.idealize_all(self._TC_amplitudes, self._TC_thresholds)
+        self.series.idealize_all(self._TC_amplitudes, self._TC_thresholds,
+                                 self._tc_resolution)
 
     def idealize_episode(self):
         """Idealize current episode."""
-
         logging.debug(f"idealize_episode")
+
         logging.log(ANALYSIS_LEVELV_NUM,
                     f"idealizing episode '{self.n_episode}'\n"
                     f"amplitudes: {self._TC_amplitudes}\n"
-                    f"thresholds: {self._TC_thresholds}")
+                    f"thresholds: {self._TC_thresholds}\n"
+                    f"resolution: {self._tc_resolution}")
 
-        self.episode.idealize(self._TC_amplitudes, self._TC_thresholds)
+        self.episode.idealize(self._TC_amplitudes, self._TC_thresholds,
+                              self._tc_resolution)
 
     def detect_fa(self, exclude=[]):
         """Apply first event detection to all episodes in the selected series"""
-        
+
         logging.debug(f"detect_fa")
+
         [episode.detect_first_activation(self._fa_threshold)
          for episode in self.series if episode.n_episode not in exclude]
 
@@ -403,17 +418,17 @@ class Recording(dict):
         """Create a histogram of all episodes in the presently selected series
         """
         logging.debug(f"series_hist")
-        #put all piezo traces and all current traces in lists
+        # put all piezo traces and all current traces in lists
         piezos = [episode.piezo for episode in self.series]
         traces = [episode.trace for episode in self.series]
         trace_list = []
         if not self.has_piezo:
-            #this is a failsafe, select_piezo should never be true if has_piezo
-            #is false
-            if select_piezo: logging.debug((f"Tried piezo selection even though ",
-                                        "there is no piezo data!"))
+            # this is a failsafe, select_piezo should never be true if has_piezo
+            # is false
+            if select_piezo: logging.debug((f"Tried piezo selection even "
+                                            "though there is no piezo data!"))
             select_piezo = False
-        #select the time points that are used for the histogram
+        # select the time points that are used for the histogram
         if select_piezo:
             for piezo, trace in zip(piezos, traces):
                 time, trace_points = piezo_selection(self.episode.time, piezo,
@@ -429,26 +444,26 @@ class Recording(dict):
         else:
             trace_list = traces
             self.hist_times = np.array(self.episode.time)
-        #turn the collected traces into a 1D numpy array for the histogram
-        #function
+        # turn the collected traces into a 1D numpy array for the histogram
+        # function
         trace_list = np.asarray(trace_list)
         trace_list = trace_list.flatten()
         heights, bins = np.histogram(trace_list, n_bins, density=density)
         # get centers of all the bins
-        centers = (bins[:-1]+bins[1:])/2
+        centers = (bins[:-1] + bins[1:]) / 2
         # get the width of a(ll) bin(s)
-        width = (bins[1]-bins[0])
+        width = bins[1] - bins[0]
         return heights, bins, centers, width
-
 
     def episode_hist(self, active=True, select_piezo=True, deviation=0.05,
                      n_bins=50, density=False, intervals=False):
         """Create a histogram of the current in the presently selected episode.
         """
         logging.debug(f"episode_hist")
-        #failsafe for piezo selection
+
+        # failsafe for piezo selection
         if not self.has_piezo: select_piezo = False
-        #select time points to include in histogram
+        # select time points to include in histogram
         if select_piezo:
             time, trace_points = piezo_selection(self.episode.time,
                     self.episode.piezo, self.episode.trace, active, deviation)
@@ -462,8 +477,8 @@ class Recording(dict):
             self.hist_times = np.array(self.episode.time)
         heights, bins = np.histogram(trace_points, n_bins, density=density)
         # get centers of all the bins
-        centers = (bins[:-1]+bins[1:])/2
+        centers = (bins[:-1] + bins[1:]) / 2
         # get the width of a(ll) bin(s)
-        width = (bins[1]-bins[0])
+        width = bins[1] - bins[0]
         # self.histogram = heights, bins, centers, width
         return heights, bins, centers, width

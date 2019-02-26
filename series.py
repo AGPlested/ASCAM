@@ -11,20 +11,30 @@ class Series(list):
     def __init__(self, data=[], idealized=False):
         """`Series` are lists of episodes which also store relevant parameters
         about the recording and operations that have been performed on the
-        data."""
+        data.
+        """
 
-        list.__init__(self,data)
+        list.__init__(self, data)
+
+        self._TC_thresholds = np.array([])
+        self._TC_amplitudes = np.array([])
+
+        self._fa_threshold = 0.
+
+    @property
+    def is_idealized(self):
+        return any([episode._idealization is not None for episode in self])
 
     @property
     def has_piezo(self):
-        try: val = True if self[0]._piezo is not None else False
+        try: val = True if (self[0]._piezo is not None) else False
         except IndexError: val = False
         logging.debug(f"has_piezo returns {val}")
         return val
 
     @property
     def has_command(self):
-        try: val = True if self[0]._command is not None else False
+        try: val = True if (self[0]._command is not None) else False
         except IndexError: val = False
         logging.debug(f"has_command returns {val}")
         return val
@@ -64,8 +74,8 @@ class Series(list):
 
     def CK_filter(self, window_lengths, weight_exponent, weight_window,
 				  apriori_f_weights=False, apriori_b_weights=False):
-        """Apply the Chung-Kennedy filter to the series."""
-
+        """Apply ChungKennedyFilter to the episodes in this series.
+        """
         output = copy.deepcopy(self)
         for episode in output:
             episode.CK_filter_episode(window_lengths, weight_exponent,
@@ -87,14 +97,20 @@ class Series(list):
                                              active=active)
         return output
 
-    def idealize_all(self, amplitudes, thresholds):
+    def idealize_all(self, amplitudes, thresholds, resolution):
         """Return `Series` object containing the idealization of the episodes
         in `self`."""
 
         logging.debug(f"idealize_all")
 
         for episode in self:
-            episode.idealize(amplitudes, thresholds)
+            episode.idealize(amplitudes, thresholds, resolution)
+
+    def remove_idealization(self):
+        """Reset the idealization of each episode to None
+        """
+        for episode in self:
+            episode.idealization = None
 
     def check_standarddeviation_all(self, stdthreshold=5e-13):
         """Check the standard deviation of the each episode in `self` against the

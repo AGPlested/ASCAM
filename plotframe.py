@@ -494,7 +494,7 @@ class PlotFrame(ttk.Frame):
         x_share = None
         show_hist = int(self.show_hist_single.get() or self.show_hist_all.get())
         # plot grid to make current plot bigger
-        #arguments are nRows by nCols
+        # arguments are nRows by nCols
         pgs = gs.GridSpec(num_plots+1,1+2*show_hist)
         if show_command:
             # always plot command voltage on bottom (-1 row)
@@ -561,35 +561,33 @@ class PlotFrame(ttk.Frame):
 
     def hist_density_cb(self, *args):
         """Redraw plots if histogram as density toggled"""
-
         logging.debug(f"hist_density_cb")
+        
         self.plot(new=True)
 
     def show_hist_single_cb(self, *args):
         """Redraw plots if showing of single episode histogram is toggled"""
-
         logging.debug(f"show_hist_single_cb")
+
         self.plot(new=True)
 
     def show_hist_all_cb(self, *args):
         """Redraw plots if showing of histogram of all episodes is toggled"""
-
         logging.debug(f"show_hist_all_cb")
+
         self.plot(new=True)
 
     def show_piezo_cb(self, *args):
         """Redraw plots if showing of piezo votlage is toggled"""
+        logging.debug(f"show_piezo_cb")
 
-        if self.show_piezo.get():
-            logging.debug(f"show_piezo_cb")
-            self.plot(new=True)
+        self.plot(new=True)
 
     def show_command_cb(self, *args):
         """Redraw plots if showing of command votlage is toggled"""
+        logging.debug(f"show_command_cb")
 
-        if self.show_command.get():
-            logging.debug(f"show_command_cb")
-            self.plot(new=True)
+        self.plot(new=True)
 
     def show_command_sc(self, *args):
         """Sanity check for show command, prevent show_command being true if
@@ -622,19 +620,16 @@ class PlotToolbar(NavigationToolbar2Tk):
         NavigationToolbar2Tk.__init__(self, canvas, parent)
 
     def zoom(self):
-        """
-        Redefine the zoom method of the toolbar to include zooming out on
-        right-click
-        """
-        # self.parent.parent.tc_frame.track_on = False
+        """Standard zoom method of the toolbar plus zooming out (restoring
+        previous view) on right-click."""
+
         self_zoom_out_cid = self.canvas.mpl_connect('button_press_event',
                                                     self.zoom_out)
         NavigationToolbar2Tk.zoom(self)
 
     def zoom_out(self, event):
-        """
-        Zoom out in this case is done by calling `back` on right-click to
-        restore the previous view (i.e. undo last zoom)
-        """
+        """Zoom out in this case is done by calling `back` on right-click to
+        restore the previous view (i.e. undo last zoom)."""
+
         if self._active=='ZOOM' and event.button==3:
             NavigationToolbar2Tk.back(self)
