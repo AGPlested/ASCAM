@@ -10,7 +10,9 @@ from tools import piezo_selection, parse_filename, interval_selection
 class Episode():
     def __init__(self, time, trace, n_episode=0, piezo=None, command=None,
                  sampling_rate=4e4, time_unit='ms', piezo_unit='V',
-                 command_unit='mV', trace_unit='pA', input_time_unit='s'):
+                 command_unit='mV', trace_unit='pA', input_time_unit='s',
+                 input_trace_unit='pA', input_piezo_unit='V',
+                 input_command_unit='V'):
         """
         Episode objects hold all the information about an epoch and
         should be used to store raw and manipulated data
@@ -31,22 +33,30 @@ class Episode():
         # the units of the private attributes (eg _time) should be SI units
         # ie seconds, ampere etc
         self.time_unit = time_unit
-        self.time_unit_factors = {'ms':1e3, 's':1}
+        self.time_unit_factors = {'ms': 1e3, 's': 1}
         self.trace_unit = trace_unit
-        self.trace_unit_factors = {'fA':1e15, 'pA':1e12, 'nA':1e9, 'µA':1e6,
-                                    'mA':1e3, 'A':1}
+        self.trace_unit_factors = {'fA': 1e15, 'pA': 1e12, 'nA': 1e9, 'µA': 1e6,
+                                    'mA': 1e3, 'A': 1}
         self.command_unit = command_unit
-        self.command_unit_factors = {'uV':1e6, 'mV':1e3, 'V':1}
+        self.command_unit_factors = {'uV': 1e6, 'mV': 1e3, 'V': 1}
         self.piezo_unit = piezo_unit
-        self.piezo_unit_factors = {'uV':1e6, 'mV':1e3, 'V':1}
+        self.piezo_unit_factors = {'uV': 1e6, 'mV': 1e3, 'V': 1}
         # units when given input
-        input_time_unit_factors = {'ms':1e-3, 's':1}
+        input_time_unit_factors = {'ms': 1e-3, 's': 1}
         input_time_factor = input_time_unit_factors[input_time_unit]
+        input_trace_unit_factors =  {'fA': 1e-15, 'pA': 1e-12, 'nA': 1e-9,
+                                     'µA': 1e-6, 'mA': 1e-3, 'A':1}
+        input_trace_unit_factor = input_trace_unit_factors[input_trace_unit]
+        input_command_unit_factors = {'uV': 1e-6, 'mV': 1e-3, 'V':1}
+        input_command_unit_factor = (
+                                input_command_unit_factors[input_command_unit])
+        input_piezo_unit_factors = {'uV': 1e-6, 'mV': 1e-3, 'V':1}
+        input_piezo_unit_factor = input_piezo_unit_factors[input_piezo_unit]
         # private attributes storing the actual data
         self._time = time * input_time_factor
-        self._trace = trace
-        self._piezo = piezo
-        self._command = command
+        self._trace = trace * input_trace_unit_factor
+        self._piezo = piezo * input_piezo_unit_factor
+        self._command = command * input_command_unit_factor
         # results of analyses
         self._first_activation = None
         self._idealization = None
