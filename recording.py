@@ -18,7 +18,8 @@ from constants import ANALYSIS_LEVELV_NUM
 class Recording(dict):
     def __init__(self, filename='data/180426 000 Copy Export.mat',
                  sampling_rate=4e4, filetype='',
-                 headerlength=0, dtype=None):
+                 headerlength=0, dtype=None, time_unit='ms', piezo_unit='V',
+                 command_unit='mV', trace_unit='pA', input_time_unit='s'):
         logging.info("""intializing Recording""")
 
         # parameters for loading the data
@@ -38,6 +39,18 @@ class Recording(dict):
         self.hist_times=0
         #parameters for analysis
         #idealization
+        self.time_unit = time_unit
+        self.time_unit_factors = {'ms':1e3, 's':1}
+        self.trace_unit = trace_unit
+        self.trace_unit_factors = {'fA':1e15, 'pA':1e12, 'nA':1e9, 'µA':1e6,
+                                    'mA':1e3, 'A':1}
+        self.command_unit = command_unit
+        self.command_unit_factors = {'uV':1e6, 'mV':1e3, 'V':1}
+        self.piezo_unit = piezo_unit
+        self.piezo_unit_factors = {'uV':1e6, 'mV':1e3, 'V':1}
+        # units when given input
+        input_time_unit_factors = {'ms':1e-3, 's':1}
+        input_time_factor = input_time_unit_factors[input_time_unit]
         self._TC_thresholds = np.array([])
         self._TC_amplitudes = np.array([])
         self.tc_unit = 'pA'
@@ -123,17 +136,17 @@ class Recording(dict):
     @property
     def has_command(self): return self.series.has_command
 
-    @property
-    def time_unit(self): return self.episode.time_unit
-
-    @property
-    def trace_unit(self): return self.episode.trace_unit
-
-    @property
-    def piezo_unit(self): return self.episode.piezo_unit
-
-    @property
-    def command_unit(self): return self.episode.command_unit
+#    @property
+#    def time_unit(self): return self.episode.time_unit
+#
+#    @property
+#    def trace_unit(self): return self.episode.trace_unit
+#
+#    @property
+#    def piezo_unit(self): return self.episode.piezo_unit
+#
+#    @property
+#    def command_unit(self): return self.episode.command_unit
 
     def load_data(self):
         """this method is supposed to load data from a file or a directory"""
@@ -144,83 +157,39 @@ class Recording(dict):
             self.__dict__ = loaded_data.__dict__
             for key, value in loaded_data.items():
                 self[key] = value
-        elif os.path.isfile(self.filename):
+        else: # if it's not a pickle is a matplab file
             self.load_series(filename=self.filename,
                              filetype=self.filetype,
                              dtype=self.dtype,
                              headerlength=self.headerlength,
                              sampling_rate=self.sampling_rate,
                              datakey='raw_')
-        elif os.path.isdir(self.filename):
-            if not self.filename.endswith('/'):
-                self.filename += '/'
-            # loop once to find the json file and extract the datakeys
-            for file in os.listdir(self.filename):
-                if file.endswith('json'):
-                    metadata, series_metadata = readdata.read_metadata(
-                    self.filename+file)
-                    break
-                # recreate recording attributes
-                self.__dict__ = metadata
-
-            # loop again to find the data and load it
-            for file in os.listdir(self.filename):
-                for datakey in series_metadata.keys():
-                    if datakey in file:
-                        self.load_series(
-                                    filename = self.filename + file,
-                                    filetype = metadata['filetype'],
-                                    dtype = metadata['dtype'],
-                                    headerlength = metadata['headerlength'],
-                                    sampling_rate = metadata['sampling_rate'],
-                                    datakey=datakey)
-                        for episode, attributes in zip(self[datakey],
-                                            series_metadata[datakey].values()):
-                            episode.__dict__ = attributes
 
     def load_series(self, filename, filetype, dtype, headerlength, datakey,
-                    sampling_rate):
+                    sampling_rate, time_unit='ms', trace_unit='pA',
+                    piezo_unit='mV', command_unit='mV'):
         """Load the data in the file at `self.filename`.
-        Accepts `.mat`, `.axgd` and `.bin` files.
-        (`.bin` files are for simulated data only at the moment.)"""
+        Accepts `.mat` files."""
         logging.debug(f"load_series")
 
-        names, *loaded_data = readdata.load(filename=filename,
-                                            filetype=filetype,
-                                            dtype=dtype,
-                                            headerlength=headerlength,
-                                            fs=sampling_rate)
+        names, time, current, piezo, command = readdata.load(
+                                                    filename=filename,
+                                                    filetype=filetype,
+                                                    dtype=dtype,
+                                                    headerlength=headerlength,
+                                                    fs=sampling_rate)
         # The `if` accounts for the presence or absence of
         # piezo and command voltage in the data being loaded
-
-        if 'Piezo [V]' in names and 'Command Voltage [V]' in names:
-            time = loaded_data[0]
-            self[datakey] = Series([Episode(time, trace, n_episode=i,
-                                            piezo=piezo,
-                                            command=command,
-                                            sampling_rate=self.sampling_rate)
-                                    for i, (trace, piezo, command)
-                                    in enumerate(zip(*loaded_data[1:]))])
-
-        elif 'Piezo [V]' in names:
-            time, current, piezo, _ = loaded_data
-            self[datakey] = Series([Episode(time, current[i], n_episode=i,
-                                            piezo=piezo[i],
-                                            sampling_rate=self.sampling_rate)
-                                    for i in range(len(current))])
-
-        elif 'Command Voltage [V]' in names:
-            time, current, _, command = loaded_data
-            self[datakey] = Series([Episode(time, current[i], n_episode=i,
-                                            command=command[i],
-                                            sampling_rate=self.sampling_rate)
-                                    for i in range(len(current))])
-
-        else:
-            time, current, _, _ = loaded_data
-            self[datakey] = Series([Episode(time, current[i], n_episode=i,
-                                            sampling_rate=self.sampling_rate)
-                                    for i in range(len(current))])
+        n_episodes = len(current)
+        if 'Piezo [V]' not in names:
+            piezo = [None] * n_episodes
+        elif 'Command Voltage [V]' not in names:
+            command = [None] * n_episodes
+        self[datakey] = Series([Episode(time, current[i], n_episode=i,
+                                        piezo=piezo[i],
+                                        command=command[i],
+                                        sampling_rate=self.sampling_rate)
+                                        for i in range(n_episodes)])
 
     def save_to_pickle(self, filepath):
         """save data using the pickle module
