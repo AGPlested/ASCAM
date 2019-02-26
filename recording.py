@@ -96,7 +96,10 @@ class Recording(dict):
 
     @tc_resolution.setter
     def tc_resolution(self, resolution):
-        self._tc_resolution = resolution / self.episode.time_unit_factor
+        if resolution is not None:
+            self._tc_resolution = resolution / self.episode.time_unit_factor
+        else:
+            self._tc_resolution = None
 
     @property
     def selected_episodes(self):
@@ -258,6 +261,7 @@ class Recording(dict):
 
     def export_idealization(self, filepath):
         logging.debug(f"export_idealization")
+
         if not filepath.endswith('.csv'):
             filepath += '.csv'
         export_array = np.zeros(shape=(len(self.selected_episodes)+1,
@@ -333,6 +337,7 @@ class Recording(dict):
     def gauss_filter_series(self, filter_freq):
         """Filter the current series using a gaussian filter"""
         logging.debug(f"gaussian_filter")
+
         logging.log(ANALYSIS_LEVELV_NUM,
                     f"gauss filtering series '{self.currentDatakey}'\n"
                     f"with frequency {filter_freq}")
@@ -351,6 +356,7 @@ class Recording(dict):
 	apriori_f_weights=False, apriori_b_weights=False):
         """Filter the current series using the Chung-Kennedy filter banks"""
         logging.debug(f"CK_filter_series")
+
         logging.log(ANALYSIS_LEVELV_NUM,
                     f"Chung-Kennedy filtering on series "
                     f"'{self.currentDatakey}'\n"
@@ -376,6 +382,7 @@ class Recording(dict):
     def idealize_series(self):
         """Idealize the current series."""
         logging.debug(f"idealize_series")
+
         logging.log(ANALYSIS_LEVELV_NUM,
                     f"idealizing series '{self.currentDatakey}'\n"
                     f"amplitudes: {self._TC_amplitudes}\n"
@@ -388,11 +395,12 @@ class Recording(dict):
     def idealize_episode(self):
         """Idealize current episode."""
         logging.debug(f"idealize_episode")
+
         logging.log(ANALYSIS_LEVELV_NUM,
                     f"idealizing episode '{self.n_episode}'\n"
                     f"amplitudes: {self._TC_amplitudes}\n"
                     f"thresholds: {self._TC_thresholds}\n"
-                    f"thresholds: {self._TC_thresholds}")
+                    f"resolution: {self._tc_resolution}")
 
         self.episode.idealize(self._TC_amplitudes, self._TC_thresholds,
                               self._tc_resolution)
