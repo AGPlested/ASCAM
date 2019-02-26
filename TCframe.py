@@ -20,18 +20,11 @@ class TC_Frame(ttk.Frame):
         #parameters for each series
 
         #variables for entry
-<<<<<<< HEAD
-        self.amp_string = tk.StringVar()
-        self.theta_string = tk.StringVar()
-        self.amp_string.set('0')
-        #variable to keep track of whether thetas have been set manually
-=======
         self.amp_string = tk.StringVar() # string holding the amplitudes
         self.amp_string.set('0')
         self.theta_string = tk.StringVar() # string holding the thresholds
         self.res_string = tk.StringVar() # string holding the resolution
         # variable to keep track of whether thetas have been set manually
->>>>>>> dead_time
         self.manual_thetas = False
         # variables for moving the lines on the plots with the mouse
         self.tracking_on = True
@@ -118,16 +111,7 @@ class TC_Frame(ttk.Frame):
         logging.debug(f"TC_Frame.get_amps")
 
         old_n_amps = self.parent.data.TC_amplitudes.size
-<<<<<<< HEAD
         self.parent.data.TC_amplitudes = self.tk_string_to_array(self.amp_string)
-=======
-        if ',' in self.amp_string.get():
-            self.parent.data.TC_amplitudes = (
-                  np.array(self.amp_string.get().split(','), dtype=np.float))
-        else:
-            self.parent.data.TC_amplitudes = (
-                    np.array(self.amp_string.get().split(), dtype=np.float))
->>>>>>> dead_time
         new_n_amps = self.parent.data.TC_amplitudes.size
 
         # update the amp lines if command is given and the number didnt change
@@ -183,17 +167,8 @@ class TC_Frame(ttk.Frame):
         logging.debug(f"TC_Frame.get_thresholds")
 
         old_n_thetas = self.parent.data.TC_thresholds.size
-<<<<<<< HEAD
         self.parent.data.TC_thresholds = self.tk_string_to_array(
                                                               self.theta_string)
-=======
-        if ',' in self.amp_string.get():
-            self.parent.data.TC_thresholds = (
-                np.array(self.theta_string.get().split(','), dtype=np.float))
-        else:
-            self.parent.data.TC_thresholds = (
-                    np.array(self.theta_string.get().split(), dtype=np.float))
->>>>>>> dead_time
         new_n_thetas = self.parent.data.TC_thresholds.size
 
         #update the amp lines if command is given and the number didnt change
@@ -262,7 +237,6 @@ class TC_Frame(ttk.Frame):
     def click_cancel(self):
         """Cancel button callback, removes idealizatoin."""
         logging.debug(f"TC_Frame.click_cancel")
-<<<<<<< HEAD
         for datakey, series in self.parent.data.items():
             #check if the series was previously idealized, if so repeat the
             #idealization with previously used parameters
@@ -271,12 +245,6 @@ class TC_Frame(ttk.Frame):
                                     self.previous_params[datakey][1])
             else:
                 series.remove_idealization()
-=======
-
-        for series in self.parent.data.values():
-            for episode in series:
-                episode.idealization = None
->>>>>>> dead_time
         self.close_frame()
 
     def click_apply(self):
@@ -343,23 +311,10 @@ class TC_Frame(ttk.Frame):
                     tc_diff = np.inf
                 if self.parent.data.TC_amplitudes.size > 0:
                     amp_diff = np.abs(self.parent.data.TC_amplitudes-y_pos)
-<<<<<<< HEAD
                 else: amp_diff = np.inf
                 #update the closest line
                 if np.min(tc_diff)<np.min(amp_diff):
                     self.update_number_in_string(y_pos, self.theta_string)
-=======
-                else:
-                    amp_diff = np.inf
-                # update the closest line
-                if np.min(tc_diff) < np.min(amp_diff):
-                    i = np.argmin(tc_diff)
-                    sep = ',' if ',' in self.theta_string.get() else ' '
-                    split_string = self.theta_string.get().split(sep)
-                    split_string[i] = f"{y_pos:.2e}"
-                    self.theta_string.set(sep.join(split_string))
-                    self.manual_thetas = True
->>>>>>> dead_time
                     self.get_thresholds(update_plot=False)
                 else:
                     self.update_number_in_string(y_pos, self.amp_string)
@@ -379,8 +334,7 @@ class TC_Frame(ttk.Frame):
             if not self.manual_thetas:
                 self.auto_set_thetas()
             self.parent.plots.update_TC_lines(draw=False)
-<<<<<<< HEAD
-            self.demo_idealization()
+            self.show_idealization()
 
     @staticmethod
     def update_number_in_string(new_val, tk_string):
@@ -404,6 +358,3 @@ class TC_Frame(ttk.Frame):
             array = np.array(tk_string.get().split(), dtype=np.float)
 
         return array
-=======
-            self.show_idealization()
->>>>>>> dead_time

@@ -97,7 +97,7 @@ class Recording(dict):
     @tc_resolution.setter
     def tc_resolution(self, resolution):
         self._tc_resolution = resolution / self.episode.time_unit_factor
-        
+
     @property
     def selected_episodes(self):
         indices = list()
@@ -333,10 +333,6 @@ class Recording(dict):
     def gauss_filter_series(self, filter_freq):
         """Filter the current series using a gaussian filter"""
         logging.debug(f"gaussian_filter")
-<<<<<<< HEAD
-
-=======
->>>>>>> master
         logging.log(ANALYSIS_LEVELV_NUM,
                     f"gauss filtering series '{self.currentDatakey}'\n"
                     f"with frequency {filter_freq}")
@@ -355,10 +351,6 @@ class Recording(dict):
 	apriori_f_weights=False, apriori_b_weights=False):
         """Filter the current series using the Chung-Kennedy filter banks"""
         logging.debug(f"CK_filter_series")
-<<<<<<< HEAD
-
-=======
->>>>>>> master
         logging.log(ANALYSIS_LEVELV_NUM,
                     f"Chung-Kennedy filtering on series "
                     f"'{self.currentDatakey}'\n"
@@ -384,10 +376,6 @@ class Recording(dict):
     def idealize_series(self):
         """Idealize the current series."""
         logging.debug(f"idealize_series")
-<<<<<<< HEAD
-
-=======
->>>>>>> master
         logging.log(ANALYSIS_LEVELV_NUM,
                     f"idealizing series '{self.currentDatakey}'\n"
                     f"amplitudes: {self._TC_amplitudes}\n"
@@ -400,10 +388,6 @@ class Recording(dict):
     def idealize_episode(self):
         """Idealize current episode."""
         logging.debug(f"idealize_episode")
-<<<<<<< HEAD
-
-=======
->>>>>>> master
         logging.log(ANALYSIS_LEVELV_NUM,
                     f"idealizing episode '{self.n_episode}'\n"
                     f"amplitudes: {self._TC_amplitudes}\n"
@@ -415,10 +399,7 @@ class Recording(dict):
 
     def detect_fa(self, exclude=[]):
         """Apply first event detection to all episodes in the selected series"""
-<<<<<<< HEAD
 
-=======
->>>>>>> dead_time
         logging.debug(f"detect_fa")
 
         [episode.detect_first_activation(self._fa_threshold)

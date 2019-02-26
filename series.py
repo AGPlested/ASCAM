@@ -97,22 +97,12 @@ class Series(list):
                                              active=active)
         return output
 
-<<<<<<< HEAD
-    def idealize_all(self, amplitudes, thresholds):
-        """
-        Return `Series` object containing the idealization of the episodes
-        in `self`
-        """
-        self._TC_amplitudes = amplitudes
-        self._TC_thresholds = thresholds
-=======
     def idealize_all(self, amplitudes, thresholds, resolution):
         """Return `Series` object containing the idealization of the episodes
         in `self`."""
 
         logging.debug(f"idealize_all")
 
->>>>>>> dead_time
         for episode in self:
             episode.idealize(amplitudes, thresholds, resolution)
 
