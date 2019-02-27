@@ -37,29 +37,20 @@ class Recording(dict):
         self.n_episode = 0
 
         self.hist_times=0
-        #idealization
-        # self.time_unit = time_unit
-        # self.time_unit_factors = {'ms': 1e3, 's': 1}
-        # self.trace_unit = trace_unit
-        # self.trace_unit_factors = {'fA': 1e15, 'pA': 1e12, 'nA': 1e9, 'µA': 1e6,
-        #                             'mA': 1e3, 'A': 1}
-        # self.command_unit = command_unit
-        # self.command_unit_factors = {'uV': 1e6, 'mV': 1e3, 'V': 1}
-        # self.piezo_unit = piezo_unit
-        # self.piezo_unit_factors = {'uV': 1e6, 'mV': 1e3, 'V': 1}
         # units when given input
         self.time_input_unit = time_input_unit
         self.piezo_input_unit = piezo_input_unit
         self.trace_input_unit = trace_input_unit
         self.command_input_unit = command_input_unit
         # parameters for analysis
-        self._TC_thresholds = np.array([])
-        self._TC_amplitudes = np.array([])
+        # idealization
+        self._tc_thresholds = np.array([])
+        self._tc_amplitudes = np.array([])
         self.tc_unit = 'pA'
-        self.tc_unit_factors = {'fA':1e15, 'pA': 1e12, 'nA': 1e9, 'µA': 1e6,
+        self.tc_unit_factors = {'fA': 1e15, 'pA': 1e12, 'nA': 1e9, 'µA': 1e6,
                                 'mA': 1e3, 'A': 1}
         self._tc_resolution = None
-        #first activation
+        # first activation
         self._fa_threshold = 0.
         # variables for user created lists of episodes
         # `lists` stores the indices of the episodes in the list in the first
@@ -70,7 +61,7 @@ class Recording(dict):
         self.current_lists = ['all']
         # if a file is specified load it
         if filename:
-            logging.info("""`filename` is not empty, will load data""")
+            logging.info("""'filename' is not empty, will load data""")
             self.load_data()
         #if the lists attribute has not been set while loading the data do it
         #now
@@ -88,19 +79,19 @@ class Recording(dict):
 
     @property
     def TC_amplitudes(self):
-        return self._TC_amplitudes * self.tc_unit_factors[self.tc_unit]
+        return self._tc_amplitudes * self.tc_unit_factors[self.tc_unit]
 
     @TC_amplitudes.setter
     def TC_amplitudes(self, amps):
-        self._TC_amplitudes = amps / self.tc_unit_factors[self.tc_unit]
+        self._tc_amplitudes = amps / self.tc_unit_factors[self.tc_unit]
 
     @property
     def TC_thresholds(self):
-        return self._TC_thresholds * self.tc_unit_factors[self.tc_unit]
+        return self._tc_thresholds * self.tc_unit_factors[self.tc_unit]
 
     @TC_thresholds.setter
     def TC_thresholds(self, amps):
-        self._TC_thresholds = amps / self.tc_unit_factors[self.tc_unit]
+        self._tc_thresholds = amps / self.tc_unit_factors[self.tc_unit]
 
     @property
     def tc_resolution(self):
@@ -356,11 +347,11 @@ class Recording(dict):
 
         logging.log(ANALYSIS_LEVELV_NUM,
                     f"idealizing series '{self.currentDatakey}'\n"
-                    f"amplitudes: {self._TC_amplitudes}\n"
-                    f"thresholds: {self._TC_thresholds}\n"
+                    f"amplitudes: {self._tc_amplitudes}\n"
+                    f"thresholds: {self._tc_thresholds}\n"
                     f"resolution: {self._tc_resolution}")
 
-        self.series.idealize_all(self._TC_amplitudes, self._TC_thresholds,
+        self.series.idealize_all(self._tc_amplitudes, self._tc_thresholds,
                                  self._tc_resolution)
 
     def idealize_episode(self):
@@ -369,11 +360,11 @@ class Recording(dict):
 
         logging.log(ANALYSIS_LEVELV_NUM,
                     f"idealizing episode '{self.n_episode}'\n"
-                    f"amplitudes: {self._TC_amplitudes}\n"
-                    f"thresholds: {self._TC_thresholds}\n"
+                    f"amplitudes: {self._tc_amplitudes}\n"
+                    f"thresholds: {self._tc_thresholds}\n"
                     f"resolution: {self._tc_resolution}")
 
-        self.episode.idealize(self._TC_amplitudes, self._TC_thresholds,
+        self.episode.idealize(self._tc_amplitudes, self._tc_thresholds,
                               self._tc_resolution)
 
     def detect_fa(self, exclude=[]):
