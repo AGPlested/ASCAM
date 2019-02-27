@@ -24,11 +24,11 @@ class TC_Frame(ttk.Frame):
         self.previous_params = dict()
         if self.parent.data.series.is_idealized:
             self.previous_params = {self.parent.datakey.get(): (
-                                        self.parent.data.series._TC_amplitudes,
-                                        self.parent.data.series._TC_thresholds)}
-            self.array_into_tkstring(self.parent.data.series._TC_amplitudes,
+                                        self.parent.data.series._tc_amplitudes,
+                                        self.parent.data.series._tc_thresholds)}
+            self.array_into_tkstring(self.parent.data.series._tc_amplitudes,
                                      self.amp_string)
-            self.array_into_tkstring(self.parent.data.series._TC_thresholds,
+            self.array_into_tkstring(self.parent.data.series._tc_thresholds,
                                      self.theta_string)
             self.manual_thetas = True
         else:
