@@ -1,4 +1,3 @@
-import os
 import logging
 import pickle
 
@@ -7,7 +6,6 @@ import numpy as np
 import pandas as pd
 
 import readdata
-import savedata
 from tools import parse_filename, piezo_selection, interval_selection
 from episode import Episode
 from series import Series
@@ -18,8 +16,10 @@ from constants import ANALYSIS_LEVELV_NUM
 class Recording(dict):
     def __init__(self, filename='data/180426 000 Copy Export.mat',
                  sampling_rate=4e4, filetype='',
-                 headerlength=0, dtype=None, time_unit='ms', piezo_unit='V',
-                 command_unit='mV', trace_unit='pA', input_time_unit='s'):
+                 headerlength=0, dtype=None, piezo_input_unit='V',
+                 command_input_unit='V', trace_input_unit='A',
+                 time_input_unit='s', piezo_unit='V', time_unit='ms',
+                 trace_unit='pA', command_unit='mV'):
         logging.info("""intializing Recording""")
 
         # parameters for loading the data
@@ -37,25 +37,27 @@ class Recording(dict):
         self.n_episode = 0
 
         self.hist_times=0
-        #parameters for analysis
         #idealization
-        self.time_unit = time_unit
-        self.time_unit_factors = {'ms':1e3, 's':1}
-        self.trace_unit = trace_unit
-        self.trace_unit_factors = {'fA':1e15, 'pA':1e12, 'nA':1e9, 'µA':1e6,
-                                    'mA':1e3, 'A':1}
-        self.command_unit = command_unit
-        self.command_unit_factors = {'uV':1e6, 'mV':1e3, 'V':1}
-        self.piezo_unit = piezo_unit
-        self.piezo_unit_factors = {'uV':1e6, 'mV':1e3, 'V':1}
+        # self.time_unit = time_unit
+        # self.time_unit_factors = {'ms': 1e3, 's': 1}
+        # self.trace_unit = trace_unit
+        # self.trace_unit_factors = {'fA': 1e15, 'pA': 1e12, 'nA': 1e9, 'µA': 1e6,
+        #                             'mA': 1e3, 'A': 1}
+        # self.command_unit = command_unit
+        # self.command_unit_factors = {'uV': 1e6, 'mV': 1e3, 'V': 1}
+        # self.piezo_unit = piezo_unit
+        # self.piezo_unit_factors = {'uV': 1e6, 'mV': 1e3, 'V': 1}
         # units when given input
-        input_time_unit_factors = {'ms':1e-3, 's':1}
-        input_time_factor = input_time_unit_factors[input_time_unit]
+        self.time_input_unit = time_input_unit
+        self.piezo_input_unit = piezo_input_unit
+        self.trace_input_unit = trace_input_unit
+        self.command_input_unit = command_input_unit
+        # parameters for analysis
         self._TC_thresholds = np.array([])
         self._TC_amplitudes = np.array([])
         self.tc_unit = 'pA'
-        self.tc_unit_factors = {'fA':1e15, 'pA':1e12, 'nA':1e9, 'µA':1e6,
-                                    'mA':1e3, 'A':1}
+        self.tc_unit_factors = {'fA':1e15, 'pA': 1e12, 'nA': 1e9, 'µA': 1e6,
+                                'mA': 1e3, 'A': 1}
         self._tc_resolution = None
         #first activation
         self._fa_threshold = 0.
@@ -136,17 +138,17 @@ class Recording(dict):
     @property
     def has_command(self): return self.series.has_command
 
-#    @property
-#    def time_unit(self): return self.episode.time_unit
-#
-#    @property
-#    def trace_unit(self): return self.episode.trace_unit
-#
-#    @property
-#    def piezo_unit(self): return self.episode.piezo_unit
-#
-#    @property
-#    def command_unit(self): return self.episode.command_unit
+    @property
+    def time_unit(self): return self.episode.time_unit
+
+    @property
+    def trace_unit(self): return self.episode.trace_unit
+
+    @property
+    def piezo_unit(self): return self.episode.piezo_unit
+
+    @property
+    def command_unit(self): return self.episode.command_unit
 
     def load_data(self):
         """this method is supposed to load data from a file or a directory"""

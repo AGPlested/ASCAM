@@ -1,7 +1,5 @@
-import logging
 
 import numpy as np
-import matplotlib.pyplot as plt
 
 from filtering import gaussian_filter, ChungKennedyFilter
 from analysis import (baseline_correction, detect_first_activation, Idealizer)
@@ -11,7 +9,7 @@ class Episode():
     def __init__(self, time, trace, n_episode=0, piezo=None, command=None,
                  sampling_rate=4e4, time_unit='ms', piezo_unit='V',
                  command_unit='mV', trace_unit='pA', input_time_unit='s',
-                 input_trace_unit='pA', input_piezo_unit='V',
+                 input_trace_unit='A', input_piezo_unit='V',
                  input_command_unit='V'):
         """
         Episode objects hold all the information about an epoch and
