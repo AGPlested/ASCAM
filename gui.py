@@ -13,6 +13,7 @@ from tools import stringList_parser, parse_filename
 from recording import Recording
 from TCframe import TC_Frame
 from firstactivationframe import FirstActivationFrame
+from episode import Episode
 
 class GUI(ttk.Frame):
     """
@@ -1085,8 +1086,7 @@ class OpenFileDialog(tk.Toplevel):
         self.title("Select file")
 
         self.create_widgets()
-        self.samplingentry.focus()
-        logging.info("OpenFileDialog initialized")
+        self.sampling_entry.focus()
 
     def create_widgets(self):
         #gui variables
@@ -1107,33 +1107,36 @@ class OpenFileDialog(tk.Toplevel):
                                                    row=3, sticky=(tk.W, tk.E))
 
         #fourth row - enter sampling rate
-        self.samplingentry = ttk.Entry(self, width=7,
+        self.sampling_entry = ttk.Entry(self, width=7,
                                        textvariable=self.parent.sampling_rate)
-        self.samplingentry.grid(column=2,row=4)
+        self.sampling_entry.grid(column=2,row=4)
         ttk.Label(self, text="sampling rate (Hz):").grid(column=1,
                                                         row=4, sticky=(tk.W))
 
         # fifth row - enter time unit of data
-        self.time_unit_entry = ttk.Entry(self, width=5,
-                                       textvariable=self.parent.time_input_unit)
+        self.time_unit_entry = tk.OptionMenu(self, self.parent.time_input_unit,
+                                             *Episode.time_unit_factors.keys())
         self.time_unit_entry.grid(column=2,row=5)
         ttk.Label(self, text="time unit:").grid(column=1,
                                                         row=5, sticky=(tk.W))
         # 6th row - enter current trace unit of data
-        self.trace_unit_entry = ttk.Entry(self, width=5,
-                                   textvariable=self.parent.trace_input_unit)
+        self.trace_unit_entry = tk.OptionMenu(self,
+                                             self.parent.trace_input_unit,
+                                             *Episode.trace_unit_factors.keys())
         self.trace_unit_entry.grid(column=2,row=6)
         ttk.Label(self, text="current trace unit:").grid(column=1,
                                                         row=6, sticky=(tk.W))
         # 7th row - enter piezo unit of data
-        self.piezo_unit_entry = ttk.Entry(self, width=5,
-                                   textvariable=self.parent.piezo_input_unit)
+        self.piezo_unit_entry = tk.OptionMenu(self,
+                                             self.parent.piezo_input_unit,
+                                             *Episode.piezo_unit_factors.keys())
         self.piezo_unit_entry.grid(column=2,row=7)
         ttk.Label(self, text="piezo unit:").grid(column=1,
                                                         row=7, sticky=(tk.W))
         # 8th row - enter command unit of data
-        self.command_unit_entry = ttk.Entry(self, width=5,
-                                   textvariable=self.parent.command_input_unit)
+        self.command_unit_entry = tk.OptionMenu(self,
+                                           self.parent.command_input_unit,
+                                           *Episode.command_unit_factors.keys())
         self.command_unit_entry.grid(column=2,row=8)
         ttk.Label(self, text="command voltage unit:").grid(column=1,
                                                         row=8, sticky=(tk.W))
