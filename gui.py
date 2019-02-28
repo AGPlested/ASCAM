@@ -409,11 +409,11 @@ class ExportIdDialog(tk.Toplevel):
 
     def create_widgets(self):
         ttk.Label(self,text='Filename: ').grid(row=0)
-        ttk.Entry(self, textvariable=self.filename, width=20)\
-            .grid(row=0,column=1)
+        ttk.Entry(self, textvariable=self.filename, width=20
+                  ).grid(row=0,column=1)
         ttk.Button(self, text='OK', command=self.ok_click).grid(row=1)
-        ttk.Button(self,text="Cancel", command=self.destroy)\
-            .grid(row=1,column=1)
+        ttk.Button(self,text="Cancel", command=self.destroy
+                   ).grid(row=1,column=1)
 
     def ok_click(self):
 
@@ -640,8 +640,8 @@ class HistogramConfiguration(tk.Toplevel):
                                                        grid(row = 0, column=1)
 
         ttk.Label(self, text="Plot as density").grid(row=0, column=3)
-        ttk.Checkbutton(self, variable=self.parent.plots.hist_density)\
-            .grid(row=0, column=4)
+        ttk.Checkbutton(self, variable=self.parent.plots.hist_density
+                        ).grid(row=0, column=4)
 
         # piezo selection options
         piez_int_label = ttk.Label(self, text="Select using piezo voltage")
@@ -674,11 +674,11 @@ class HistogramConfiguration(tk.Toplevel):
                   width=7).grid(row = 2, column=4)
 
         # draw button
-        ttk.Button(self, text="OK", command=self.ok_click)\
-            .grid(row=5, columnspan=2)
+        ttk.Button(self, text="OK", command=self.ok_click
+                   ).grid(row=5, columnspan=2)
         # cancel button
-        ttk.Button(self, text="Cancel", command=self.destroy)\
-            .grid(row=5, column=3, columnspan=2)
+        ttk.Button(self, text="Cancel", command=self.destroy
+                   ).grid(row=5, column=3, columnspan=2)
 
         if not self.parent.data.has_piezo:
             for widget in [piez_int_label, piezo_int_button, act_label,
@@ -752,40 +752,39 @@ class BaselineFrame(tk.Toplevel):
         ttk.Entry(self, width=7, textvariable=self.method).grid(column=2, row=0)
 
         ttk.Label(self, text='degree').grid(column=1, row=1)
-        ttk.Entry(self,width=8, textvariable=self.degree)\
-            .grid(row=1, column=2)
+        ttk.Entry(self,width=8, textvariable=self.degree
+                  ).grid(row=1, column=2)
 
         ### piezo selection options
-        ttk.Label(self, text="Select using piezo voltage")\
-            .grid(row=2, column=0)
-        ttk.Checkbutton(self, variable=self.select_piezo)\
-            .grid(row=2, column=1)
+        ttk.Label(self, text="Select using piezo voltage"
+                  ).grid(row=2, column=0)
+        ttk.Checkbutton(self, variable=self.select_piezo
+                        ).grid(row=2, column=1)
 
         ttk.Label(self, text="Active/Inactive").grid(row=3, column=0)
         ttk.Checkbutton(self, variable=self.piezo_active).grid(row=3, column=1)
 
         ttk.Label(self, text="deviation from max/min").grid(row=4, column=0)
-        ttk.Entry(self, textvariable=self.deviation, width=7)\
-            .grid(row=4, column=1)
+        ttk.Entry(self, textvariable=self.deviation, width=7
+                  ).grid(row=4, column=1)
 
         # interval selection options
         ttk.Label(self, text="Use intervals").grid(row=2, column=3)
         ttk.Checkbutton(self, variable=self.select_intvl).grid(row=2, column=4)
         ttk.Label(self, text="Intervals").grid(row=3, column=3)
-        ttk.Entry(self, textvariable=self.interval_entry, width=7)\
-            .grid(row=3, column=4)
+        ttk.Entry(self, textvariable=self.interval_entry, width=7
+                    ).grid(row=3, column=4)
 
 
         # ok and close
-        ttk.Button(self, text="OK", command=self.ok_click)\
-            .grid(row=5, columnspan=2)
-        ttk.Button(self, text="Cancel", command=self.destroy)\
-            .grid(row=5, column=3, columnspan=2)
+        ttk.Button(self, text="OK", command=self.ok_click
+                   ).grid(row=5, columnspan=2)
+        ttk.Button(self, text="Cancel", command=self.destroy
+                   ).grid(row=5, column=3, columnspan=2)
 
     def ok_click(self):
-        """
-        redraw the histogram (with new settings) and close the dialog
-        """
+        """redraw the histogram (with new settings) and close the dialog."""
+
         logging.info('going to baseline all episodes')
         try:
             self.intervals=stringList_parser(self.interval_entry.get())
@@ -807,16 +806,14 @@ class BaselineFrame(tk.Toplevel):
         self.destroy()
 
     def interval_NotPiezo(self,*args):
-        """
-        If interval selection is turned on turn off the piezo selection
-        """
+        """If interval selection is turned on turn off the piezo selection."""
+
         if self.select_intvl.get() == 1:
             self.select_piezo.set(0)
 
     def piezo_NotInterval(self,*args):
-        """
-        If piezo selection is turned on turn off interval
-        """
+        """If piezo selection is turned on turn off interval."""
+
         if self.select_piezo.get() == 1:
             self.select_intvl.set(0)
 
