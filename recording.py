@@ -11,9 +11,89 @@ from episode import Episode
 from series import Series
 from constants import ANALYSIS_LEVELV_NUM
 
-# log = logging.getLogger()
 
 class Recording(dict):
+
+    @classmethod
+    def from_file(cls, filename, sampling_rate=None, time_unit='s',
+                       trace_unit='A', piezo_unit='V', command_unit='V'):
+        """Load data from a file.
+
+        This method creates a recording objects or reconstructs one from the
+        data in the file.
+        Args:
+            filename - name of the file
+            sampling_rate - the frequency at which the recording was sampled
+            time_unit - the unit of time in the input
+            trace_unit - the unit of electric current in the input
+            piezo_unit - the unit of voltage in the piezo data in the input
+            command_unit - the units in which the command voltage is given
+        Returns:
+            recording - instance of the Recording clas containing the data"""
+        logging.debug(f"Recording.from_file")
+
+        filetype, _, _, _ = parse_filename(filename)
+        if filetype == 'pkl':
+            recording = cls.from_pickle(filename)
+        elif filetype == 'mat':
+            recording = cls.from_matlab(filename, sampling_rate, time_unit,
+                                        trace_unit, piezo_unit, command_unit)
+        return recording
+
+    @classmethod
+    def from_pickle(cls, filename):
+        """Load a recording from a '.pkl' file.
+
+        Recordings edited in ASCAM can be saved as pickles, this method
+        reconstructs such saved recordings.
+        Args:
+            filename - name of the pickle
+        Returns:
+            recording the instance of the recording that was stored in the
+            pickle."""
+        recording = cls()
+        with open(filename, 'rb') as file:
+            data = pickle.load(file).__dict__
+            recording.__dict__ = data.__dict__
+            for key, value in loaded_data.items():
+                self[key] = value
+        return recording
+
+    @classmethod
+    def from_matlab(cls, filename, sampling_rate, time_unit, trace_unit,
+                    piezo_unit, command_unit):
+        """Load data from a matlab file.
+
+        This method creates a recording objects from the data in the file.
+        Args:
+            filename - name of the file
+            sampling_rate - the frequency at which the recording was sampled
+            time_unit - the unit of time in the input
+            trace_unit - the unit of electric current in the input
+            piezo_unit - the unit of voltage in the piezo data in the input
+            command_unit - the units in which the command voltage is given
+        Returns:
+            recording - instance of the Recording clas containing the data"""
+        logging.debug(f"from_matlab")
+
+        recording = cls()
+        names, time, current, piezo, command = readdata.load_matlab(filename)
+        n_episodes = len(current)
+        if not piezo:
+            piezo = [None] * n_episodes
+        if not command:
+            command = [None] * n_episodes
+        recording['raw_'] = Series([Episode(time, current[i], n_episode=i,
+                                            piezo=piezo[i],
+                                            command=command[i],
+                                            sampling_rate=sampling_rate,
+                                            input_time_unit=time_unit,
+                                            input_trace_unit=trace_unit,
+                                            input_piezo_unit=piezo_unit,
+                                            input_command_unit=command_unit)
+                                    for i in range(n_episodes)])
+        return recording
+
     def __init__(self, filename='data/180426 000 Copy Export.mat',
                  sampling_rate=4e4, filetype='',
                  headerlength=0, dtype=None, piezo_input_unit='V',
@@ -36,7 +116,7 @@ class Recording(dict):
         self.currentDatakey = 'raw_'
         self.n_episode = 0
 
-        self.hist_times=0
+        self.hist_times = 0
         # units when given input
         self.time_input_unit = time_input_unit
         self.piezo_input_unit = piezo_input_unit
@@ -60,14 +140,19 @@ class Recording(dict):
         self.lists = dict()
         self.current_lists = ['all']
         # if a file is specified load it
-        if filename:
-            logging.info("""'filename' is not empty, will load data""")
-            self.load_data()
-        #if the lists attribute has not been set while loading the data do it
-        #now
-        #lists is a dict with key name_of_list and values (episodes, color, key)
+        # if filename:
+        #     logging.info("""'filename' is not empty, will load data""")
+        #     self.from_file(time_unit = ime_input_unit,
+        #                    piezo_unit = piezo_input_unit,
+        #                    trace_unit = race_input_unit,
+        #                    command_unit = command_input_unit)
+        # if the lists attribute has not been set while loading the data do it
+        # now
+        # lists is a dict with key name_of_list and values
+        # (episodes, color, key)
         if not self.lists:
-            self.lists = {'all':(list(range(len(self['raw_']))), 'white', None)}
+            self.lists = {
+                        'all': (list(range(len(self['raw_']))), 'white', None)}
 
     @property
     def fa_threshold(self):
@@ -116,7 +201,6 @@ class Recording(dict):
         indices = np.array(list(set(indices)))
         return np.array(self.series)[indices]
 
-
     @property
     def series(self): return self[self.currentDatakey]
 
@@ -140,49 +224,6 @@ class Recording(dict):
 
     @property
     def command_unit(self): return self.episode.command_unit
-
-    def load_data(self):
-        """this method is supposed to load data from a file or a directory"""
-        logging.debug(f"Recording.load_data")
-
-        if 'pkl' in parse_filename(self.filename)[0]:
-            loaded_data = readdata.load_pickle(self.filename)
-            self.__dict__ = loaded_data.__dict__
-            for key, value in loaded_data.items():
-                self[key] = value
-        else: # if it's not a pickle is a matplab file
-            self.load_series(filename=self.filename,
-                             filetype=self.filetype,
-                             dtype=self.dtype,
-                             headerlength=self.headerlength,
-                             sampling_rate=self.sampling_rate,
-                             datakey='raw_')
-
-    def load_series(self, filename, filetype, dtype, headerlength, datakey,
-                    sampling_rate, time_unit='ms', trace_unit='pA',
-                    piezo_unit='mV', command_unit='mV'):
-        """Load the data in the file at `self.filename`.
-        Accepts `.mat` files."""
-        logging.debug(f"load_series")
-
-        names, time, current, piezo, command = readdata.load(
-                                                    filename=filename,
-                                                    filetype=filetype,
-                                                    dtype=dtype,
-                                                    headerlength=headerlength,
-                                                    fs=sampling_rate)
-        # The `if` accounts for the presence or absence of
-        # piezo and command voltage in the data being loaded
-        n_episodes = len(current)
-        if 'Piezo [V]' not in names:
-            piezo = [None] * n_episodes
-        elif 'Command Voltage [V]' not in names:
-            command = [None] * n_episodes
-        self[datakey] = Series([Episode(time, current[i], n_episode=i,
-                                        piezo=piezo[i],
-                                        command=command[i],
-                                        sampling_rate=self.sampling_rate)
-                                        for i in range(n_episodes)])
 
     def save_to_pickle(self, filepath):
         """save data using the pickle module
@@ -208,7 +249,7 @@ class Recording(dict):
         no_episodes = len(self[datakey])
         fill_length = len(str(no_episodes))
 
-        #get the episodes we want to save
+        # get the episodes we want to save
         indices = list()
         for listname in lists_to_save:
             indices.extend(self.lists[listname][0])
@@ -217,8 +258,10 @@ class Recording(dict):
         for episode in episodes:
             n = str(episode.n_episode).zfill(fill_length)
             export_dict['trace'+n] = episode._trace
-            if save_piezo: export_dict['piezo'+n] = episode._piezo
-            if save_command: export_dict['command'+n] = episode._command
+            if save_piezo:
+                export_dict['piezo'+n] = episode._piezo
+            if save_command:
+                export_dict['command'+n] = episode._command
         io.savemat(filepath, export_dict)
 
     def export_idealization(self, filepath):
