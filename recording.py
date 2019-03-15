@@ -337,9 +337,13 @@ class Recording(dict):
             #if operations have been done before combine the names
             newDatakey = self.currentDatakey+fdatakey
         self[newDatakey] = (
-        self[self.currentDatakey].CK_filter(window_lengths, weight_exponent,
-                           weight_window, apriori_f_weights, apriori_b_weights))
-        self.currentDatakey = newDatakey
+                self[self.current_datakey].CK_filter(window_lengths,
+                                                     weight_exponent,
+                                                     weight_window,
+                                                     apriori_f_weights,
+                                                     apriori_b_weights)
+                           )
+        self.current_datakey = newDatakey
 
     def idealize_series(self):
         """Idealize the current series."""
