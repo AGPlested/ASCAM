@@ -17,9 +17,9 @@ class FirstActivationFrame(tk.Frame):
         #we can use the smallest threshold value as initial value for the first
         #event threshold
         if (self.parent.data.fa_threshold is None \
-            and np.any(parent.data._TC_thresholds)
+            and np.any(parent.data._tc_thresholds)
            ):
-            self.parent.data.fa_threshold = parent.data._TC_thresholds[0]
+            self.parent.data.fa_threshold = parent.data._tc_thresholds[0]
         else:
             self.parent.data.fa_threshold \
             = np.mean(self.parent.data.episode.trace)

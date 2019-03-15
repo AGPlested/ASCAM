@@ -16,8 +16,8 @@ class Series(list):
 
         list.__init__(self, data)
 
-        self._TC_thresholds = np.array([])
-        self._TC_amplitudes = np.array([])
+        self._tc_thresholds = np.array([])
+        self._tc_amplitudes = np.array([])
 
         self._fa_threshold = 0.
 

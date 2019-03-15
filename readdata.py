@@ -12,21 +12,28 @@ from scipy.io.matlab.mio5 import varmats_from_mat
 from tools import parse_filename
 
 
-def read_metadata(filename):
+def load(filename, filetype=False, dtype=None, headerlength=None, fs=None):
     """
-    read a json file containing the attributes of a recording and its episodes
-    and return dictionaries containing these attributes
+    get data form a file
+    if filetype is not given automatically detects it from the
+    extension
     """
-    with open(filename,'r') as metadata_file:
-        metadata = json.load(metadata_file)
-    # seperate attributes into recording attributes and episode attributes per
-    # series
-    series_attributes = dict()
-    for datakey in metadata['datakeys']:
-        series_attributes[datakey] = (metadata[datakey])
-        metadata.pop(datakey)
-    metadata.pop('datakeys')
-    return metadata, series_attributes
+    if not filetype:
+        # the first value returned by parse_filename is the filetype
+        filetype = parse_filename(filename)[0]
+
+    if filetype == 'axo':
+        output = load_axo(filename)
+    elif filetype == 'mat':
+        output = load_matlab(filename)
+    elif filetype == 'bin':
+        output = load_binary(filename,dtype,headerlength,fs)
+    elif filetype == 'tdt':
+        output = load_tdt(filename)
+    else:
+        print("Filetype not supported.")
+        output = False
+    return output
 
 def load_pickle(filename):
     """
@@ -36,6 +43,7 @@ def load_pickle(filename):
     with open(filename,'rb') as file:
         data = pickle.load(file)
     return data
+
 
 def load_tdt(filename):
     """
@@ -62,8 +70,9 @@ def load_tdt(filename):
         names = next(reader)
         n_lists = len(names)
 
-        #create a 'list-array' to hold the data, we need to create a list for each timeseries we get before populating them
-        #and they need to be lists because the length is unknown
+        # create a 'list-array' to hold the data, we need to create a list for 
+        # each timeseries we get before populating them
+        # and they need to be lists because the length is unknown
         listlist = list()
         for i in range(n_lists): listlist.append(list())
 
@@ -221,26 +230,3 @@ def load_axo(filename):
     commandVoltage = data[3::3]
 
     return names_to_output, time, current, piezo, commandVoltage
-
-def load(filename, filetype=False, dtype=None, headerlength=None, fs=None):
-    """
-    get data form a file
-    if filetype is not given automatically detects it from the
-    extension
-    """
-    if not filetype:
-        # the first value returned by parse_filename is the filetype
-        filetype = parse_filename(filename)[0]
-
-    if filetype == 'axo':
-        output = load_axo(filename)
-    elif filetype == 'mat':
-        output = load_matlab(filename)
-    elif filetype == 'bin':
-        output = load_binary(filename,dtype,headerlength,fs)
-    elif filetype == 'tdt':
-        output = load_tdt(filename)
-    else:
-        print("Filetype not supported.")
-        output = False
-    return output

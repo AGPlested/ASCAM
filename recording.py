@@ -1,4 +1,3 @@
-import os
 import logging
 import pickle
 
@@ -7,7 +6,6 @@ import numpy as np
 import pandas as pd
 
 import readdata
-import savedata
 from tools import parse_filename, piezo_selection, interval_selection
 from episode import Episode
 from series import Series
@@ -18,7 +16,10 @@ from constants import ANALYSIS_LEVELV_NUM
 class Recording(dict):
     def __init__(self, filename='data/180426 000 Copy Export.mat',
                  sampling_rate=4e4, filetype='',
-                 headerlength=0, dtype=None):
+                 headerlength=0, dtype=None, piezo_input_unit='V',
+                 command_input_unit='V', trace_input_unit='A',
+                 time_input_unit='s', piezo_unit='V', time_unit='ms',
+                 trace_unit='pA', command_unit='mV'):
         logging.info("""intializing Recording""")
 
         # parameters for loading the data
@@ -36,15 +37,20 @@ class Recording(dict):
         self.n_episode = 0
 
         self.hist_times=0
-        #parameters for analysis
-        #idealization
-        self._TC_thresholds = np.array([])
-        self._TC_amplitudes = np.array([])
+        # units when given input
+        self.time_input_unit = time_input_unit
+        self.piezo_input_unit = piezo_input_unit
+        self.trace_input_unit = trace_input_unit
+        self.command_input_unit = command_input_unit
+        # parameters for analysis
+        # idealization
+        self._tc_thresholds = np.array([])
+        self._tc_amplitudes = np.array([])
         self.tc_unit = 'pA'
-        self.tc_unit_factors = {'fA':1e15, 'pA':1e12, 'nA':1e9, 'µA':1e6,
-                                    'mA':1e3, 'A':1}
+        self.tc_unit_factors = {'fA': 1e15, 'pA': 1e12, 'nA': 1e9, 'µA': 1e6,
+                                'mA': 1e3, 'A': 1}
         self._tc_resolution = None
-        #first activation
+        # first activation
         self._fa_threshold = 0.
         # variables for user created lists of episodes
         # `lists` stores the indices of the episodes in the list in the first
@@ -55,7 +61,7 @@ class Recording(dict):
         self.current_lists = ['all']
         # if a file is specified load it
         if filename:
-            logging.info("""`filename` is not empty, will load data""")
+            logging.info("""'filename' is not empty, will load data""")
             self.load_data()
         #if the lists attribute has not been set while loading the data do it
         #now
@@ -73,19 +79,19 @@ class Recording(dict):
 
     @property
     def TC_amplitudes(self):
-        return self._TC_amplitudes * self.tc_unit_factors[self.tc_unit]
+        return self._tc_amplitudes * self.tc_unit_factors[self.tc_unit]
 
     @TC_amplitudes.setter
     def TC_amplitudes(self, amps):
-        self._TC_amplitudes = amps / self.tc_unit_factors[self.tc_unit]
+        self._tc_amplitudes = amps / self.tc_unit_factors[self.tc_unit]
 
     @property
     def TC_thresholds(self):
-        return self._TC_thresholds * self.tc_unit_factors[self.tc_unit]
+        return self._tc_thresholds * self.tc_unit_factors[self.tc_unit]
 
     @TC_thresholds.setter
     def TC_thresholds(self, amps):
-        self._TC_thresholds = amps / self.tc_unit_factors[self.tc_unit]
+        self._tc_thresholds = amps / self.tc_unit_factors[self.tc_unit]
 
     @property
     def tc_resolution(self):
@@ -144,83 +150,39 @@ class Recording(dict):
             self.__dict__ = loaded_data.__dict__
             for key, value in loaded_data.items():
                 self[key] = value
-        elif os.path.isfile(self.filename):
+        else: # if it's not a pickle is a matplab file
             self.load_series(filename=self.filename,
                              filetype=self.filetype,
                              dtype=self.dtype,
                              headerlength=self.headerlength,
                              sampling_rate=self.sampling_rate,
                              datakey='raw_')
-        elif os.path.isdir(self.filename):
-            if not self.filename.endswith('/'):
-                self.filename += '/'
-            # loop once to find the json file and extract the datakeys
-            for file in os.listdir(self.filename):
-                if file.endswith('json'):
-                    metadata, series_metadata = readdata.read_metadata(
-                    self.filename+file)
-                    break
-                # recreate recording attributes
-                self.__dict__ = metadata
-
-            # loop again to find the data and load it
-            for file in os.listdir(self.filename):
-                for datakey in series_metadata.keys():
-                    if datakey in file:
-                        self.load_series(
-                                    filename = self.filename + file,
-                                    filetype = metadata['filetype'],
-                                    dtype = metadata['dtype'],
-                                    headerlength = metadata['headerlength'],
-                                    sampling_rate = metadata['sampling_rate'],
-                                    datakey=datakey)
-                        for episode, attributes in zip(self[datakey],
-                                            series_metadata[datakey].values()):
-                            episode.__dict__ = attributes
 
     def load_series(self, filename, filetype, dtype, headerlength, datakey,
-                    sampling_rate):
+                    sampling_rate, time_unit='ms', trace_unit='pA',
+                    piezo_unit='mV', command_unit='mV'):
         """Load the data in the file at `self.filename`.
-        Accepts `.mat`, `.axgd` and `.bin` files.
-        (`.bin` files are for simulated data only at the moment.)"""
+        Accepts `.mat` files."""
         logging.debug(f"load_series")
 
-        names, *loaded_data = readdata.load(filename=filename,
-                                            filetype=filetype,
-                                            dtype=dtype,
-                                            headerlength=headerlength,
-                                            fs=sampling_rate)
+        names, time, current, piezo, command = readdata.load(
+                                                    filename=filename,
+                                                    filetype=filetype,
+                                                    dtype=dtype,
+                                                    headerlength=headerlength,
+                                                    fs=sampling_rate)
         # The `if` accounts for the presence or absence of
         # piezo and command voltage in the data being loaded
-
-        if 'Piezo [V]' in names and 'Command Voltage [V]' in names:
-            time = loaded_data[0]
-            self[datakey] = Series([Episode(time, trace, n_episode=i,
-                                            piezo=piezo,
-                                            command=command,
-                                            sampling_rate=self.sampling_rate)
-                                    for i, (trace, piezo, command)
-                                    in enumerate(zip(*loaded_data[1:]))])
-
-        elif 'Piezo [V]' in names:
-            time, current, piezo, _ = loaded_data
-            self[datakey] = Series([Episode(time, current[i], n_episode=i,
-                                            piezo=piezo[i],
-                                            sampling_rate=self.sampling_rate)
-                                    for i in range(len(current))])
-
-        elif 'Command Voltage [V]' in names:
-            time, current, _, command = loaded_data
-            self[datakey] = Series([Episode(time, current[i], n_episode=i,
-                                            command=command[i],
-                                            sampling_rate=self.sampling_rate)
-                                    for i in range(len(current))])
-
-        else:
-            time, current, _, _ = loaded_data
-            self[datakey] = Series([Episode(time, current[i], n_episode=i,
-                                            sampling_rate=self.sampling_rate)
-                                    for i in range(len(current))])
+        n_episodes = len(current)
+        if 'Piezo [V]' not in names:
+            piezo = [None] * n_episodes
+        elif 'Command Voltage [V]' not in names:
+            command = [None] * n_episodes
+        self[datakey] = Series([Episode(time, current[i], n_episode=i,
+                                        piezo=piezo[i],
+                                        command=command[i],
+                                        sampling_rate=self.sampling_rate)
+                                        for i in range(n_episodes)])
 
     def save_to_pickle(self, filepath):
         """save data using the pickle module
@@ -385,11 +347,11 @@ class Recording(dict):
 
         logging.log(ANALYSIS_LEVELV_NUM,
                     f"idealizing series '{self.currentDatakey}'\n"
-                    f"amplitudes: {self._TC_amplitudes}\n"
-                    f"thresholds: {self._TC_thresholds}\n"
+                    f"amplitudes: {self._tc_amplitudes}\n"
+                    f"thresholds: {self._tc_thresholds}\n"
                     f"resolution: {self._tc_resolution}")
 
-        self.series.idealize_all(self._TC_amplitudes, self._TC_thresholds,
+        self.series.idealize_all(self._tc_amplitudes, self._tc_thresholds,
                                  self._tc_resolution)
 
     def idealize_episode(self):
@@ -398,11 +360,11 @@ class Recording(dict):
 
         logging.log(ANALYSIS_LEVELV_NUM,
                     f"idealizing episode '{self.n_episode}'\n"
-                    f"amplitudes: {self._TC_amplitudes}\n"
-                    f"thresholds: {self._TC_thresholds}\n"
+                    f"amplitudes: {self._tc_amplitudes}\n"
+                    f"thresholds: {self._tc_thresholds}\n"
                     f"resolution: {self._tc_resolution}")
 
-        self.episode.idealize(self._TC_amplitudes, self._TC_thresholds,
+        self.episode.idealize(self._tc_amplitudes, self._tc_thresholds,
                               self._tc_resolution)
 
     def detect_fa(self, exclude=[]):

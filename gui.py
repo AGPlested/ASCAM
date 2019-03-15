@@ -1,6 +1,6 @@
-import os
-import copy
-import time
+#import os
+#import copy
+#import time
 import logging
 import tkinter as tk
 from tkinter import ttk
@@ -13,6 +13,7 @@ from tools import stringList_parser, parse_filename
 from recording import Recording
 from TCframe import TC_Frame
 from firstactivationframe import FirstActivationFrame
+from episode import Episode
 
 class GUI(ttk.Frame):
     """
@@ -38,7 +39,7 @@ class GUI(ttk.Frame):
         root.title("ASCAM")
         root.grid_columnconfigure(0, weight=1)
         root.grid_rowconfigure(0, weight=1)
-        GUI = cls(root, test)
+        cls(root, test)
         root.mainloop()
 
     def __init__(self, master, test):
@@ -50,6 +51,7 @@ class GUI(ttk.Frame):
         logging.debug("window system is {}".format(self.window_system))
 
         self._init_fileparams()
+        self._init_data_params()
 
         #placeholders for subframes
         #set to None so existence can be checked is `is not None`
@@ -64,10 +66,6 @@ class GUI(ttk.Frame):
         # bind window name updating
         self.filename.trace("w",
             lambda *args: self.master.title(f"ASCAM - {self.filename.get()}"))
-
-        # parameters of the data
-        self.sampling_rate = tk.StringVar()
-        # self.sampling_rate.set("0")
 
         if test:
             self.data = Recording()
@@ -101,6 +99,19 @@ class GUI(ttk.Frame):
             # self.menuBar.launch_fa_mode()
 
         logging.debug(f"end GUI.__init__")
+
+    def _init_data_params(self):
+        # parameters of the data
+        self.sampling_rate = tk.StringVar()
+        self.time_input_unit = tk.StringVar()
+        self.trace_input_unit = tk.StringVar()
+        self.piezo_input_unit = tk.StringVar()
+        self.command_input_unit = tk.StringVar()
+        # set defaults
+        self.time_input_unit.set('s')
+        self.trace_input_unit.set('A')
+        self.piezo_input_unit.set('V')
+        self.command_input_unit.set('V')
 
     def _init_fileparams(self):
         """initialize parameters for loading of a file
@@ -157,16 +168,19 @@ class GUI(ttk.Frame):
         self.filetypefull.set(filetypefull)
 
     def load_recording(self):
-        """ Take a recording object and load it into the GUI.
-        """
+        """ Take a recording object and load it into the GUI."""
         logging.debug("""load_recording""")
 
         # set ASCAM title
         self.master.title("ASCAM - "+self.filename.get())
 
         self.data = Recording(self.filenamefull.get(),
-                                     self.sampling_rate.get(),
-                                     self.filetype.get())
+                              self.sampling_rate.get(),
+                              self.filetype.get(),
+                              piezo_input_unit=self.piezo_input_unit.get(),
+                              time_input_unit=self.time_input_unit.get(),
+                              trace_input_unit=self.trace_input_unit.get(),
+                              command_input_unit=self.command_input_unit.get())
         self.datakey.set(self.data.currentDatakey)
         # recreate user defined episodelists
         for name, (_, color, key) in self.data.lists.items():
@@ -176,9 +190,8 @@ class GUI(ttk.Frame):
             self.update_all()
 
     def change_current_datakey(self, *args, **kwargs):
-        """This function changes the current datakey in the recording object, which
-        is the one that determines what is filtered etc
-        """
+        """This function changes the current datakey in the recording object,
+        which is the one that determines what is filtered etc."""
         logging.debug(f"GUI.change_current_datakey")
 
         self.data.currentDatakey = self.datakey.get()
@@ -1070,11 +1083,9 @@ class OpenFileDialog(tk.Toplevel):
         self.title("Select file")
 
         self.create_widgets()
-        self.samplingentry.focus()
-        logging.info("OpenFileDialog initialized")
+        self.sampling_entry.focus()
 
     def create_widgets(self):
-        #TODO: check if these 'local' variables can be replaced by the main
         #gui variables
         logging.info("creating OpenFileDialog widgets")
         # first row - filename and button for choosing file
@@ -1093,25 +1104,53 @@ class OpenFileDialog(tk.Toplevel):
                                                    row=3, sticky=(tk.W, tk.E))
 
         #fourth row - enter sampling rate
-        self.samplingentry = ttk.Entry(self, width=7,
+        self.sampling_entry = ttk.Entry(self, width=7,
                                        textvariable=self.parent.sampling_rate)
-        self.samplingentry.grid(column=2,row=4)
-        ttk.Label(self, text="sampling_rate (Hz):").grid(column=1,
+        self.sampling_entry.grid(column=2,row=4)
+        ttk.Label(self, text="sampling rate (Hz):").grid(column=1,
                                                         row=4, sticky=(tk.W))
 
-        #fifth row - Load button to close and go to next window and close button
+        # fifth row - enter time unit of data
+        self.time_unit_entry = tk.OptionMenu(self, self.parent.time_input_unit,
+                                             *Episode.time_unit_factors.keys())
+        self.time_unit_entry.grid(column=2,row=5)
+        ttk.Label(self, text="time unit:").grid(column=1,
+                                                        row=5, sticky=(tk.W))
+        # 6th row - enter current trace unit of data
+        self.trace_unit_entry = tk.OptionMenu(self,
+                                             self.parent.trace_input_unit,
+                                             *Episode.trace_unit_factors.keys())
+        self.trace_unit_entry.grid(column=2,row=6)
+        ttk.Label(self, text="current trace unit:").grid(column=1,
+                                                        row=6, sticky=(tk.W))
+        # 7th row - enter piezo unit of data
+        self.piezo_unit_entry = tk.OptionMenu(self,
+                                             self.parent.piezo_input_unit,
+                                             *Episode.piezo_unit_factors.keys())
+        self.piezo_unit_entry.grid(column=2,row=7)
+        ttk.Label(self, text="piezo unit:").grid(column=1,
+                                                        row=7, sticky=(tk.W))
+        # 8th row - enter command unit of data
+        self.command_unit_entry = tk.OptionMenu(self,
+                                           self.parent.command_input_unit,
+                                           *Episode.command_unit_factors.keys())
+        self.command_unit_entry.grid(column=2,row=8)
+        ttk.Label(self, text="command voltage unit:").grid(column=1,
+                                                        row=8, sticky=(tk.W))
+        # 9th row - Load button to close and go to next window and close button
         self.loadbutton = ttk.Button(self, text="Load",
                                    command=self.load_button)
-        self.loadbutton.grid(column=1, row=5, sticky=(tk.S, tk.W))
+        self.loadbutton.grid(column=1, row=9, sticky=(tk.S, tk.W))
 
         self.closebutton = ttk.Button(self, text="Close",
                                       command=self.destroy)
-        self.closebutton.grid(column=3, row=5, sticky=(tk.S, tk.E))
+        self.closebutton.grid(column=3, row=9, sticky=(tk.S, tk.E))
 
     def load_button(self):
         logging.debug(f"OpenFileDialog.load_button")
+
         if self.parent.filetype.get() == 'bin':
-            binframe = Binaryquery(self)
+            Binaryquery(self)
         else:
             self.parent.load_recording()
             self.destroy()
