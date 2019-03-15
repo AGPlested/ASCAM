@@ -4,6 +4,7 @@ from filtering import gaussian_filter, ChungKennedyFilter
 from analysis import baseline_correction, detect_first_activation, Idealizer
 from tools import piezo_selection
 
+
 class Episode():
     trace_unit_factors = {'fA': 1e15, 'pA': 1e12, 'nA': 1e9, 'µA': 1e6,
                           'mA': 1e3, 'A': 1}

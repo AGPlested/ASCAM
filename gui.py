@@ -72,7 +72,7 @@ class GUI(ttk.Frame):
 
         # datakey of the current displayed data
         self.datakey = tk.StringVar()
-        self.datakey.set(self.data.currentDatakey)
+        self.datakey.set(self.data.current_datakey)
         self.datakey.trace('w', self.change_current_datakey)
         # episode number of the currently displayed episode
         self.n_episode = tk.IntVar()
@@ -152,7 +152,7 @@ class GUI(ttk.Frame):
         self.grid_columnconfigure(1, weight=1)
 
         # Third row
-        self.episodeList.grid(row=2, column=4,sticky='NS')
+        self.episodeList.grid(row=2, column=4, sticky='NS')
         self.grid_rowconfigure(2, weight=1)
 
     def set_filename(self, filepath):
@@ -171,19 +171,18 @@ class GUI(ttk.Frame):
 
         # set ASCAM title
         self.master.title("ASCAM - "+self.filename.get())
-
-        self.data = Recording(self.filenamefull.get(),
-                              self.sampling_rate.get(),
-                              self.filetype.get(),
-                              piezo_input_unit=self.piezo_input_unit.get(),
-                              time_input_unit=self.time_input_unit.get(),
-                              trace_input_unit=self.trace_input_unit.get(),
-                              command_input_unit=self.command_input_unit.get())
-        self.datakey.set(self.data.currentDatakey)
+        self.data = Recording.from_file(
+                              self.filenamefull.get(),
+                              sampling_rate=self.sampling_rate.get(),
+                              piezo_unit=self.piezo_input_unit.get(),
+                              time_unit=self.time_input_unit.get(),
+                              trace_unit=self.trace_input_unit.get(),
+                              command_unit=self.command_input_unit.get())
+        self.datakey.set(self.data.current_datakey)
         # recreate user defined episodelists
         for name, (_, color, key) in self.data.lists.items():
-            logging.debug("""found list {}, color: {}, key: {}"""\
-            .format(name, color, key))
+            logging.debug("""found list {}, color: {}, key: {}"""
+                          "".format(name, color, key))
             self.listSelection.create_checkbox(name=name, key=key, color=color)
             self.update_all()
 
@@ -192,7 +191,7 @@ class GUI(ttk.Frame):
         which is the one that determines what is filtered etc."""
         logging.debug(f"GUI.change_current_datakey")
 
-        self.data.currentDatakey = self.datakey.get()
+        self.data.current_datakey = self.datakey.get()
         self.episodeList.create_list()
         self.plots.plot(new=True)
         self.episodeList.episodelist.select_set(self.n_episode.get())
@@ -331,10 +330,10 @@ class MenuBar(tk.Menu):
         """
         logging.debug(f"MenuBar.create_file_cascade")
         self.add_cascade(label="File", menu=self.file_menu)
-        #Submenus under 'File'
+        # Submenus under 'File'
         self.file_menu.add_command(label="Open File", command=self.open_file)
         self.file_menu.add_command(label="Save", command=self.save_to_file)
-        self.file_menu.add_command(label="Export", command=lambda: \
+        self.file_menu.add_command(label="Export", command=lambda:
                                    ExportFileDialog(self.parent))
         self.file_menu.add_command(label="Export Idealization",
                                    command=self.export_idealization)
@@ -409,6 +408,7 @@ class MenuBar(tk.Menu):
     def launch_fa_mode(self):
         self.parent.fa_frame = FirstActivationFrame(self.parent)
         self.parent.fa_frame.grid(row=5, column=1, columnspan=3, padx=5, pady=5)
+
 
 class ExportIdDialog(tk.Toplevel):
     def __init__(self, parent):
@@ -545,7 +545,7 @@ class FilterFrame(tk.Toplevel):
             cutoffFrequency = float(self.gaussian_fc.get())
             logging.info("filter frequency is {}".format(cutoffFrequency))
             self.parent.data.gauss_filter_series(cutoffFrequency)
-            self.parent.datakey.set(self.parent.data.currentDatakey)
+            self.parent.datakey.set(self.parent.data.current_datakey)
             self.parent.update_episodelist()
             self.parent.draw_plots()
         elif self.filter_selection.get() == "Chung-Kennedy":
@@ -562,7 +562,7 @@ class FilterFrame(tk.Toplevel):
                        int(self.weight_exponent.get()),
                        int(self.weight_window.get()),
                        ap_b, ap_f)
-            self.parent.datakey.set(self.parent.data.currentDatakey)
+            self.parent.datakey.set(self.parent.data.current_datakey)
             self.parent.update_episodelist()
             self.parent.draw_plots()
 
@@ -809,7 +809,7 @@ class BaselineFrame(tk.Toplevel):
                                         select_piezo=self.select_piezo.get(),
                                         active_piezo=self.piezo_active.get(),
                                         piezo_diff=deviation)
-        self.parent.parent.datakey.set(self.parent.parent.data.currentDatakey)
+        self.parent.parent.datakey.set(self.parent.parent.data.current_datakey)
         self.parent.parent.update_episodelist()
         self.parent.parent.draw_plots(True)
         self.destroy()
@@ -1049,12 +1049,12 @@ class EpisodeList(ttk.Frame):
         for name in list(self.parent.data.lists.keys())[1:]:
             for index in self.parent.data.lists[name][0]:
                 self.episodelist.itemconfig(index,
-                                    {'bg':self.parent.data.lists[name][1]})
+                                        {'bg':self.parent.data.lists[name][1]})
 
         # assign the scrollbar its function
         self.Scrollbar['command'] = self.episodelist.yview
         self.episodelist.selection_set(self.parent.data.n_episode)
-        #make list and scrollbar expand
+        # make list and scrollbar expand
         self.grid_rowconfigure(1, weight=1)
 
     def create_dropdownmenu(self):
@@ -1066,7 +1066,7 @@ class EpisodeList(ttk.Frame):
         listOptions = self.parent.data.keys()
 
         self.menu = tk.OptionMenu(self, self.parent.datakey, *listOptions)
-        self.menu.grid(row=0,column=0,columnspan=2,sticky=tk.N)
+        self.menu.grid(row=0, column=0, columnspan=2, sticky=tk.N)
 
 class OpenFileDialog(tk.Toplevel):
     """
@@ -1126,19 +1126,20 @@ class OpenFileDialog(tk.Toplevel):
         self.piezo_unit_entry = tk.OptionMenu(self,
                                              self.parent.piezo_input_unit,
                                              *Episode.piezo_unit_factors.keys())
-        self.piezo_unit_entry.grid(column=2,row=7)
+        self.piezo_unit_entry.grid(column=2, row=7)
         ttk.Label(self, text="piezo unit:").grid(column=1,
-                                                        row=7, sticky=(tk.W))
+                                                 row=7, sticky=(tk.W))
         # 8th row - enter command unit of data
-        self.command_unit_entry = tk.OptionMenu(self,
-                                           self.parent.command_input_unit,
-                                           *Episode.command_unit_factors.keys())
-        self.command_unit_entry.grid(column=2,row=8)
+        self.command_unit_entry = (
+                tk.OptionMenu(self, self.parent.command_input_unit,
+                              *Episode.command_unit_factors.keys())
+                              )
+        self.command_unit_entry.grid(column=2, row=8)
         ttk.Label(self, text="command voltage unit:").grid(column=1,
-                                                        row=8, sticky=(tk.W))
+                                                           row=8, sticky=(tk.W))
         # 9th row - Load button to close and go to next window and close button
         self.loadbutton = ttk.Button(self, text="Load",
-                                   command=self.load_button)
+                                     command=self.load_button)
         self.loadbutton.grid(column=1, row=9, sticky=(tk.S, tk.W))
 
         self.closebutton = ttk.Button(self, text="Close",
@@ -1154,32 +1155,32 @@ class OpenFileDialog(tk.Toplevel):
             self.parent.load_recording()
             self.destroy()
 
+
 class Binaryquery(tk.Toplevel):
-    #this is basically deprecated!
-    #probably does not work any more
-    """
-    If the filetype is '.bin' this asks for the additional parameters
+    # this is basically deprecated!
+    # probably does not work any more
+    """If the filetype is '.bin' this asks for the additional parameters
     such as the length of the header (can be zero) and the datatype
-    (should be given as numpy type, such as "np.int16")
-    """
+    (should be given as numpy type, such as "np.int16")."""
+
     def __init__(self, parent):
-        #frame configuration
+        # frame configuration
         tk.Toplevel.__init__(self, parent)
         self.parent = parent.parent
         self.loadframe = parent
         self.title("Additional parameters for binary file")
 
-        #initialize content
+        # initialize content
         self.create_widgets()
         self.headerentry.focus()
 
     def create_widgets(self):
         # #entry field for headerlength
         self.headerentry = ttk.Entry(self, width=7,
-                                textvariable=self.parent.headerlength)
-        self.headerentry.grid(column=3,row=1,sticky=(tk.W,tk.N))
+                                     textvariable=self.parent.headerlength)
+        self.headerentry.grid(column=3, row=1, sticky=(tk.W, tk.N))
 
-        ttk.Label(self, text="Headerlength:").grid(column=2,row=1,
+        ttk.Label(self, text="Headerlength:").grid(column=2, row=1,
                                                    sticky=(tk.N))
 
         #entry field for filetype
@@ -1201,10 +1202,10 @@ class Binaryquery(tk.Toplevel):
                             #returns a string which numpy doesnt
                             #understand
         self.parent.data = Recording(self.parent.filenamefull.get(),
-                                         self.parent.sampling_rate.get(),
-                                         self.parent.filetype.get(),
-                                         self.parent.headerlength.get(),
-                                         datatype)
+                                     self.parent.sampling_rate.get(),
+                                     self.parent.filetype.get(),
+                                     self.parent.headerlength.get(),
+                                     datatype)
         self.parent.update_all()
         self.parent.episodeList.create_list()
         self.loadframe.destroy()
