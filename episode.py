@@ -1,13 +1,12 @@
-
 import numpy as np
 
 from filtering import gaussian_filter, ChungKennedyFilter
-from analysis import (baseline_correction, detect_first_activation, Idealizer)
-from tools import piezo_selection, parse_filename, interval_selection
+from analysis import baseline_correction, detect_first_activation, Idealizer
+from tools import piezo_selection
 
 class Episode():
     trace_unit_factors = {'fA': 1e15, 'pA': 1e12, 'nA': 1e9, 'µA': 1e6,
-                            'mA': 1e3, 'A': 1}
+                          'mA': 1e3, 'A': 1}
     command_unit_factors = {'uV': 1e6, 'mV': 1e3, 'V': 1}
     piezo_unit_factors = {'uV': 1e6, 'mV': 1e3, 'V': 1}
     time_unit_factors = {'ms': 1e3, 's': 1}
@@ -17,8 +16,7 @@ class Episode():
                  command_unit='mV', trace_unit='pA', input_time_unit='s',
                  input_trace_unit='A', input_piezo_unit='V',
                  input_command_unit='V'):
-        """
-        Episode objects hold all the information about an epoch and
+        """Episode objects hold all the information about an epoch and
         should be used to store raw and manipulated data
 
         Parameters:
@@ -31,8 +29,8 @@ class Episode():
                                                   cell
             n_episode [int] - the number of measurements on this cell that
                           came before this one
-            filterType [string] - type of filter used
-        """
+            filterType [string] - type of filter used"""
+
         # units of the data
         # the units of the private attributes (eg _time) should be SI units
         # ie seconds, ampere etc

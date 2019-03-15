@@ -25,7 +25,7 @@ class PlotFrame(ttk.Frame):
         self.parent = parent #parent is main frame
         #initiliaze figure
         #changing the size of the figure only seems to work
-        self.fig = plt.figure(figsize=(10,5), dpi=100)
+        self.fig = plt.figure(figsize=(10, 5), dpi=100)
         self.canvas = FigureCanvasTkAgg(self.fig, master=self)
         self.canvas.get_tk_widget().pack(side="top", fill='both', expand=True)
         self.toolbar = PlotToolbar(self.canvas, self)
@@ -134,30 +134,33 @@ class PlotFrame(ttk.Frame):
                                                 if self.show_fa_mark.get() \
                                                 else self.remove_fa_marks())
 
-    def draw_hist_indicator(self, draw=True, *args):
+    def draw_hist_indicator(self, *args, draw=True):
         logging.debug(f"draw_hist_indicator")
         trace_y = self.parent.data.series.max_current\
                   - self.parent.data.series.min_current
         hist_indicator = np.ones(self.parent.data.hist_times.size)\
                          *(self.parent.data.series.min_current-.1*trace_y)
         self.interval_indicator, = self.current_plot.plot(
-                                        self.parent.data.hist_times,
-                                        hist_indicator,
-                                        color=SELECT_COLOR, lw=5, alpha=.5,
-                                        linestyle='none', marker='o')
-        if draw: self.canvas.draw()
+            self.parent.data.hist_times,
+            hist_indicator,
+            color=SELECT_COLOR, lw=5, alpha=.5,
+            linestyle='none', marker='o')
+        if draw:
+            self.canvas.draw()
 
-    def update_command_plot(self, draw=True, *args):
+    def update_command_plot(self, *args, draw=True):
         logging.debug(f"update_command_plot")
         self.c_line.set_ydata(self.parent.data.episode.command)
-        if draw: self.canvas.draw()
+        if draw:
+            self.canvas.draw()
 
-    def update_current_plot(self, draw=True, *args):
+    def update_current_plot(self, *args, draw=True):
         logging.debug(f"update_current_plot")
         self.t_line.set_ydata(self.parent.data.episode.trace)
-        if draw: self.canvas.draw()
+        if draw:
+            self.canvas.draw()
 
-    def update_idealization_plot(self, draw=True, *args):
+    def update_idealization_plot(self, *args, draw=True):
         logging.debug(f"update_idealization_plot")
         if self.parent.data.episode.idealization is not None:
             if self.show_idealization.get():
@@ -165,14 +168,15 @@ class PlotFrame(ttk.Frame):
             else:
                 self.i_line.set_visible(False)
             self.i_line.set_ydata(self.parent.data.episode.idealization)
-            if draw: self.canvas.draw()
+            if draw:
+                self.canvas.draw()
 
-    def update_piezo_plot(self, draw=True, *args):
+    def update_piezo_plot(self, *args, draw=True):
         logging.debug(f"update_piezo_plot")
         self.p_line.set_ydata(self.parent.data.episode.piezo)
         if draw: self.canvas.draw()
 
-    def update_plots(self, draw=True, *args):
+    def update_plots(self, *args, draw=True):
         logging.debug(f"plotframe.update_plots")
 
         self.update_current_plot(draw=False)
@@ -190,38 +194,40 @@ class PlotFrame(ttk.Frame):
         self.fig.canvas.flush_events()
         if draw: self.canvas.draw()
 
-    def update_histograms(self, draw=True, *args):
+    def update_histograms(self, *args, draw=True):
         logging.debug(f"update_histograms")
         if self.show_hist_single.get(): self.update_single_hist(draw=False)
         if self.show_hist_all.get(): self.update_all_hist(draw=False)
         self.draw_hist_indicator(draw=False)
-        if draw: self.canvas.draw()
+        if draw:
+            self.canvas.draw()
 
-    def update_single_hist(self, draw=True, *args):
+    def update_single_hist(self, *args, draw=True):
         logging.debug(f"update_single_hist")
         heights, bins, centers, width \
         = self.parent.data.episode_hist(
-                            active=self.hist_piezo_active.get(),
-                            select_piezo=self.hist_piezo_interval.get(),
-                            deviation=float(self.hist_piezo_deviation.get()),
-                            n_bins=int(self.hist_n_bins.get()),
-                            density=self.hist_density.get(),
-                            intervals=self.hist_intervals)
+            active=self.hist_piezo_active.get(),
+            select_piezo=self.hist_piezo_interval.get(),
+            deviation=float(self.hist_piezo_deviation.get()),
+            n_bins=int(self.hist_n_bins.get()),
+            density=self.hist_density.get(),
+            intervals=self.hist_intervals
+            )
         for (rect, h, b) in zip(self.single_hist_sel, heights, bins):
             rect.set_width(h)
             rect.set_y(b)
 
         heights, bins, centers, width \
         = self.parent.data.episode_hist(select_piezo=False,
-                                            n_bins=int(self.hist_n_bins.get()),
-                                            density=self.hist_density.get())
+                                        n_bins=int(self.hist_n_bins.get()),
+                                        density=self.hist_density.get())
         for (rect, h, b) in zip(self.single_hist, heights, bins):
             rect.set_width(h)
             rect.set_y(b)
 
         if draw: self.canvas.draw()
 
-    def update_all_hist(self, draw=True, *args):
+    def update_all_hist(self, *args, draw=True):
         logging.debug(f"update_all_hist")
         # episode = self.parent.data.episode
         # indices = self.parent.get_episodes_in_lists()
@@ -229,24 +235,24 @@ class PlotFrame(ttk.Frame):
         #                             if episode.n_episode in indices]
         # traces = [episode.trace for episode in self.parent.data.series \
         #                             if episode.n_episode in indices]
-        heights, bins, centers, width \
-        = self.parent.data.series_hist(
-                            active=self.hist_piezo_active.get(),
-                            select_piezo=self.hist_piezo_interval.get(),
-                            n_bins=int(self.hist_n_bins.get()),
-                            deviation=float(self.hist_piezo_deviation.get()),
-                            density=self.hist_density.get(),
-                            intervals=self.hist_intervals)
+        heights, bins, centers, _ = (self.parent.data.series_hist(
+            active=self.hist_piezo_active.get(),
+            select_piezo=self.hist_piezo_interval.get(),
+            n_bins=int(self.hist_n_bins.get()),
+            deviation=float(self.hist_piezo_deviation.get()),
+            density=self.hist_density.get(),
+            intervals=self.hist_intervals)
+                                    )
         for (rect, h, b) in zip(self.all_hist_sel, heights, bins):
             rect.set_width(h)
             rect.set_y(b)
         self.all_hist_line_sel.set_xdata(heights)
         self.all_hist_line_sel.set_ydata(centers)
 
-        heights, bins, centers, width \
+        heights, bins, centers, _ \
         = self.parent.data.series_hist(select_piezo=False,
-                                           n_bins=int(self.hist_n_bins.get()),
-                                           density=self.hist_density.get())
+                                   n_bins=int(self.hist_n_bins.get()),
+                                   density=self.hist_density.get())
         for (rect, h, b) in zip(self.all_hist, heights, bins):
             rect.set_width(h)
             rect.set_y(b)
@@ -256,8 +262,10 @@ class PlotFrame(ttk.Frame):
 
     def update_TC_lines(self, draw=True, *args):
         logging.debug(f"update_TC_lines")
-        if self.show_amp.get(): self.update_amp_lines(draw=False)
-        if self.show_thetas.get(): self.update_theta_lines(draw=False)
+        if self.show_amp.get():
+            self.update_amp_lines(draw=False)
+        if self.show_thetas.get():
+            self.update_theta_lines(draw=False)
         if draw: self.canvas.draw()
 
     def update_amp_lines(self, draw=True, *args):
