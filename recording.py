@@ -150,7 +150,7 @@ class Recording(dict):
             self.__dict__ = loaded_data.__dict__
             for key, value in loaded_data.items():
                 self[key] = value
-        else: # if it's not a pickle is a matplab file
+        else:  # if it's not a pickle is a matplab file
             self.load_series(filename=self.filename,
                              filetype=self.filetype,
                              dtype=self.dtype,
