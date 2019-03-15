@@ -72,7 +72,7 @@ class GUI(ttk.Frame):
 
         # datakey of the current displayed data
         self.datakey = tk.StringVar()
-        self.datakey.set(self.data.currentDatakey)
+        self.datakey.set(self.data.current_datakey)
         self.datakey.trace('w', self.change_current_datakey)
         # episode number of the currently displayed episode
         self.n_episode = tk.IntVar()
@@ -178,7 +178,7 @@ class GUI(ttk.Frame):
                               time_unit=self.time_input_unit.get(),
                               trace_unit=self.trace_input_unit.get(),
                               command_unit=self.command_input_unit.get())
-        self.datakey.set(self.data.currentDatakey)
+        self.datakey.set(self.data.current_datakey)
         # recreate user defined episodelists
         for name, (_, color, key) in self.data.lists.items():
             logging.debug("""found list {}, color: {}, key: {}"""
@@ -191,7 +191,7 @@ class GUI(ttk.Frame):
         which is the one that determines what is filtered etc."""
         logging.debug(f"GUI.change_current_datakey")
 
-        self.data.currentDatakey = self.datakey.get()
+        self.data.current_datakey = self.datakey.get()
         self.episodeList.create_list()
         self.plots.plot(new=True)
         self.episodeList.episodelist.select_set(self.n_episode.get())
@@ -545,7 +545,7 @@ class FilterFrame(tk.Toplevel):
             cutoffFrequency = float(self.gaussian_fc.get())
             logging.info("filter frequency is {}".format(cutoffFrequency))
             self.parent.data.gauss_filter_series(cutoffFrequency)
-            self.parent.datakey.set(self.parent.data.currentDatakey)
+            self.parent.datakey.set(self.parent.data.current_datakey)
             self.parent.update_episodelist()
             self.parent.draw_plots()
         elif self.filter_selection.get() == "Chung-Kennedy":
@@ -562,7 +562,7 @@ class FilterFrame(tk.Toplevel):
                        int(self.weight_exponent.get()),
                        int(self.weight_window.get()),
                        ap_b, ap_f)
-            self.parent.datakey.set(self.parent.data.currentDatakey)
+            self.parent.datakey.set(self.parent.data.current_datakey)
             self.parent.update_episodelist()
             self.parent.draw_plots()
 
@@ -809,7 +809,7 @@ class BaselineFrame(tk.Toplevel):
                                         select_piezo=self.select_piezo.get(),
                                         active_piezo=self.piezo_active.get(),
                                         piezo_diff=deviation)
-        self.parent.parent.datakey.set(self.parent.parent.data.currentDatakey)
+        self.parent.parent.datakey.set(self.parent.parent.data.current_datakey)
         self.parent.parent.update_episodelist()
         self.parent.parent.draw_plots(True)
         self.destroy()
