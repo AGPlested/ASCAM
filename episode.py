@@ -178,20 +178,20 @@ class Episode():
         value."""
 
         _, _, trace = piezo_selection(self._time, self._piezo,
-                                      self._trace, active = False,
-                                      deviation = 0.01)
+                                      self._trace, active=False,
+                                      deviation=0.01)
         tracestd = np.std(trace)
-        if tracestd>stdthreshold:
+        if tracestd > stdthreshold:
             self.suspiciousSTD = True
 
     def get_command_stats(self):
         """Get the mean and standard deviation of the command voltage of the
         episode."""
 
-        try:
+        if self._command is not None:
             mean = np.mean(self._command)
             std = np.std(self._command)
-        except:
+        else:
             mean = std = np.nan
         return mean, std
 

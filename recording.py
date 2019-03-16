@@ -182,10 +182,13 @@ class Recording(dict):
             indices.extend(self.lists[listname][0])
         # remove duplicate indices
         indices = np.array(list(set(indices)))
+        logging.debug(f"Selected episodes: {indices}")
         return np.array(self.series)[indices]
 
     @property
-    def series(self): return self[self.current_datakey]
+    def series(self):
+        logging.debug(f"Returning series {self.current_datakey}")
+        return self[self.current_datakey]
 
     @property
     def episode(self): return self.series[self.n_episode]
@@ -440,16 +443,18 @@ class Recording(dict):
                                 * Episode.command_unit_factors[command_unit])
         scipy.io.savemat(filepath, export_dict)
 
-    def export_idealization(self, filepath):
+    def export_idealization(self, filepath, time_unit, trace_unit):
         logging.debug(f"export_idealization")
 
         if not filepath.endswith('.csv'):
             filepath += '.csv'
         export_array = np.zeros(shape=(len(self.selected_episodes)+1,
                                 self.episode._idealization.size))
-        export_array[0] = self.episode._time
+        export_array[0] = (
+                        self.episode._time*Episode.time_unit_factors[time_unit])
         for k, episode in enumerate(self.selected_episodes):
-            export_array[k+1] = episode._idealization
+            export_array[k+1] = (
+                   episode._idealization*Episode.trace_unit_factors[trace_unit])
         # note that we transpose the export array to export the matrix
         # as time x episode
         np.savetxt(filepath, export_array.T, delimiter=',')
@@ -468,19 +473,21 @@ class Recording(dict):
         for episode in self.series:
             # create a column containing the episode number
             ep_events = episode.get_events()
-            episode_number = episode.n_episode*np.ones(len(ep_events[:, 0]))
+            episode_number = episode.n_episode * np.ones(len(ep_events[:, 0]))
             # glue that column to the event
             ep_events = np.concatenate((ep_events,
                                         episode_number[:, np.newaxis]), axis=1)
             export_array = np.concatenate((export_array, ep_events), axis=0)
         pd.DataFrame(export_array).to_csv(filepath, header=header, index=False)
 
-    def export_first_activation(self, filepath):
+    def export_first_activation(self, filepath, time_unit):
         """Export csv file of first activation times."""
         logging.debug(f"export_first_activation")
 
         if not filepath.endswith('.csv'):
             filepath += '.csv'
-        export_array = np.array([(episode.n_episode, episode._first_activation)
-                                for episode in self.selected_episodes])
+        export_array = np.array(
+            [(episode.n_episode,
+                episode._first_activation*Episode.time_unit_factors[time_unit])
+             for episode in self.selected_episodes])
         np.savetxt(filepath, export_array, delimiter=',')
