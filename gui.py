@@ -173,7 +173,7 @@ class GUI(ttk.Frame):
         self.master.title("ASCAM - "+self.filename.get())
         self.data = Recording.from_file(
                               self.filenamefull.get(),
-                              sampling_rate=self.sampling_rate.get(),
+                              sampling_rate=float(self.sampling_rate.get()),
                               piezo_unit=self.piezo_input_unit.get(),
                               time_unit=self.time_input_unit.get(),
                               trace_unit=self.trace_input_unit.get(),
