@@ -255,8 +255,7 @@ class Recording(dict):
         else:
             # if operations have been done before combine the names
             new_key = self.current_datakey+fdatakey
-        self[new_key] = self[self.current_datakey].gaussian_filter(
-                                                            float(filter_freq))
+        self[new_key] = self.series.gaussian_filter(filter_freq)
         self.current_datakey = new_key
 
     def CK_filter_series(self, window_lengths, weight_exponent, weight_window,
