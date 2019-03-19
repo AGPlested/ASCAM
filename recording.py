@@ -56,8 +56,8 @@ class Recording(dict):
         with open(filename, 'rb') as file:
             data = pickle.load(file).__dict__
             recording.__dict__ = data.__dict__
-            for key, value in loaded_data.items():
-                self[key] = value
+            for key, value in data.items():
+                recording[key] = value
         return recording
 
     @classmethod
@@ -255,7 +255,8 @@ class Recording(dict):
         else:
             # if operations have been done before combine the names
             new_key = self.current_datakey+fdatakey
-        self[new_key] = self[self.current_datakey].gaussian_filter(filter_freq)
+        self[new_key] = self[self.current_datakey].gaussian_filter(
+                                        float(filter_freq))
         self.current_datakey = new_key
 
     def CK_filter_series(self, window_lengths, weight_exponent, weight_window,
