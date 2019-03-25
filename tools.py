@@ -24,9 +24,7 @@ def parse_filename(filename):
     filetype = filename[period+1:]
     logging.debug("""path: {}
                  filetype: {}""".format(path, filetype))
-    if filetype == 'axgd':
-        filetype = 'axo'
-        filetype_long = 'axograph'
+    if 'axg' in filetype: filetype_long = 'axograph'
     elif filetype == 'bin': filetype_long = 'binary'
     elif filetype == 'mat': filetype_long = 'matlab'
     elif filetype == 'pkl': filetype_long = 'pickle'

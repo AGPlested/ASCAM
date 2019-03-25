@@ -2,3 +2,4 @@ matplotlib==3.0.2
 numpy==1.15.4
 pandas==0.24.0
 scipy==1.2.0
+axographio==0.3.1

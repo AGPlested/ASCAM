@@ -39,6 +39,43 @@ class Recording(dict):
         elif filetype == 'mat':
             recording = cls.from_matlab(filename, sampling_rate, time_unit,
                                         trace_unit, piezo_unit, command_unit)
+        elif "axg" in filetype:
+            recording = cls.from_axo(filename, sampling_rate, time_unit,
+                                     trace_unit, piezo_unit, command_unit)
+        else:
+            raise ValueError(f"Cannot load from filetype {filetype}.")
+        return recording
+
+    @classmethod
+    def from_axo(cls, filename, sampling_rate, time_unit, trace_unit,
+                    piezo_unit, command_unit):
+        """Load a recording from an axograph file.
+
+        Recordings edited in ASCAM can be saved as pickles, this method
+        reconstructs such saved recordings.
+        Args:
+            filename - name of the file
+        Returns:
+            recording the instance of the recording that was stored in the
+            pickle."""
+        logging.debug(f"from_axo")
+
+        recording = cls()
+        names, time, current, piezo, command = readdata.load_axo(filename)
+        n_episodes = len(current)
+        if not piezo:
+            piezo = [None] * n_episodes
+        if not command:
+            command = [None] * n_episodes
+        recording['raw_'] = Series([Episode(time, current[i], n_episode=i,
+                                            piezo=piezo[i],
+                                            command=command[i],
+                                            sampling_rate=sampling_rate,
+                                            input_time_unit=time_unit,
+                                            input_trace_unit=trace_unit,
+                                            input_piezo_unit=piezo_unit,
+                                            input_command_unit=command_unit)
+                                    for i in range(n_episodes)])
         return recording
 
     @classmethod
