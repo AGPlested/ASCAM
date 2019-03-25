@@ -1,13 +1,12 @@
 import csv
-import json
 import pickle
 import logging
-import subprocess
-import os
 
 import numpy as np
+import axographio
 from scipy.io import loadmat as scipy_loadmat
 from scipy.io.matlab.mio5 import varmats_from_mat
+
 
 from tools import parse_filename
 
@@ -35,6 +34,7 @@ def load(filename, filetype=False, dtype=None, headerlength=None, fs=None):
         output = False
     return output
 
+
 def load_pickle(filename):
     """
     read a recording object from a pickle file
@@ -57,11 +57,11 @@ def load_tdt(filename):
         time [1D numpy array] - times of measurement
         current [list of 1D numpy arrays] - the current recorded from the patch
         piezo [list of 1D numpy arrays] - voltage of the piezo pipette
-        commandVoltage [list of 1D numpy arrays] - command voltage applied to the
-                                            patch
+        command_voltage [list of 1D numpy arrays] - command voltage applied to
+                                                    the patch
     """
     current = []
-    commandVoltage = []
+    command_voltage = []
     piezo = []
 
     with open(filename) as datafile:
@@ -86,7 +86,7 @@ def load_tdt(filename):
             if 'Ipatch' in names[i] or 'trace' in names[i]:
                 current.append(np.array(listlist[i],dtype=np.float))
             elif '10Vm' in names[i] or 'command' in names[i]:
-                commandVoltage.append(np.array(listlist[i],dtype=np.float))
+                command_voltage.append(np.array(listlist[i],dtype=np.float))
             elif 'Piezo' in names[i] or 'piezo' in names[i]:
                 piezo.append(np.array(listlist[i],dtype=np.float))
             elif 'Time' in names[i] or 'time' in names[i]:
@@ -97,9 +97,10 @@ def load_tdt(filename):
         names.append('Current [A]')
     if piezo:
         names.append('Piezo [V]')
-    if commandVoltage:
+    if command_voltage:
         names.append('Command Voltage [V]')
-    return names, time, current, piezo, commandVoltage
+    return names, time, current, piezo, command_voltage
+
 
 def load_matlab(filename):
     """
@@ -111,14 +112,14 @@ def load_matlab(filename):
         time [1D numpy array] - times of measurement
         current [list of 1D numpy arrays] - the current recorded from the patch
         piezo [list of 1D numpy arrays] - voltage of the piezo pipette
-        commandVoltage [list of 1D numpy arrays] - command voltage applied to the
-                                            patch
+        command_voltage [list of 1D numpy arrays] - command voltage applied to
+                                                    the patch
     Because the data we have comes with strange dictionary keys (i.e.
     including column numbers and hex values) the function loops over the keys
     to extract current, command voltatge, piezo voltage and time.
     """
     current = []
-    commandVoltage = []
+    command_voltage = []
     piezo = []
     names = ['Time [ms]']
 
@@ -137,7 +138,7 @@ def load_matlab(filename):
             or "Column" in variable[0]):
             current.append(value.flatten())
         elif '10Vm' in variable[0] or 'command' in variable[0]:
-            commandVoltage.append(value.flatten())
+            command_voltage.append(value.flatten())
         elif 'Piezo' in variable[0] or 'piezo' in variable[0]:
             piezo.append(value.flatten())
         elif 'Time' in variable[0] or 'time' in variable[0]:
@@ -146,9 +147,10 @@ def load_matlab(filename):
         names.append('Current [A]')
     if piezo:
         names.append('Piezo [V]')
-    if commandVoltage:
+    if command_voltage:
         names.append('Command Voltage [V]')
-    return names, time, current, piezo, commandVoltage
+    return names, time, current, piezo, command_voltage
+
 
 def load_binary(filename, dtype, headerlength, fs):
     """
@@ -172,61 +174,34 @@ def load_binary(filename, dtype, headerlength, fs):
     time = np.linspace(0,t_end,len(current))
     names = ["Time [ms]", "Current [A]"]
     current = current[np.newaxis]
-    piezo = commandVoltage = []
-    return names, time, current, piezo, commandVoltage
+    piezo = command_voltage = []
+    return names, time, current, piezo, command_voltage
+
 
 def load_axo(filename):
-    """
-    Read axograph data by calling a python2 subprocess that uses the
-    axopgraphio module to read it.
-    For now path should be the full path of the directory containinig
-    the file.
-    Returns data as an array and labels as names and the number of
-    measurements and their length.
-    """
-    moduleName = 'importing_axo.py'
-    command = 'python2 '+moduleName+' '+'"'+filename+'"'
-    python2output = subprocess.Popen(command, shell=True,
-                                     stdout=subprocess.PIPE)
-    out, error = python2output.communicate()
+    """Load data from axograph files using the axographio library.
 
-    if error:
-        print("Something went wrong while tyring to read the data!")
-        print(err)
+    Arguments:
+        filename - string containing the path to the datafile
+    Return:
+        time [1D numpy array] - times of measurement
+        current [list of 1D numpy arrays] - the current recorded from the patch
+        piezo [list of 1D numpy arrays] - voltage of the piezo pipette
+        command_voltage [list of 1D numpy arrays] - command voltage applied to
+                                                    the patch"""
 
-    results = out.split(b'\n')
-    output = []
-    for result in results:
-        output.append(result.decode("utf-8"))
-
-    outputindex = 1
-    Nepisodes = int(output[outputindex])
-    outputindex += 1
-    measurement_len = int(output[outputindex])
-    outputindex += 1
-
-    names = []
-    for i in np.arange(outputindex,outputindex+Nepisodes):
-        names.append(output[i])
-        outputindex += 1
-    names_to_output = []
-    if 'Time (s)' in names:
-        names_to_output.append('Time [s]')
-    if 'Ipatch (A)' in names:
-        names_to_output.append('Current [A]')
-    if 'Piezo Com (V)' in names:
-        names_to_output.append('Piezo [V]')
-    if '10Vm (V)' in names:
-        names_to_output.append('Command Voltage [V]')
-
-    data = np.zeros((Nepisodes,measurement_len))
-    for i in range(Nepisodes):
-        for j in range(measurement_len):
-            data[i,j] = float(output[outputindex])
-            outputindex+=1
-    time = data[0]
-    current = data[1::3]
-    piezo = data[2::3]
-    commandVoltage = data[3::3]
-
-    return names_to_output, time, current, piezo, commandVoltage
+    file = axographio.read(filename)
+    current = []
+    command_voltage = []
+    piezo = []
+    for name, data in zip(file.names, file.data):
+        if 'Ipatch' in name or 'trace' in name:
+            current.append(np.array(data))
+        elif '10Vm' in name or 'command' in name:
+            command_voltage.append(np.array(data))
+        elif 'Piezo' in name or 'piezo' in name:
+            piezo.append(np.array(data))
+        elif 'Time' in name or 'time' in name:
+            time = np.array(data)
+    
+    return file.names, time, current, piezo, command_voltage
