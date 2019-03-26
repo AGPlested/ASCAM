@@ -1,9 +1,7 @@
 import logging
 import pickle
 
-from scipy import io
 import numpy as np
-import pandas as pd
 
 import readdata
 from tools import parse_filename, piezo_selection, interval_selection
@@ -15,8 +13,10 @@ from constants import ANALYSIS_LEVELV_NUM
 class Recording(dict):
 
     @classmethod
-    def from_file(cls, filename, sampling_rate=None, time_unit='s',
-                       trace_unit='A', piezo_unit='V', command_unit='V'):
+    def from_file(cls, filename='data/180426 000 Copy Export.mat',
+                       sampling_rate=4e4, time_input_unit='s',
+                       trace_input_unit='A', piezo_input_unit='V',
+                       command_input_unit='V'):
         """Load data from a file.
 
         This method creates a recording objects or reconstructs one from the
@@ -29,122 +29,47 @@ class Recording(dict):
             piezo_unit - the unit of voltage in the piezo data in the input
             command_unit - the units in which the command voltage is given
         Returns:
-            recording - instance of the Recording clas containing the data"""
+            recording - instance of the Recording class containing the data"""
         logging.debug(f"Recording.from_file")
-        logging.log(ANALYSIS_LEVELV_NUM, f"Loading data from file {filename}")
+        logging.log(ANALYSIS_LEVELV_NUM,
+                    f"Loading data from file {filename}\n"
+                    f"sampling_rate = {sampling_rate}\n"
+                    f"time_input_unit = {time_input_unit}\n"
+                    f"trace_input_unit = {trace_input_unit}\n"
+                    f"piezo_input_unit = {piezo_input_unit}\n"
+                    f"command_input_unit = {command_input_unit}")
+
+        recording = cls(filename, sampling_rate,
+                        trace_input_unit=trace_input_unit,
+                        piezo_input_unit=piezo_input_unit,
+                        command_input_unit=command_input_unit)
 
         filetype, _, _, _ = parse_filename(filename)
         if filetype == 'pkl':
-            recording = cls.from_pickle(filename)
+            recording = cls._load_from_pickle(recording)
         elif filetype == 'mat':
-            recording = cls.from_matlab(filename, sampling_rate, time_unit,
-                                        trace_unit, piezo_unit, command_unit)
+            recording = cls._load_from_matlab(recording)
         elif "axg" in filetype:
-            recording = cls.from_axo(filename, sampling_rate, time_unit,
-                                     trace_unit, piezo_unit, command_unit)
+            recording = cls._load_from_axo(recording)
         else:
             raise ValueError(f"Cannot load from filetype {filetype}.")
+
+
+        recording.lists = {
+                    'all': (list(range(len(recording['raw_']))), 'white', None)}
+
         return recording
 
-    @classmethod
-    def from_axo(cls, filename, sampling_rate, time_unit, trace_unit,
-                    piezo_unit, command_unit):
-        """Load a recording from an axograph file.
 
-        Recordings edited in ASCAM can be saved as pickles, this method
-        reconstructs such saved recordings.
-        Args:
-            filename - name of the file
-        Returns:
-            recording the instance of the recording that was stored in the
-            pickle."""
-        logging.debug(f"from_axo")
-
-        recording = cls()
-        names, time, current, piezo, command = readdata.load_axo(filename)
-        n_episodes = len(current)
-        if not piezo:
-            piezo = [None] * n_episodes
-        if not command:
-            command = [None] * n_episodes
-        recording['raw_'] = Series([Episode(time, current[i], n_episode=i,
-                                            piezo=piezo[i],
-                                            command=command[i],
-                                            sampling_rate=sampling_rate,
-                                            input_time_unit=time_unit,
-                                            input_trace_unit=trace_unit,
-                                            input_piezo_unit=piezo_unit,
-                                            input_command_unit=command_unit)
-                                    for i in range(n_episodes)])
-        return recording
-
-    @classmethod
-    def from_pickle(cls, filename):
-        """Load a recording from a '.pkl' file.
-
-        Recordings edited in ASCAM can be saved as pickles, this method
-        reconstructs such saved recordings.
-        Args:
-            filename - name of the pickle
-        Returns:
-            recording the instance of the recording that was stored in the
-            pickle."""
-        recording = cls()
-        with open(filename, 'rb') as file:
-            data = pickle.load(file).__dict__
-            recording.__dict__ = data.__dict__
-            for key, value in data.items():
-                recording[key] = value
-        return recording
-
-    @classmethod
-    def from_matlab(cls, filename, sampling_rate, time_unit, trace_unit,
-                    piezo_unit, command_unit):
-        """Load data from a matlab file.
-
-        This method creates a recording objects from the data in the file.
-        Args:
-            filename - name of the file
-            sampling_rate - the frequency at which the recording was sampled
-            time_unit - the unit of time in the input
-            trace_unit - the unit of electric current in the input
-            piezo_unit - the unit of voltage in the piezo data in the input
-            command_unit - the units in which the command voltage is given
-        Returns:
-            recording - instance of the Recording clas containing the data"""
-        logging.debug(f"from_matlab")
-
-        recording = cls()
-        names, time, current, piezo, command = readdata.load_matlab(filename)
-        n_episodes = len(current)
-        if not piezo:
-            piezo = [None] * n_episodes
-        if not command:
-            command = [None] * n_episodes
-        recording['raw_'] = Series([Episode(time, current[i], n_episode=i,
-                                            piezo=piezo[i],
-                                            command=command[i],
-                                            sampling_rate=sampling_rate,
-                                            input_time_unit=time_unit,
-                                            input_trace_unit=trace_unit,
-                                            input_piezo_unit=piezo_unit,
-                                            input_command_unit=command_unit)
-                                    for i in range(n_episodes)])
-        return recording
-
-    def __init__(self, filename='data/180426 000 Copy Export.mat',
-                 sampling_rate=4e4, filetype='',
-                 headerlength=0, dtype=None, piezo_input_unit='V',
+    def __init__(self, filename,
+                 sampling_rate=4e4, filetype='', piezo_input_unit='V',
                  command_input_unit='V', trace_input_unit='A',
-                 time_input_unit='s', piezo_unit='V', time_unit='ms',
-                 trace_unit='pA', command_unit='mV'):
+                 time_input_unit='s'):
         logging.info("""intializing Recording""")
 
         # parameters for loading the data
         self.filename = filename
         self.filetype = filetype
-        self.headerlength = int(float(headerlength))
-        self.dtype = dtype
 
         # attributes of the data
         self.sampling_rate = int(float(sampling_rate))
@@ -177,20 +102,6 @@ class Recording(dict):
         # of a tuple that is the value under the list's name (as dict key)
         self.lists = dict()
         self.current_lists = ['all']
-        # if a file is specified load it
-        # if filename:
-        #     logging.info("""'filename' is not empty, will load data""")
-        #     self.from_file(time_unit = ime_input_unit,
-        #                    piezo_unit = piezo_input_unit,
-        #                    trace_unit = race_input_unit,
-        #                    command_unit = command_input_unit)
-        # if the lists attribute has not been set while loading the data do it
-        # now
-        # lists is a dict with key name_of_list and values
-        # (episodes, color, key)
-        if not self.lists:
-            self.lists = {
-                        'all': (list(range(len(self['raw_']))), 'white', None)}
 
     @property
     def fa_threshold(self):
@@ -464,10 +375,13 @@ class Recording(dict):
                       save_command):
         """Export all the episodes in the givens list(s) from the given series
         (only one) to a matlab file."""
-        logging.debug(f"export_matlab")
+        logging.debug(f"export_matlab:\n"
+                      f"saving the lists: {lists_to_save}\n"
+                      f"of series {datakey}\n"
+                      f"save piezo: {save_piezo}; save command: {save_command}\n"
+                      f"saving to destination: {filepath}")
+        from scipy import io
 
-        if not filepath.endswith('.mat'):
-            filepath += '.mat'
         # create dict to write matlab file and add the time vector
         export_dict = dict()
         export_dict['time'] = self['raw_'][0].time
@@ -489,6 +403,54 @@ class Recording(dict):
                 export_dict['command'+n] = episode._command
         io.savemat(filepath, export_dict)
 
+    def export_axo(self, filepath, datakey, lists_to_save, save_piezo,
+                      save_command):
+        """Export data to an axograph file.
+
+        Argument:
+            filepath - location where the file is to be stored
+            datakey - series that should be exported
+            lists_to_save - the user-created lists of episodes that should be
+                includes
+            save_piezo - if true piezo data will be exported
+            save_command - if true command voltage data will be exported"""
+        logging.debug(f"export_axo:\n"
+                      f"saving the lists: {lists_to_save}\n"
+                      f"of series {datakey}\n"
+                      f"save piezo: {save_piezo}; save command: {save_command}\n"
+                      f"saving to destination: {filepath}")
+
+        import axographio
+
+        column_names = [f'time ({self.time_unit})']
+
+        # to write to axgd we need a list as the second argument of the 'write'
+        # method, this elements in the lists will be the columns in data table
+        # the first column in this will be a list of episode numbers
+        data_list = [self.episode.time]
+
+        # get the episodes we want to save
+        indices = list()
+        for listname in lists_to_save:
+            indices.extend(self.lists[listname][0])
+        indices = np.array(list(set(indices)))
+        episodes = np.array(self.series)[indices]
+
+        for episode in episodes:
+            data_list.append(np.array(episode._trace))
+            column_names.append(
+                f"Ipatch ({self.trace_unit} ep#{episode.n_episode}")
+            if save_piezo:
+                column_names.append(
+                    f"piezo voltage ({self.piezo_unit} ep#{episode.n_episode}")
+                data_list.append(np.array(episode._piezo))
+            if save_command:
+                column_names.append(
+                    f"command voltage ({self.command_unit} ep#{episode.n_episode})")
+                data_list.append(np.array(episode._command))
+        file = axographio.file_contents(column_names, data_list)
+        file.write(filepath)
+
     def export_idealization(self, filepath):
         logging.debug(f"export_idealization")
 
@@ -507,6 +469,8 @@ class Recording(dict):
         """Export a table of events in the current (idealized) series and
         duration to a csv file."""
         logging.debug(f"export_events")
+
+        import pandas as pd
 
         if not filepath.endswith('.csv'):
             filepath += '.csv'
@@ -533,3 +497,81 @@ class Recording(dict):
         export_array = np.array([(episode.n_episode, episode._first_activation)
                                 for episode in self.selected_episodes])
         np.savetxt(filepath, export_array, delimiter=',')
+
+    @staticmethod
+    def _load_from_axo(recording):
+        """Load a recording from an axograph file.
+
+        Recordings edited in ASCAM can be saved as pickles, this method
+        reconstructs such saved recordings.
+        Args:
+            recording - recording object to be filled with data
+        Returns:
+            recording the instance of the recording that was stored in the
+            file."""
+        logging.debug(f"from_axo")
+
+        names, time, current, piezo, command = (
+                    readdata.load_axo(recording.filename))
+        n_episodes = len(current)
+        if not piezo:
+            piezo = [None] * n_episodes
+        if not command:
+            command = [None] * n_episodes
+        recording['raw_'] = Series([Episode(
+                                time, current[i], n_episode=i,
+                                piezo=piezo[i], command=command[i],
+                                sampling_rate=recording.sampling_rate,
+                                input_time_unit=recording.time_input_unit,
+                                input_trace_unit=recording.trace_input_unit,
+                                input_piezo_unit=recording.piezo_input_unit,
+                                input_command_unit=recording.command_input_unit)
+                                    for i in range(n_episodes)])
+        return recording
+
+    @staticmethod
+    def _load_from_pickle(recording):
+        """Load a recording from a '.pkl' file.
+
+        Recordings edited in ASCAM can be saved as pickles, this method
+        reconstructs such saved recordings.
+        Args:
+            recording - recording object to be filled with data
+        Returns:
+            recording the instance of the recording that was stored in the
+            pickle."""
+        with open(recording.filename, 'rb') as file:
+            data = pickle.load(file).__dict__
+            recording.__dict__ = data.__dict__
+            for key, value in data.items():
+                recording[key] = value
+        return recording
+
+    @staticmethod
+    def _load_from_matlab(recording):
+        """Load data from a matlab file.
+
+        This method creates a recording objects from the data in the file.
+        Args:
+            recording - recording object to be filled with data
+        Returns:
+            recording - instance of the Recording class containing the data"""
+        logging.debug(f"from_matlab")
+
+        names, time, current, piezo, command = (
+                    readdata.load_matlab(recording.filename))
+        n_episodes = len(current)
+        if not piezo:
+            piezo = [None] * n_episodes
+        if not command:
+            command = [None] * n_episodes
+        recording['raw_'] = Series([Episode(
+                                time, current[i], n_episode=i,
+                                piezo=piezo[i], command=command[i],
+                                sampling_rate=recording.sampling_rate,
+                                input_time_unit=recording.time_input_unit,
+                                input_trace_unit=recording.trace_input_unit,
+                                input_piezo_unit=recording.piezo_input_unit,
+                                input_command_unit=recording.command_input_unit)
+                                    for i in range(n_episodes)])
+        return recording
