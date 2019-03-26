@@ -68,7 +68,7 @@ class GUI(ttk.Frame):
         if test:
             self.data = Recording.from_file()
         else:
-            self.data = Recording('')
+            self.data = Recording()
 
         # datakey of the current displayed data
         self.datakey = tk.StringVar()
@@ -259,9 +259,9 @@ class DiplayFrame(ttk.Frame):
         logging.debug(f"DisplayFrame.show_command_stats")
         if self.parent.data.has_command:
             mean, std = self.parent.data.episode.get_command_stats()
-            command_stats ="Command Voltage = "
-            command_stats+="{:2f} +/- {:2f}".format(mean,std)
-            command_stats+=self.parent.data.command_unit
+            command_stats = "Command Voltage = "
+            command_stats += "{:2f} +/- {:2f}".format(mean, std)
+            command_stats += self.parent.data.command_unit
             ttk.Label(self, text=command_stats).grid(row=4, column=0)
         else:
             logging.info("no command voltage found")
@@ -270,7 +270,7 @@ class DiplayFrame(ttk.Frame):
 class MenuBar(tk.Menu):
     def __init__(self, parent):
         logging.debug(f"begin MenuBar.__init__")
-        self.parent = parent #parent is main window
+        self.parent = parent  # parent is main window
         tk.Menu.__init__(self, parent.master, tearoff=0)
         self.parent.master.config(menu=self)
 
@@ -289,7 +289,7 @@ class MenuBar(tk.Menu):
 
         # the code below is needed to make the menuBar responsive on Mac OS
         # apple uses window system aqua
-        if parent.window_system=='aqua':
+        if parent.window_system == 'aqua':
             logging.info("trying to make the menu work on Mac")
             appmenu = tk.Menu(self, name='apple')
             self.add_cascade(menu=appmenu)
@@ -305,13 +305,13 @@ class MenuBar(tk.Menu):
                                    command=lambda: ZeroTFrame(self.parent))
         self.plot_menu.add_separator()
         self.plot_menu.add_checkbutton(label="Show piezo voltage",
-                                   variable=self.parent.plots.show_piezo)
+                                       variable=self.parent.plots.show_piezo)
         self.plot_menu.add_checkbutton(label="Show command voltage",
-                                   variable=self.parent.plots.show_command)
+                                       variable=self.parent.plots.show_command)
         self.plot_menu.add_checkbutton(label="Show idealization",
                                    variable=self.parent.plots.show_idealization)
         self.plot_menu.add_checkbutton(label="Show first activation",
-                                   variable=self.parent.plots.show_fa_mark)
+                                       variable=self.parent.plots.show_fa_mark)
 
     def create_histogram_cascade(self):
         logging.debug(f"MenuBar.create_histogram_cascade")
@@ -322,7 +322,7 @@ class MenuBar(tk.Menu):
                                         variable=self.parent.plots.hist_density)
         self.histogram_menu.add_separator()
         self.histogram_menu.add_command(label="Configuration",
-                                        command=lambda:\
+                                        command=lambda:
                                         HistogramConfiguration(self.parent))
 
     def create_file_cascade(self):
@@ -342,8 +342,10 @@ class MenuBar(tk.Menu):
         self.file_menu.add_command(label="Export Events",
                                    command=self.export_events)
         self.file_menu.add_command(label="Export First Activation",
-                                   command=self.export_fa)
-        self.file_menu.add_command(label="Quit",command=self.parent.master.quit)
+                                   command=lambda:
+                                   ExportFirstActivationDialog(self.parent))
+        self.file_menu.add_command(label="Quit",
+                                   command=self.parent.master.quit)
 
     def create_analysis_cascade(self):
         logging.debug(f"MenuBar.create_analysis_cascade")
@@ -394,14 +396,6 @@ class MenuBar(tk.Menu):
         else:
             logging.info("User pressed 'Cancel'")
 
-    def export_fa(self):
-        logging.debug(f"MenuBar.export_fa")
-        filepath = asksaveasfilename()
-        if isinstance(filepath, str):
-            self.parent.data.export_first_activation(filepath)
-        else:
-            logging.info("User pressed 'Cancel'")
-
     def launch_idealization(self):
         logging.debug(f"MenuBar.launch_idealization")
         self.parent.tc_frame = TC_Frame(self.parent)
@@ -410,6 +404,89 @@ class MenuBar(tk.Menu):
     def launch_fa_mode(self):
         self.parent.fa_frame = FirstActivationFrame(self.parent)
         self.parent.fa_frame.grid(row=5, column=1, columnspan=3, padx=5, pady=5)
+
+
+class ExportIdealizationDialog(tk.Toplevel):
+    def __init__(self, parent):
+        logging.debug(f"begin ExportIdealizationDialog.__init__")
+        tk.Toplevel.__init__(self, parent)
+        self.parent = parent  # parent should be main window
+        self.title("Export Idealization")
+        # export parameters
+        self.time_unit = tk.StringVar(self, 's')
+        self.trace_unit = tk.StringVar(self, 'A')
+
+        self.create_widgets()
+        logging.debug(f"end ExportIdealizationDialog.__init__")
+
+    def create_widgets(self):
+        # enter time unit to be used for saving
+        self.time_unit_entry = tk.OptionMenu(self, self.time_unit,
+                                             *Episode.time_unit_factors.keys())
+        self.time_unit_entry.grid(column=2, row=0)
+        ttk.Label(self, text="time unit: ").grid(column=1, row=0, sticky=(tk.W))
+        # enter time unit to be used for saving
+        self.trace_unit_entry = tk.OptionMenu(self, self.trace_unit,
+                                              *Episode.trace_unit_factors.keys()
+                                              )
+        self.trace_unit_entry.grid(column=2, row=1)
+        ttk.Label(self, text="time unit: ").grid(column=1, row=1, sticky=(tk.W))
+        # last row - save and cancel button
+        save_button = ttk.Button(self, text="Export", command=self.export)
+        save_button.grid(row=4, column=0)
+        cancel_button = ttk.Button(self, text="Cancel", command=self.cancel)
+        cancel_button.grid(row=4, column=2)
+
+    def export(self):
+        filepath = asksaveasfilename()
+        if filepath is not None:
+            self.parent.data.export_idealization(filepath,
+                                                 self.time_unit.get(),
+                                                 self.trace_unit.get()
+                                                 )
+        else:
+            logging.info("User pressed 'Cancel'")
+        self.destroy()
+
+    def cancel(self):
+        self.destroy()
+
+
+class ExportFirstActivationDialog(tk.Toplevel):
+    def __init__(self, parent):
+        logging.debug(f"begin ExportFileDialog.__init__")
+        tk.Toplevel.__init__(self, parent)
+        self.parent = parent  # parent should be main window
+        self.title("Export First Activation Latencies")
+        # export parameters
+        self.time_unit = tk.StringVar(self, 's')
+
+        self.create_widgets()
+        logging.debug(f"end ExportFileDialog.__init__")
+
+    def create_widgets(self):
+        # enter time unit to be used for saving
+        self.time_unit_entry = tk.OptionMenu(self, self.time_unit,
+                                             *Episode.time_unit_factors.keys())
+        self.time_unit_entry.grid(column=2, row=0)
+        ttk.Label(self, text="time unit: ").grid(column=1, row=0, sticky=(tk.W))
+        # last row - save and cancel button
+        save_button = ttk.Button(self, text="Export", command=self.export)
+        save_button.grid(row=4, column=0)
+        cancel_button = ttk.Button(self, text="Cancel", command=self.cancel)
+        cancel_button.grid(row=4, column=2)
+
+    def export(self):
+        filepath = asksaveasfilename()
+        if filepath is not None:
+            self.parent.data.export_first_activation(filepath,
+                                                     self.time_unit.get())
+        else:
+            logging.info("User pressed 'Cancel'")
+        self.destroy()
+
+    def cancel(self):
+        self.destroy()
 
 
 class ExportIdDialog(tk.Toplevel):
@@ -579,10 +656,10 @@ class FilterFrame(tk.Toplevel):
 class ExportFileDialog(tk.Toplevel):
     def __init__(self, parent):
         logging.debug(f"begin ExportFileDialog.__init__")
-        tk.Toplevel.__init__(self,parent)
-        self.parent = parent #parent should be main window
+        tk.Toplevel.__init__(self, parent)
+        self.parent = parent  # parent should be main window
 
-        #export parameters
+        # export parameters
         self.save_piezo = tk.IntVar()
         self.save_piezo.set(0)
         self.save_command = tk.IntVar()
@@ -590,23 +667,26 @@ class ExportFileDialog(tk.Toplevel):
         self.datakey = tk.StringVar()
         self.datakey.set('raw_')
         self.lists_to_export = list()
+        self.time_unit = tk.StringVar(self, 's')
+        self.trace_unit = tk.StringVar(self, 'A')
+        self.piezo_unit = tk.StringVar(self, 'V')
+        self.command_unit = tk.StringVar(self, 'V')
 
         self.create_widgets()
         logging.debug(f"end ExportFileDialog.__init__")
 
-
     def create_widgets(self):
-        #first row - select the series
-        ttk.Label(self,text='Select series: ')
+        # first row - select the series
+        ttk.Label(self, text='Select series: ')
         self.menu = tk.OptionMenu(self, self.datakey, *self.parent.data.keys())
-        self.menu.grid(row=1,column=1,columnspan=3)
-        #second row - save piezo and command?
+        self.menu.grid(row=1, column=1, columnspan=3)
+        # second row - save piezo and command?
         ttk.Label(self, text="Piezo").grid(row=2, column=0)
         ttk.Checkbutton(self, variable=self.save_piezo).grid(row=2, column=1)
         ttk.Label(self, text="Command").grid(row=2, column=3)
         ttk.Checkbutton(self, variable=self.save_command).grid(row=2, column=4)
 
-        #third to end which lists to save?
+        # third to end which lists to save?
         row_num = 3
         for list_name in self.parent.data.lists.keys():
             var = tk.IntVar()
@@ -616,7 +696,41 @@ class ExportFileDialog(tk.Toplevel):
             self.lists_to_export.append((list_name, var))
             row_num += 1
 
-        #last row - save and cancel button
+        # enter time unit to be used for saving
+        self.time_unit_entry = tk.OptionMenu(self, self.time_unit,
+                                             *Episode.time_unit_factors.keys())
+        self.time_unit_entry.grid(column=2, row=row_num)
+        ttk.Label(self, text="time unit:"
+                  ).grid(column=1, row=row_num, sticky=(tk.W))
+        row_num += 1
+        # enter current trace unit of data
+        self.trace_unit_entry = tk.OptionMenu(self,
+                                              self.trace_unit,
+                                              *Episode.trace_unit_factors.keys()
+                                              )
+        self.trace_unit_entry.grid(column=2, row=row_num)
+        ttk.Label(self, text="current trace unit:"
+                  ).grid(column=1, row=row_num, sticky=(tk.W))
+        row_num += 1
+        #  enter piezo unit of data
+        self.piezo_unit_entry = tk.OptionMenu(self,
+                                              self.piezo_unit,
+                                              *Episode.piezo_unit_factors.keys()
+                                              )
+        self.piezo_unit_entry.grid(column=2, row=row_num)
+        ttk.Label(self, text="piezo unit:").grid(column=1,
+                                                 row=row_num, sticky=(tk.W))
+        row_num += 1
+        # 8th row enter command unit of data
+        self.command_unit_entry = (
+                tk.OptionMenu(self, self.command_unit,
+                              *Episode.command_unit_factors.keys())
+                              )
+        self.command_unit_entry.grid(column=2, row=row_num)
+        ttk.Label(self, text="command voltage unit:"
+                  ).grid(column=1, row=row_num, sticky=(tk.W))
+        row_num += 1
+        # last row - save and cancel button
         save_button = ttk.Button(self, text="Save", command=self.save)
         save_button.grid(row=row_num, column=0)
         cancel_button = ttk.Button(self, text="Cancel", command=self.cancel)
@@ -644,12 +758,101 @@ class ExportFileDialog(tk.Toplevel):
                                         lists_to_save=lists_to_save,
                                         save_piezo=self.save_piezo.get(),
                                         save_command=self.save_command.get())
+
         else:
             logging.info("User pressed 'Cancel'")
         self.destroy()
 
     def cancel(self):
         self.destroy()
+
+
+class OpenFileDialog(tk.Toplevel):
+    """
+    Temporary frame that gets the file and information about it.
+    Select file and load it by clicking 'ok' button, in case of binary
+    file another window pops up to ask for additional parameters.
+    """
+    def __init__(self, parent):
+        logging.info("initializing OpenFileDialog")
+
+        tk.Toplevel.__init__(self, parent)
+        self.parent = parent
+        self.title("Select file")
+
+        self.create_widgets()
+        self.sampling_entry.focus()
+
+    def create_widgets(self):
+        # gui variables
+        logging.info("creating OpenFileDialog widgets")
+        # first row - filename and button for choosing file
+        ttk.Label(self, text='File:').grid(column=1, row=1, sticky=(tk.N, tk.W))
+
+        filenamelabel = ttk.Label(self, textvariable=self.parent.filename)
+        filenamelabel.grid(column=2, row=1, sticky=tk.N)
+
+        # second row - show filepath
+        ttk.Label(self, text='Path:').grid(column=1, row=2, sticky=tk.W)
+        ttk.Label(self, textvariable=self.parent.path).grid(column=2, row=2)
+
+        # third row - show filetype
+        ttk.Label(self, text='Filetype:').grid(column=1, row=3, sticky=tk.W)
+        ttk.Label(self, textvariable=self.parent.filetypefull
+                  ).grid(column=2, row=3, sticky=(tk.W, tk.E))
+
+        # fourth row - enter sampling rate
+        self.sampling_entry = ttk.Entry(self, width=7,
+                                        textvariable=self.parent.sampling_rate)
+        self.sampling_entry.grid(column=2, row=4)
+        ttk.Label(self, text="sampling rate (Hz):").grid(column=1,
+                                                         row=4, sticky=(tk.W))
+
+        # fifth row - enter time unit of data
+        self.time_unit_entry = tk.OptionMenu(self, self.parent.time_input_unit,
+                                             *Episode.time_unit_factors.keys())
+        self.time_unit_entry.grid(column=2, row=5)
+        ttk.Label(self, text="time unit:").grid(column=1, row=5, sticky=(tk.W))
+        # 6th row - enter current trace unit of data
+        self.trace_unit_entry = tk.OptionMenu(self,
+                                              self.parent.trace_input_unit,
+                                              *Episode.trace_unit_factors.keys()
+                                              )
+        self.trace_unit_entry.grid(column=2, row=6)
+        ttk.Label(self, text="current trace unit:"
+                  ).grid(column=1, row=6, sticky=(tk.W))
+        # 7th row - enter piezo unit of data
+        self.piezo_unit_entry = tk.OptionMenu(self,
+                                              self.parent.piezo_input_unit,
+                                              *Episode.piezo_unit_factors.keys()
+                                              )
+        self.piezo_unit_entry.grid(column=2, row=7)
+        ttk.Label(self, text="piezo unit:").grid(column=1, row=7, sticky=(tk.W))
+        # 8th row - enter command unit of data
+        self.command_unit_entry = (
+                tk.OptionMenu(self, self.parent.command_input_unit,
+                              *Episode.command_unit_factors.keys())
+                              )
+        self.command_unit_entry.grid(column=2, row=8)
+        ttk.Label(self, text="command voltage unit:"
+                  ).grid(column=1, row=8, sticky=(tk.W))
+        # 9th row - Load button to close and go to next window and close button
+        self.loadbutton = ttk.Button(self, text="Load",
+                                     command=self.load_button)
+        self.loadbutton.grid(column=1, row=9, sticky=(tk.S, tk.W))
+
+        self.closebutton = ttk.Button(self, text="Close",
+                                      command=self.destroy)
+        self.closebutton.grid(column=3, row=9, sticky=(tk.S, tk.E))
+
+    def load_button(self):
+        logging.debug(f"OpenFileDialog.load_button")
+
+        if self.parent.filetype.get() == 'bin':
+            Binaryquery(self)
+        else:
+            self.parent.load_recording()
+            self.destroy()
 
 
 class HistogramConfiguration(tk.Toplevel):
@@ -1086,94 +1289,6 @@ class EpisodeList(ttk.Frame):
 
         self.menu = tk.OptionMenu(self, self.parent.datakey, *listOptions)
         self.menu.grid(row=0, column=0, columnspan=2, sticky=tk.N)
-
-
-class OpenFileDialog(tk.Toplevel):
-    """
-    Temporary frame that gets the file and information about it.
-    Select file and load it by clicking 'ok' button, in case of binary
-    file another window pops up to ask for additional parameters.
-    """
-    def __init__(self, parent):
-        logging.info("initializing OpenFileDialog")
-
-        tk.Toplevel.__init__(self,parent)
-        self.parent = parent
-        self.title("Select file")
-
-        self.create_widgets()
-        self.sampling_entry.focus()
-
-    def create_widgets(self):
-        #gui variables
-        logging.info("creating OpenFileDialog widgets")
-        # first row - filename and button for choosing file
-        ttk.Label(self, text='File:').grid(column=1,row=1,sticky=(tk.N, tk.W))
-
-        filenamelabel = ttk.Label(self, textvariable=self.parent.filename)
-        filenamelabel.grid(column=2, row=1, sticky=tk.N)
-
-        #second row - show filepath
-        ttk.Label(self, text='Path:').grid(column=1, row=2, sticky = tk.W)
-        ttk.Label(self, textvariable=self.parent.path).grid(column=2, row=2)
-
-        #third row - show filetype
-        ttk.Label(self, text='Filetype:').grid(column=1, row=3, sticky = tk.W)
-        ttk.Label(self, textvariable=self.parent.filetypefull).grid(column=2,
-                                                   row=3, sticky=(tk.W, tk.E))
-
-        #fourth row - enter sampling rate
-        self.sampling_entry = ttk.Entry(self, width=7,
-                                       textvariable=self.parent.sampling_rate)
-        self.sampling_entry.grid(column=2,row=4)
-        ttk.Label(self, text="sampling rate (Hz):").grid(column=1,
-                                                        row=4, sticky=(tk.W))
-
-        # fifth row - enter time unit of data
-        self.time_unit_entry = tk.OptionMenu(self, self.parent.time_input_unit,
-                                             *Episode.time_unit_factors.keys())
-        self.time_unit_entry.grid(column=2,row=5)
-        ttk.Label(self, text="time unit:").grid(column=1,
-                                                        row=5, sticky=(tk.W))
-        # 6th row - enter current trace unit of data
-        self.trace_unit_entry = tk.OptionMenu(self,
-                                             self.parent.trace_input_unit,
-                                             *Episode.trace_unit_factors.keys())
-        self.trace_unit_entry.grid(column=2,row=6)
-        ttk.Label(self, text="current trace unit:").grid(column=1,
-                                                        row=6, sticky=(tk.W))
-        # 7th row - enter piezo unit of data
-        self.piezo_unit_entry = tk.OptionMenu(self,
-                                             self.parent.piezo_input_unit,
-                                             *Episode.piezo_unit_factors.keys())
-        self.piezo_unit_entry.grid(column=2, row=7)
-        ttk.Label(self, text="piezo unit:").grid(column=1,
-                                                 row=7, sticky=(tk.W))
-        # 8th row - enter command unit of data
-        self.command_unit_entry = (
-                tk.OptionMenu(self, self.parent.command_input_unit,
-                              *Episode.command_unit_factors.keys())
-                              )
-        self.command_unit_entry.grid(column=2, row=8)
-        ttk.Label(self, text="command voltage unit:").grid(column=1,
-                                                           row=8, sticky=(tk.W))
-        # 9th row - Load button to close and go to next window and close button
-        self.loadbutton = ttk.Button(self, text="Load",
-                                     command=self.load_button)
-        self.loadbutton.grid(column=1, row=9, sticky=(tk.S, tk.W))
-
-        self.closebutton = ttk.Button(self, text="Close",
-                                      command=self.destroy)
-        self.closebutton.grid(column=3, row=9, sticky=(tk.S, tk.E))
-
-    def load_button(self):
-        logging.debug(f"OpenFileDialog.load_button")
-
-        if self.parent.filetype.get() == 'bin':
-            Binaryquery(self)
-        else:
-            self.parent.load_recording()
-            self.destroy()
 
 
 class Binaryquery(tk.Toplevel):

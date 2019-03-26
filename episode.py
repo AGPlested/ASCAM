@@ -48,8 +48,14 @@ class Episode():
         # private attributes storing the actual data
         self._time = time * input_time_factor
         self._trace = trace * input_trace_unit_factor
-        self._piezo = piezo * input_piezo_unit_factor
-        self._command = command * input_command_unit_factor
+        if piezo is not None:
+            self._piezo = piezo * input_piezo_unit_factor
+        else:
+            self._piezo = None
+        if command is not None:
+            self._command = command * input_command_unit_factor
+        else:
+            self._command = None
         # results of analyses
         self._first_activation = None
         self._idealization = None
@@ -62,31 +68,36 @@ class Episode():
     def time(self):
         if self._time is not None:
             return self._time * self.time_unit_factor
-        else: return None
+        else:
+            return None
 
     @property
     def trace(self):
         if self._trace is not None:
             return self._trace * self.trace_unit_factor
-        else: return None
+        else:
+            return None
 
     @property
     def piezo(self):
         if self._piezo is not None:
             return self._piezo * self.piezo_unit_factor
-        else: return None
+        else:
+            return None
 
     @property
     def command(self):
         if self._command is not None:
             return self._command * self.command_unit_factor
-        else: return None
+        else:
+            return None
 
     @property
     def first_activation(self):
         if self._first_activation is not None:
             return self._first_activation * self.time_unit_factor
-        else: return None
+        else:
+            return None
 
     @first_activation.setter
     def first_activation(self, fa):
@@ -96,7 +107,8 @@ class Episode():
     def idealization(self):
         if self._idealization is not None:
             return self._idealization * self.trace_unit_factor
-        else: return None
+        else:
+            return None
 
     @idealization.setter
     def idealization(self, id):
@@ -120,19 +132,22 @@ class Episode():
         version of itself."""
 
         self._trace = gaussian_filter(signal=self._trace,
-                                     filter_frequency=filter_frequency,
-                                     sampling_rate=self.sampling_rate)
-        # reset idealization
+                                      filter_frequency=filter_frequency,
+                                      sampling_rate=self.sampling_rate)
+        # sett idealization to None since the newly created episode has no
+        # idealization
         self._idealization = None
 
     def CK_filter_episode(self, window_lengths, weight_exponent, weight_window,
-				          apriori_f_weights=False, apriori_b_weights=False):
+                          apriori_f_weights=False, apriori_b_weights=False):
         """Replace the current _trace by the CK fitered version of itself."""
 
         ck_filter = ChungKennedyFilter(window_lengths, weight_exponent,
-                            weight_window, apriori_f_weights, apriori_b_weights)
+                                       weight_window, apriori_f_weights,
+                                       apriori_b_weights)
         self._trace = ck_filter.apply_filter(self._trace)
-        # reset _idealization
+        # sett idealization to None since the newly created episode has no
+        # idealization
         self._idealization = None
 
     def baseline_correct_episode(self, intervals, method='poly', degree=1,
@@ -163,20 +178,20 @@ class Episode():
         value."""
 
         _, _, trace = piezo_selection(self._time, self._piezo,
-                                      self._trace, active = False,
-                                      deviation = 0.01)
+                                      self._trace, active=False,
+                                      deviation=0.01)
         tracestd = np.std(trace)
-        if tracestd>stdthreshold:
+        if tracestd > stdthreshold:
             self.suspiciousSTD = True
 
     def get_command_stats(self):
         """Get the mean and standard deviation of the command voltage of the
         episode."""
 
-        try:
+        if self._command is not None:
             mean = np.mean(self._command)
             std = np.std(self._command)
-        except:
+        else:
             mean = std = np.nan
         return mean, std
 
@@ -196,31 +211,3 @@ class Episode():
             time and its duration"""
 
         return Idealizer.extract_events(self.idealization, self.time)
-        # diff = self.idealization[1:]-self.idealization[:-1]
-        # events = np.where(diff!=0)[0]
-        # # diff+1 marks the indices of the first time point of a new event
-        # # starting from 0 to diff[0] is the first event, and from diff[-1] to
-        # # t_end is the last event, hence
-        # n_events = events.size+1
-        # # init the array they will be final output table, events in rows and
-        # # amplitude, start, end and duration in columns
-        # event_list = np.zeros((n_events,4))
-        # # fill the array
-        # if n_events == 1:
-        #     event_list[0][0] = self.idealization[0]
-        #     event_list[0][2] = self.time[0]-(self.time[1]-self.time[0])
-        #     event_list[0][3] = self.time[-1]
-        # else:
-        #     event_list[0][0] = self.idealization[0]
-        #     event_list[0][2] = self.time[0]-(self.time[1]-self.time[0])
-        #     event_list[0][3] = self.time[int(events[0])]
-        #     for i, t in enumerate(events[:-1]):
-        #         event_list[i+1][0] = self.idealization[int(t)+1]
-        #         event_list[i+1][2] = self.time[int(events[i])]
-        #         event_list[i+1][3] = self.time[int(events[i+1])]
-        #     event_list[-1][0] = self.idealization[int(events[-1])+1]
-        #     event_list[-1][2] = self.time[(int(events[-1]))]
-        #     event_list[-1][3] = self.time[-1]
-        # # get the duration column
-        # event_list[:,1]=event_list[:,3]-event_list[:,2]
-        # return event_list

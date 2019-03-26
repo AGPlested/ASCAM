@@ -60,16 +60,13 @@ class Recording(dict):
 
         return recording
 
-
-    def __init__(self, filename,
-                 sampling_rate=4e4, filetype='', piezo_input_unit='V',
-                 command_input_unit='V', trace_input_unit='A',
-                 time_input_unit='s'):
+    def __init__(self, filename='', sampling_rate=4e4,
+                 piezo_input_unit='V', command_input_unit='V',
+                 trace_input_unit='A', time_input_unit='s'):
         logging.info("""intializing Recording""")
 
         # parameters for loading the data
         self.filename = filename
-        self.filetype = filetype
 
         # attributes of the data
         self.sampling_rate = int(float(sampling_rate))
@@ -80,11 +77,6 @@ class Recording(dict):
         self.n_episode = 0
 
         self.hist_times = 0
-        # units when given input
-        self.time_input_unit = time_input_unit
-        self.piezo_input_unit = piezo_input_unit
-        self.trace_input_unit = trace_input_unit
-        self.command_input_unit = command_input_unit
         # parameters for analysis
         # idealization
         self._tc_thresholds = np.array([])
@@ -148,10 +140,13 @@ class Recording(dict):
             indices.extend(self.lists[listname][0])
         # remove duplicate indices
         indices = np.array(list(set(indices)))
+        logging.debug(f"Selected episodes: {indices}")
         return np.array(self.series)[indices]
 
     @property
-    def series(self): return self[self.current_datakey]
+    def series(self):
+        logging.debug(f"Returning series {self.current_datakey}")
+        return self[self.current_datakey]
 
     @property
     def episode(self): return self.series[self.n_episode]
@@ -188,21 +183,20 @@ class Recording(dict):
                     f"the selected intervals are {intval}\n"
                     f"select where piezo is active is {active_piezo}; the "
                     f"difference to piezo baseline is {piezo_diff}")
-        # valid = self.check_operation('BC_')
         if self.current_datakey == 'raw_':
             # if its the first operation drop the 'raw_'
-            newDatakey = 'BC_'
+            new_datakey = 'BC_'
         else:
             # if operations have been done before combine the names
-            newDatakey = self.current_datakey + 'BC_'
-        logging.info(f"new datakey is {newDatakey}")
-        self[newDatakey] = self[self.current_datakey].baseline_correct_all(
+            new_datakey = self.current_datakey + 'BC_'
+        logging.info(f"new datakey is {new_datakey}")
+        self[new_datakey] = self[self.current_datakey].baseline_correct_all(
                             intervals=intval, method=method, degree=poly_degree,
                             select_intvl=select_intvl,
                             select_piezo=select_piezo, active=active_piezo,
                             deviation=piezo_diff)
-        self.current_datakey = newDatakey
-        logging.debug("""keys of the recording are now {}""".format(self.keys()))
+        self.current_datakey = new_datakey
+        logging.debug("keys of the recording are now {}".format(self.keys()))
 
     def gauss_filter_series(self, filter_freq):
         """Filter the current series using a gaussian filter"""
@@ -219,8 +213,7 @@ class Recording(dict):
         else:
             # if operations have been done before combine the names
             new_key = self.current_datakey+fdatakey
-        self[new_key] = self[self.current_datakey].gaussian_filter(
-                                                            float(filter_freq))
+        self[new_key] = self.series.gaussian_filter(filter_freq)
         self.current_datakey = new_key
 
     def CK_filter_series(self, window_lengths, weight_exponent, weight_window,
@@ -240,14 +233,17 @@ class Recording(dict):
         fdatakey = f'CKFILTER_K{n_filters}p{weight_exponent}M{weight_window}_'
         if self.current_datakey == 'raw_':
             # if its the first operation drop the 'raw-'
-            newDatakey = fdatakey
+            new_datakey = fdatakey
         else:
             # if operations have been done before combine the names
-            newDatakey = self.current_datakey+fdatakey
-        self[newDatakey] = (
-        self[self.current_datakey].CK_filter(window_lengths, weight_exponent,
-                           weight_window, apriori_f_weights, apriori_b_weights))
-        self.current_datakey = newDatakey
+            new_datakey = self.current_datakey+fdatakey
+        self[new_datakey] = (
+                self[self.current_datakey].CK_filter(window_lengths,
+                                                     weight_exponent,
+                                                     weight_window,
+                                                     apriori_f_weights,
+                                                     apriori_b_weights))
+        self.current_datakey = new_datakey
 
     def idealize_series(self):
         """Idealize the current series."""
@@ -361,9 +357,9 @@ class Recording(dict):
         # self.histogram = heights, bins, centers, width
         return heights, bins, centers, width
 
+    # exporting and saving methods
     def save_to_pickle(self, filepath):
-        """save data using the pickle module
-        useful for saving data that is to be used in ASCAM again"""
+        """Dump the recording to a pickle."""
         logging.debug(f"save_to_pickle")
 
         if not filepath.endswith('.pkl'):
@@ -372,22 +368,24 @@ class Recording(dict):
             pickle.dump(self, save_file)
 
     def export_matlab(self, filepath, datakey, lists_to_save, save_piezo,
-                      save_command):
+                      save_command, time_unit='s', trace_unit='A',
+                      piezo_unit='V', command_unit='V'):
         """Export all the episodes in the givens list(s) from the given series
         (only one) to a matlab file."""
         logging.debug(f"export_matlab:\n"
                       f"saving the lists: {lists_to_save}\n"
                       f"of series {datakey}\n"
-                      f"save piezo: {save_piezo}; save command: {save_command}\n"
+                      f"save piezo: {save_piezo}; "
+                      "save command: {save_command}\n"
                       f"saving to destination: {filepath}")
         from scipy import io
 
         # create dict to write matlab file and add the time vector
         export_dict = dict()
-        export_dict['time'] = self['raw_'][0].time
+        export_dict['time'] = (
+                    self['raw_'][0].time * Episode.time_unit_factors[time_unit])
         no_episodes = len(self[datakey])
         fill_length = len(str(no_episodes))
-
         # get the episodes we want to save
         indices = list()
         for listname in lists_to_save:
@@ -396,11 +394,15 @@ class Recording(dict):
         episodes = np.array(self[datakey])[indices]
         for episode in episodes:
             n = str(episode.n_episode).zfill(fill_length)
-            export_dict['trace'+n] = episode._trace
+            export_dict['trace'+n] = (
+                        episode._trace * Episode.trace_unit_factors[trace_unit])
             if save_piezo:
-                export_dict['piezo'+n] = episode._piezo
+                export_dict['piezo'+n] = (
+                        episode._piezo * Episode.piezo_unit_factors[piezo_unit])
             if save_command:
-                export_dict['command'+n] = episode._command
+                export_dict['command'+n] = (
+                                episode._command
+                                * Episode.command_unit_factors[command_unit])
         io.savemat(filepath, export_dict)
 
     def export_axo(self, filepath, datakey, lists_to_save, save_piezo,
@@ -451,16 +453,18 @@ class Recording(dict):
         file = axographio.file_contents(column_names, data_list)
         file.write(filepath)
 
-    def export_idealization(self, filepath):
+    def export_idealization(self, filepath, time_unit, trace_unit):
         logging.debug(f"export_idealization")
 
         if not filepath.endswith('.csv'):
             filepath += '.csv'
         export_array = np.zeros(shape=(len(self.selected_episodes)+1,
                                 self.episode._idealization.size))
-        export_array[0] = self.episode._time
+        export_array[0] = (
+                        self.episode._time*Episode.time_unit_factors[time_unit])
         for k, episode in enumerate(self.selected_episodes):
-            export_array[k+1] = episode._idealization
+            export_array[k+1] = (
+                   episode._idealization*Episode.trace_unit_factors[trace_unit])
         # note that we transpose the export array to export the matrix
         # as time x episode
         np.savetxt(filepath, export_array.T, delimiter=',')
@@ -481,21 +485,23 @@ class Recording(dict):
         for episode in self.series:
             # create a column containing the episode number
             ep_events = episode.get_events()
-            episode_number = episode.n_episode*np.ones(len(ep_events[:, 0]))
+            episode_number = episode.n_episode * np.ones(len(ep_events[:, 0]))
             # glue that column to the event
             ep_events = np.concatenate((ep_events,
                                         episode_number[:, np.newaxis]), axis=1)
             export_array = np.concatenate((export_array, ep_events), axis=0)
         pd.DataFrame(export_array).to_csv(filepath, header=header, index=False)
 
-    def export_first_activation(self, filepath):
+    def export_first_activation(self, filepath, time_unit):
         """Export csv file of first activation times."""
         logging.debug(f"export_first_activation")
 
         if not filepath.endswith('.csv'):
             filepath += '.csv'
-        export_array = np.array([(episode.n_episode, episode._first_activation)
-                                for episode in self.selected_episodes])
+        export_array = np.array(
+            [(episode.n_episode,
+                episode._first_activation*Episode.time_unit_factors[time_unit])
+             for episode in self.selected_episodes])
         np.savetxt(filepath, export_array, delimiter=',')
 
     @staticmethod
