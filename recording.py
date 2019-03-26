@@ -39,18 +39,25 @@ class Recording(dict):
                     f"piezo_input_unit = {piezo_input_unit}\n"
                     f"command_input_unit = {command_input_unit}")
 
-        recording = cls(filename, sampling_rate,
-                        trace_input_unit=trace_input_unit,
-                        piezo_input_unit=piezo_input_unit,
-                        command_input_unit=command_input_unit)
+        recording = cls(filename, sampling_rate)
 
         filetype, _, _, _ = parse_filename(filename)
         if filetype == 'pkl':
             recording = cls._load_from_pickle(recording)
         elif filetype == 'mat':
-            recording = cls._load_from_matlab(recording)
+            recording = cls._load_from_matlab(
+                                        recording,
+                                        trace_input_unit=trace_input_unit,
+                                        piezo_input_unit=piezo_input_unit,
+                                        command_input_unit=command_input_unit,
+                                        time_input_unit=time_input_unit)
         elif "axg" in filetype:
-            recording = cls._load_from_axo(recording)
+            recording = cls._load_from_axo(
+                                        recording,
+                                        trace_input_unit=trace_input_unit,
+                                        piezo_input_unit=piezo_input_unit,
+                                        command_input_unit=command_input_unit,
+                                        time_input_unit=time_input_unit)
         else:
             raise ValueError(f"Cannot load from filetype {filetype}.")
 
@@ -60,9 +67,7 @@ class Recording(dict):
 
         return recording
 
-    def __init__(self, filename='', sampling_rate=4e4,
-                 piezo_input_unit='V', command_input_unit='V',
-                 trace_input_unit='A', time_input_unit='s'):
+    def __init__(self, filename='', sampling_rate=4e4):
         logging.info("""intializing Recording""")
 
         # parameters for loading the data
@@ -505,7 +510,8 @@ class Recording(dict):
         np.savetxt(filepath, export_array, delimiter=',')
 
     @staticmethod
-    def _load_from_axo(recording):
+    def _load_from_axo(recording, trace_input_unit, piezo_input_unit,
+                       command_input_unit, time_input_unit):
         """Load a recording from an axograph file.
 
         Recordings edited in ASCAM can be saved as pickles, this method
@@ -525,13 +531,13 @@ class Recording(dict):
         if not command:
             command = [None] * n_episodes
         recording['raw_'] = Series([Episode(
-                                time, current[i], n_episode=i,
-                                piezo=piezo[i], command=command[i],
-                                sampling_rate=recording.sampling_rate,
-                                input_time_unit=recording.time_input_unit,
-                                input_trace_unit=recording.trace_input_unit,
-                                input_piezo_unit=recording.piezo_input_unit,
-                                input_command_unit=recording.command_input_unit)
+                                        time, current[i], n_episode=i,
+                                        piezo=piezo[i], command=command[i],
+                                        sampling_rate=recording.sampling_rate,
+                                        input_time_unit=time_input_unit,
+                                        input_trace_unit=trace_input_unit,
+                                        input_piezo_unit=piezo_input_unit,
+                                        input_command_unit=command_input_unit)
                                     for i in range(n_episodes)])
         return recording
 
@@ -554,7 +560,8 @@ class Recording(dict):
         return recording
 
     @staticmethod
-    def _load_from_matlab(recording):
+    def _load_from_matlab(recording, trace_input_unit, piezo_input_unit,
+                          command_input_unit, time_input_unit):
         """Load data from a matlab file.
 
         This method creates a recording objects from the data in the file.
@@ -572,12 +579,12 @@ class Recording(dict):
         if not command:
             command = [None] * n_episodes
         recording['raw_'] = Series([Episode(
-                                time, current[i], n_episode=i,
-                                piezo=piezo[i], command=command[i],
-                                sampling_rate=recording.sampling_rate,
-                                input_time_unit=recording.time_input_unit,
-                                input_trace_unit=recording.trace_input_unit,
-                                input_piezo_unit=recording.piezo_input_unit,
-                                input_command_unit=recording.command_input_unit)
+                                        time, current[i], n_episode=i,
+                                        piezo=piezo[i], command=command[i],
+                                        sampling_rate=recording.sampling_rate,
+                                        input_time_unit=time_input_unit,
+                                        input_trace_unit=trace_input_unit,
+                                        input_piezo_unit=piezo_input_unit,
+                                        input_command_unit=command_input_unit)
                                     for i in range(n_episodes)])
         return recording

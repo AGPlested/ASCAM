@@ -424,13 +424,13 @@ class ExportIdealizationDialog(tk.Toplevel):
         self.time_unit_entry = tk.OptionMenu(self, self.time_unit,
                                              *Episode.time_unit_factors.keys())
         self.time_unit_entry.grid(column=2, row=0)
-        ttk.Label(self, text="time unit: ").grid(column=1, row=0, sticky=(tk.W))
+        ttk.Label(self, text="time unit: ").grid(column=1, row=0, sticky=tk.W)
         # enter time unit to be used for saving
         self.trace_unit_entry = tk.OptionMenu(self, self.trace_unit,
                                               *Episode.trace_unit_factors.keys()
                                               )
         self.trace_unit_entry.grid(column=2, row=1)
-        ttk.Label(self, text="time unit: ").grid(column=1, row=1, sticky=(tk.W))
+        ttk.Label(self, text="time unit: ").grid(column=1, row=1, sticky=tk.W)
         # last row - save and cancel button
         save_button = ttk.Button(self, text="Export", command=self.export)
         save_button.grid(row=4, column=0)
@@ -741,8 +741,8 @@ class ExportFileDialog(tk.Toplevel):
         for (listname, var) in self.lists_to_export:
             if var.get():
                 lists_to_save.append(listname)
-        filepath = asksaveasfilename(filetypes=(("MatLab", "*.mat"),
-                                                ("Axograph", "*.axgd")))
+        filepath = asksaveasfilename(filetypes=(("MatLab", ".mat"),
+                                                ("Axograph", ".axgd")))
         if filepath:
             if filepath.endswith(".mat"):
                 self.parent.data.export_matlab(
