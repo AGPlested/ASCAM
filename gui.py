@@ -66,7 +66,7 @@ class GUI(ttk.Frame):
             lambda *args: self.master.title(f"ASCAM - {self.filename.get()}"))
 
         if test:
-            self.data = Recording()
+            self.data = Recording.from_file()
         else:
             self.data = Recording('')
 
@@ -174,10 +174,10 @@ class GUI(ttk.Frame):
         self.data = Recording.from_file(
                               self.filenamefull.get(),
                               sampling_rate=float(self.sampling_rate.get()),
-                              piezo_unit=self.piezo_input_unit.get(),
-                              time_unit=self.time_input_unit.get(),
-                              trace_unit=self.trace_input_unit.get(),
-                              command_unit=self.command_input_unit.get())
+                              piezo_input_unit=self.piezo_input_unit.get(),
+                              time_input_unit=self.time_input_unit.get(),
+                              trace_input_unit=self.trace_input_unit.get(),
+                              command_input_unit=self.command_input_unit.get())
         self.datakey.set(self.data.current_datakey)
         # recreate user defined episodelists
         for name, (_, color, key) in self.data.lists.items():
@@ -233,6 +233,7 @@ class GUI(ttk.Frame):
         self.master.destroy()
         self.master.quit()
 
+
 class DiplayFrame(ttk.Frame):
     """
     This frame is used to display information.
@@ -264,6 +265,7 @@ class DiplayFrame(ttk.Frame):
             ttk.Label(self, text=command_stats).grid(row=4, column=0)
         else:
             logging.info("no command voltage found")
+
 
 class MenuBar(tk.Menu):
     def __init__(self, parent):
@@ -439,6 +441,7 @@ class ExportIdDialog(tk.Toplevel):
             logging.info("User pressed 'Cancel'")
         self.destroy()
 
+
 class ZeroTFrame(tk.Toplevel):
     """Dialog for entering the offset for the time axis in plots"""
     def __init__(self, parent):
@@ -572,6 +575,7 @@ class FilterFrame(tk.Toplevel):
             self.filter_series()
         self.destroy()
 
+
 class ExportFileDialog(tk.Toplevel):
     def __init__(self, parent):
         logging.debug(f"begin ExportFileDialog.__init__")
@@ -606,11 +610,11 @@ class ExportFileDialog(tk.Toplevel):
         row_num = 3
         for list_name in self.parent.data.lists.keys():
             var = tk.IntVar()
-            var.set(1) if list_name=='all' else var.set(0)
-            ttk.Label(self, text=list_name).grid(row=row_num,column=1)
-            ttk.Checkbutton(self, variable=var).grid(row=row_num,column=2)
-            self.lists_to_export.append((list_name,var))
-            row_num+=1
+            var.set(1) if list_name == 'all' else var.set(0)
+            ttk.Label(self, text=list_name).grid(row=row_num, column=1)
+            ttk.Checkbutton(self, variable=var).grid(row=row_num, column=2)
+            self.lists_to_export.append((list_name, var))
+            row_num += 1
 
         #last row - save and cancel button
         save_button = ttk.Button(self, text="Save", command=self.save)
@@ -621,20 +625,32 @@ class ExportFileDialog(tk.Toplevel):
     def save(self):
         lists_to_save = list()
         for (listname, var) in self.lists_to_export:
-            if var.get(): lists_to_save.append(listname)
-        filepath = asksaveasfilename()
-        if filepath is not None:
-            self.parent.data.export_matlab(filepath=filepath,
-                                           datakey=self.datakey.get(),
-                                           lists_to_save=lists_to_save,
-                                           save_piezo=self.save_piezo.get(),
-                                           save_command=self.save_command.get())
+            if var.get():
+                lists_to_save.append(listname)
+        filepath = asksaveasfilename(filetypes=(("MatLab", "*.mat"),
+                                                ("Axograph", "*.axgd")))
+        if filepath:
+            if filepath.endswith(".mat"):
+                self.parent.data.export_matlab(
+                                        filepath=filepath,
+                                        datakey=self.datakey.get(),
+                                        lists_to_save=lists_to_save,
+                                        save_piezo=self.save_piezo.get(),
+                                        save_command=self.save_command.get())
+            elif filepath.endswith(".axgd"):
+                self.parent.data.export_axo(
+                                        filepath=filepath,
+                                        datakey=self.datakey.get(),
+                                        lists_to_save=lists_to_save,
+                                        save_piezo=self.save_piezo.get(),
+                                        save_command=self.save_command.get())
         else:
             logging.info("User pressed 'Cancel'")
         self.destroy()
 
     def cancel(self):
         self.destroy()
+
 
 class HistogramConfiguration(tk.Toplevel):
     """
@@ -710,6 +726,7 @@ class HistogramConfiguration(tk.Toplevel):
             self.parent.draw_plots(new=True)
         except: pass
         self.destroy()
+
 
 class BaselineFrame(tk.Toplevel):
     """
@@ -948,6 +965,7 @@ class ListSelection(ttk.Frame):
                                           command=lambda: AddListDialog(self))
         self.createBoxButton.pack()
 
+
 class AddListDialog(tk.Toplevel):
     """
     The dialog that will pop up if a new list is created, it asks for the name
@@ -993,6 +1011,7 @@ class AddListDialog(tk.Toplevel):
                                      color = self.color_choice.get())
         else: print("failed to enter name and/or key")
         self.destroy()
+
 
 class EpisodeList(ttk.Frame):
     """Frame that holds a scrollable list of all the episodes in the currently
@@ -1067,6 +1086,7 @@ class EpisodeList(ttk.Frame):
 
         self.menu = tk.OptionMenu(self, self.parent.datakey, *listOptions)
         self.menu.grid(row=0, column=0, columnspan=2, sticky=tk.N)
+
 
 class OpenFileDialog(tk.Toplevel):
     """
