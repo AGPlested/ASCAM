@@ -265,9 +265,11 @@ class TC_Frame(ttk.Frame):
         """Apply button callback."""
         logging.debug(f"TC_Frame.click_apply")
 
-        #when clicking 'ok' apply the idealization with the last settings
-        #to the actual data in the main window
+        # when clicking 'ok' apply the idealization with the last settings
+        # to the actual data in the main window
         self.get_amps(update_plot=False)
+        if self.manual_thetas:
+            self.get_thresholds(update_plot=False)
         self.get_resolution(update_plot=False)
         self.parent.data.idealize_series()
         self.close_frame()

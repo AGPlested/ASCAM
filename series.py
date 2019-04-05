@@ -27,15 +27,19 @@ class Series(list):
 
     @property
     def has_piezo(self):
-        try: val = True if (self[0]._piezo is not None) else False
-        except IndexError: val = False
+        try:
+            val = True if (self[0]._piezo is not None) else False
+        except IndexError:
+            val = False
         logging.debug(f"has_piezo returns {val}")
         return val
 
     @property
     def has_command(self):
-        try: val = True if (self[0]._command is not None) else False
-        except IndexError: val = False
+        try:
+            val = True if (self[0]._command is not None) else False
+        except IndexError:
+            val = False
         logging.debug(f"has_command returns {val}")
         return val
 
@@ -73,13 +77,14 @@ class Series(list):
         return output
 
     def CK_filter(self, window_lengths, weight_exponent, weight_window,
-				  apriori_f_weights=False, apriori_b_weights=False):
-        """Apply ChungKennedyFilter to the episodes in this series.
-        """
+                  apriori_f_weights=False, apriori_b_weights=False):
+        """Apply ChungKennedyFilter to the episodes in this series."""
+
         output = copy.deepcopy(self)
         for episode in output:
             episode.CK_filter_episode(window_lengths, weight_exponent,
-                            weight_window, apriori_f_weights, apriori_b_weights)
+                                      weight_window, apriori_f_weights,
+                                      apriori_b_weights)
         return output
 
     def baseline_correct_all(self, intervals=[], method='poly', degree=1,

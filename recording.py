@@ -150,7 +150,7 @@ class Recording(dict):
 
     @property
     def series(self):
-        logging.debug(f"Returning series {self.current_datakey}")
+        # logging.debug(f"Returning series {self.current_datakey}")
         return self[self.current_datakey]
 
     @property
@@ -260,8 +260,11 @@ class Recording(dict):
                     f"thresholds: {self._tc_thresholds}\n"
                     f"resolution: {self._tc_resolution}")
 
-        self.series.idealize_all(self._tc_amplitudes, self._tc_thresholds,
+        for episode in self.series:
+            episode.idealize(self._tc_amplitudes, self._tc_thresholds,
                                  self._tc_resolution)
+        # self.series.idealize_all(self._tc_amplitudes, self._tc_thresholds,
+        #                          self._tc_resolution)
 
     def idealize_episode(self):
         """Idealize current episode."""
