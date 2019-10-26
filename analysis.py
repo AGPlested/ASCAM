@@ -106,7 +106,7 @@ class Idealizer:
 
     @staticmethod
     def extract_events(idealization: Array[float, 1, ...], time: Array[float, 1, ...]):
-        -> Array[float, 1, ...]:
+        -> Array[float, ..., 4]:
         """Summarize an idealized trace as a list of events.
 
         Args:
@@ -167,7 +167,7 @@ def baseline_correction(
         select_piezo: Optional[bool] = False,
         active: Optional[bool] = False,
         deviation: Optional[float] = 0.05,
-):
+) -> Array[float, 1, ...]:
     """Perform polynomial/offset baseline correction on the given signal.
 
     Parameters:
