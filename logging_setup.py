@@ -5,7 +5,8 @@ import types
 
 from constants import ANALYSIS_LEVELV_NUM
 
-def initialize_logger(output_dir, log_level='INFO', silent=False):
+
+def initialize_logger(output_dir, log_level="INFO", silent=False):
     """Start the root logger and the handlers.
 
     Args:
@@ -28,12 +29,14 @@ def setup_file_handlers(logger, log_level, output_dir):
     """Set up handlers for writing logs to files."""
 
     date = datetime.datetime.now().strftime("%Y-%m-%d-%H:%M")
-    formatter = logging.Formatter('%(asctime)s:%(levelname)s:%(module)s:'
-                                  '%(lineno)d:%(message)s')
+    formatter = logging.Formatter(
+        "%(asctime)s:%(levelname)s:%(module)s:" "%(lineno)d:%(message)s"
+    )
 
-    if not os.path.exists(output_dir): os.makedirs(output_dir)
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
 
-    ana_file_name = os.path.join(output_dir, f'ASCAM_{date}.log')
+    ana_file_name = os.path.join(output_dir, f"ASCAM_{date}.log")
     ana_file_handler = logging.FileHandler(ana_file_name, "w")
     ana_file_handler.setLevel(ANALYSIS_LEVELV_NUM)
     ana_file_handler.addFilter(AnalysisFilter())
@@ -41,17 +44,19 @@ def setup_file_handlers(logger, log_level, output_dir):
     logger.addHandler(ana_file_handler)
 
     if log_level == "DEBUG":
-        debug_logfile_name = os.path.join(output_dir, f'DEBUG_ASCAM_{date}.log')
+        debug_logfile_name = os.path.join(output_dir, f"DEBUG_ASCAM_{date}.log")
         debug_file_handler = logging.FileHandler(debug_logfile_name, "w")
         debug_file_handler.setLevel(logging.DEBUG)
         debug_file_handler.setFormatter(formatter)
         logger.addHandler(debug_file_handler)
 
+
 def setup_cl_handlers(logger, log_level):
     """Set up handler for command line logging."""
 
-    formatter = logging.Formatter("%(levelname)s:%(module)s:"
-                                  "%(lineno)d - %(message)s")
+    formatter = logging.Formatter(
+        "%(levelname)s:%(module)s:" "%(lineno)d - %(message)s"
+    )
     # create command line handler for analysis logging
     ana_cl_handler = logging.StreamHandler()
     ana_cl_handler.addFilter(AnalysisFilter())
