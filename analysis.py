@@ -8,10 +8,13 @@ from tools import interval_selection, piezo_selection
 class Idealizer:
     @classmethod
     def idealize_episode(
-            cls, signal: Array[float, 1, ...], amplitudes: Array[float, 1, ...],
-            thresholds: Optional[Array[float, 1, ...]] = None, resolution:
-            Optional[int]=None, time: Optional[Array[float, 1, ...]] = None
-            ) -> Array[float, 1, ...]:
+        cls,
+        signal: Array[float, 1, ...],
+        amplitudes: Array[float, 1, ...],
+        thresholds: Optional[Array[float, 1, ...]] = None,
+        resolution: Optional[int] = None,
+        time: Optional[Array[float, 1, ...]] = None,
+    ) -> Array[float, 1, ...]:
         """Get idealization for single episode."""
 
         idealizer = cls(amplitudes, thresholds)
@@ -20,8 +23,11 @@ class Idealizer:
             idealization = idealizer.apply_resolution(idealization, time, resolution)
         return idealization
 
-    def __init__(self, amplitudes: Array[float, 1, ...], thresholds:
-            Optional[Array[float, 1, ...]] = None) -> None:
+    def __init__(
+        self,
+        amplitudes: Array[float, 1, ...],
+        thresholds: Optional[Array[float, 1, ...]] = None,
+    ) -> None:
         """Container object for the different idealization functions.
 
         Arguments:
@@ -40,8 +46,7 @@ class Idealizer:
         else:
             self.thresholds = thresholds
 
-    def threshold_crossing(self, signal: Array[float, 1, ...]) ->
-    Array[float, 1, ...]:
+    def threshold_crossing(self, signal: Array[float, 1, ...]) -> Array[float, 1, ...]:
         """Perform a threshold-crossing idealization on the signal.
 
         Arguments:
@@ -61,8 +66,12 @@ class Idealizer:
 
         return idealization
 
-    def apply_resolution(self, idealization: Array[float, 1, ...], 
-            time: Array[float, 1, ...], resolution: int) -> Array[float, 1, ...]:
+    def apply_resolution(
+        self,
+        idealization: Array[float, 1, ...],
+        time: Array[float, 1, ...],
+        resolution: int,
+    ) -> Array[float, 1, ...]:
         """Remove from the idealization any events that are too short.
 
         Args:
@@ -105,8 +114,9 @@ class Idealizer:
         return idealization
 
     @staticmethod
-    def extract_events(idealization: Array[float, 1, ...], time: Array[float, 1, ...]):
-        -> Array[float, ..., 4]:
+    def extract_events(
+        idealization: Array[float, 1, ...], time: Array[float, 1, ...]
+    ) -> Array[float, ..., 4]:
         """Summarize an idealized trace as a list of events.
 
         Args:
@@ -147,26 +157,26 @@ class Idealizer:
         return event_list
 
 
-def detect_first_activation(time: Array[float, 1, ...], signal: Array[float, 1,
-    ...], 
-        threshold: float) -> float:
+def detect_first_activation(
+    time: Array[float, 1, ...], signal: Array[float, 1, ...], threshold: float
+) -> float:
     """Return the time where a signal first crosses below a threshold."""
 
     return time[np.argmax(signal < threshold)]
 
 
 def baseline_correction(
-        time: Array[float, 1, ...],
-        signal: Array[float, 1, ...],
-        fs: float,
-        intervals: Optional[List]=None,
-        degree: Optional[int] = 1,
-        method: Optional[str] = "poly",
-        select_intvl: Optional[bool] = False,
-        piezo: Optional[Array[float]] = None,
-        select_piezo: Optional[bool] = False,
-        active: Optional[bool] = False,
-        deviation: Optional[float] = 0.05,
+    time: Array[float, 1, ...],
+    signal: Array[float, 1, ...],
+    fs: float,
+    intervals: Optional[List] = None,
+    degree: Optional[int] = 1,
+    method: Optional[str] = "poly",
+    select_intvl: Optional[bool] = False,
+    piezo: Optional[Array[float]] = None,
+    select_piezo: Optional[bool] = False,
+    active: Optional[bool] = False,
+    deviation: Optional[float] = 0.05,
 ) -> Array[float, 1, ...]:
     """Perform polynomial/offset baseline correction on the given signal.
 
