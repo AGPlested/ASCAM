@@ -21,13 +21,13 @@ def load(filename, filetype=False, dtype=None, headerlength=None, fs=None):
         # the first value returned by parse_filename is the filetype
         filetype = parse_filename(filename)[0]
 
-    if filetype == 'axo':
+    if filetype == "axo":
         output = load_axo(filename)
-    elif filetype == 'mat':
+    elif filetype == "mat":
         output = load_matlab(filename)
-    elif filetype == 'bin':
-        output = load_binary(filename,dtype,headerlength,fs)
-    elif filetype == 'tdt':
+    elif filetype == "bin":
+        output = load_binary(filename, dtype, headerlength, fs)
+    elif filetype == "tdt":
         output = load_tdt(filename)
     else:
         print("Filetype not supported.")
@@ -40,7 +40,7 @@ def load_pickle(filename):
     read a recording object from a pickle file
     """
     logging.info("""reading pickle""")
-    with open(filename,'rb') as file:
+    with open(filename, "rb") as file:
         data = pickle.load(file)
     return data
 
@@ -66,39 +66,40 @@ def load_tdt(filename):
 
     with open(filename) as datafile:
         datafile = open(filename)
-        reader = csv.reader(datafile, delimiter='\t')
+        reader = csv.reader(datafile, delimiter="\t")
         names = next(reader)
         n_lists = len(names)
 
-        # create a 'list-array' to hold the data, we need to create a list for 
+        # create a 'list-array' to hold the data, we need to create a list for
         # each timeseries we get before populating them
         # and they need to be lists because the length is unknown
         listlist = list()
-        for i in range(n_lists): listlist.append(list())
+        for i in range(n_lists):
+            listlist.append(list())
 
-        #sort the data from the csv reader into the seperate lists
+        # sort the data from the csv reader into the seperate lists
         for line in reader:
             for i in range(n_lists):
                 listlist[i].append(line[i])
 
-        #assign the lists with data
+        # assign the lists with data
         for i in range(n_lists):
-            if 'Ipatch' in names[i] or 'trace' in names[i]:
-                current.append(np.array(listlist[i],dtype=np.float))
-            elif '10Vm' in names[i] or 'command' in names[i]:
-                command_voltage.append(np.array(listlist[i],dtype=np.float))
-            elif 'Piezo' in names[i] or 'piezo' in names[i]:
-                piezo.append(np.array(listlist[i],dtype=np.float))
-            elif 'Time' in names[i] or 'time' in names[i]:
-                time = np.array(listlist[i],dtype=np.float)
+            if "Ipatch" in names[i] or "trace" in names[i]:
+                current.append(np.array(listlist[i], dtype=np.float))
+            elif "10Vm" in names[i] or "command" in names[i]:
+                command_voltage.append(np.array(listlist[i], dtype=np.float))
+            elif "Piezo" in names[i] or "piezo" in names[i]:
+                piezo.append(np.array(listlist[i], dtype=np.float))
+            elif "Time" in names[i] or "time" in names[i]:
+                time = np.array(listlist[i], dtype=np.float)
 
-    names = ['Time [ms]']
+    names = ["Time [ms]"]
     if current:
-        names.append('Current [A]')
+        names.append("Current [A]")
     if piezo:
-        names.append('Piezo [V]')
+        names.append("Piezo [V]")
     if command_voltage:
-        names.append('Command Voltage [V]')
+        names.append("Command Voltage [V]")
     return names, time, current, piezo, command_voltage
 
 
@@ -121,34 +122,32 @@ def load_matlab(filename):
     current = []
     command_voltage = []
     piezo = []
-    names = ['Time [ms]']
+    names = ["Time [ms]"]
 
     # we use varmats to split up the file into seperate mat files, one for
     # each variable this is necessary for files containing a lot of data
     # (i.e. more that 1000 episode) because the variable names are 3-digit
     # column numbers (so they loop back around after 1000))
-    varmats = varmats_from_mat(open(filename, 'rb'))
+    varmats = varmats_from_mat(open(filename, "rb"))
 
     for variable in varmats:
         value = scipy_loadmat(variable[1])[variable[0]]
         # the first possibility is the name in files we get, the second
         # comes from the ASCAM data structure
-        if ('Ipatch' in variable[0]
-            or 'trace' in variable[0]
-            or "Column" in variable[0]):
+        if "Ipatch" in variable[0] or "trace" in variable[0] or "Column" in variable[0]:
             current.append(value.flatten())
-        elif '10Vm' in variable[0] or 'command' in variable[0]:
+        elif "10Vm" in variable[0] or "command" in variable[0]:
             command_voltage.append(value.flatten())
-        elif 'Piezo' in variable[0] or 'piezo' in variable[0]:
+        elif "Piezo" in variable[0] or "piezo" in variable[0]:
             piezo.append(value.flatten())
-        elif 'Time' in variable[0] or 'time' in variable[0]:
+        elif "Time" in variable[0] or "time" in variable[0]:
             time = value.flatten()
     if current:
-        names.append('Current [A]')
+        names.append("Current [A]")
     if piezo:
-        names.append('Piezo [V]')
+        names.append("Piezo [V]")
     if command_voltage:
-        names.append('Command Voltage [V]')
+        names.append("Command Voltage [V]")
     return names, time, current, piezo, command_voltage
 
 
@@ -170,8 +169,8 @@ def load_binary(filename, dtype, headerlength, fs):
     headerlength = int(headerlength)
     current = np.fromfile(filename, dtype=dtype)
     current = current[headerlength:]
-    t_end = len(current)/fs*1000
-    time = np.linspace(0,t_end,len(current))
+    t_end = len(current) / fs * 1000
+    time = np.linspace(0, t_end, len(current))
     names = ["Time [ms]", "Current [A]"]
     current = current[np.newaxis]
     piezo = command_voltage = []
@@ -195,13 +194,13 @@ def load_axo(filename):
     command_voltage = []
     piezo = []
     for name, data in zip(file.names, file.data):
-        if 'Ipatch' in name or 'trace' in name:
+        if "Ipatch" in name or "trace" in name:
             current.append(np.array(data))
-        elif '10Vm' in name or 'command' in name:
+        elif "10Vm" in name or "command" in name:
             command_voltage.append(np.array(data))
-        elif 'Piezo' in name or 'piezo' in name:
+        elif "Piezo" in name or "piezo" in name:
             piezo.append(np.array(data))
-        elif 'Time' in name or 'time' in name:
+        elif "Time" in name or "time" in name:
             time = np.array(data)
-    
+
     return file.names, time, current, piezo, command_voltage

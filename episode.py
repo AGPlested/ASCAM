@@ -5,18 +5,36 @@ from analysis import baseline_correction, detect_first_activation, Idealizer
 from tools import piezo_selection
 
 
-class Episode():
-    trace_unit_factors = {'fA': 1e15, 'pA': 1e12, 'nA': 1e9, 'µA': 1e6,
-                          'mA': 1e3, 'A': 1}
-    command_unit_factors = {'uV': 1e6, 'mV': 1e3, 'V': 1}
-    piezo_unit_factors = {'uV': 1e6, 'mV': 1e3, 'V': 1}
-    time_unit_factors = {'ms': 1e3, 's': 1}
+class Episode:
+    trace_unit_factors = {
+        "fA": 1e15,
+        "pA": 1e12,
+        "nA": 1e9,
+        "µA": 1e6,
+        "mA": 1e3,
+        "A": 1,
+    }
+    command_unit_factors = {"uV": 1e6, "mV": 1e3, "V": 1}
+    piezo_unit_factors = {"uV": 1e6, "mV": 1e3, "V": 1}
+    time_unit_factors = {"ms": 1e3, "s": 1}
 
-    def __init__(self, time, trace, n_episode=0, piezo=None, command=None,
-                 sampling_rate=4e4, time_unit='ms', piezo_unit='V',
-                 command_unit='mV', trace_unit='pA', input_time_unit='s',
-                 input_trace_unit='A', input_piezo_unit='V',
-                 input_command_unit='V'):
+    def __init__(
+        self,
+        time,
+        trace,
+        n_episode=0,
+        piezo=None,
+        command=None,
+        sampling_rate=4e4,
+        time_unit="ms",
+        piezo_unit="V",
+        command_unit="mV",
+        trace_unit="pA",
+        input_time_unit="s",
+        input_trace_unit="A",
+        input_piezo_unit="V",
+        input_command_unit="V",
+    ):
         """Episode objects hold all the information about an epoch and
         should be used to store raw and manipulated data
 
@@ -42,8 +60,7 @@ class Episode():
         # units when given input
         input_time_factor = 1 / self.time_unit_factors[input_time_unit]
         input_trace_unit_factor = 1 / self.trace_unit_factors[input_trace_unit]
-        input_command_unit_factor = (
-                            1 / self.command_unit_factors[input_command_unit])
+        input_command_unit_factor = 1 / self.command_unit_factors[input_command_unit]
         input_piezo_unit_factor = 1 / self.piezo_unit_factors[input_piezo_unit]
         # private attributes storing the actual data
         self._time = time * input_time_factor
@@ -115,71 +132,98 @@ class Episode():
         self._idealization = id
 
     @property
-    def time_unit_factor(self): return self.time_unit_factors[self.time_unit]
+    def time_unit_factor(self):
+        return self.time_unit_factors[self.time_unit]
 
     @property
-    def trace_unit_factor(self): return self.trace_unit_factors[self.trace_unit]
+    def trace_unit_factor(self):
+        return self.trace_unit_factors[self.trace_unit]
 
     @property
     def command_unit_factor(self):
         return self.command_unit_factors[self.command_unit]
 
     @property
-    def piezo_unit_factor(self): return self.piezo_unit_factors[self.piezo_unit]
+    def piezo_unit_factor(self):
+        return self.piezo_unit_factors[self.piezo_unit]
 
-    def gauss_filter_episode(self, filter_frequency=1e3, method='convolution'):
+    def gauss_filter_episode(self, filter_frequency=1e3, method="convolution"):
         """Replace the current trace of the episode by the gauss filtered
         version of itself."""
 
-        self._trace = gaussian_filter(signal=self._trace,
-                                      filter_frequency=filter_frequency,
-                                      sampling_rate=self.sampling_rate)
+        self._trace = gaussian_filter(
+            signal=self._trace,
+            filter_frequency=filter_frequency,
+            sampling_rate=self.sampling_rate,
+        )
         # sett idealization to None since the newly created episode has no
         # idealization
         self._idealization = None
 
-    def CK_filter_episode(self, window_lengths, weight_exponent, weight_window,
-                          apriori_f_weights=False, apriori_b_weights=False):
+    def CK_filter_episode(
+        self,
+        window_lengths,
+        weight_exponent,
+        weight_window,
+        apriori_f_weights=False,
+        apriori_b_weights=False,
+    ):
         """Replace the current _trace by the CK fitered version of itself."""
 
-        ck_filter = ChungKennedyFilter(window_lengths, weight_exponent,
-                                       weight_window, apriori_f_weights,
-                                       apriori_b_weights)
+        ck_filter = ChungKennedyFilter(
+            window_lengths,
+            weight_exponent,
+            weight_window,
+            apriori_f_weights,
+            apriori_b_weights,
+        )
         self._trace = ck_filter.apply_filter(self._trace)
         # sett idealization to None since the newly created episode has no
         # idealization
         self._idealization = None
 
-    def baseline_correct_episode(self, intervals, method='poly', degree=1,
-                                 select_intvl=False, select_piezo=False,
-                                 active=False, deviation=0.05):
+    def baseline_correct_episode(
+        self,
+        intervals,
+        method="poly",
+        degree=1,
+        select_intvl=False,
+        select_piezo=False,
+        active=False,
+        deviation=0.05,
+    ):
         """Apply a baseline correction to the episode."""
 
-        self._trace = baseline_correction(time=self._time, signal=self._trace,
-                                          fs=self.sampling_rate,
-                                          intervals=intervals,
-                                          degree=degree, method=method,
-                                          select_intvl=select_intvl,
-                                          piezo=self._piezo,
-                                          select_piezo=select_piezo,
-                                          active=active, deviation=deviation)
+        self._trace = baseline_correction(
+            time=self._time,
+            signal=self._trace,
+            fs=self.sampling_rate,
+            intervals=intervals,
+            degree=degree,
+            method=method,
+            select_intvl=select_intvl,
+            piezo=self._piezo,
+            select_piezo=select_piezo,
+            active=active,
+            deviation=deviation,
+        )
         # reset _idealization
         self._idealization = None
 
     def idealize(self, amplitudes, thresholds, resolution):
         """Idealize the episode using threshold crossing."""
 
-        self._idealization = Idealizer.idealize_episode(self._trace, amplitudes,
-                                                        thresholds, resolution,
-                                                        self._time)
+        self._idealization = Idealizer.idealize_episode(
+            self._trace, amplitudes, thresholds, resolution, self._time
+        )
 
     def check_standarddeviation_all(self, stdthreshold=5e-13):
         """Check the standard deviation of the episode against a reference
         value."""
 
-        _, _, trace = piezo_selection(self._time, self._piezo,
-                                      self._trace, active=False,
-                                      deviation=0.01)
+        _, _, trace = piezo_selection(
+            self._time, self._piezo, self._trace, active=False, deviation=0.01
+        )
         tracestd = np.std(trace)
         if tracestd > stdthreshold:
             self.suspiciousSTD = True
@@ -198,9 +242,9 @@ class Episode():
     def detect_first_activation(self, threshold):
         """Detect the first activation in the episode."""
 
-        self._first_activation = detect_first_activation(self._time,
-                                                         self._trace,
-                                                         threshold)
+        self._first_activation = detect_first_activation(
+            self._time, self._trace, threshold
+        )
 
     def get_events(self):
         """Get the events (i.e. states) from the idealized trace.

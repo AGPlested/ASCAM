@@ -5,6 +5,7 @@ ASCAM for processing and analysis of data from single ion channels.
 import sys
 import os
 import logging
+
 # import datetime
 import getopt
 
@@ -21,13 +22,14 @@ def parse_options():
         silent (bool) - if true no logs will be printed to the console
         logdir (string) - the directory in which the log should be saved
     """
-    log_level = 'INFO'
+    log_level = "INFO"
     silent = True
-    logdir = './logfiles'
+    logdir = "./logfiles"
     test = False
     try:
-        options, args = getopt.getopt(sys.argv[1:], "l:d:th",
-                                      ["loglevel=", "logdir=","help", "test"])
+        options, args = getopt.getopt(
+            sys.argv[1:], "l:d:th", ["loglevel=", "logdir=", "help", "test"]
+        )
     except getopt.GetoptError as err:
         # print help information and exit:
         print(err)  # will print something like "option -a not recognized"
@@ -44,14 +46,17 @@ def parse_options():
         elif opt in ("-h", "--help"):
             display_help()
             sys.exit(2)
-        else: assert False, "unhandled option"
+        else:
+            assert False, "unhandled option"
     return log_level, silent, logdir, test
+
 
 def display_help():
     """
     Print a manual for calling ASCAM to the commandline.
     """
-    print("""Usage: ./ASCAM --loglevel=INFO --silent --logdir=./logfiles
+    print(
+        """Usage: ./ASCAM --loglevel=INFO --silent --logdir=./logfiles
 
             -l --loglevel : level of logging to be printed to console (INFO or
                             DEBUG)
@@ -59,16 +64,20 @@ def display_help():
                             console
             -d --logdir : directory in which the log file should be saved
             -t --test : load example data
-            -h --help : display this message""")
+            -h --help : display this message"""
+    )
+
 
 def main():
     log_level, silent, logdir, test = parse_options()
 
-    #set up the logging module, for now logs are saved in current working
-    #directory
+    # set up the logging module, for now logs are saved in current working
+    # directory
     initialize_logger(logdir, log_level, silent)
-    logging.info("-"*20+"Start of new ASCAM session"+"-"*20)
+    logging.info("-" * 20 + "Start of new ASCAM session" + "-" * 20)
 
     GUI.run(test)
 
-if __name__ == '__main__': main()
+
+if __name__ == "__main__":
+    main()

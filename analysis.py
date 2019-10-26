@@ -3,17 +3,17 @@ import numpy as np
 from tools import interval_selection, piezo_selection
 
 
-class Idealizer():
+class Idealizer:
     @classmethod
-    def idealize_episode(cls, signal, amplitudes, thresholds=np.array([]),
-                         resolution=None, time=None):
+    def idealize_episode(
+        cls, signal, amplitudes, thresholds=np.array([]), resolution=None, time=None
+    ):
         """Get idealization for single episode."""
 
         idealizer = cls(amplitudes, thresholds)
         idealization = idealizer.threshold_crossing(signal)
         if resolution is not None:
-            idealization = idealizer.apply_resolution(idealization, time,
-                                                      resolution)
+            idealization = idealizer.apply_resolution(idealization, time, resolution)
         return idealization
 
     def __init__(self, amplitudes, thresholds=np.array([])):
@@ -73,7 +73,7 @@ class Idealizer():
                     i_end = int(np.where(time == events[i, 3])[0]) + 1
                     # add the first but not the last event to the next,
                     # otherwise, flip a coin
-                    if (np.random.binomial(1, .5) or i == 0) and i != end_ind-1:
+                    if (np.random.binomial(1, 0.5) or i == 0) and i != end_ind - 1:
                         idealization[i_start:i_end] = events[i + 1, 0]
                         # set amplitude
                         events[i, 0] = events[i + 1, 0]
@@ -145,10 +145,19 @@ def detect_first_activation(time, signal, threshold):
     return time[np.argmax(signal < threshold)]
 
 
-def baseline_correction(time, signal, fs, intervals=None,
-                        degree=1, method='poly', select_intvl=False,
-                        piezo=None, select_piezo=False, active=False,
-                        deviation=0.05):
+def baseline_correction(
+    time,
+    signal,
+    fs,
+    intervals=None,
+    degree=1,
+    method="poly",
+    select_intvl=False,
+    piezo=None,
+    select_piezo=False,
+    active=False,
+    deviation=0.05,
+):
     """Perform polynomial/offset baseline correction on the given signal.
 
     Parameters:
@@ -173,10 +182,10 @@ def baseline_correction(time, signal, fs, intervals=None,
         t = time
         s = signal
 
-    if method == 'offset':
+    if method == "offset":
         offset = np.mean(s)
         output = signal - offset
-    elif method == 'poly':
+    elif method == "poly":
         coeffs = np.polyfit(t, s, degree)
         baseline = np.zeros_like(time)
         for i in range(degree + 1):

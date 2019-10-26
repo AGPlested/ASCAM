@@ -19,7 +19,7 @@ class Series(list):
         self._tc_thresholds = np.array([])
         self._tc_amplitudes = np.array([])
 
-        self._fa_threshold = 0.
+        self._fa_threshold = 0.0
 
     @property
     def is_idealized(self):
@@ -76,30 +76,51 @@ class Series(list):
             episode.gauss_filter_episode(filter_frequency)
         return output
 
-    def CK_filter(self, window_lengths, weight_exponent, weight_window,
-                  apriori_f_weights=False, apriori_b_weights=False):
+    def CK_filter(
+        self,
+        window_lengths,
+        weight_exponent,
+        weight_window,
+        apriori_f_weights=False,
+        apriori_b_weights=False,
+    ):
         """Apply ChungKennedyFilter to the episodes in this series."""
 
         output = copy.deepcopy(self)
         for episode in output:
-            episode.CK_filter_episode(window_lengths, weight_exponent,
-                                      weight_window, apriori_f_weights,
-                                      apriori_b_weights)
+            episode.CK_filter_episode(
+                window_lengths,
+                weight_exponent,
+                weight_window,
+                apriori_f_weights,
+                apriori_b_weights,
+            )
         return output
 
-    def baseline_correct_all(self, intervals=[], method='poly', degree=1,
-                             select_intvl=False, select_piezo=False,
-                             active=False, deviation=0.05):
+    def baseline_correct_all(
+        self,
+        intervals=[],
+        method="poly",
+        degree=1,
+        select_intvl=False,
+        select_piezo=False,
+        active=False,
+        deviation=0.05,
+    ):
         """Return a `Series` object in which the episodes stored in `self` are
         baseline corrected with the given parameters."""
 
         output = copy.deepcopy(self)
         for episode in output:
-            episode.baseline_correct_episode(degree=degree, intervals=intervals,
-                                             method=method, deviation=deviation,
-                                             select_intvl=select_intvl,
-                                             select_piezo=select_piezo,
-                                             active=active)
+            episode.baseline_correct_episode(
+                degree=degree,
+                intervals=intervals,
+                method=method,
+                deviation=deviation,
+                select_intvl=select_intvl,
+                select_piezo=select_piezo,
+                active=active,
+            )
         return output
 
     def idealize_all(self, amplitudes, thresholds, resolution):

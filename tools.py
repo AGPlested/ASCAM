@@ -2,6 +2,7 @@ import logging
 
 import numpy as np
 
+
 def parse_filename(filename):
     """
     detect the type of file from the extension
@@ -15,27 +16,41 @@ def parse_filename(filename):
     for i, char in enumerate(filename[::-1]):
         # loop over the full filename (which includes directory) backwards
         # to extract the extension and name of the file
-        if (char == '.') and not period:
-            period = N-1-i
-        if (char == '/') and not slash:
-            slash = N-1-i
+        if (char == ".") and not period:
+            period = N - 1 - i
+        if (char == "/") and not slash:
+            slash = N - 1 - i
             break
     path = filename[:slash]
-    filetype = filename[period+1:]
-    logging.debug("""path: {}
-                 filetype: {}""".format(path, filetype))
-    if 'axg' in filetype: filetype_long = 'axograph'
-    elif filetype == 'bin': filetype_long = 'binary'
-    elif filetype == 'mat': filetype_long = 'matlab'
-    elif filetype == 'pkl': filetype_long = 'pickle'
-    elif filetype == 'txt' or filetype == 'axgt':
-        filetype = 'tdt'
-        filetype_long = 'tab-delimited-text'
-    else: log.warning("Could not detect filetype!")
-    filename = filename[slash+1:]
-    logging.debug("""filetype_long : {}"
-               filename: {} """.format(filetype_long,filename))
+    filetype = filename[period + 1 :]
+    logging.debug(
+        """path: {}
+                 filetype: {}""".format(
+            path, filetype
+        )
+    )
+    if "axg" in filetype:
+        filetype_long = "axograph"
+    elif filetype == "bin":
+        filetype_long = "binary"
+    elif filetype == "mat":
+        filetype_long = "matlab"
+    elif filetype == "pkl":
+        filetype_long = "pickle"
+    elif filetype == "txt" or filetype == "axgt":
+        filetype = "tdt"
+        filetype_long = "tab-delimited-text"
+    else:
+        log.warning("Could not detect filetype!")
+    filename = filename[slash + 1 :]
+    logging.debug(
+        """filetype_long : {}"
+               filename: {} """.format(
+            filetype_long, filename
+        )
+    )
     return filetype, path, filetype_long, filename
+
 
 def piezo_selection(time, piezo, trace, active=True, deviation=0.05):
     """
@@ -70,10 +85,10 @@ def piezo_selection(time, piezo, trace, active=True, deviation=0.05):
     #           """.format(active,deviation,maxPiezo,time,piezo,trace))
     if active:
         # logging.debug("""selecting for active piezo""")
-        indices = np.where((maxPiezo-np.abs(piezo))/maxPiezo<deviation)
+        indices = np.where((maxPiezo - np.abs(piezo)) / maxPiezo < deviation)
     else:
         # logging.debug("""selecting for inactive piezo""")
-        indices = np.where(np.abs(piezo)/maxPiezo<deviation)
+        indices = np.where(np.abs(piezo) / maxPiezo < deviation)
     time = time[indices]
     piezo = piezo[indices]
     trace = trace[indices]
@@ -82,6 +97,7 @@ def piezo_selection(time, piezo, trace, active=True, deviation=0.05):
     #           piezo: {}
     #           trace: {}""".format(indices, time, piezo, trace))
     return time, trace
+
 
 def interval_selection(time, signal, intervals, fs):
     """
@@ -100,19 +116,16 @@ def interval_selection(time, signal, intervals, fs):
     if type(intervals[0]) is list:
         logging.debug("""`intervals` is a list of intervals""")
         for ival in intervals:
-            time_out.extend(time[ int(ival[0]*fs)
-                            : int(ival[-1]*fs) ])
-            signal_out.extend(signal[ int(ival[0]*fs)
-                              : int(ival[-1]*fs)])
+            time_out.extend(time[int(ival[0] * fs) : int(ival[-1] * fs)])
+            signal_out.extend(signal[int(ival[0] * fs) : int(ival[-1] * fs)])
     elif type(intervals[0]) in [int, float]:
         logging.debug("""`intervals` is just one interval""")
-        time_out = time[ int(intervals[0]*fs)
-                   : int(intervals[-1]*fs)]
-        signal_out = signal[int(intervals[0]*fs)
-                   : int(intervals[1]*fs)]
+        time_out = time[int(intervals[0] * fs) : int(intervals[-1] * fs)]
+        signal_out = signal[int(intervals[0] * fs) : int(intervals[1] * fs)]
     # logging.debug("""selected times: {}
     #              and signal: {}""".format(time_out,signal_out))
     return time_out, signal_out
+
 
 def stringList_parser(list_as_string):
     """
@@ -126,15 +139,15 @@ def stringList_parser(list_as_string):
     logging.info("""called `stringList_parser`""")
     whole_list = []
     current_list = []
-    num_string = ''
+    num_string = ""
     for char in list_as_string:
-        if char == '[':
+        if char == "[":
             current_list = []
-        elif char == ',':
+        elif char == ",":
             if len(current_list) == 0:
                 current_list.append(float(num_string))
-            num_string = ''
-        elif char == ']':
+            num_string = ""
+        elif char == "]":
             current_list.append(float(num_string))
             whole_list.append(current_list)
         else:
