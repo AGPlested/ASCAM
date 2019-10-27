@@ -190,7 +190,11 @@ class PlotFrame(ttk.Frame):
                 self.i_line.set_visible(True)
             else:
                 self.i_line.set_visible(False)
-            self.i_line.set_ydata(self.parent.data.episode.idealization)
+            if (len(self.i_line.get_xdata(orig=True)) ==
+                len(self.parent.data.episode.id_time)):
+                self.i_line.set_ydata(self.parent.data.episode.idealization)
+            else:
+                self.draw_idealization_plot()
             if draw:
                 self.canvas.draw()
 
@@ -463,19 +467,13 @@ class PlotFrame(ttk.Frame):
             self.setup_plots()
             self.init_plot()
 
-    def init_plot(self):
-        logging.debug(f"PlotFrame.init_plot")
+    def draw_idealization_plot(self):
         episode = self.parent.data.episode
-        if self.command_plot is not None:
-            self.c_line, = self.command_plot.plot(
-                episode.time, episode.command, color=TRACE_COLOR
-            )
-        self.t_line, = self.current_plot.plot(
-            episode.time, episode.trace, color=TRACE_COLOR
-        )
+        if self.i_line:
+            self.i_line.remove()
         if episode.idealization is not None:
             self.i_line, = self.current_plot.plot(
-                episode.time,
+                episode.id_time,
                 episode.idealization,
                 color=ID_COLOR,
                 alpha=0.6,
@@ -490,6 +488,18 @@ class PlotFrame(ttk.Frame):
                 alpha=0.6,
                 color=ID_COLOR,
             )
+
+    def init_plot(self):
+        logging.debug(f"PlotFrame.init_plot")
+        episode = self.parent.data.episode
+        if self.command_plot is not None:
+            self.c_line, = self.command_plot.plot(
+                episode.time, episode.command, color=TRACE_COLOR
+            )
+        self.t_line, = self.current_plot.plot(
+            episode.time, episode.trace, color=TRACE_COLOR
+        )
+        self.draw_idealization_plot()
 
         if self.piezo_plot is not None:
             self.p_line, = self.piezo_plot.plot(
