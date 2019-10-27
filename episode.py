@@ -221,8 +221,12 @@ class Episode:
         """Idealize the episode using threshold crossing."""
 
         self._idealization, self._id_time = Idealizer.idealize_episode(
-            self._trace, self._time, amplitudes, thresholds, resolution, 
-            interpolation_factor
+            self._trace,
+            self._time,
+            amplitudes,
+            thresholds,
+            resolution,
+            interpolation_factor,
         )
 
     def check_standarddeviation_all(self, stdthreshold=5e-13):

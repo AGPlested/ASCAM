@@ -8,6 +8,7 @@ from tools import interval_selection, piezo_selection
 
 class Idealizer:
     """Container object for the different idealization functions."""
+
     @classmethod
     def idealize_episode(
         Idealizer,
@@ -27,19 +28,23 @@ class Idealizer:
 
         if resolution is not None:
             events = Idealizer.extract_events(idealization, time)
-            idealization = Idealizer.apply_resolution(events, idealization, time, resolution)
+            idealization = Idealizer.apply_resolution(
+                events, idealization, time, resolution
+            )
         return idealization, time
 
     @staticmethod
-    def interpolate(signal: Array[float, 1, ...],
-            time: Array[float, 1, ...],
-            interpolation_factor: int,
-            ) -> Tuple[Array[float, 1, ...], Array[float, 1, ...]]:
+    def interpolate(
+        signal: Array[float, 1, ...],
+        time: Array[float, 1, ...],
+        interpolation_factor: int,
+    ) -> Tuple[Array[float, 1, ...], Array[float, 1, ...]]:
         """Interpolate the signal with a cubic spline."""
 
         spline = spCubicSpline(time, signal)
-        interpolation_time =np.arange(time[0], time[-1], (time[1]-time[0]) /
-                interpolation_factor)
+        interpolation_time = np.arange(
+            time[0], time[-1], (time[1] - time[0]) / interpolation_factor
+        )
         return spline(interpolation_time), interpolation_time
 
     @staticmethod
@@ -47,7 +52,7 @@ class Idealizer:
         signal: Array[float, 1, ...],
         amplitudes: Array[float, 1, ...],
         thresholds: Optional[Array[float, 1, ...]] = None,
-        ) -> Array[float, 1, ...]:
+    ) -> Array[float, 1, ...]:
         """Perform a threshold-crossing idealization on the signal.
 
         Arguments:
@@ -57,9 +62,9 @@ class Idealizer:
         # converting to array should no longer be neccessary as we have
         # typehints
 
-        amplitudes.sort()# sort amplitudes in descending order
+        amplitudes.sort()  # sort amplitudes in descending order
         amplitudes = amplitudes[::-1]
-        
+
         # if thresholds are no or incorrectly supplied take midpoint between
         # amplitudes as thresholds
         if thresholds.size != amplitudes.size - 1:

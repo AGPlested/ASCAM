@@ -326,8 +326,10 @@ class Recording(dict):
         )
 
         self.episode.idealize(
-            self._tc_amplitudes, self._tc_thresholds, self._tc_resolution, 
-            self.interpolation_factor
+            self._tc_amplitudes,
+            self._tc_thresholds,
+            self._tc_resolution,
+            self.interpolation_factor,
         )
 
     def detect_fa(self, exclude=[]):

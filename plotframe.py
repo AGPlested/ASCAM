@@ -190,8 +190,9 @@ class PlotFrame(ttk.Frame):
                 self.i_line.set_visible(True)
             else:
                 self.i_line.set_visible(False)
-            if (len(self.i_line.get_xdata(orig=True)) ==
-                len(self.parent.data.episode.id_time)):
+            if len(self.i_line.get_xdata(orig=True)) == len(
+                self.parent.data.episode.id_time
+            ):
                 self.i_line.set_ydata(self.parent.data.episode.idealization)
             else:
                 self.draw_idealization_plot()

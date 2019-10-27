@@ -19,8 +19,8 @@ class TC_Frame(ttk.Frame):
         self.amp_string = tk.StringVar()  # string holding the amplitudes
         self.theta_string = tk.StringVar()  # string holding the thresholds
         self.res_string = tk.StringVar()  # string holding the resolution
-        self.interpolate = tk.IntVar() # bool for interpolating
-        self.interpolation_factor = tk.StringVar() 
+        self.interpolate = tk.IntVar()  # bool for interpolating
+        self.interpolation_factor = tk.StringVar()
 
         # if idealization has already been performed store the parameters
         # to recreate if cancel is clicked
@@ -121,17 +121,17 @@ class TC_Frame(ttk.Frame):
         res_entry = ttk.Entry(self, textvariable=self.res_string, width=40)
         res_entry.grid(row=9, column=0, columnspan=2, padx=5, pady=5)
         res_entry.bind("<Return>", self.get_resolution)
-        
+
         # interpolation
-        ttk.Label(
-            self, text=f"Interpolation"
-        ).grid(row=10, column=0, columnspan=2, padx=5, pady=5)
-        ttk.Checkbutton(self, variable=self.interpolate
-                ).grid(row=10, column=2, padx=5, pady=5)
+        ttk.Label(self, text=f"Interpolation").grid(
+            row=10, column=0, columnspan=2, padx=5, pady=5
+        )
+        ttk.Checkbutton(self, variable=self.interpolate).grid(
+            row=10, column=2, padx=5, pady=5
+        )
         intrp_entry = ttk.Entry(self, textvariable=self.interpolation_factor, width=40)
         intrp_entry.grid(row=10, column=3, columnspan=2, padx=5, pady=5)
         intrp_entry.bind("<Return>", self.get_intrp_factor)
-
 
         # demo button
         ttk.Button(self, text="Demo", command=self.demo_idealization).grid(
@@ -150,7 +150,7 @@ class TC_Frame(ttk.Frame):
         """Get the interpolation factor from the entry.
 
         Also update the idealization."""
-        
+
         logging.debug(f"get_intrp_factor")
 
         self.interpolate.set(1)
