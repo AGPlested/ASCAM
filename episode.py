@@ -82,6 +82,13 @@ class Episode:
         self.suspiciousSTD = False
 
     @property
+    def id_time(self):
+        if self._id_time is not None:
+            return self._id_time * self.time_unit_factor
+        else:
+            return self.time
+
+    @property
     def time(self):
         if self._time is not None:
             return self._time * self.time_unit_factor
@@ -210,11 +217,12 @@ class Episode:
         # reset _idealization
         self._idealization = None
 
-    def idealize(self, amplitudes, thresholds, resolution):
+    def idealize(self, amplitudes, thresholds, resolution, interpolation_factor):
         """Idealize the episode using threshold crossing."""
 
-        self._idealization = Idealizer.idealize_episode(
-            self._trace, amplitudes, thresholds, resolution, self._time
+        self._idealization, self._id_time = Idealizer.idealize_episode(
+            self._trace, self._time, amplitudes, thresholds, resolution, 
+            interpolation_factor
         )
 
     def check_standarddeviation_all(self, stdthreshold=5e-13):
