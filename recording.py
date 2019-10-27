@@ -90,6 +90,7 @@ class Recording(dict):
         self.hist_times = 0
         # parameters for analysis
         # idealization
+        self.interpolation_factor = None
         self._tc_thresholds = np.array([])
         self._tc_amplitudes = np.array([])
         self.tc_unit = "pA"
@@ -325,7 +326,8 @@ class Recording(dict):
         )
 
         self.episode.idealize(
-            self._tc_amplitudes, self._tc_thresholds, self._tc_resolution
+            self._tc_amplitudes, self._tc_thresholds, self._tc_resolution, 
+            self.interpolation_factor
         )
 
     def detect_fa(self, exclude=[]):

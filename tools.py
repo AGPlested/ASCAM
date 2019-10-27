@@ -40,8 +40,8 @@ def parse_filename(filename):
     elif filetype == "txt" or filetype == "axgt":
         filetype = "tdt"
         filetype_long = "tab-delimited-text"
-    else:
-        log.warning("Could not detect filetype!")
+#    else:
+#        log.warning("Could not detect filetype!")
     filename = filename[slash + 1 :]
     logging.debug(
         """filetype_long : {}"
@@ -113,7 +113,7 @@ def interval_selection(time, signal, intervals, fs):
     print(intervals)
     time_out = []
     signal_out = []
-    if type(intervals[0]) is list:
+    if isinstance(intervals[0], list):
         logging.debug("""`intervals` is a list of intervals""")
         for ival in intervals:
             time_out.extend(time[int(ival[0] * fs) : int(ival[-1] * fs)])
