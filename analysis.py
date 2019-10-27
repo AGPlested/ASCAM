@@ -1,73 +1,90 @@
 import numpy as np
-from typing import Optional, List
+from scipy.interpolate import CubicSpline as spCubicSpline
+from typing import Optional, List, Tuple
 from nptyping import Array
 
 from tools import interval_selection, piezo_selection
 
 
 class Idealizer:
+    """Container object for the different idealization functions."""
     @classmethod
     def idealize_episode(
-        cls,
+        Idealizer,
         signal: Array[float, 1, ...],
+        time: Array[float, 1, ...],
         amplitudes: Array[float, 1, ...],
         thresholds: Optional[Array[float, 1, ...]] = None,
         resolution: Optional[int] = None,
-        time: Optional[Array[float, 1, ...]] = None,
+        interpolation_factor: Optional[int] = None,
     ) -> Array[float, 1, ...]:
         """Get idealization for single episode."""
 
-        idealizer = cls(amplitudes, thresholds)
-        idealization = idealizer.threshold_crossing(signal)
-        if resolution is not None:
-            idealization = idealizer.apply_resolution(idealization, time, resolution)
-        return idealization
+        if interpolation_factor is not None:
+            signal, time = Idealizer.interpolate(signal, time, interpolation_factor)
 
-    def __init__(
-        self,
+        idealization = Idealizer.threshold_crossing(signal, amplitudes, thresholds)
+
+        if resolution is not None:
+            events = Idealizer.extract_events(idealization, time)
+            idealization = Idealizer.apply_resolution(events, idealization, time, resolution)
+        return idealization, time
+
+    @staticmethod
+    def interpolate(signal: Array[float, 1, ...],
+            time: Array[float, 1, ...],
+            interpolation_factor: int,
+            ) -> Tuple[Array[float, 1, ...], Array[float, 1, ...]]:
+        """Interpolate the signal with a cubic spline."""
+
+        spline = spCubicSpline(time, signal)
+        interpolation_time =np.arange(time[0], time[-1], (time[1]-time[0]) /
+                interpolation_factor)
+        return spline(interpolation_time), interpolation_time
+
+    @staticmethod
+    def threshold_crossing(
+        signal: Array[float, 1, ...],
         amplitudes: Array[float, 1, ...],
         thresholds: Optional[Array[float, 1, ...]] = None,
-    ) -> None:
-        """Container object for the different idealization functions.
-
-        Arguments:
-            amplitudes [1D numpy array] - supposed true amplitudes of signal
-            thresholds [1D numpy array] - thresholds between the amplitudes
-        If the wrong number of thresholds (or none) are given they will be
-        replaced by the midpoint between the pairs of adjacent amplitudes."""
-
-        self.amplitudes = np.asarray(amplitudes)
-        # sort amplitudes in descending order
-        self.amplitudes.sort()
-        self.amplitudes = self.amplitudes[::-1]
-
-        if thresholds.size != self.amplitudes.size - 1:
-            self.thresholds = (self.amplitudes[1:] + self.amplitudes[:-1]) / 2
-        else:
-            self.thresholds = thresholds
-
-    def threshold_crossing(self, signal: Array[float, 1, ...]) -> Array[float, 1, ...]:
+        ) -> Array[float, 1, ...]:
         """Perform a threshold-crossing idealization on the signal.
 
         Arguments:
             signal [1D numpy array] - data to be idealized"""
 
-        if self.amplitudes.size == 1:
-            idealization = np.ones(signal.size) * self.amplitudes
+        # amplitudes = np.asarray(amplitudes)
+        # converting to array should no longer be neccessary as we have
+        # typehints
+
+        amplitudes.sort()# sort amplitudes in descending order
+        amplitudes = amplitudes[::-1]
+        
+        # if thresholds are no or incorrectly supplied take midpoint between
+        # amplitudes as thresholds
+        if thresholds.size != amplitudes.size - 1:
+            thresholds = (amplitudes[1:] + amplitudes[:-1]) / 2
+        else:
+            thresholds = thresholds
+
+        # for convenience we include the trivial case of only 1 amplitude
+        if amplitudes.size == 1:
+            idealization = np.ones(signal.size) * amplitudes
         else:
             idealization = np.zeros(len(signal))
             # np.where returns a tuple containing array so we have to get the
             # first element to get the indices
-            inds = np.where(signal > self.thresholds[0])[0]
-            idealization[inds] = self.amplitudes[0]
-            for thresh, amp in zip(self.thresholds, self.amplitudes[1:]):
+            inds = np.where(signal > thresholds[0])[0]
+            idealization[inds] = amplitudes[0]
+            for thresh, amp in zip(thresholds, amplitudes[1:]):
                 inds = np.where(signal < thresh)[0]
                 idealization[inds] = amp
 
         return idealization
 
+    @staticmethod
     def apply_resolution(
-        self,
+        events: Array[float, ..., 4],
         idealization: Array[float, 1, ...],
         time: Array[float, 1, ...],
         resolution: int,
@@ -75,11 +92,10 @@ class Idealizer:
         """Remove from the idealization any events that are too short.
 
         Args:
-            idealization [1D numpy array] - an idealized current trace
-            time [1D numpy array] - the corresponding time array
-            resolution [int] - the minimum duration for an event"""
+            idealization - an idealized current trace
+            time - the corresponding time array
+            resolution - the minimum duration for an event"""
 
-        events = self.extract_events(idealization, time)
         while np.any(events[:, 1] < resolution):
             i = 0
             end_ind = len(events[:, 1])
@@ -133,8 +149,8 @@ class Idealizer:
         # starting from 0 to diff[0] is the first event, and from diff[-1] to
         # t_end is the last event, hence
         n_events = events.size + 1
-        # init the array they will be final output table, events in rows and
-        # amplitude, start, end and duration in columns
+        # init the array that will be final output table, events in rows and
+        # amplitude, duration, start and end in columns
         event_list = np.zeros((n_events, 4))
         # fill the array
         if n_events == 1:
