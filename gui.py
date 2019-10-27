@@ -107,6 +107,7 @@ class GUI(ttk.Frame):
         self.piezo_input_unit = tk.StringVar()
         self.command_input_unit = tk.StringVar()
         # set defaults
+        self.sampling_rate.get("40000")
         self.time_input_unit.set("s")
         self.trace_input_unit.set("A")
         self.piezo_input_unit.set("V")
