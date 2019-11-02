@@ -85,11 +85,11 @@ class TC_Frame(ttk.Frame):
             relief="raised",
             command=self.toggle_amp,
         )
-        self.amp_button.grid(row=4, column=0, columnspan=2, padx=5, pady=5)
+        self.amp_button.grid(row=4, column=0, columnspan=4, padx=5, pady=5)
 
         # entry for amplitudes
         amp_entry = ttk.Entry(self, textvariable=self.amp_string, width=40)
-        amp_entry.grid(row=5, column=0, columnspan=2, padx=5, pady=5)
+        amp_entry.grid(row=5, column=0, columnspan=4, padx=5, pady=5)
         amp_entry.bind(
             "<Return>",
             lambda *args: (self.toggle_amp() if not self.show_amp else self.get_amps()),
@@ -103,9 +103,9 @@ class TC_Frame(ttk.Frame):
             relief="raised",
             command=self.toggle_tc,
         )
-        self.tc_button.grid(row=6, column=0, columnspan=2, padx=5, pady=5)
+        self.tc_button.grid(row=6, column=0, columnspan=4, padx=5, pady=5)
         theta_entry = ttk.Entry(self, textvariable=self.theta_string, width=40)
-        theta_entry.grid(row=7, column=0, columnspan=2, padx=5, pady=5)
+        theta_entry.grid(row=7, column=0, columnspan=4, padx=5, pady=5)
         theta_entry.bind(
             "<Return>",
             lambda *args: (
@@ -117,33 +117,33 @@ class TC_Frame(ttk.Frame):
         # resolution
         ttk.Label(
             self, text=f"Resolution " f"[{self.parent.data.episode.time_unit}]"
-        ).grid(row=8, column=0, columnspan=2, padx=5, pady=5)
+        ).grid(row=8, column=0, columnspan=4, padx=5, pady=5)
         res_entry = ttk.Entry(self, textvariable=self.res_string, width=40)
-        res_entry.grid(row=9, column=0, columnspan=2, padx=5, pady=5)
+        res_entry.grid(row=9, column=0, columnspan=4, padx=5, pady=5)
         res_entry.bind("<Return>", self.get_resolution)
 
         # interpolation
         ttk.Label(self, text=f"Interpolation").grid(
-            row=10, column=0, columnspan=2, padx=5, pady=5
+            row=10, column=0, columnspan=1, padx=5, pady=5
         )
         ttk.Checkbutton(self, variable=self.interpolate).grid(
-            row=10, column=2, padx=5, pady=5
+            row=10, column=1, padx=5, pady=5
         )
         intrp_entry = ttk.Entry(self, textvariable=self.interpolation_factor, width=40)
-        intrp_entry.grid(row=10, column=3, columnspan=2, padx=5, pady=5)
+        intrp_entry.grid(row=10, column=2, columnspan=2, padx=5, pady=5)
         intrp_entry.bind("<Return>", self.get_intrp_factor)
 
         # demo button
         ttk.Button(self, text="Demo", command=self.demo_idealization).grid(
-            row=11, columnspan=2, padx=5, pady=5
+            row=11, columnspan=4, padx=5, pady=5
         )
 
         # frame closing buttons
-        ttk.Button(self, text="Apply and finish", command=self.click_apply).grid(
-            row=13, padx=5, pady=5
+        ttk.Button(self, text="Apply and close", command=self.click_apply).grid(
+            row=13, columnspan=2, padx=5, pady=5
         )
         ttk.Button(self, text="Cancel", command=self.click_cancel).grid(
-            row=13, column=1, padx=5, pady=5
+            row=13, column=3, columnspan=2, padx=5, pady=5
         )
 
     def get_intrp_factor(self, update_plot=True, *args):
