@@ -130,12 +130,17 @@ class TC_Frame(ttk.Frame):
             relief="raised",
             command=self.toggle_intrp,
         )
-        self.intrp_button.grid(
-            row=10, column=0, columnspan=4, padx=5, pady=5
-        )
+        self.intrp_button.grid(row=10, column=0, columnspan=4, padx=5, pady=5)
         intrp_entry = ttk.Entry(self, textvariable=self.interpolation_factor, width=40)
         intrp_entry.grid(row=11, column=0, columnspan=4, padx=5, pady=5)
-        intrp_entry.bind("<Return>", self.toggle_intrp)
+        intrp_entry.bind(
+            "<Return>",
+            lambda *a: (
+                self.get_intrp_factor()
+                if self.interpolate.get()
+                else self.toggle_intrp()
+            ),
+        )
 
         # demo button
         ttk.Button(self, text="Demo", command=self.demo_idealization).grid(
@@ -149,7 +154,6 @@ class TC_Frame(ttk.Frame):
         ttk.Button(self, text="Cancel", command=self.click_cancel).grid(
             row=13, column=3, columnspan=2, padx=5, pady=5
         )
-
 
     def get_amps(self, update_plot=True, *args):
         """Get the amplitudes from the entry field.
@@ -240,7 +244,12 @@ class TC_Frame(ttk.Frame):
             self.parent.data.tc_resolution = float(resolution)
         else:
             self.parent.data.tc_resolution = None
+        self.apply_and_show_idealization()
 
+    def get_intrp_factor(self, *args):
+        """Get the interpolation_factor from the entry."""
+        logging.debug(f"TC_Frame.get_intrp_factor")
+        self.parent.data.interpolation_factor = int(self.interpolation_factor.get())
         self.apply_and_show_idealization()
 
     def toggle_intrp(self, *args):
@@ -254,7 +263,7 @@ class TC_Frame(ttk.Frame):
         else:
             self.interpolate.set(1)
             self.intrp_button.config(relief="sunken")
-            self.parent.data.interpolation_factor = int(self.interpolation_factor.get())
+            self.get_intrp_factor()
         self.apply_and_show_idealization()
 
     def toggle_amp(self, *args):

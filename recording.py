@@ -90,7 +90,7 @@ class Recording(dict):
         self.hist_times = 0
         # parameters for analysis
         # idealization
-        self.interpolation_factor = None
+        self.interpolation_factor = 1
         self._tc_thresholds = np.array([])
         self._tc_amplitudes = np.array([])
         self.tc_unit = "pA"
@@ -303,12 +303,16 @@ class Recording(dict):
             f"idealizing series '{self.current_datakey}'\n"
             f"amplitudes: {self._tc_amplitudes}\n"
             f"thresholds: {self._tc_thresholds}\n"
-            f"resolution: {self._tc_resolution}",
+            f"resolution: {self._tc_resolution}\n"
+            f"interpolation_factor: {self.interpolation_factor}",
         )
 
         for episode in self.series:
             episode.idealize(
-                self._tc_amplitudes, self._tc_thresholds, self._tc_resolution
+                self._tc_amplitudes,
+                self._tc_thresholds,
+                self._tc_resolution,
+                self.interpolation_factor,
             )
         # self.series.idealize_all(self._tc_amplitudes, self._tc_thresholds,
         #                          self._tc_resolution)
@@ -322,7 +326,8 @@ class Recording(dict):
             f"idealizing episode '{self.n_episode}'\n"
             f"amplitudes: {self._tc_amplitudes}\n"
             f"thresholds: {self._tc_thresholds}\n"
-            f"resolution: {self._tc_resolution}",
+            f"resolution: {self._tc_resolution}\n"
+            f"interpolation_factor: {self.interpolation_factor}",
         )
 
         self.episode.idealize(

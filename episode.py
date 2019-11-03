@@ -266,4 +266,4 @@ class Episode:
             a table containing the amplitude of an opening, its start and end
             time and its duration"""
 
-        return Idealizer.extract_events(self.idealization, self.time)
+        return Idealizer.extract_events(self.idealization, self.id_time)

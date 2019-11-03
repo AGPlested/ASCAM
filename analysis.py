@@ -17,11 +17,11 @@ class Idealizer:
         amplitudes: Array[float, 1, ...],
         thresholds: Optional[Array[float, 1, ...]] = None,
         resolution: Optional[int] = None,
-        interpolation_factor: Optional[int] = None,
+        interpolation_factor: Optional[int] = 1,
     ) -> Array[float, 1, ...]:
         """Get idealization for single episode."""
 
-        if interpolation_factor is not None:
+        if interpolation_factor != 1:
             signal, time = Idealizer.interpolate(signal, time, interpolation_factor)
 
         idealization = Idealizer.threshold_crossing(signal, amplitudes, thresholds)
@@ -65,9 +65,9 @@ class Idealizer:
         amplitudes.sort()  # sort amplitudes in descending order
         amplitudes = amplitudes[::-1]
 
-        # if thresholds are no or incorrectly supplied take midpoint between
+        # if thresholds are not or incorrectly supplied take midpoint between
         # amplitudes as thresholds
-        if thresholds.size != amplitudes.size - 1:
+        if thresholds is not None and (thresholds.size != amplitudes.size - 1):
             thresholds = (amplitudes[1:] + amplitudes[:-1]) / 2
         else:
             thresholds = thresholds
