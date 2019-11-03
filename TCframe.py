@@ -122,20 +122,24 @@ class TC_Frame(ttk.Frame):
         res_entry.grid(row=9, column=0, columnspan=4, padx=5, pady=5)
         res_entry.bind("<Return>", self.get_resolution)
 
-        # interpolation
-        ttk.Label(self, text=f"Interpolation").grid(
-            row=10, column=0, columnspan=1, padx=5, pady=5
+        # interprolation
+        self.intrp_button = tk.Button(
+            self,
+            text=f"Interpolation",
+            width=12,
+            relief="raised",
+            command=self.toggle_intrp,
         )
-        ttk.Checkbutton(self, variable=self.interpolate).grid(
-            row=10, column=1, padx=5, pady=5
+        self.intrp_button.grid(
+            row=10, column=0, columnspan=4, padx=5, pady=5
         )
         intrp_entry = ttk.Entry(self, textvariable=self.interpolation_factor, width=40)
-        intrp_entry.grid(row=10, column=2, columnspan=2, padx=5, pady=5)
-        intrp_entry.bind("<Return>", self.get_intrp_factor)
+        intrp_entry.grid(row=11, column=0, columnspan=4, padx=5, pady=5)
+        intrp_entry.bind("<Return>", self.toggle_intrp)
 
         # demo button
         ttk.Button(self, text="Demo", command=self.demo_idealization).grid(
-            row=11, columnspan=4, padx=5, pady=5
+            row=12, columnspan=4, padx=5, pady=5
         )
 
         # frame closing buttons
@@ -146,17 +150,6 @@ class TC_Frame(ttk.Frame):
             row=13, column=3, columnspan=2, padx=5, pady=5
         )
 
-    def get_intrp_factor(self, update_plot=True, *args):
-        """Get the interpolation factor from the entry.
-
-        Also update the idealization."""
-
-        logging.debug(f"get_intrp_factor")
-
-        self.interpolate.set(1)
-
-        self.parent.data.interpolation_factor = int(self.interpolation_factor.get())
-        self.apply_and_show_idealization()
 
     def get_amps(self, update_plot=True, *args):
         """Get the amplitudes from the entry field.
@@ -250,17 +243,31 @@ class TC_Frame(ttk.Frame):
 
         self.apply_and_show_idealization()
 
+    def toggle_intrp(self, *args):
+        """Toggle the interpolation, turning it off sets the factor 1."""
+        logging.debug(f"TC_Frame.toggle_intrp")
+
+        if self.interpolate.get():
+            self.interpolate.set(0)
+            self.intrp_button.config(relief="raised")
+            self.parent.data.interpolation_factor = 1
+        else:
+            self.interpolate.set(1)
+            self.intrp_button.config(relief="sunken")
+            self.parent.data.interpolation_factor = int(self.interpolation_factor.get())
+        self.apply_and_show_idealization()
+
     def toggle_amp(self, *args):
         """Toggle showing the amplitude lines on the plot."""
         logging.debug(f"TC_Frame.toggle_amp")
 
-        if self.parent.plots.show_amp.get() == 0:
+        if self.parent.plots.show_amp.get():
+            self.parent.plots.show_amp.set(0)
+            self.amp_button.config(relief="raised")
+        else:
             self.get_amps(update_plot=False)
             self.amp_button.config(relief="sunken")
             self.parent.plots.show_amp.set(1)
-        else:
-            self.parent.plots.show_amp.set(0)
-            self.amp_button.config(relief="raised")
 
     def toggle_tc(self, *args):
         """Toggle showing the threshold lines on the plot."""
