@@ -180,22 +180,28 @@ class PlotFrame(ttk.Frame):
     def update_current_plot(self, *args, draw=True):
         logging.debug(f"update_current_plot")
         self.t_line.set_ydata(self.parent.data.episode.trace)
-        if draw:
-            self.canvas.draw()
+        if len(self.t_line.get_xdata(orig=True)) == len(
+            self.parent.data.episode.id_time
+        ):
+            self.t_line.set_ydata(self.parent.data.episode.trace)
+        else:
+            self.draw_current_plot(self.parent.data.episode, draw=draw)
 
     def update_idealization_plot(self, *args, draw=True):
         logging.debug(f"update_idealization_plot")
+        logging.debug(f"show = {self.show_idealization.get()}")
         if self.parent.data.episode.idealization is not None:
-            if self.show_idealization.get():
-                self.i_line.set_visible(True)
-            else:
-                self.i_line.set_visible(False)
+            logging.debug(f"idealization found")
             if len(self.i_line.get_xdata(orig=True)) == len(
                 self.parent.data.episode.id_time
             ):
                 self.i_line.set_ydata(self.parent.data.episode.idealization)
             else:
-                self.draw_idealization_plot()
+                self.draw_idealization_plot(self.parent.data.episode, draw=False)
+            if self.show_idealization.get():
+                self.i_line.set_visible(True)
+            else:
+                self.i_line.set_visible(False)
             if draw:
                 self.canvas.draw()
 
@@ -209,10 +215,9 @@ class PlotFrame(ttk.Frame):
         logging.debug(f"plotframe.update_plots")
 
         self.update_current_plot(draw=False)
+        self.update_idealization_plot(draw=False)
         if self.show_command.get():
             self.update_command_plot(draw=False)
-        if self.show_idealization:
-            self.update_idealization_plot(draw=False)
         if self.show_piezo.get():
             self.update_piezo_plot(draw=False)
         if self.show_amp.get():
@@ -468,10 +473,7 @@ class PlotFrame(ttk.Frame):
             self.setup_plots()
             self.init_plot()
 
-    def draw_idealization_plot(self):
-        episode = self.parent.data.episode
-        if self.i_line:
-            self.i_line.remove()
+    def draw_idealization_plot(self, episode, draw=False):
         if episode.idealization is not None:
             self.i_line, = self.current_plot.plot(
                 episode.id_time,
@@ -489,23 +491,42 @@ class PlotFrame(ttk.Frame):
                 alpha=0.6,
                 color=ID_COLOR,
             )
+        if draw:
+            self.canvas.draw()
 
-    def init_plot(self):
-        logging.debug(f"PlotFrame.init_plot")
-        episode = self.parent.data.episode
+    def draw_current_plot(self, episode, draw=False):
+        if self.t_line:
+            self.t_line.remove()
+        self.t_line, = self.current_plot.plot(
+            episode.id_time, episode.trace, color=TRACE_COLOR
+        )
+        if draw:
+            self.canvas.draw()
+
+    def draw_command_plot(self, episode, draw=False):
         if self.command_plot is not None:
             self.c_line, = self.command_plot.plot(
                 episode.time, episode.command, color=TRACE_COLOR
             )
-        self.t_line, = self.current_plot.plot(
-            episode.time, episode.trace, color=TRACE_COLOR
-        )
-        self.draw_idealization_plot()
+        if draw:
+            self.canvas.draw()
 
+    def draw_piezo_plot(self, episode, draw=False):
         if self.piezo_plot is not None:
             self.p_line, = self.piezo_plot.plot(
                 episode.time, episode.piezo, color=TRACE_COLOR
             )
+        if draw:
+            self.canvas.draw()
+
+    def init_plot(self):
+        logging.debug(f"PlotFrame.init_plot")
+
+        episode = self.parent.data.episode
+        self.draw_command_plot(episode)
+        self.draw_current_plot(episode)
+        self.draw_idealization_plot(episode)
+        self.draw_piezo_plot(episode)
 
         self.amp_plot_lines = list()
         self.theta_plot_lines = list()
