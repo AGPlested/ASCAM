@@ -69,6 +69,11 @@ class TC_Frame(ttk.Frame):
     def show_amp(self):
         return self.parent.plots.show_amp.get()
 
+    @show_amp.setter
+    def show_amp(self, val):
+        val = 1 if val else 0
+        self.parent.plots.show_amp.set(val)
+
     @property
     def show_thetas(self):
         return self.parent.plots.show_thetas.get()
@@ -83,7 +88,11 @@ class TC_Frame(ttk.Frame):
             text=f"Amplitudes [{self.parent.data.trace_unit}]",
             width=12,
             relief="raised",
-            command=self.toggle_amp,
+            command=lambda *args: [
+                self.toggle_amp(),
+                self.get_amps(),
+                self.apply_and_show_idealization(),
+            ],
         )
         self.amp_button.grid(row=4, column=0, columnspan=4, padx=5, pady=5)
 
@@ -92,7 +101,11 @@ class TC_Frame(ttk.Frame):
         amp_entry.grid(row=5, column=0, columnspan=4, padx=5, pady=5)
         amp_entry.bind(
             "<Return>",
-            lambda *args: (self.toggle_amp() if not self.show_amp else self.get_amps()),
+            lambda *args: [
+                self.toggle_amp() if not self.show_amp else None,
+                self.get_amps(),
+                self.apply_and_show_idealization(),
+            ],
         )
 
         # entry for thresholds
@@ -101,7 +114,11 @@ class TC_Frame(ttk.Frame):
             text=f"Thresholds [{self.parent.data.trace_unit}]",
             width=12,
             relief="raised",
-            command=self.toggle_tc,
+            command=lambda *args: (
+                self.toggle_tc(),
+                self.get_thresholds(),
+                self.apply_and_show_idealization(),
+            ),
         )
         self.tc_button.grid(row=6, column=0, columnspan=4, padx=5, pady=5)
         theta_entry = ttk.Entry(self, textvariable=self.theta_string, width=40)
@@ -109,10 +126,11 @@ class TC_Frame(ttk.Frame):
         theta_entry.bind(
             "<Return>",
             lambda *args: (
-                self.toggle_tc() if not self.show_thetas else self.get_thresholds()
+                self.toggle_tc() if not self.show_thetas else None,
+                self.get_thresholds(),
+                self.apply_and_show_idealization(),
             ),
         )
-        theta_entry.bind("<Return>", self.toggle_manual_thetas)
 
         # resolution
         ttk.Label(
@@ -120,7 +138,10 @@ class TC_Frame(ttk.Frame):
         ).grid(row=8, column=0, columnspan=4, padx=5, pady=5)
         res_entry = ttk.Entry(self, textvariable=self.res_string, width=40)
         res_entry.grid(row=9, column=0, columnspan=4, padx=5, pady=5)
-        res_entry.bind("<Return>", self.get_resolution)
+        res_entry.bind(
+            "<Return>",
+            lambda *args: (self.get_resolution, self.apply_and_show_idealization()),
+        )
 
         # interprolation
         self.intrp_button = tk.Button(
@@ -128,17 +149,21 @@ class TC_Frame(ttk.Frame):
             text=f"Interpolation",
             width=12,
             relief="raised",
-            command=self.toggle_intrp,
+            command=lambda *args: (
+                self.get_intrp_factor(),
+                self.toggle_intrp(),
+                self.apply_and_show_idealization(),
+            ),
         )
         self.intrp_button.grid(row=10, column=0, columnspan=4, padx=5, pady=5)
         intrp_entry = ttk.Entry(self, textvariable=self.interpolation_factor, width=40)
         intrp_entry.grid(row=11, column=0, columnspan=4, padx=5, pady=5)
         intrp_entry.bind(
             "<Return>",
-            lambda *a: (
-                self.get_intrp_factor()
-                if self.interpolate.get()
-                else self.toggle_intrp()
+            lambda *args: (
+                self.toggle_intrp() if not self.interpolate.get() else None,
+                self.get_intrp_factor(),
+                self.apply_and_show_idealization(),
             ),
         )
 
@@ -185,9 +210,6 @@ class TC_Frame(ttk.Frame):
                 elif new_n_amps != old_n_amps:
                     self.parent.plots.draw_amp_lines()
 
-        # redo the idealization
-        self.apply_and_show_idealization()
-
     def toggle_manual_thetas(self, *args):
         """Toggle manually specifying thresholds."""
 
@@ -232,9 +254,6 @@ class TC_Frame(ttk.Frame):
             elif old_n_thetas != new_n_thetas:
                 self.parent.plots.draw_theta_lines()
 
-        # redo the idealization
-        self.apply_and_show_idealization()
-
     def get_resolution(self, update_plot=True, *args):
         """Get the resolution from the entry."""
         logging.debug(f"TC_Frame.get_resolution")
@@ -244,13 +263,11 @@ class TC_Frame(ttk.Frame):
             self.parent.data.tc_resolution = float(resolution)
         else:
             self.parent.data.tc_resolution = None
-        self.apply_and_show_idealization()
 
     def get_intrp_factor(self, *args):
         """Get the interpolation_factor from the entry."""
         logging.debug(f"TC_Frame.get_intrp_factor")
         self.parent.data.interpolation_factor = int(self.interpolation_factor.get())
-        self.apply_and_show_idealization()
 
     def toggle_intrp(self, *args):
         """Toggle the interpolation, turning it off sets the factor 1."""
@@ -263,30 +280,23 @@ class TC_Frame(ttk.Frame):
         else:
             self.interpolate.set(1)
             self.intrp_button.config(relief="sunken")
-            self.get_intrp_factor()
-        self.apply_and_show_idealization()
 
     def toggle_amp(self, *args):
         """Toggle showing the amplitude lines on the plot."""
         logging.debug(f"TC_Frame.toggle_amp")
 
-        if self.parent.plots.show_amp.get():
-            self.parent.plots.show_amp.set(0)
+        if self.show_amp:
+            self.show_amp = False
             self.amp_button.config(relief="raised")
         else:
-            self.get_amps(update_plot=False)
             self.amp_button.config(relief="sunken")
-            self.parent.plots.show_amp.set(1)
+            self.show_amp = True
 
     def toggle_tc(self, *args):
         """Toggle showing the threshold lines on the plot."""
         logging.debug(f"TC_Frame.toggle_tc")
 
-        if self.parent.plots.show_thetas.get() == 0:
-            try:
-                self.get_thresholds(update_plot=False)
-            except IndexError:
-                return
+        if not self.parent.plots.show_thetas.get():
             self.tc_button.config(relief="sunken")
             self.parent.plots.show_thetas.set(1)
         else:
@@ -305,7 +315,10 @@ class TC_Frame(ttk.Frame):
     def apply_and_show_idealization(self, *args):
         """Apply and plot the idealization."""
 
+        logging.debug("apply and show idealization")
         self.parent.data.idealize_episode()
+        if self.interpolation_factor.get():
+            self.parent.plots.update_current_plot()
         self.parent.plots.update_idealization_plot()
 
     def click_cancel(self):
@@ -396,7 +409,7 @@ class TC_Frame(ttk.Frame):
                 self.update_number_in_string(y_pos, self.theta_string)
                 self.get_thresholds(update_plot=False)
                 self.manual_thetas = True
-            elif self.parent.plots.show_amp.get():
+            elif self.show_amp:
                 self.update_number_in_string(y_pos, self.amp_string)
                 self.get_amps(update_plot=False)
                 if not self.manual_thetas:
