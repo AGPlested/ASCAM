@@ -77,25 +77,30 @@ class ChungKennedyFilter:
     ):
         """Chung-Kennedy filter.
 
-		Parameters:
-			window_lengths [list of positive ints] - a python list containing
-					the desired widths of the forward and backward predictors
-			weight_exponent [positive float] - the exponent governing the
-					sensitivity of the weights to the accuracy of the predictors
-					this is 'p' in the original paper
-			apriori_f_weights [list of positive floats] - apriori confidence in
-					the different forward predictors, 'pi_i' in the paper
-			apriori_b_weights [list of positive floats] - apriori confidence in
-					the different backward predictors, 'pi_i' in the paper
-			boundary_mode [string] - how to deal with boundary effects
-					either 'increasing' which will calculate predictions with
-					increasing window widths or 'padded' which will pad the
-					signal with 0s at the edges
-		Note:
-			-window_lengths used for forward and backward prediction are the
-			same
-			-if apriori weights are given their order is assumed to correspond
-			to the order of the window lengths"""
+            Parameters:
+            window_lengths [list of positive ints] - a list containing the 
+                desired widths of the forward and backward predictors
+
+            weight_exponent [positive float] - the exponent governing the
+                sensitivity of the weights to the accuracy of the predictors
+                this is 'p' in the original paper
+
+            apriori_f_weights [list of positive floats] - apriori confidence in
+                the different forward predictors, 'pi_i' in the paper
+
+            apriori_b_weights [list of positive floats] - apriori confidence in
+                the different backward predictors, 'pi_i' in the paper
+
+            boundary_mode [string] - how to deal with boundary effects either 
+                'increasing' which will calculate predictions with increasing 
+                window widths or 'padded' which will pad the signal with 0s
+                at the edges
+
+        Note:
+            -window_lengths used for forward and backward prediction are the
+            same
+            -if apriori weights are given their order is assumed to correspond
+            to the order of the window lengths"""
 
         self.window_lengths = window_lengths
         self.weight_exponent = weight_exponent
