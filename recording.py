@@ -308,7 +308,7 @@ class Recording(dict):
         )
 
         for episode in self.series:
-            episode.idealize(
+            episode.idealize_or_interpolate(
                 self._tc_amplitudes,
                 self._tc_thresholds,
                 self._tc_resolution,
@@ -330,7 +330,7 @@ class Recording(dict):
             f"interpolation_factor: {self.interpolation_factor}",
         )
 
-        self.episode.idealize(
+        self.episode.idealize_or_interpolate(
             self._tc_amplitudes,
             self._tc_thresholds,
             self._tc_resolution,
@@ -362,7 +362,7 @@ class Recording(dict):
         logging.debug(f"series_hist")
         # put all piezo traces and all current traces in lists
         piezos = [episode.piezo for episode in self.series]
-        traces = [episode.trace for episode in self.series]
+        traces = [episode.og_trace for episode in self.series]
         trace_list = []
         if not self.has_piezo:
             # this is a failsafe, select_piezo should never be true if has_piezo
@@ -422,7 +422,7 @@ class Recording(dict):
             time, trace_points = piezo_selection(
                 self.episode.time,
                 self.episode.piezo,
-                self.episode.trace,
+                self.episode.og_trace,
                 active,
                 deviation,
             )
@@ -430,7 +430,7 @@ class Recording(dict):
         elif intervals:
             time, trace_points = interval_selection(
                 self.episode.time,
-                self.episode.trace,
+                self.episode.og_trace,
                 intervals,
                 self.episode.sampling_rate,
             )
