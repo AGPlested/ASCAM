@@ -6,6 +6,18 @@ from nptyping import Array
 from tools import interval_selection, piezo_selection
 
 
+def interpolate(
+    signal: Array[float, 1, ...], time: Array[float, 1, ...], interpolation_factor: int
+) -> Tuple[Array[float, 1, ...], Array[float, 1, ...]]:
+    """Interpolate the signal with a cubic spline."""
+
+    spline = spCubicSpline(time, signal)
+    interpolation_time = np.arange(
+        time[0], time[-1], (time[1] - time[0]) / interpolation_factor
+    )
+    return spline(interpolation_time), interpolation_time
+
+
 class Idealizer:
     """Container object for the different idealization functions."""
 
@@ -17,12 +29,12 @@ class Idealizer:
         amplitudes: Array[float, 1, ...],
         thresholds: Optional[Array[float, 1, ...]] = None,
         resolution: Optional[int] = None,
-        interpolation_factor: Optional[int] = 1,
+        interpolation_factor: int = 1,
     ) -> Array[float, 1, ...]:
         """Get idealization for single episode."""
 
         if interpolation_factor != 1:
-            signal, time = Idealizer.interpolate(signal, time, interpolation_factor)
+            signal, time = interpolate(signal, time, interpolation_factor)
 
         idealization = Idealizer.threshold_crossing(signal, amplitudes, thresholds)
 
@@ -31,21 +43,7 @@ class Idealizer:
             idealization = Idealizer.apply_resolution(
                 events, idealization, time, resolution
             )
-        return idealization, time
-
-    @staticmethod
-    def interpolate(
-        signal: Array[float, 1, ...],
-        time: Array[float, 1, ...],
-        interpolation_factor: int,
-    ) -> Tuple[Array[float, 1, ...], Array[float, 1, ...]]:
-        """Interpolate the signal with a cubic spline."""
-
-        spline = spCubicSpline(time, signal)
-        interpolation_time = np.arange(
-            time[0], time[-1], (time[1] - time[0]) / interpolation_factor
-        )
-        return spline(interpolation_time), interpolation_time
+        return idealization, signal, time
 
     @staticmethod
     def threshold_crossing(
@@ -56,11 +54,10 @@ class Idealizer:
         """Perform a threshold-crossing idealization on the signal.
 
         Arguments:
-            signal [1D numpy array] - data to be idealized"""
-
-        # amplitudes = np.asarray(amplitudes)
-        # converting to array should no longer be neccessary as we have
-        # typehints
+            signal - data to be idealized
+            amplitudes - amplitudes to which signal will be idealized
+            thresholds - the thresholds above/below which signal is mapped
+                to an amplitude"""
 
         amplitudes.sort()  # sort amplitudes in descending order
         amplitudes = amplitudes[::-1]
