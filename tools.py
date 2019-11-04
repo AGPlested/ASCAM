@@ -40,13 +40,8 @@ def parse_filename(filename):
     elif filetype == "txt" or filetype == "axgt":
         filetype = "tdt"
         filetype_long = "tab-delimited-text"
-<<<<<<< HEAD
-    #    else:
-    #        log.warning("Could not detect filetype!")
-=======
     else:
         log.warning("Could not detect filetype!")
->>>>>>> master
     filename = filename[slash + 1 :]
     logging.debug(
         """filetype_long : {}"
