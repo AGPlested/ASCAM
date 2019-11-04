@@ -1,7 +1,14 @@
+from typing import Optional, List, Tuple
+from nptyping import Array
 import numpy as np
 
 from filtering import gaussian_filter, ChungKennedyFilter
-from analysis import baseline_correction, detect_first_activation, Idealizer
+from analysis import (
+    baseline_correction,
+    detect_first_activation,
+    Idealizer,
+    interpolate,
+)
 from tools import piezo_selection
 
 
@@ -65,6 +72,7 @@ class Episode:
         # private attributes storing the actual data
         self._time = time * input_time_factor
         self._trace = trace * input_trace_unit_factor
+        self._id_time = time * input_time_factor  # time used for current plots
         if piezo is not None:
             self._piezo = piezo * input_piezo_unit_factor
         else:
@@ -76,6 +84,7 @@ class Episode:
         # results of analyses
         self._first_activation = None
         self._idealization = None
+        self._intrp_trace = None
         # metadata about the episode
         self.n_episode = int(n_episode)
         self.sampling_rate = sampling_rate
@@ -96,11 +105,18 @@ class Episode:
             return None
 
     @property
-    def trace(self):
+    def og_trace(self):
         if self._trace is not None:
             return self._trace * self.trace_unit_factor
-        else:
-            return None
+        return None
+
+    @property
+    def trace(self):
+        if self._intrp_trace is not None:
+            return self._intrp_trace * self.trace_unit_factor
+        if self._trace is not None:
+            return self._trace * self.trace_unit_factor
+        return None
 
     @property
     def piezo(self):
@@ -217,10 +233,27 @@ class Episode:
         # reset _idealization
         self._idealization = None
 
+    def idealize_or_interpolate(
+        self,
+        amplitudes: Array[float, 1, ...] = np.array([]),
+        thresholds: Array[float, 1, ...] = np.array([]),
+        resolution: Optional[int] = None,
+        interpolation_factor: int = 1,
+    ):
+        if amplitudes.size != 0:
+            self.idealize(amplitudes, thresholds, resolution, interpolation_factor)
+        else:
+            self.interpolate(interpolation_factor)
+
+    def interpolate(self, interpolation_factor):
+        self._intrp_trace, self._id_time = interpolate(
+            self._trace, self._time, interpolation_factor
+        )
+
     def idealize(self, amplitudes, thresholds, resolution, interpolation_factor):
         """Idealize the episode using threshold crossing."""
 
-        self._idealization, self._id_time = Idealizer.idealize_episode(
+        self._idealization, self._intrp_trace, self._id_time = Idealizer.idealize_episode(
             self._trace,
             self._time,
             amplitudes,
