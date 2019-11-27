@@ -1,3 +1,4 @@
+import logging
 import numpy as np
 from scipy.interpolate import CubicSpline as spCubicSpline
 from typing import Optional, List, Tuple
@@ -97,6 +98,7 @@ class Idealizer:
             idealization - an idealized current trace
             time - the corresponding time array
             resolution - the minimum duration for an event"""
+        logging.debug(f"Apply resolution={resolution}.")
 
         while np.any(events[:, 1] < resolution):
             i = 0

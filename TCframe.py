@@ -444,7 +444,7 @@ class TC_Frame(ttk.Frame):
         i = np.argmin(differences)
         sep = "," if "," in tk_string.get() else " "
         split_string = tk_string.get().split(sep)
-        split_string[i] = f"{new_val:.2e}"
+        split_string[i] = f"{new_val:.2f}"
         tk_string.set(sep.join(split_string))
 
     @staticmethod
@@ -462,4 +462,4 @@ class TC_Frame(ttk.Frame):
         """Take a numpy array and enter it in to a TK.StringVar as a list of
         values seperated by commas."""
 
-        tk_string.set(sep.join(np.char.mod("%.2e", array)))
+        tk_string.set(sep.join(np.char.mod("%.2f", array)))
