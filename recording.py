@@ -616,7 +616,11 @@ class Recording(dict):
                 (ep_events, episode_number[:, np.newaxis]), axis=1
             )
             export_array = np.concatenate((export_array, ep_events), axis=0)
-        pd.DataFrame(export_array).to_csv(filepath, header=header, index=False)
+        export_array = pd.DataFrame(export_array)
+        # truncate floats for duration and timestamps to 3 decimals (standard 1 micro s)
+        for i in [1, 2, 3]:
+            export_array[i] = export_array[i].map(lambda x: f"{x:.3f}")
+        export_array.to_csv(filepath)
 
     def export_first_activation(self, filepath, time_unit):
         """Export csv file of first activation times."""
