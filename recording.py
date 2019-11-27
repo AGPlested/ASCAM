@@ -90,9 +90,6 @@ class Recording(dict):
         self.hist_times = 0
         # parameters for analysis
         # idealization
-        self.interpolation_factor = 1
-        self._tc_thresholds = np.array([])
-        self._tc_amplitudes = np.array([])
         self.tc_unit = "pA"
         self.tc_unit_factors = {
             "fA": 1e15,
@@ -115,41 +112,61 @@ class Recording(dict):
 
     @property
     def fa_threshold(self):
-        return self._fa_threshold * self.tc_unit_factors[self.tc_unit]
+        return self.series._fa_threshold * self.tc_unit_factors[self.tc_unit]
 
     @fa_threshold.setter
     def fa_threshold(self, theta):
-        self._fa_threshold = theta / self.tc_unit_factors[self.tc_unit]
+        if theta is not None:
+            self.series._fa_threshold = theta / self.tc_unit_factors[self.tc_unit]
+        else:
+            self.series._fa_threshold = None
 
     @property
-    def TC_amplitudes(self):
-        return self._tc_amplitudes * self.tc_unit_factors[self.tc_unit]
+    def tc_amplitudes(self):
+        return self.series._tc_amplitudes * self.tc_unit_factors[self.tc_unit]
 
-    @TC_amplitudes.setter
-    def TC_amplitudes(self, amps):
-        self._tc_amplitudes = amps / self.tc_unit_factors[self.tc_unit]
+    @tc_amplitudes.setter
+    def tc_amplitudes(self, amps):
+        if amps is not None:
+            self.series._tc_amplitudes = amps / self.tc_unit_factors[self.tc_unit]
+        else:
+            self.series._tc_amplitudes = np.array([])
 
     @property
-    def TC_thresholds(self):
-        return self._tc_thresholds * self.tc_unit_factors[self.tc_unit]
+    def tc_thresholds(self):
+        return self.series._tc_thresholds * self.tc_unit_factors[self.tc_unit]
 
-    @TC_thresholds.setter
-    def TC_thresholds(self, amps):
-        self._tc_thresholds = amps / self.tc_unit_factors[self.tc_unit]
+    @tc_thresholds.setter
+    def tc_thresholds(self, thetas):
+        if thetas is not None:
+            self.series._tc_thresholds = thetas / self.tc_unit_factors[self.tc_unit]
+        else:
+            self.series._tc_thresholds = np.array([])
 
     @property
     def tc_resolution(self):
-        if self._tc_resolution:
-            return self._tc_resolution * self.episode.time_unit_factor
+        if self.series._tc_resolution:
+            return self.series._tc_resolution * self.episode.time_unit_factor
         else:
             return None
 
     @tc_resolution.setter
     def tc_resolution(self, resolution):
         if resolution is not None:
-            self._tc_resolution = resolution / self.episode.time_unit_factor
+            self.series._tc_resolution = resolution / self.episode.time_unit_factor
         else:
-            self._tc_resolution = None
+            self.series.tc_resolution = None
+
+    @property
+    def interpolation_factor(self):
+        return self.series.interpolation_factor
+
+    @interpolation_factor.setter
+    def interpolation_factor(self, factor):
+        if factor is not None:
+            self.series.interpolation_factor = factor
+        else:
+            self.series.interpolation_factor = 1
 
     @property
     def selected_episodes(self):
@@ -301,21 +318,19 @@ class Recording(dict):
         logging.log(
             ANALYSIS_LEVELV_NUM,
             f"idealizing series '{self.current_datakey}'\n"
-            f"amplitudes: {self._tc_amplitudes}\n"
-            f"thresholds: {self._tc_thresholds}\n"
-            f"resolution: {self._tc_resolution}\n"
-            f"interpolation_factor: {self.interpolation_factor}",
+            f"amplitudes: {self.series._tc_amplitudes}\n"
+            f"thresholds: {self.series._tc_thresholds}\n"
+            f"resolution: {self.series._tc_resolution}\n"
+            f"interpolation_factor: {self.series.interpolation_factor}",
         )
 
         for episode in self.series:
             episode.idealize_or_interpolate(
-                self._tc_amplitudes,
-                self._tc_thresholds,
-                self._tc_resolution,
-                self.interpolation_factor,
+                self.series._tc_amplitudes,
+                self.series._tc_thresholds,
+                self.series._tc_resolution,
+                self.series.interpolation_factor,
             )
-        # self.series.idealize_all(self._tc_amplitudes, self._tc_thresholds,
-        #                          self._tc_resolution)
 
     def idealize_episode(self):
         """Idealize current episode."""
@@ -324,17 +339,17 @@ class Recording(dict):
         logging.log(
             ANALYSIS_LEVELV_NUM,
             f"idealizing episode '{self.n_episode}'\n"
-            f"amplitudes: {self._tc_amplitudes}\n"
-            f"thresholds: {self._tc_thresholds}\n"
-            f"resolution: {self._tc_resolution}\n"
-            f"interpolation_factor: {self.interpolation_factor}",
+            f"amplitudes: {self.series._tc_amplitudes}\n"
+            f"thresholds: {self.series._tc_thresholds}\n"
+            f"resolution: {self.series._tc_resolution}\n"
+            f"interpolation_factor: {self.series.interpolation_factor}",
         )
 
         self.episode.idealize_or_interpolate(
-            self._tc_amplitudes,
-            self._tc_thresholds,
-            self._tc_resolution,
-            self.interpolation_factor,
+            self.series._tc_amplitudes,
+            self.series._tc_thresholds,
+            self.series._tc_resolution,
+            self.series.interpolation_factor,
         )
 
     def detect_fa(self, exclude=[]):

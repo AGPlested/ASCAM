@@ -1,5 +1,5 @@
 .pytype*
-tags
+tag*
 data/
 .ipynb_checkpoints
 __pycache__/

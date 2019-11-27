@@ -320,7 +320,7 @@ class PlotFrame(ttk.Frame):
     def update_amp_lines(self, draw=True, *args):
         logging.debug(f"update_amp_lines")
         for amp, plot_line, hist_line in zip(
-            self.parent.data.TC_amplitudes, self.amp_plot_lines, self.amp_hist_lines
+            self.parent.data.tc_amplitudes, self.amp_plot_lines, self.amp_hist_lines
         ):
             plot_line.set_ydata(amp)
             hist_line.set_ydata(amp)
@@ -416,7 +416,7 @@ class PlotFrame(ttk.Frame):
         logging.debug(f"PlotFrame.draw_amp_lines")
         if self.amp_plot_lines:
             self.remove_amp_lines()
-        for amp in self.parent.data.TC_amplitudes:
+        for amp in self.parent.data.tc_amplitudes:
             line = self.current_plot.axhline(amp, ls="--", c=ID_COLOR, alpha=0.3)
             self.amp_plot_lines.append(line)
             line = self.histogram.axhline(amp, ls="--", c=ID_COLOR, alpha=0.3)

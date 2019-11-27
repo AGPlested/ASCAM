@@ -26,19 +26,31 @@ class TC_Frame(ttk.Frame):
         # to recreate if cancel is clicked
         self.previous_params = dict()
         if self.parent.data.series.is_idealized:
+            logging.debug(f"Series has been idealized, setting parameters\n"
+                          f"TC amplitudes = '{self.parent.data.tc_amplitudes}'\n"
+                          f"TC thresholds = '{self.parent.data.tc_thresholds}'\n"
+                          f"Resolution = '{self.parent.data.tc_resolution}'\n"
+                          f"interpolation_factor = '{self.parent.data.interpolation_factor}'")
             self.previous_params = {
                 self.parent.datakey.get(): (
-                    self.parent.data.series._tc_amplitudes,
-                    self.parent.data.series._tc_thresholds,
+                    self.parent.data.tc_amplitudes,
+                    self.parent.data.tc_thresholds,
+                    self.parent.data.tc_resolution,
+                    self.parent.data.interpolation_factor
                 )
             }
             self.array_into_tkstring(
-                self.parent.data.series._tc_amplitudes, self.amp_string
+                self.parent.data.series.tc_amplitudes, self.amp_string
             )
-            self.array_into_tkstring(
-                self.parent.data.series._tc_thresholds, self.theta_string
-            )
-            self.manual_thetas = True
+            if self.parent.data.tc_thresholds is not None:
+                self.array_into_tkstring(
+                    self.parent.data.series.tc_thresholds, self.theta_string
+                )
+                self.manual_thetas = True
+            if self.parent.data.tc_resolution is not None:
+                self.res_string.set(str(self.parent.data.tc_resolution))
+            if self.parent.data.interpolation_factor is not None:
+                self.interpolation_factor.set(str(self.parent.data.interpolation_factor))
         else:
             self.amp_string.set("0")
             self.manual_thetas = False
@@ -77,6 +89,11 @@ class TC_Frame(ttk.Frame):
     @property
     def show_thetas(self):
         return self.parent.plots.show_thetas.get()
+
+    @show_thetas.setter
+    def show_thetas(self, val):
+        val = 1 if val else 0
+        self.parent.plots.show_thetas.set(val)
 
     def create_widgets(self):
         """Create the tkiner widgets in this frame."""
@@ -168,7 +185,7 @@ class TC_Frame(ttk.Frame):
         )
 
         # demo button
-        ttk.Button(self, text="Demo", command=self.demo_idealization).grid(
+        ttk.Button(self, text="Show", command=self.demo_idealization).grid(
             row=12, columnspan=4, padx=5, pady=5
         )
 
@@ -188,9 +205,9 @@ class TC_Frame(ttk.Frame):
 
         logging.debug(f"TC_Frame.get_amps")
 
-        old_n_amps = self.parent.data.TC_amplitudes.size
-        self.parent.data.TC_amplitudes = self.tk_string_to_array(self.amp_string)
-        new_n_amps = self.parent.data.TC_amplitudes.size
+        old_n_amps = self.parent.data.tc_amplitudes.size
+        self.parent.data.tc_amplitudes = self.tk_string_to_array(self.amp_string)
+        new_n_amps = self.parent.data.tc_amplitudes.size
 
         # update the amp lines if command is given and the number didnt change
         # always draw new lines if the number changed
@@ -230,7 +247,7 @@ class TC_Frame(ttk.Frame):
 
         # automatically set the thresholds to the midpoint between the amps
         self.parent.data.TC_thresholds = (
-            self.parent.data.TC_amplitudes[1:] + self.parent.data.TC_amplitudes[:-1]
+            self.parent.data.tc_amplitudes[1:] + self.parent.data.tc_amplitudes[:-1]
         ) / 2
         # seperate the threshold string the same way as the amp string
         sep = ", " if "," in self.amp_string.get() else " "
@@ -282,7 +299,6 @@ class TC_Frame(ttk.Frame):
             self.intrp_button.config(relief="sunken")
 
     def toggle_amp(self, *args):
-        """Toggle showing the amplitude lines on the plot."""
         logging.debug(f"TC_Frame.toggle_amp")
 
         if self.show_amp:
@@ -322,19 +338,21 @@ class TC_Frame(ttk.Frame):
         self.parent.plots.update_idealization_plot()
 
     def click_cancel(self):
-        """Cancel button callback, removes idealizatoin."""
+        """Cancel button callback, removes idealization."""
         logging.debug(f"TC_Frame.click_cancel")
         for datakey, series in self.parent.data.items():
             # check if the series was previously idealized, if so repeat the
             # idealization with previously used parameters
-            amps, thetas = self.previous_params.get(datakey, (None, None))
-            # if datakey in self.previous_params.keys():
-            # series.idealize_all(self.previous_params[datakey][0],
-            #                   self.previous_params[datakey][1])
-            if amps:
-                series.idealize_all(amps, thetas)
+            amps, thetas, res, intrp = self.previous_params.get(datakey, (None, None, None, None))
+            self.parent.data.tc_amplitudes = amps
+            self.parent.data.tc_thresholds = thetas
+            self.parent.data.tc_resolution = res
+            self.parent.data.interpolation_factor = intrp
+            if ( amps is not None ) and ( amps.size not in (0, 1) ):
+                self.parent.data.idealize_series()
             else:
-                series.remove_idealization()
+                for episode in series:
+                    episode.idealization = None
         self.close_frame()
 
     def click_apply(self):
@@ -369,11 +387,11 @@ class TC_Frame(ttk.Frame):
         self.parent.plots.show_piezo.set(self.previous_show_piezo)
         self.parent.plots.show_hist.set(self.previous_show_hist)
         # hide TC parameters
-        self.parent.plots.show_thetas.set(0)
-        self.parent.plots.show_amp.set(0)
+        self.show_thetas = False
+        self.show_amp = False
         self.parent.plots.fig.canvas.mpl_disconnect(self.plot_track_cid)
         # remove reference in main window
-        self.parent.tc_frame = None
+        del self.parent.tc_frame 
         self.destroy()
 
     def track_cursor(self, event):
@@ -397,8 +415,8 @@ class TC_Frame(ttk.Frame):
                 tc_diff = np.abs(self.parent.data.TC_thresholds - y_pos)
             else:
                 tc_diff = np.inf
-            if self.parent.data.TC_amplitudes.size > 0:
-                amp_diff = np.abs(self.parent.data.TC_amplitudes - y_pos)
+            if self.parent.data.tc_amplitudes.size > 0:
+                amp_diff = np.abs(self.parent.data.tc_amplitudes - y_pos)
             else:
                 amp_diff = np.inf
 

@@ -18,6 +18,8 @@ class Series(list):
 
         self._tc_thresholds = np.array([])
         self._tc_amplitudes = np.array([])
+        self._tc_resolution = None
+        self.interpolation_factor = 1
 
         self._fa_threshold = 0.0
 
@@ -123,24 +125,3 @@ class Series(list):
             )
         return output
 
-    def idealize_all(self, amplitudes, thresholds, resolution):
-        """Return `Series` object containing the idealization of the episodes
-        in `self`."""
-
-        logging.debug(f"idealize_all")
-
-        for episode in self:
-            episode.idealize(amplitudes, thresholds, resolution)
-
-    def remove_idealization(self):
-        """Reset the idealization of each episode to None
-        """
-        for episode in self:
-            episode.idealization = None
-
-    def check_standarddeviation_all(self, stdthreshold=5e-13):
-        """Check the standard deviation of the each episode in `self` against the
-        given threshold value."""
-
-        for episode in self:
-            episode.check_standarddeviation(stdthreshold)
