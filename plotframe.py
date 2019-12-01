@@ -331,7 +331,7 @@ class PlotFrame(ttk.Frame):
     def update_theta_lines(self, draw=True, *args):
         logging.debug(f"update_theta_lines")
         for theta, plot_line, hist_line in zip(
-            self.parent.data.TC_thresholds, self.theta_plot_lines, self.theta_hist_lines
+            self.parent.data.tc_thresholds, self.theta_plot_lines, self.theta_hist_lines
         ):
             plot_line.set_ydata(theta)
             hist_line.set_ydata(theta)
@@ -405,7 +405,7 @@ class PlotFrame(ttk.Frame):
         logging.debug(f"draw_theta_lines")
         if self.theta_plot_lines:
             self.remove_theta_lines()
-        for theta in self.parent.data.TC_thresholds:
+        for theta in self.parent.data.tc_thresholds:
             line = self.current_plot.axhline(theta, ls="--", c=THETA_COLOR, alpha=0.3)
             self.theta_plot_lines.append(line)
             line = self.histogram.axhline(theta, ls="--", c=THETA_COLOR, alpha=0.3)

@@ -1,3 +1,4 @@
+import logging
 from typing import Optional, List, Tuple
 from nptyping import Array
 import numpy as np
@@ -253,6 +254,13 @@ class Episode:
     def idealize(self, amplitudes, thresholds, resolution, interpolation_factor):
         """Idealize the episode using threshold crossing."""
 
+        logging.debug(
+            f"Idealizing episode #{self.n_episode}\n"
+            f"amplitudes = {amplitudes}\n"
+            f"thresholds = { thresholds } \n"
+            f"resolution = { resolution } \n"
+            f"interpolation_factor = { interpolation_factor } "
+        )
         self._idealization, self._intrp_trace, self._id_time = Idealizer.idealize_episode(
             self._trace,
             self._time,

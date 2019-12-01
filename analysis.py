@@ -1,3 +1,4 @@
+import warnings
 import logging
 import numpy as np
 from scipy.interpolate import CubicSpline as spCubicSpline
@@ -66,6 +67,12 @@ class Idealizer:
         # if thresholds are not or incorrectly supplied take midpoint between
         # amplitudes as thresholds
         if thresholds is not None and (thresholds.size != amplitudes.size - 1):
+            warnings.warn(
+                f"Too many or too few thresholds given, there should be "
+                f"{amplitudes.size - 1} but there are {thresholds.size}.\n"
+                f"Thresholds = {thresholds}."
+            )
+
             thresholds = (amplitudes[1:] + amplitudes[:-1]) / 2
         else:
             thresholds = thresholds

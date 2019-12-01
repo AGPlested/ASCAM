@@ -257,22 +257,22 @@ class TC_Frame(ttk.Frame):
         logging.debug(f"auto_set_thetas")
 
         # automatically set the thresholds to the midpoint between the amps
-        self.parent.data.TC_thresholds = (
+        self.parent.data.tc_thresholds = (
             self.parent.data.tc_amplitudes[1:] + self.parent.data.tc_amplitudes[:-1]
         ) / 2
         # seperate the threshold string the same way as the amp string
         sep = ", " if "," in self.amp_string.get() else " "
         self.array_into_tkstring(
-            self.parent.data.TC_thresholds, self.theta_string, sep=sep
+            self.parent.data.tc_thresholds, self.theta_string, sep=sep
         )
 
     def get_thresholds(self, update_plot=True, *args):
         """Get the thresholds from the entry field."""
         logging.debug(f"TC_Frame.get_thresholds")
 
-        old_n_thetas = self.parent.data.TC_thresholds.size
-        self.parent.data.TC_thresholds = self.tk_string_to_array(self.theta_string)
-        new_n_thetas = self.parent.data.TC_thresholds.size
+        old_n_thetas = self.parent.data.tc_thresholds.size
+        self.parent.data.tc_thresholds = self.tk_string_to_array(self.theta_string)
+        new_n_thetas = self.parent.data.tc_thresholds.size
 
         # update the amp lines if command is given and the number didnt change
         # always draw new lines if the number changed
@@ -418,8 +418,8 @@ class TC_Frame(ttk.Frame):
             # these conditionals check whether thetas and amps are displayed or
             # only one and whether or not they exist
             # first if both are shown and at least one is nonempty
-            if self.parent.data.TC_thresholds.size > 0:
-                tc_diff = np.abs(self.parent.data.TC_thresholds - y_pos)
+            if self.parent.data.tc_thresholds.size > 0:
+                tc_diff = np.abs(self.parent.data.tc_thresholds - y_pos)
             else:
                 tc_diff = np.inf
             if self.parent.data.tc_amplitudes.size > 0:
