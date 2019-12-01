@@ -26,17 +26,19 @@ class TC_Frame(ttk.Frame):
         # to recreate if cancel is clicked
         self.previous_params = dict()
         if self.parent.data.series.is_idealized:
-            logging.debug(f"Series has been idealized, setting parameters\n"
-                          f"TC amplitudes = '{self.parent.data.tc_amplitudes}'\n"
-                          f"TC thresholds = '{self.parent.data.tc_thresholds}'\n"
-                          f"Resolution = '{self.parent.data.tc_resolution}'\n"
-                          f"interpolation_factor = '{self.parent.data.interpolation_factor}'")
+            logging.debug(
+                f"Series has been idealized, setting parameters\n"
+                f"TC amplitudes = '{self.parent.data.tc_amplitudes}'\n"
+                f"TC thresholds = '{self.parent.data.tc_thresholds}'\n"
+                f"Resolution = '{self.parent.data.tc_resolution}'\n"
+                f"interpolation_factor = '{self.parent.data.interpolation_factor}'"
+            )
             self.previous_params = {
                 self.parent.datakey.get(): (
                     self.parent.data.tc_amplitudes,
                     self.parent.data.tc_thresholds,
                     self.parent.data.tc_resolution,
-                    self.parent.data.interpolation_factor
+                    self.parent.data.interpolation_factor,
                 )
             }
             self.array_into_tkstring(
@@ -50,7 +52,9 @@ class TC_Frame(ttk.Frame):
             if self.parent.data.tc_resolution is not None:
                 self.res_string.set(str(self.parent.data.tc_resolution))
             if self.parent.data.interpolation_factor is not None:
-                self.interpolation_factor.set(str(self.parent.data.interpolation_factor))
+                self.interpolation_factor.set(
+                    str(self.parent.data.interpolation_factor)
+                )
         else:
             self.amp_string.set("0")
             self.manual_thetas = False
@@ -74,7 +78,6 @@ class TC_Frame(ttk.Frame):
         )
 
         self.create_widgets()
-        self.toggle_amp()
         logging.debug("end TC_Frame.__init__")
 
     @property
@@ -100,26 +103,26 @@ class TC_Frame(ttk.Frame):
 
         logging.debug(f"TC_Frame.create_widgets")
         # button to toggle display of amplitude lines on plot
-        self.amp_button = tk.Button(
+        self.amp_checkbox = ttk.Checkbutton(
             self,
-            text=f"Amplitudes [{self.parent.data.trace_unit}]",
-            width=12,
-            relief="raised",
-            command=lambda *args: [
-                self.toggle_amp(),
-                self.get_amps(),
-                self.apply_and_show_idealization(),
-            ],
+            variable=self.parent.plots.show_amp,
+            command=lambda *args: [self.get_amps(), self.apply_and_show_idealization()],
         )
-        self.amp_button.grid(row=4, column=0, columnspan=4, padx=5, pady=5)
+        self.amp_checkbox.grid(row=4, column=0, columnspan=1, padx=5, pady=5)
+
+        ttk.Label(self, text=f"Amplitudes " f"[{self.parent.data.trace_unit}]").grid(
+            row=4, column=1, columnspan=4, padx=5, pady=5
+        )
 
         # entry for amplitudes
         amp_entry = ttk.Entry(self, textvariable=self.amp_string, width=40)
         amp_entry.grid(row=5, column=0, columnspan=4, padx=5, pady=5)
         amp_entry.bind(
             "<Return>",
-            lambda *args: [
-                self.toggle_amp() if not self.show_amp else None,
+            lambda *args: [self.get_amps(), self.apply_and_show_idealization()]
+            if self.show_amp
+            else [
+                self.toggle_amp(),
                 self.get_amps(),
                 self.apply_and_show_idealization(),
             ],
@@ -303,9 +306,9 @@ class TC_Frame(ttk.Frame):
 
         if self.show_amp:
             self.show_amp = False
-            self.amp_button.config(relief="raised")
+            # self.amp_button.config(relief="raised")
         else:
-            self.amp_button.config(relief="sunken")
+            # self.amp_button.config(relief="sunken")
             self.show_amp = True
 
     def toggle_tc(self, *args):
@@ -343,12 +346,14 @@ class TC_Frame(ttk.Frame):
         for datakey, series in self.parent.data.items():
             # check if the series was previously idealized, if so repeat the
             # idealization with previously used parameters
-            amps, thetas, res, intrp = self.previous_params.get(datakey, (None, None, None, None))
+            amps, thetas, res, intrp = self.previous_params.get(
+                datakey, (None, None, None, None)
+            )
             self.parent.data.tc_amplitudes = amps
             self.parent.data.tc_thresholds = thetas
             self.parent.data.tc_resolution = res
             self.parent.data.interpolation_factor = intrp
-            if ( amps is not None ) and ( amps.size not in (0, 1) ):
+            if (amps is not None) and (amps.size not in (0, 1)):
                 self.parent.data.idealize_series()
             else:
                 for episode in series:
@@ -391,7 +396,7 @@ class TC_Frame(ttk.Frame):
         self.show_amp = False
         self.parent.plots.fig.canvas.mpl_disconnect(self.plot_track_cid)
         # remove reference in main window
-        del self.parent.tc_frame 
+        del self.parent.tc_frame
         self.destroy()
 
     def track_cursor(self, event):
