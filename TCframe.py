@@ -101,7 +101,6 @@ class TC_Frame(ttk.Frame):
     def create_widgets(self):
         """Create the tkiner widgets in this frame."""
 
-        logging.debug(f"TC_Frame.create_widgets")
         # button to toggle display of amplitude lines on plot
         self.amp_checkbox = ttk.Checkbutton(
             self,
@@ -110,8 +109,8 @@ class TC_Frame(ttk.Frame):
         )
         self.amp_checkbox.grid(row=4, column=0, columnspan=1, padx=5, pady=5)
 
-        ttk.Label(self, text=f"Amplitudes " f"[{self.parent.data.trace_unit}]").grid(
-            row=4, column=1, columnspan=4, padx=5, pady=5
+        ttk.Label(self, text=f"Amplitudes [{self.parent.data.trace_unit}]").grid(
+            row=4, column=1, columnspan=3, padx=5, pady=5
         )
 
         # entry for amplitudes
@@ -119,28 +118,27 @@ class TC_Frame(ttk.Frame):
         amp_entry.grid(row=5, column=0, columnspan=4, padx=5, pady=5)
         amp_entry.bind(
             "<Return>",
-            lambda *args: [self.get_amps(), self.apply_and_show_idealization()]
-            if self.show_amp
-            else [
-                self.toggle_amp(),
+            lambda *args: (
+                None if self.show_amp else self.toggle_amp(),
                 self.get_amps(),
-                self.apply_and_show_idealization(),
-            ],
-        )
-
-        # entry for thresholds
-        self.tc_button = tk.Button(
-            self,
-            text=f"Thresholds [{self.parent.data.trace_unit}]",
-            width=12,
-            relief="raised",
-            command=lambda *args: (
-                self.toggle_tc(),
-                self.get_thresholds(),
                 self.apply_and_show_idealization(),
             ),
         )
-        self.tc_button.grid(row=6, column=0, columnspan=4, padx=5, pady=5)
+
+        # entry for thresholds
+        self.theta_checkbox = ttk.Checkbutton(
+            self,
+            variable=self.parent.plots.show_thetas,
+            command=lambda *args: [
+                self.get_thresholds(),
+                self.apply_and_show_idealization(),
+            ],
+        )
+        self.theta_checkbox.grid(row=6, column=0, columnspan=1, padx=5, pady=5)
+
+        ttk.Label(self, text=f"Thresholds [{self.parent.data.trace_unit}]").grid(
+            row=6, column=1, columnspan=3, padx=5, pady=5
+        )
         theta_entry = ttk.Entry(self, textvariable=self.theta_string, width=40)
         theta_entry.grid(row=7, column=0, columnspan=4, padx=5, pady=5)
         theta_entry.bind(
@@ -153,9 +151,17 @@ class TC_Frame(ttk.Frame):
         )
 
         # resolution
+        self.res_checkbox = ttk.Checkbutton(
+            self,
+            state=tk.DISABLED
+            # variable=self.parent.plots.show_thetas,
+            # command=lambda *args: [self.get_thresholds(), self.apply_and_show_idealization()],
+        )
+        self.res_checkbox.grid(row=8, column=0, columnspan=1, padx=5, pady=5)
+
         ttk.Label(
             self, text=f"Resolution " f"[{self.parent.data.episode.time_unit}]"
-        ).grid(row=8, column=0, columnspan=4, padx=5, pady=5)
+        ).grid(row=8, column=1, columnspan=3, padx=5, pady=5)
         res_entry = ttk.Entry(self, textvariable=self.res_string, width=40)
         res_entry.grid(row=9, column=0, columnspan=4, padx=5, pady=5)
         res_entry.bind(
@@ -164,20 +170,22 @@ class TC_Frame(ttk.Frame):
         )
 
         # interprolation
-        self.intrp_button = tk.Button(
+        self.intrp_checkbox = ttk.Checkbutton(
             self,
-            text=f"Interpolation",
-            width=12,
-            relief="raised",
+            variable=self.interpolate,
             command=lambda *args: (
                 self.get_intrp_factor(),
-                self.toggle_intrp(),
                 self.apply_and_show_idealization(),
             ),
         )
-        self.intrp_button.grid(row=10, column=0, columnspan=4, padx=5, pady=5)
+        self.intrp_checkbox.grid(row=11, column=0, columnspan=1, padx=5, pady=5)
+
+        ttk.Label(self, text=f"Interpolation").grid(
+            row=11, column=1, columnspan=3, pady=5, padx=5
+        )
+
         intrp_entry = ttk.Entry(self, textvariable=self.interpolation_factor, width=40)
-        intrp_entry.grid(row=11, column=0, columnspan=4, padx=5, pady=5)
+        intrp_entry.grid(row=12, column=0, columnspan=4, padx=5, pady=5)
         intrp_entry.bind(
             "<Return>",
             lambda *args: (
@@ -187,17 +195,17 @@ class TC_Frame(ttk.Frame):
             ),
         )
 
-        # demo button
+        # show button
         ttk.Button(self, text="Show", command=self.demo_idealization).grid(
-            row=12, columnspan=4, padx=5, pady=5
+            row=13, columnspan=4, padx=5, pady=5
         )
 
         # frame closing buttons
         ttk.Button(self, text="Apply and close", command=self.click_apply).grid(
-            row=13, columnspan=2, padx=5, pady=5
+            row=14, columnspan=2, padx=5, pady=5
         )
         ttk.Button(self, text="Cancel", command=self.click_cancel).grid(
-            row=13, column=3, columnspan=2, padx=5, pady=5
+            row=14, column=3, columnspan=2, padx=5, pady=5
         )
 
     def get_amps(self, update_plot=True, *args):
@@ -295,20 +303,16 @@ class TC_Frame(ttk.Frame):
 
         if self.interpolate.get():
             self.interpolate.set(0)
-            self.intrp_button.config(relief="raised")
             self.parent.data.interpolation_factor = 1
         else:
             self.interpolate.set(1)
-            self.intrp_button.config(relief="sunken")
 
     def toggle_amp(self, *args):
         logging.debug(f"TC_Frame.toggle_amp")
 
         if self.show_amp:
             self.show_amp = False
-            # self.amp_button.config(relief="raised")
         else:
-            # self.amp_button.config(relief="sunken")
             self.show_amp = True
 
     def toggle_tc(self, *args):
@@ -316,11 +320,9 @@ class TC_Frame(ttk.Frame):
         logging.debug(f"TC_Frame.toggle_tc")
 
         if not self.parent.plots.show_thetas.get():
-            self.tc_button.config(relief="sunken")
             self.parent.plots.show_thetas.set(1)
         else:
             self.parent.plots.show_thetas.set(0)
-            self.tc_button.config(relief="raised")
 
     def demo_idealization(self, *args):
         """Apply the idealization and show it on the plot."""
