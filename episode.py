@@ -105,13 +105,13 @@ class Episode:
             return None
 
     @property
-    def og_trace(self):
+    def trace(self):
         if self._trace is not None:
             return self._trace * self.trace_unit_factor
         return None
 
     @property
-    def trace(self):
+    def intrp_trace(self):
         if self._intrp_trace is not None:
             return self._intrp_trace * self.trace_unit_factor
         if self._trace is not None:

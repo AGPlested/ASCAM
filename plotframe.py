@@ -181,7 +181,7 @@ class PlotFrame(ttk.Frame):
         logging.debug(f"update_current_plot")
         self.t_line.set_ydata(self.parent.data.episode.trace)
         if len(self.t_line.get_xdata(orig=True)) == len(
-            self.parent.data.episode.id_time
+            self.parent.data.episode.time
         ):
             self.t_line.set_ydata(self.parent.data.episode.trace)
         else:
@@ -192,11 +192,12 @@ class PlotFrame(ttk.Frame):
         logging.debug(f"show = {self.show_idealization.get()}")
         if self.parent.data.episode.idealization is not None:
             logging.debug(f"idealization found")
-            if len(self.i_line.get_xdata(orig=True)) == len(
+            if len( self.i_line.get_xdata(orig=True) ) == len(
                 self.parent.data.episode.id_time
             ):
                 self.i_line.set_ydata(self.parent.data.episode.idealization)
             else:
+                self.i_line.remove()
                 self.draw_idealization_plot(self.parent.data.episode, draw=False)
             if self.show_idealization.get():
                 self.i_line.set_visible(True)
@@ -486,7 +487,7 @@ class PlotFrame(ttk.Frame):
         else:
             self.i_line, = self.current_plot.plot(
                 episode.time,
-                np.mean(episode.trace) * np.ones(episode.time.size),
+                np.mean(episode.trace) * np.ones(episode.id_time.size),
                 visible=False,
                 alpha=0.6,
                 color=ID_COLOR,
@@ -498,7 +499,7 @@ class PlotFrame(ttk.Frame):
         if self.t_line:
             self.t_line.remove()
         self.t_line, = self.current_plot.plot(
-            episode.id_time, episode.trace, color=TRACE_COLOR
+            episode.time, episode.trace, color=TRACE_COLOR
         )
         if draw:
             self.canvas.draw()
