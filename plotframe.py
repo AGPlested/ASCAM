@@ -180,9 +180,7 @@ class PlotFrame(ttk.Frame):
     def update_current_plot(self, *args, draw=True):
         logging.debug(f"update_current_plot")
         self.t_line.set_ydata(self.parent.data.episode.trace)
-        if len(self.t_line.get_xdata(orig=True)) == len(
-            self.parent.data.episode.time
-        ):
+        if len(self.t_line.get_xdata(orig=True)) == len(self.parent.data.episode.time):
             self.t_line.set_ydata(self.parent.data.episode.trace)
         else:
             self.draw_current_plot(self.parent.data.episode, draw=draw)
@@ -192,7 +190,7 @@ class PlotFrame(ttk.Frame):
         logging.debug(f"show = {self.show_idealization.get()}")
         if self.parent.data.episode.idealization is not None:
             logging.debug(f"idealization found")
-            if len( self.i_line.get_xdata(orig=True) ) == len(
+            if len(self.i_line.get_xdata(orig=True)) == len(
                 self.parent.data.episode.id_time
             ):
                 self.i_line.set_ydata(self.parent.data.episode.idealization)

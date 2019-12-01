@@ -124,4 +124,3 @@ class Series(list):
                 active=active,
             )
         return output
-
