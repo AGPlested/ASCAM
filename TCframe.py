@@ -4,6 +4,7 @@ import logging
 
 import numpy as np
 
+from table_frame import TableFrame
 
 class TC_Frame(ttk.Frame):
     def __init__(self, parent):
@@ -207,6 +208,9 @@ class TC_Frame(ttk.Frame):
         ttk.Button(self, text="Cancel", command=self.click_cancel).grid(
             row=14, column=3, columnspan=2, padx=5, pady=5
         )
+
+        self.table_frame = TableFrame(self)
+        self.table_frame.grid(row=15, columnspan=4)
 
     def get_amps(self, update_plot=True, *args):
         """Get the amplitudes from the entry field.
