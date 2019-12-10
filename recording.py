@@ -591,6 +591,8 @@ class Recording(dict):
         np.savetxt(filepath, export_array.T, delimiter=",")
 
     def get_events(self):
+        if not self.series.is_idealized:
+            self.idealize_series()
         export_array = np.zeros((0, 5)).astype(object)
         for episode in self.series:
             # create a column containing the episode number

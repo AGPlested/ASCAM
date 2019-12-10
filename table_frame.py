@@ -10,37 +10,32 @@ class TableFrame(ttk.Frame):
         logging.debug("being TableFrame.__init__")
         ttk.Frame.__init__(self, parent)
         self.parent = parent  # parent is TC_Frame
-        self.ep_or_all = tk.IntVar()
-        self.ep_or_all.set(0)  # 0 for episode 1 for series
         
-        # self.cells = None
-
         self.create_widgets()
-        # self.set_row_state(tk.DISABLED)
 
     def create_widgets(self):
         row = 1
-        ttk.Label(self,
-                  text=f"Episode {self.parent.parent.data.n_episode}"
-                  ).grid(row=row, column=0)
-        ttk.Radiobutton(
-            self, variable=self.ep_or_all, value=0
-        ).grid(row=row, column=1)
-        ttk.Label(self,
-                  text=f"All Episodes"
-                  ).grid(row=row, column=2)
-        ttk.Radiobutton(
-            self, variable=self.ep_or_all, value=1
-        ).grid(row=row, column=3)
-        row += 1
+        # ttk.Label(self,
+        #           text=f"Amplitude [{self.parent.parent.data.trace_unit}]"
+        #           ).grid(row=row, column=0)
+        # ttk.Label(self,
+        #           text=f"Duration [{self.parent.parent.data.time_unit}]"
+        #           ).grid(row=row, column=1)
+        # ttk.Label(self,
+        #           text=f"Start [{self.parent.parent.data.time_unit}]"
+        #           ).grid(row=row, column=2)
+        # ttk.Label(self,
+        #           text=f"End [{self.parent.parent.data.time_unit}]"
+        #           ).grid(row=row, column=3)
+        # row += 1
 
         self.canvas = tk.Canvas(self)
-        self.canvas.grid(row=row, column=0, columnspan=5, sticky="NESW")
+        self.canvas.grid(row=row, column=0, columnspan=3, sticky="NESW")
 
         self.table = ttk.Frame(self.canvas)
 
         self.scrollbar = tk.Scrollbar(self, orient=tk.VERTICAL, command=self.canvas.yview)
-        self.scrollbar.grid(column=5, row=row, sticky="NESW")
+        self.scrollbar.grid(column=3, row=row, sticky="NESW")
         self.canvas.configure(yscrollcommand=self.scrollbar.set)
         self.canvas.configure(scrollregion=self.canvas.bbox("all"))
 
@@ -54,33 +49,16 @@ class TableFrame(ttk.Frame):
     def fill_table(self, table_array):
         n_rows, n_cols = np.shape(table_array)
 
-        # self.cells = []
         for i in range(n_rows):
-            # row = []
             for j in range(n_cols):
                 cell = tk.Label(self.table, text=f"{table_array[i][j]:.3f}",
                                 borderwidth=0, width=10)
                 cell.grid(row=i, column=j, sticky="nsew", padx=1, pady=1)
-                # row.append(cell)
-            # self.cells.append(row)
-        # for row in range(n_rows):
-        #     self.grid_rowconfigure(row, weight=1)
-        # for column in range(n_cols):
-        #     self.grid_columnconfigure(column, weight=1)
         self.canvas.create_window((1, 1), window=self.table)
 
-    def set_row_state(self, state):
-        for w in self.children.values():
-            if w.grid_info()["row"] == "1":
-                w.config(state=state)
-
-    # def change_val(self, val, row, col):
-    #     """We will need this function if the table is supposed to be
-    #     editable."""
-    #     cell = self.table[row][col]
-    #     if type(val) == float:
-    #         val = f"{val:.2f}"
-    #     cell.configure(text=f"{val}")
+    def update_table(self, *args):
+        events = self.parent.parent.data.episode.get_events()
+        self.fill_table(events)
 
 
 if __name__ == "__main__":

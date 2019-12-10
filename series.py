@@ -25,7 +25,7 @@ class Series(list):
 
     @property
     def is_idealized(self):
-        return any([episode._idealization is not None for episode in self])
+        return all([episode._idealization is not None for episode in self])
 
     @property
     def has_piezo(self):

@@ -328,12 +328,6 @@ class TC_Frame(ttk.Frame):
         else:
             self.parent.plots.show_thetas.set(0)
 
-    def update_events_table(self, *args):
-        logging.debug("updating events table")
-
-        events = self.parent.data.episode.get_events()
-        self.table_frame.fill_table(events)
-
     def demo_idealization(self, *args):
         """Apply the idealization and show it on the plot."""
         logging.debug(f"TC_Frame.demo_idealization")
@@ -351,7 +345,7 @@ class TC_Frame(ttk.Frame):
         if self.interpolation_factor.get():
             self.parent.plots.update_current_plot()
         self.parent.plots.update_idealization_plot()
-        self.update_events_table()
+        self.table_frame.update_table()
 
     def click_cancel(self):
         """Cancel button callback, removes idealization."""
