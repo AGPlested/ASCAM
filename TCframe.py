@@ -328,6 +328,12 @@ class TC_Frame(ttk.Frame):
         else:
             self.parent.plots.show_thetas.set(0)
 
+    def update_events_table(self, *args):
+        logging.debug("updating events table")
+
+        events = self.parent.data.episode.get_events()
+        self.table_frame.fill_table(events)
+
     def demo_idealization(self, *args):
         """Apply the idealization and show it on the plot."""
         logging.debug(f"TC_Frame.demo_idealization")
@@ -336,6 +342,7 @@ class TC_Frame(ttk.Frame):
             self.get_thresholds(update_plot=False)
         self.get_resolution(update_plot=False)
         self.apply_and_show_idealization()
+        self.update_events_table()
 
     def apply_and_show_idealization(self, *args):
         """Apply and plot the idealization."""

@@ -1299,11 +1299,11 @@ class EpisodeList(ttk.Frame):
         """
         logging.debug(f"create_list")
 
-        self.Scrollbar = tk.Scrollbar(self, orient=tk.VERTICAL)
-        self.Scrollbar.grid(column=1, row=1, rowspan=3, sticky="NESW")
+        self.scrollbar = tk.Scrollbar(self, orient=tk.VERTICAL)
+        self.scrollbar.grid(column=1, row=1, rowspan=3, sticky="NESW")
 
         self.episodelist = tk.Listbox(
-            self, bd=2, yscrollcommand=self.Scrollbar.set, selectmode=tk.EXTENDED
+            self, bd=2, yscrollcommand=self.scrollbar.set, selectmode=tk.EXTENDED
         )
         self.episodelist.grid(row=1, rowspan=3, sticky="NESW")
         # set what should happen when an episode is selected
@@ -1321,7 +1321,7 @@ class EpisodeList(ttk.Frame):
                 )
 
         # assign the scrollbar its function
-        self.Scrollbar["command"] = self.episodelist.yview
+        self.scrollbar["command"] = self.episodelist.yview
         self.episodelist.selection_set(self.parent.data.n_episode)
         # make list and scrollbar expand
         self.grid_rowconfigure(1, weight=1)
