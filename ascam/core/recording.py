@@ -3,11 +3,11 @@ import pickle
 
 import numpy as np
 
-import readdata
-from tools import parse_filename, piezo_selection, interval_selection
-from episode import Episode
-from series import Series
-from constants import ANALYSIS_LEVELV_NUM
+import ascam.core.readdata
+from ascam.utils.tools import parse_filename, piezo_selection, interval_selection
+from ascam.core.episode import Episode
+from ascam.core.series import Series
+from ascam.constants import ANALYSIS_LEVELV_NUM
 
 
 class Recording(dict):

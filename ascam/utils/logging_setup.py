@@ -3,7 +3,7 @@ import os
 import datetime
 import types
 
-from constants import ANALYSIS_LEVELV_NUM
+from ascam.constants import ANALYSIS_LEVELV_NUM
 
 
 def initialize_logger(output_dir, log_level="INFO", silent=False):

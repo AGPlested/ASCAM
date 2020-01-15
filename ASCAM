@@ -3,14 +3,14 @@
 ASCAM for processing and analysis of data from single ion channels.
 """
 import sys
-import os
+# import os
 import logging
 
 # import datetime
 import getopt
 
-from gui import GUI
-from logging_setup import initialize_logger
+from ascam.gui.mainwindow import GUI
+from ascam.utils.logging_setup import initialize_logger
 
 
 def parse_options():

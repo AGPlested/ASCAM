@@ -5,13 +5,13 @@ from tkinter.filedialog import askopenfilename, asksaveasfilename
 
 import numpy as np
 
-from plotframe import PlotFrame
-from tools import stringList_parser, parse_filename
-from recording import Recording
-from TCframe import TC_Frame
-from firstactivationframe import FirstActivationFrame
-from episode import Episode
-from constants import DEFAULT_GAUSS_CUTOFF_FREQ
+from ascam.gui.plotframe import PlotFrame
+from ascam.utils.tools import stringList_parser, parse_filename
+from ascam.core.recording import Recording
+from ascam.gui.TCframe import TC_Frame
+from ascam.gui.firstactivationframe import FirstActivationFrame
+from ascam.core.episode import Episode
+from ascam.constants import DEFAULT_GAUSS_CUTOFF_FREQ
 
 
 class GUI(ttk.Frame):

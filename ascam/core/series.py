@@ -3,8 +3,8 @@ import logging
 
 import numpy as np
 
-from episode import Episode
-from tools import piezo_selection, interval_selection
+from ascam.core.episode import Episode
+from ascam.utils.tools import piezo_selection, interval_selection
 
 
 class Series(list):

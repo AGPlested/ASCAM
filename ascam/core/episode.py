@@ -3,14 +3,14 @@ from typing import Optional, List, Tuple
 from nptyping import Array
 import numpy as np
 
-from filtering import gaussian_filter, ChungKennedyFilter
-from analysis import (
+from ascam.core.filtering import gaussian_filter, ChungKennedyFilter
+from ascam.core.analysis import (
     baseline_correction,
     detect_first_activation,
     Idealizer,
     interpolate,
 )
-from tools import piezo_selection
+from ascam.utils.tools import piezo_selection
 
 
 class Episode:

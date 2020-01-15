@@ -5,7 +5,7 @@ from scipy.interpolate import CubicSpline as spCubicSpline
 from typing import Optional, List, Tuple
 from nptyping import Array
 
-from tools import interval_selection, piezo_selection
+from ascam.utils.tools import interval_selection, piezo_selection
 
 
 def interpolate(
