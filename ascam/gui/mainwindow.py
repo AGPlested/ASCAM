@@ -23,7 +23,7 @@ class GUI(ttk.Frame):
     because then they can be entered in entry fields without problems."""
 
     @classmethod
-    def run(cls, test=False):
+    def create(cls, test=False):
         """
         Call this method to start the GUI
         Initializes root tk window and GUI main frame
@@ -37,7 +37,10 @@ class GUI(ttk.Frame):
         root.title("ASCAM")
         root.grid_columnconfigure(0, weight=1)
         root.grid_rowconfigure(0, weight=1)
-        cls(root, test)
+        inst = cls(root, test)
+        return inst, root
+
+    def run(self, root):
         root.mainloop()
 
     def __init__(self, master, test):

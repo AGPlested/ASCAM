@@ -3,7 +3,7 @@ import pickle
 
 import numpy as np
 
-import ascam.core.readdata
+from ascam.core.readdata import load_matlab, load_axo
 from ascam.utils.tools import parse_filename, piezo_selection, interval_selection
 from ascam.core.episode import Episode
 from ascam.core.series import Series
@@ -658,7 +658,7 @@ class Recording(dict):
             file."""
         logging.debug(f"from_axo")
 
-        names, time, current, piezo, command = readdata.load_axo(recording.filename)
+        names, time, current, piezo, command = load_axo(recording.filename)
         n_episodes = len(current)
         if not piezo:
             piezo = [None] * n_episodes
@@ -718,7 +718,7 @@ class Recording(dict):
             recording - instance of the Recording class containing the data"""
         logging.debug(f"from_matlab")
 
-        names, time, current, piezo, command = readdata.load_matlab(recording.filename)
+        names, time, current, piezo, command = load_matlab(recording.filename)
         n_episodes = len(current)
         if not piezo:
             piezo = [None] * n_episodes

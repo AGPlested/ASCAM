@@ -1,4 +1,5 @@
 import logging
+import warnings
 
 import numpy as np
 
@@ -41,7 +42,7 @@ def parse_filename(filename):
         filetype = "tdt"
         filetype_long = "tab-delimited-text"
     else:
-        log.warning("Could not detect filetype!")
+        warnings.warning("Could not detect filetype!")
     filename = filename[slash + 1 :]
     logging.debug(
         """filetype_long : {}"

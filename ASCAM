@@ -33,7 +33,7 @@ def parse_options():
     except getopt.GetoptError as err:
         # print help information and exit:
         print(err)  # will print something like "option -a not recognized"
-        usage()
+        display_help()
         sys.exit(2)
     for opt, arg in options:
         if opt in ("-l", "--loglevel"):
@@ -76,7 +76,16 @@ def main():
     initialize_logger(logdir, log_level, silent)
     logging.info("-" * 20 + "Start of new ASCAM session" + "-" * 20)
 
-    GUI.run(test)
+    app, root = GUI.create()
+    if test:
+        app.filenamefull.set("data/180426 000 Copy Export.mat")
+        app.sampling_rate.set("40000")
+        app.piezo_input_unit.set("V")
+        app.time_input_unit.set("s")
+        app.trace_input_unit.set("A")
+        app.command_input_unit.set("V")
+        app.load_recording()
+    app.run(root)
 
 
 if __name__ == "__main__":
