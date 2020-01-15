@@ -10,6 +10,6 @@ After successful installation of Anaconda, if you have Git installed, you can cl
 
 If you don't have Git, you can just copy ASCAM directory and then navigate to it manually.
 
-Start ASCAM from within its own directory with the following command in the Terminal: `./ASCAM.py`
+Start ASCAM from within its own directory by executing the file `ASCAM`. (Enter `./ASCAM` in the terminal)
 
-There is an example raw data file in the ASCAM folder. This recording was sampled at 40 kHz.
+There is an example raw data file in the ASCAM/data folder. This recording was sampled at 40 kHz.
