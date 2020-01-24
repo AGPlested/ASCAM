@@ -1,4 +1,4 @@
-ASCAM can be used to browse, organize and analize episodic recordings of single ion channel currents.
+ASCAM can be used to browse, organize and analyze episodic recordings of single ion channel currents.
 
 Requires python>=3.6 and Numpy>=1.16 
 Further required packages can be found in 'requirements.txt' and installed with 
