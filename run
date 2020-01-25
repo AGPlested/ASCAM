@@ -9,7 +9,9 @@ import logging
 # import datetime
 import getopt
 
-from ascam.gui.mainwindow import GUI
+from PySide2.QtWidgets import QApplication
+# from ascam.gui.mainwindow import GUI
+from ascam.qtgui.mainwindow import MainWindow 
 from ascam.utils.logging_setup import initialize_logger
 
 
@@ -76,16 +78,20 @@ def main():
     initialize_logger(logdir, log_level, silent)
     logging.info("-" * 20 + "Start of new ASCAM session" + "-" * 20)
 
-    app, root = GUI.create()
-    if test:
-        app.filenamefull.set("data/180426 000 Copy Export.mat")
-        app.sampling_rate.set("40000")
-        app.piezo_input_unit.set("V")
-        app.time_input_unit.set("s")
-        app.trace_input_unit.set("A")
-        app.command_input_unit.set("V")
-        app.load_recording()
-    app.run(root)
+    app = QApplication([])
+    main_window = MainWindow()
+    main_window.show()
+    sys.exit(app.exec_())
+    # app, root = GUI.create()
+    # if test:
+    #     app.filenamefull.set("data/180426 000 Copy Export.mat")
+    #     app.sampling_rate.set("40000")
+        # app.piezo_input_unit.set("V")
+        # app.time_input_unit.set("s")
+        # app.trace_input_unit.set("A")
+        # app.command_input_unit.set("V")
+        # app.load_recording()
+    # app.run(root)
 
 
 if __name__ == "__main__":

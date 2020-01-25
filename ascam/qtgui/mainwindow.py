@@ -12,6 +12,9 @@ from ascam.qtgui.export_fa_dialog import ExportFADialog
 from ascam.qtgui.export_file_dialog import ExportFileDialog
 from ascam.qtgui.filter_frame import FilterFrame
 from ascam.qtgui.baseline_frame import BaselineFrame
+from ascam.qtgui.plot_frame import PlotFrame
+from ascam.qtgui.episode_frame import EpisodeFrame
+
 
 class Color(QLabel):
     def __init__(self, color, text, *args, **kwargs):
@@ -84,13 +87,19 @@ class MainWindow(QMainWindow):
         self.central_layout.addWidget(self.tc_frame, 1, 1)
 
     def open_file(self):
-        raise NotImplementedError
+        pass
 
     def save_to_file(self):
-        raise NotImplementedError
+        pass
 
     def export_events(self):
-        raise NotImplementedError
+        pass
 
     def export_idealization(self):
-        raise NotImplementedError
+        pass
+
+    def launch_idealization(self):
+        pass
+    
+    def launch_fa_analysis(self):
+        pass
