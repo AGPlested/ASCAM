@@ -1,3 +1,5 @@
+import logging
+
 from PySide2.QtWidgets import (QListWidget, QLabel, QHBoxLayout, QVBoxLayout,
         QGridLayout, QWidget, QPushButton, QMainWindow, QApplication, QToolBar,
         QStatusBar, QFileDialog)
@@ -15,9 +17,14 @@ from ascam.qtgui.idealization_frame import IdealizationFrame
 from ascam.core.recording import Recording
 
 
+ana_logger = logging.getLogger("ascam.analysis")
+debug_logger = logging.getLogger("ascam.debug")
+
+
 class MainWindow(QMainWindow):
     def __init__(self, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
+        debug_logger.debug("MainWindow initializing")
 
         self.setWindowTitle("cuteSCAM")
 
@@ -31,6 +38,7 @@ class MainWindow(QMainWindow):
         self.create_menu()
 
     def create_menu(self):
+        debug_logger.debug("MainWindow creating menus")
         self.file_menu = self.menuBar().addMenu("File")
         self.file_menu.addAction('Open File', self.open_file)
         self.file_menu.addAction('Save', self.save_to_file)

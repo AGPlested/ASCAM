@@ -1,83 +1,58 @@
 import logging
 import os
 import datetime
-import types
-
-from ascam.constants import ANALYSIS_LEVELV_NUM
 
 
-def initialize_logger(output_dir, log_level="INFO", silent=False):
+def initialize_logger(output_dir=".", verbose=False, debug=False):
     """Start the root logger and the handlers.
 
     Args:
         output_dir - the directory in which the logs should be stored
-        log_level - 'ANALYSIS', 'DEBUG' or 'ALL', determines what is logged
-        silent - if false the logs are printed the console
+        verbose (bool) - if true print analysis log contents to console
+        debug (bool) - if true print debug log contents to console
     """
 
-    logger = logging.getLogger()
-    logger.setLevel(ANALYSIS_LEVELV_NUM)
+    analysis_logger = logging.getLogger("ascam.analysis")
+    debug_logger = logging.getLogger("ascam.debug")
 
-    if not silent:
-        setup_cl_handlers(logger, log_level)
+    # do not show these logs in root logger (avoids double printing)
+    analysis_logger.propagate = False
+    debug_logger.propagate = False
 
-    # create debug file handler and set level to debug
-    setup_file_handlers(logger, log_level, output_dir)
+    analysis_logger.setLevel(logging.DEBUG)
+    debug_logger.setLevel(logging.DEBUG)
 
-
-def setup_file_handlers(logger, log_level, output_dir):
-    """Set up handlers for writing logs to files."""
+    if verbose:
+        setup_cl_handlers(analysis_logger)
+    if debug:
+        setup_cl_handlers(debug_logger)
 
     date = datetime.datetime.now().strftime("%Y-%m-%d-%H:%M")
-    formatter = logging.Formatter(
-        "%(asctime)s:%(levelname)s:%(module)s:" "%(lineno)d:%(message)s"
-    )
 
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
-    ana_file_name = os.path.join(output_dir, f"ASCAM_{date}.log")
-    ana_file_handler = logging.FileHandler(ana_file_name, "w")
-    ana_file_handler.setLevel(ANALYSIS_LEVELV_NUM)
-    ana_file_handler.addFilter(AnalysisFilter())
-    ana_file_handler.setFormatter(formatter)
-    logger.addHandler(ana_file_handler)
-
-    if log_level == "DEBUG":
-        debug_logfile_name = os.path.join(output_dir, f"DEBUG_ASCAM_{date}.log")
-        debug_file_handler = logging.FileHandler(debug_logfile_name, "w")
-        debug_file_handler.setLevel(logging.DEBUG)
-        debug_file_handler.setFormatter(formatter)
-        logger.addHandler(debug_file_handler)
+    setup_file_handler(debug_logger, output_dir, f"debug_ASCAM_{date}.log")
+    setup_file_handler(debug_logger, output_dir, f"analysis_ASCAM_{date}.log")
 
 
-def setup_cl_handlers(logger, log_level):
+def setup_file_handler(logger, output_dir, filename):
+    formatter = logging.Formatter(
+        "%(asctime)s:%(levelname)s:%(module)s:" "%(lineno)d:%(message)s"
+    )
+    logfile_name = os.path.join(output_dir, filename)
+    file_handler = logging.FileHandler(logfile_name, "w")
+    file_handler.setFormatter(formatter)
+    logger.addHandler(file_handler)
+
+
+def setup_cl_handlers(logger):
     """Set up handler for command line logging."""
 
     formatter = logging.Formatter(
         "%(levelname)s:%(module)s:" "%(lineno)d - %(message)s"
     )
-    # create command line handler for analysis logging
-    ana_cl_handler = logging.StreamHandler()
-    ana_cl_handler.addFilter(AnalysisFilter())
-    ana_cl_handler.setLevel(ANALYSIS_LEVELV_NUM)
-    ana_cl_handler.setFormatter(formatter)
+    cl_handler = logging.StreamHandler()
+    cl_handler.setFormatter(formatter)
+    logger.addHandler(cl_handler)
 
-    debug_cl_handler = logging.StreamHandler()
-    debug_cl_handler.setLevel(logging.DEBUG)
-    debug_cl_handler.setFormatter(formatter)
-
-    if log_level == "ANALYSIS":
-        logger.addHandler(ana_cl_handler)
-    elif log_level == "DEBUG":
-        logger.addHandler(debug_cl_handler)
-    elif log_level == "ALL":
-        logger.addHandler(ana_cl_handler)
-        logger.addHandler(debug_cl_handler)
-
-
-class AnalysisFilter(logging.Filter):
-    def filter(self, record):
-        """Filter logging to only accept loglevel INFO"""
-
-        return record.levelno == ANALYSIS_LEVELV_NUM
