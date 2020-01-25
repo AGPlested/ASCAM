@@ -1,6 +1,7 @@
 # from PySide2.QtCore import Qt
-from PySide2.QtWidgets import (QListWidget, QLabel, QHBoxLayout, QVBoxLayout, QGridLayout, QWidget, 
-        QPushButton, QMainWindow, QApplication, QToolBar, QStatusBar)
+from PySide2.QtWidgets import (QListWidget, QLabel, QHBoxLayout, QVBoxLayout,
+        QGridLayout, QWidget, QPushButton, QMainWindow, QApplication, QToolBar,
+        QStatusBar, QFileDialog)
 from PySide2.QtGui import QPalette, QColor
 # from PyQt5.QtWidgets import (QListWidget, QLabel, QHBoxLayout, QVBoxLayout, QGridLayout, QWidget, 
 #         QPushButton, QMainWindow, QApplication, QToolBar, QStatusBar)
@@ -15,6 +16,8 @@ from ascam.qtgui.baseline_frame import BaselineFrame
 from ascam.qtgui.plot_frame import PlotFrame
 from ascam.qtgui.episode_frame import EpisodeFrame
 from ascam.qtgui.idealization_frame import IdealizationFrame
+
+from ascam.core.recording import Recording
 
 
 class Color(QLabel):
@@ -76,7 +79,9 @@ class MainWindow(QMainWindow):
         self.central_layout.addWidget(self.ep_frame, 1, 3)
 
     def open_file(self):
-        pass
+        filename = QFileDialog.getOpenFileName(self)[0]
+        self.data = Recording.from_file(filename)
+        self.ep_frame.populate(self.data)
 
     def save_to_file(self):
         pass

@@ -1,3 +1,5 @@
+import logging
+
 from PySide2.QtWidgets import (QListWidget, QLabel, QHBoxLayout, QVBoxLayout, 
         QGridLayout, QWidget, QPushButton, QMainWindow, QApplication, QToolBar, 
         QStatusBar)
@@ -13,9 +15,14 @@ class EpisodeFrame(QListWidget):
         self.setLayout(self.layout)
         self.populate()
 
-    def populate(self):
-        for i in range(10):
-            self.insertItem(i, round((i+1)/2)*"Red")
+    def populate(self, data=None):
+        self.clear()
+        if data is not None:
+            logging.debug("inserting data")
+            self.addItems([f"Episode {i+1}" for i in range(len(data.series))])
+        else:
+            for i in range(10):
+                self.insertItem(i, round((i+1)/2)*"Red")
     #     button = QPushButton("cute button")
     #     button.clicked.connect(self.parent.add_tc)
     #     self.layout.addWidget(button)
