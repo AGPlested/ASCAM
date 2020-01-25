@@ -8,23 +8,23 @@ from PySide2.QtWidgets import (QListWidget, QLabel, QHBoxLayout, QVBoxLayout,
 class EpisodeFrame(QListWidget):
     """Widget holding the scrollable list of episodes and the episode list 
     selection"""
-    def __init__(self, parent, *args, **kwargs):
+
+    def __init__(self, main, *args, **kwargs):
         super(EpisodeFrame, self).__init__(*args, **kwargs)
-        self.parent = parent
+        self.main = main
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
         self.populate()
+        
+        self.currentItemChanged.connect(self.on_item_click)
+
+    def on_item_click(self, item, previous):
+        print(f"clicked {self.row(item)}")
+        self.main.plot_frame.plot_episode(self.row(item))
 
     def populate(self, data=None):
         self.clear()
         if data is not None:
             logging.debug("inserting data")
             self.addItems([f"Episode {i+1}" for i in range(len(data.series))])
-        else:
-            for i in range(10):
-                self.insertItem(i, round((i+1)/2)*"Red")
-    #     button = QPushButton("cute button")
-    #     button.clicked.connect(self.parent.add_tc)
-    #     self.layout.addWidget(button)
-    #     self.layout.addWidget(Color("red", "episodes"))
 
