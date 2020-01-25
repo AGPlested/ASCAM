@@ -14,6 +14,7 @@ from ascam.qtgui.filter_frame import FilterFrame
 from ascam.qtgui.baseline_frame import BaselineFrame
 from ascam.qtgui.plot_frame import PlotFrame
 from ascam.qtgui.episode_frame import EpisodeFrame
+from ascam.qtgui.idealization_frame import IdealizationFrame
 
 
 class Color(QLabel):
@@ -74,18 +75,6 @@ class MainWindow(QMainWindow):
         self.ep_frame = EpisodeFrame(self)
         self.central_layout.addWidget(self.ep_frame, 1, 3)
 
-    def add_tc(self):
-        self.tc_frame = QWidget()
-        layout = QVBoxLayout()
-        layout.addWidget(Color("green", "button works"))
-        button = QPushButton("bye")
-        button.clicked.connect(lambda *args: self.tc_frame.close())
-        layout.addWidget(button)
-        self.tc_frame.show()
-        self.tc_frame.setLayout(layout)
-        
-        self.central_layout.addWidget(self.tc_frame, 1, 1)
-
     def open_file(self):
         pass
 
@@ -99,7 +88,9 @@ class MainWindow(QMainWindow):
         pass
 
     def launch_idealization(self):
-        pass
+        self.tc_frame = IdealizationFrame()
+        self.tc_frame.show()
+        self.central_layout.addWidget(self.tc_frame, 1, 1)
     
     def launch_fa_analysis(self):
         pass
