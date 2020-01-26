@@ -7,7 +7,9 @@ from ascam.core.readdata import load_matlab, load_axo
 from ascam.utils.tools import parse_filename, piezo_selection, interval_selection
 from ascam.core.episode import Episode
 from ascam.core.series import Series
-from ascam.constants import ANALYSIS_LEVELV_NUM
+
+ana_logger = logging.getLogger("ascam.analysis")
+debug_logger = logging.getLogger("ascam.debug")
 
 
 class Recording(dict):
@@ -34,9 +36,8 @@ class Recording(dict):
             command_unit - the units in which the command voltage is given
         Returns:
             recording - instance of the Recording class containing the data"""
-        logging.debug(f"Recording.from_file")
-        logging.log(
-            ANALYSIS_LEVELV_NUM,
+        debug_logger.debug(f"Recording.from_file")
+        ana_logger.info(
             f"Loading data from file {filename}\n"
             f"sampling_rate = {sampling_rate}\n"
             f"time_input_unit = {time_input_unit}\n"
@@ -74,7 +75,7 @@ class Recording(dict):
         return recording
 
     def __init__(self, filename="", sampling_rate=4e4):
-        logging.info("""intializing Recording""")
+        debug_logger.debug("""intializing Recording""")
 
         # parameters for loading the data
         self.filename = filename
@@ -175,12 +176,12 @@ class Recording(dict):
             indices.extend(self.lists[listname][0])
         # remove duplicate indices
         indices = np.array(list(set(indices)))
-        logging.debug(f"Selected episodes: {indices}")
+        debug_logger.debug(f"Selected episodes: {indices}")
         return np.array(self.series)[indices]
 
     @property
     def series(self):
-        # logging.debug(f"Returning series {self.current_datakey}")
+        # debug_logger.debug(f"Returning series {self.current_datakey}")
         return self[self.current_datakey]
 
     @property
@@ -222,10 +223,9 @@ class Recording(dict):
         active_piezo=False,
     ):
         """Apply a baseline correction to the current series."""
-        logging.debug(f"baseline_correction")
+        debug_logger.debug(f"baseline_correction")
 
-        logging.log(
-            ANALYSIS_LEVELV_NUM,
+        ana_logger.info(
             f"baseline_correction on series '{self.current_datakey}',"
             f"using method '{method}' with degree {poly_degree}\n"
             f"select_intvl is {select_intvl}; select_piezo is "
@@ -251,14 +251,13 @@ class Recording(dict):
             deviation=piezo_diff,
         )
         self.current_datakey = new_datakey
-        logging.debug("keys of the recording are now {}".format(self.keys()))
+        debug_logger.debug("keys of the recording are now {}".format(self.keys()))
 
     def gauss_filter_series(self, filter_freq):
         """Filter the current series using a gaussian filter"""
-        logging.debug(f"gaussian_filter")
+        debug_logger.debug(f"gaussian_filter")
 
-        logging.log(
-            ANALYSIS_LEVELV_NUM,
+        ana_logger.info(
             f"gauss filtering series '{self.current_datakey}'\n"
             f"with frequency {filter_freq}",
         )
@@ -282,9 +281,8 @@ class Recording(dict):
         apriori_b_weights=False,
     ):
         """Filter the current series using the Chung-Kennedy filter banks"""
-        logging.debug(f"CK_filter_series")
-        logging.log(
-            ANALYSIS_LEVELV_NUM,
+        debug_logger.debug(f"CK_filter_series")
+        ana_logger.info(
             f"Chung-Kennedy filtering on series "
             f"'{self.current_datakey}'\n"
             f"window_lengths: {window_lengths}\n"
@@ -313,10 +311,9 @@ class Recording(dict):
 
     def idealize_series(self):
         """Idealize the current series."""
-        logging.debug(f"idealize_series")
+        debug_logger.debug(f"idealize_series")
 
-        logging.log(
-            ANALYSIS_LEVELV_NUM,
+        ana_logger.info(
             f"idealizing series '{self.current_datakey}'\n"
             f"amplitudes: {self.series._tc_amplitudes}\n"
             f"thresholds: {self.series._tc_thresholds}\n"
@@ -334,10 +331,9 @@ class Recording(dict):
 
     def idealize_episode(self):
         """Idealize current episode."""
-        logging.debug(f"idealize_episode")
+        debug_logger.debug(f"idealize_episode")
 
-        logging.log(
-            ANALYSIS_LEVELV_NUM,
+        ana_logger.info(
             f"idealizing episode '{self.n_episode}'\n"
             f"amplitudes: {self.series._tc_amplitudes}\n"
             f"thresholds: {self.series._tc_thresholds}\n"
@@ -355,7 +351,7 @@ class Recording(dict):
     def detect_fa(self, exclude=[]):
         """Apply first event detection to all episodes in the selected series"""
 
-        logging.debug(f"detect_fa")
+        debug_logger.debug(f"detect_fa")
 
         [
             episode.detect_first_activation(self._fa_threshold)
@@ -374,7 +370,7 @@ class Recording(dict):
     ):
         """Create a histogram of all episodes in the presently selected series
         """
-        logging.debug(f"series_hist")
+        debug_logger.debug(f"series_hist")
         # put all piezo traces and all current traces in lists
         piezos = [episode.piezo for episode in self.series]
         traces = [episode.trace for episode in self.series]
@@ -383,7 +379,7 @@ class Recording(dict):
             # this is a failsafe, select_piezo should never be true if has_piezo
             # is false
             if select_piezo:
-                logging.debug(
+                debug_logger.debug(
                     (f"Tried piezo selection even " "though there is no piezo data!")
                 )
             select_piezo = False
@@ -427,7 +423,7 @@ class Recording(dict):
     ):
         """Create a histogram of the current in the presently selected episode.
         """
-        logging.debug(f"episode_hist")
+        debug_logger.debug(f"episode_hist")
 
         # failsafe for piezo selection
         if not self.has_piezo:
@@ -464,7 +460,7 @@ class Recording(dict):
     # exporting and saving methods
     def save_to_pickle(self, filepath):
         """Dump the recording to a pickle."""
-        logging.debug(f"save_to_pickle")
+        debug_logger.debug(f"save_to_pickle")
 
         if not filepath.endswith(".pkl"):
             filepath += ".pkl"
@@ -485,7 +481,7 @@ class Recording(dict):
     ):
         """Export all the episodes in the givens list(s) from the given series
         (only one) to a matlab file."""
-        logging.debug(
+        debug_logger.debug(
             f"export_matlab:\n"
             f"saving the lists: {lists_to_save}\n"
             f"of series {datakey}\n"
@@ -533,7 +529,7 @@ class Recording(dict):
                 includes
             save_piezo - if true piezo data will be exported
             save_command - if true command voltage data will be exported"""
-        logging.debug(
+        debug_logger.debug(
             f"export_axo:\n"
             f"saving the lists: {lists_to_save}\n"
             f"of series {datakey}\n"
@@ -574,7 +570,7 @@ class Recording(dict):
         file.write(filepath)
 
     def export_idealization(self, filepath, time_unit, trace_unit):
-        logging.debug(f"export_idealization")
+        debug_logger.debug(f"export_idealization")
 
         if not filepath.endswith(".csv"):
             filepath += ".csv"
@@ -593,7 +589,7 @@ class Recording(dict):
     def export_events(self, filepath):
         """Export a table of events in the current (idealized) series and
         duration to a csv file."""
-        logging.debug(f"export_events")
+        debug_logger.debug(f"export_events")
 
         import pandas as pd
 
@@ -624,7 +620,7 @@ class Recording(dict):
 
     def export_first_activation(self, filepath, time_unit):
         """Export csv file of first activation times."""
-        logging.debug(f"export_first_activation")
+        debug_logger.debug(f"export_first_activation")
 
         if not filepath.endswith(".csv"):
             filepath += ".csv"
@@ -656,7 +652,7 @@ class Recording(dict):
         Returns:
             recording the instance of the recording that was stored in the
             file."""
-        logging.debug(f"from_axo")
+        debug_logger.debug(f"from_axo")
 
         names, time, current, piezo, command = load_axo(recording.filename)
         n_episodes = len(current)
@@ -716,7 +712,7 @@ class Recording(dict):
             recording - recording object to be filled with data
         Returns:
             recording - instance of the Recording class containing the data"""
-        logging.debug(f"from_matlab")
+        debug_logger.debug(f"from_matlab")
 
         names, time, current, piezo, command = load_matlab(recording.filename)
         n_episodes = len(current)

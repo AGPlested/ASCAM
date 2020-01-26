@@ -14,6 +14,7 @@ def initialize_logger(output_dir=".", verbose=False, debug=False):
 
     analysis_logger = logging.getLogger("ascam.analysis")
     debug_logger = logging.getLogger("ascam.debug")
+    root_logger = logging.getLogger()
 
     # do not show these logs in root logger (avoids double printing)
     analysis_logger.propagate = False
@@ -21,10 +22,17 @@ def initialize_logger(output_dir=".", verbose=False, debug=False):
 
     analysis_logger.setLevel(logging.DEBUG)
     debug_logger.setLevel(logging.DEBUG)
+    root_logger.setLevel(logging.INFO)
 
-    if verbose:
+    if verbose and debug:
+        setup_cl_handlers(root_logger)
+        setup_cl_handlers(debug_logger)
         setup_cl_handlers(analysis_logger)
-    if debug:
+    elif verbose:
+        setup_cl_handlers(root_logger)
+        setup_cl_handlers(analysis_logger)
+    elif debug:
+        setup_cl_handlers(root_logger)
         setup_cl_handlers(debug_logger)
 
     date = datetime.datetime.now().strftime("%Y-%m-%d-%H:%M")
@@ -32,18 +40,24 @@ def initialize_logger(output_dir=".", verbose=False, debug=False):
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
-    setup_file_handler(debug_logger, output_dir, f"debug_ASCAM_{date}.log")
-    setup_file_handler(debug_logger, output_dir, f"analysis_ASCAM_{date}.log")
+    debug_handler = setup_file_handler(output_dir, f"debug_ASCAM_{date}.log")
+    root_logger.addHandler(debug_handler)
+    debug_logger.addHandler(debug_handler)
+
+    ana_handler = setup_file_handler(output_dir, f"analysis_ASCAM_{date}.log")
+    root_logger.addHandler(ana_handler)
+    analysis_logger.addHandler(ana_handler)
 
 
-def setup_file_handler(logger, output_dir, filename):
+def setup_file_handler(output_dir, filename):
     formatter = logging.Formatter(
         "%(asctime)s:%(levelname)s:%(module)s:" "%(lineno)d:%(message)s"
     )
     logfile_name = os.path.join(output_dir, filename)
     file_handler = logging.FileHandler(logfile_name, "w")
     file_handler.setFormatter(formatter)
-    logger.addHandler(file_handler)
+
+    return file_handler
 
 
 def setup_cl_handlers(logger):

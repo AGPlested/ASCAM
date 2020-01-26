@@ -25,6 +25,8 @@ class MainWindow(QMainWindow):
     def __init__(self, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
         debug_logger.debug("MainWindow initializing")
+        ana_logger.debug("ana debug")
+        logging.info("root info")
 
         self.setWindowTitle("cuteSCAM")
 

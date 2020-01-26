@@ -19,7 +19,6 @@ class EpisodeFrame(QListWidget):
         self.currentItemChanged.connect(self.on_item_click)
 
     def on_item_click(self, item, previous):
-        print(f"clicked {self.row(item)}")
         self.main.plot_frame.plot_episode(self.row(item))
 
     def populate(self, data=None):
