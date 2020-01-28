@@ -47,7 +47,7 @@ class Series(list):
 
     @property
     def max_command(self):
-        return np.max([np.max(episode.command) for episode in self])
+        return 
 
     @property
     def min_command(self):
