@@ -266,7 +266,7 @@ class DiplayFrame(ttk.Frame):
 
     def show_command_stats(self):
         logging.debug(f"DisplayFrame.show_command_stats")
-        if self.parent.data.has_command:
+        if self.parent.data.episode.command is not None:
             mean, std = self.parent.data.episode.get_command_stats()
             command_stats = "Command Voltage = "
             command_stats += "{:2f} +/- {:2f}".format(mean, std)
@@ -942,7 +942,7 @@ class HistogramConfiguration(tk.Toplevel):
             row=5, column=3, columnspan=2
         )
 
-        if not self.parent.data.has_piezo:
+        if not self.parent.data.episode.piezo is not None:
             for widget in [
                 piez_int_label,
                 piezo_int_button,
@@ -1059,12 +1059,12 @@ class BaselineFrame(tk.Toplevel):
         deviation = float(self.deviation.get())
         self.parent.parent.data.baseline_correction(
             method=self.method.get(),
-            poly_degree=int(self.degree.get()),
-            intval=self.intervals,
+            degree=int(self.degree.get()),
+            intervals=self.intervals,
             select_intvl=self.select_intvl.get(),
             select_piezo=self.select_piezo.get(),
-            active_piezo=self.piezo_active.get(),
-            piezo_diff=deviation,
+            active=self.piezo_active.get(),
+            deviation=deviation,
         )
         self.parent.parent.datakey.set(self.parent.parent.data.current_datakey)
         self.parent.parent.update_episodelist()
