@@ -50,8 +50,8 @@ class MainWindow(QMainWindow):
         self.file_menu.addAction('Quit', self.close)
 
         self.processing_menu = self.menuBar().addMenu("Processing")
-        self.processing_menu.addAction("Baseline Correction", lambda: BaselineFrame())
-        self.processing_menu.addAction("Filter", lambda: FilterFrame())
+        self.processing_menu.addAction("Baseline Correction", lambda: BaselineFrame(self))
+        self.processing_menu.addAction("Filter", lambda: FilterFrame(self))
 
         self.analysis_menu = self.menuBar().addMenu("Analysis")
         self.analysis_menu.addAction("Idealize", self.launch_idealization)
