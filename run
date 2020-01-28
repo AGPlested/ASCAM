@@ -9,7 +9,7 @@ import getopt
 
 from PySide2.QtWidgets import QApplication
 from ascam.qtgui.mainwindow import MainWindow 
-from ascam.utils.logging_setup import initialize_logger
+from ascam.utils import initialize_logger
 
 
 def parse_options():

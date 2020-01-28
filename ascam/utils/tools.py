@@ -156,3 +156,14 @@ def stringList_parser(list_as_string):
     # logging.debug("""string was: {}
     #          returning: {}""".format(list_as_string,whole_list))
     return whole_list
+
+
+def clear_qt_layout(layout):
+    if layout is not None:
+        while layout.count():
+            child = layout.takeAt(0)
+            if child.widget() is not None:
+                child.widget().deleteLater()
+            elif child.layout() is not None:
+                clear_qt_layout(child.layout())
+
