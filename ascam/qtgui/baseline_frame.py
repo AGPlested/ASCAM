@@ -1,8 +1,7 @@
 import logging
 
-from PySide2.QtWidgets import (QDialog, QLineEdit, QGridLayout, QComboBox,
-        QVBoxLayout, QHBoxLayout, QWidget,
-        QPushButton, QLabel, QCheckBox)
+from PySide2.QtWidgets import (QDialog, QLineEdit, QComboBox,
+        QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QCheckBox)
 
 from ascam.utils import clear_qt_layout
 
