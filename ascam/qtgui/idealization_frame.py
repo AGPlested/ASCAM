@@ -1,7 +1,7 @@
 import logging
 
-from PySide2.QtWidgets import ( QTabWidget, QWidget, QVBoxLayout, QHBoxLayout,
-QPushButton, QLabel)
+from PySide2.QtWidgets import (QTabWidget, QWidget, QVBoxLayout, QHBoxLayout,
+        QToolButton, QTabBar, QPushButton, QLabel)
 
 
 debug_logger = logging.getLogger("ascam.debug")
@@ -15,21 +15,21 @@ class IdealizationFrame(QTabWidget):
         self.tabs = [IdealizationTab(self)]
         self.addTab(self.tabs[0], "1")
 
-        new_tab_button = QWidget()
-        self.addTab(new_tab_button, "+")
+        self.insertTab(1, QWidget(), '')
+        self.new_button = QToolButton()
+        self.new_button.setText('+')
+        self.new_button.clicked.connect(self.add_tab)
+        self.tabBar().setTabButton(1, QTabBar.RightSide, self.new_button)
 
-        self.tabBarClicked.connect(self.new_tab)
-
-    def new_tab(self, index):
-        if index == len(self.tabs):
-            self.add_tab()
+        self.setTabsClosable(True)
+        self.tabBar().tabCloseRequested.connect(self.removeTab)
 
     def add_tab(self):
-        title = str(len(self.tabs)+1)
+        title = str(self.count())
         debug_logger.debug(f"adding new tab with number {title}")
         tab = IdealizationTab(self)
         self.tabs.append(tab)
-        self.insertTab(len(self.tabs)-1, tab, title)
+        self.insertTab(self.count()-1, tab, title)
 
 
 class IdealizationTab(QWidget):
