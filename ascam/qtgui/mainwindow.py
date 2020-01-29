@@ -83,7 +83,7 @@ class MainWindow(QMainWindow):
         pass
 
     def launch_idealization(self):
-        self.tc_frame = IdealizationFrame()
+        self.tc_frame = IdealizationFrame(self)
         self.tc_frame.show()
         self.central_layout.addWidget(self.tc_frame, 1, 1)
     
