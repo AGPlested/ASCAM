@@ -25,7 +25,7 @@ class TC_Frame(ttk.Frame):
         # if idealization has already been performed store the parameters
         # to recreate if cancel is clicked
         self.previous_params = dict()
-        if self.parent.data.series.is_idealized:
+        if self.parent.data.episode.idealization is not None:
             logging.debug(
                 f"Series has been idealized, setting parameters\n"
                 f"TC amplitudes = '{self.parent.data.tc_amplitudes}'\n"
@@ -42,11 +42,11 @@ class TC_Frame(ttk.Frame):
                 )
             }
             self.array_into_tkstring(
-                self.parent.data.series.tc_amplitudes, self.amp_string
+                self.parent.data.tc_amplitudes, self.amp_string
             )
             if self.parent.data.tc_thresholds is not None:
                 self.array_into_tkstring(
-                    self.parent.data.series.tc_thresholds, self.theta_string
+                    self.parent.data.tc_thresholds, self.theta_string
                 )
                 self.manual_thetas = True
             if self.parent.data.tc_resolution is not None:
@@ -345,7 +345,7 @@ class TC_Frame(ttk.Frame):
     def click_cancel(self):
         """Cancel button callback, removes idealization."""
         logging.debug(f"TC_Frame.click_cancel")
-        for datakey, series in self.parent.data.items():
+        for datakey in self.parent.data:
             # check if the series was previously idealized, if so repeat the
             # idealization with previously used parameters
             amps, thetas, res, intrp = self.previous_params.get(
@@ -358,7 +358,7 @@ class TC_Frame(ttk.Frame):
             if (amps is not None) and (amps.size not in (0, 1)):
                 self.parent.data.idealize_series()
             else:
-                for episode in series:
+                for episode in self.parent.data[datakey]:
                     episode.idealization = None
         self.close_frame()
 

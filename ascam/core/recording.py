@@ -1,3 +1,4 @@
+import copy
 import logging
 import pickle
 
@@ -6,7 +7,6 @@ import numpy as np
 from ascam.core.readdata import load_matlab, load_axo
 from ascam.utils.tools import parse_filename, piezo_selection, interval_selection
 from ascam.core.episode import Episode
-from ascam.core.series import Series
 
 ana_logger = logging.getLogger("ascam.analysis")
 debug_logger = logging.getLogger("ascam.debug")
@@ -84,14 +84,22 @@ class Recording(dict):
         self.sampling_rate = int(float(sampling_rate))
 
         # attributes for storing and managing the data
-        self["raw_"] = Series()
+        self["raw_"] = []
         self.current_datakey = "raw_"
         self.n_episode = 0
 
         self.hist_times = 0
         # parameters for analysis
         # idealization
+        self.params = {"raw_" : {
+                            "_tc_thresholds" : np.array([]),
+                            "_tc_amplitudes" : np.array([]),
+                            "_tc_resolution" : None,
+                            "interpolation_factor" : 1,
+                            "_fa_threshold" : 0.0, }
+                        }
         self.tc_unit = "pA"
+        # TODO move these to constants.py
         self.tc_unit_factors = {
             "fA": 1e15,
             "pA": 1e12,
@@ -113,50 +121,50 @@ class Recording(dict):
 
     @property
     def fa_threshold(self):
-        return self.series._fa_threshold * self.tc_unit_factors[self.tc_unit]
+        return self.params[self.current_datakey]["_fa_threshold"] * self.tc_unit_factors[self.tc_unit]
 
     @fa_threshold.setter
     def fa_threshold(self, theta):
         if theta is not None:
-            self.series._fa_threshold = theta / self.tc_unit_factors[self.tc_unit]
+            self.params[self.current_datakey]["_fa_threshold"] = theta / self.tc_unit_factors[self.tc_unit]
         else:
-            self.series._fa_threshold = None
+            self.params[self.current_datakey]["_fa_threshold"] = None
 
     @property
     def tc_amplitudes(self):
-        return self.series._tc_amplitudes * self.tc_unit_factors[self.tc_unit]
+        return self.params[self.current_datakey]["_tc_amplitudes"] * self.tc_unit_factors[self.tc_unit]
 
     @tc_amplitudes.setter
     def tc_amplitudes(self, amps):
         if amps is not None:
-            self.series._tc_amplitudes = amps / self.tc_unit_factors[self.tc_unit]
+            self.params[self.current_datakey]["_tc_amplitudes"]  = amps / self.tc_unit_factors[self.tc_unit]
         else:
-            self.series._tc_amplitudes = np.array([])
+            self.params[self.current_datakey]["_tc_amplitudes"]  = np.array([])
 
     @property
     def tc_thresholds(self):
-        return self.series._tc_thresholds * self.tc_unit_factors[self.tc_unit]
+        return self.params[self.current_datakey]["_tc_thresholds"] * self.tc_unit_factors[self.tc_unit]
 
     @tc_thresholds.setter
     def tc_thresholds(self, thetas):
         if thetas is not None:
-            self.series._tc_thresholds = thetas / self.tc_unit_factors[self.tc_unit]
+            self.params[self.current_datakey]["_tc_thresholds"] = thetas / self.tc_unit_factors[self.tc_unit]
         else:
-            self.series._tc_thresholds = np.array([])
+            self.params[self.current_datakey]["_tc_thresholds"] = np.array([])
 
     @property
     def tc_resolution(self):
-        if self.series._tc_resolution:
-            return self.series._tc_resolution * self.episode.time_unit_factor
+        if self.params[self.current_datakey]["_tc_resolution"] is not None:
+            return self.params[self.current_datakey]["_tc_resolution"]  * self.episode.time_unit_factor
         else:
             return None
 
     @tc_resolution.setter
     def tc_resolution(self, resolution):
         if resolution is not None:
-            self.series._tc_resolution = resolution / self.episode.time_unit_factor
+            self.params[self.current_datakey]["_tc_resolution"]  = resolution / self.episode.time_unit_factor
         else:
-            self.series.tc_resolution = None
+            self.params[self.current_datakey]["_tc_resolution"]  = None
 
     @property
     def interpolation_factor(self):
@@ -165,9 +173,9 @@ class Recording(dict):
     @interpolation_factor.setter
     def interpolation_factor(self, factor):
         if factor is not None:
-            self.series.interpolation_factor = factor
+            self.params[self.current_datakey]["interpolation_factor"] = factor
         else:
-            self.series.interpolation_factor = 1
+            self.params[self.current_datakey]["interpolation_factor"] = 1
 
     @property
     def selected_episodes(self):
@@ -189,14 +197,6 @@ class Recording(dict):
         return self.series[self.n_episode]
 
     @property
-    def has_piezo(self):
-        return self.series.has_piezo
-
-    @property
-    def has_command(self):
-        return self.series.has_command
-
-    @property
     def time_unit(self):
         return self.episode.time_unit
 
@@ -212,27 +212,31 @@ class Recording(dict):
     def command_unit(self):
         return self.episode.command_unit
 
+    def new_series(self, new_datakey):
+        self[new_datakey] = copy.deepcopy(self.series)
+        self.params[new_datakey] = copy.deepcopy(self.params[self.current_datakey])
+
     def baseline_correction(
         self,
         method="poly",
-        poly_degree=1,
-        intval=[],
+        degree=1,
+        intervals=[],
         select_intvl=False,
-        piezo_diff=0.05,
+        deviation=0.05,
         select_piezo=True,
-        active_piezo=False,
+        active=False,
     ):
         """Apply a baseline correction to the current series."""
         debug_logger.debug(f"baseline_correction")
 
         ana_logger.info(
             f"baseline_correction on series '{self.current_datakey}',"
-            f"using method '{method}' with degree {poly_degree}\n"
+            f"using method '{method}' with degree {degree}\n"
             f"select_intvl is {select_intvl}; select_piezo is "
             f"{select_piezo}\n"
-            f"the selected intervals are {intval}\n"
-            f"select where piezo is active is {active_piezo}; the "
-            f"difference to piezo baseline is {piezo_diff}",
+            f"the selected intervals are {intervals}\n"
+            f"select where piezo is active is {active}; the "
+            f"difference to piezo baseline is {deviation}",
         )
         if self.current_datakey == "raw_":
             # if its the first operation drop the 'raw_'
@@ -241,15 +245,17 @@ class Recording(dict):
             # if operations have been done before combine the names
             new_datakey = self.current_datakey + "BC_"
         logging.info(f"new datakey is {new_datakey}")
-        self[new_datakey] = self[self.current_datakey].baseline_correct_all(
-            intervals=intval,
-            method=method,
-            degree=poly_degree,
-            select_intvl=select_intvl,
-            select_piezo=select_piezo,
-            active=active_piezo,
-            deviation=piezo_diff,
-        )
+        self.new_series(new_datakey)
+        for episode in self[new_datakey]:
+            episode.baseline_correct_episode(
+                degree=degree,
+                intervals=intervals,
+                method=method,
+                deviation=deviation,
+                select_intvl=select_intvl,
+                select_piezo=select_piezo,
+                active=active,
+            )
         self.current_datakey = new_datakey
         debug_logger.debug("keys of the recording are now {}".format(self.keys()))
 
@@ -265,12 +271,14 @@ class Recording(dict):
         fdatakey = f"GFILTER{filter_freq}_"
         if self.current_datakey == "raw_":
             # if its the first operation drop the 'raw-'
-            new_key = fdatakey
+            new_datakey = fdatakey
         else:
             # if operations have been done before combine the names
-            new_key = self.current_datakey + fdatakey
-        self[new_key] = self.series.gaussian_filter(filter_freq)
-        self.current_datakey = new_key
+            new_datakey = self.current_datakey + fdatakey
+        self.new_series(new_datakey)
+        for episode in self[new_datakey]:
+            episode.gauss_filter_episode(filter_freq)
+        self.current_datakey = new_datakey
 
     def CK_filter_series(
         self,
@@ -300,13 +308,16 @@ class Recording(dict):
         else:
             # if operations have been done before combine the names
             new_datakey = self.current_datakey + fdatakey
-        self[new_datakey] = self[self.current_datakey].CK_filter(
-            window_lengths,
-            weight_exponent,
-            weight_window,
-            apriori_f_weights,
-            apriori_b_weights,
-        )
+
+        self[new_datakey] = copy.deepcopy(self.series)
+        for episode in self[new_datakey]:
+            episode.CK_filter_episode(
+                window_lengths,
+                weight_exponent,
+                weight_window,
+                apriori_f_weights,
+                apriori_b_weights,
+            )
         self.current_datakey = new_datakey
 
     def idealize_series(self):
@@ -315,18 +326,18 @@ class Recording(dict):
 
         ana_logger.info(
             f"idealizing series '{self.current_datakey}'\n"
-            f"amplitudes: {self.series._tc_amplitudes}\n"
-            f"thresholds: {self.series._tc_thresholds}\n"
-            f"resolution: {self.series._tc_resolution}\n"
-            f"interpolation_factor: {self.series.interpolation_factor}",
+            f"amplitudes: {self.params[self.current_datakey]['_tc_amplitudes']}\n"
+            f"thresholds: {self.params[self.current_datakey]['_tc_thresholds']}\n"
+            f"resolution: {self.params[self.current_datakey]['_tc_resolution']}\n"
+            f"interpolation_factor: {self.params[self.current_datakey]['interpolation_factor']}",
         )
 
         for episode in self.series:
             episode.idealize_or_interpolate(
-                self.series._tc_amplitudes,
-                self.series._tc_thresholds,
-                self.series._tc_resolution,
-                self.series.interpolation_factor,
+                self.params[self.current_datakey]["_tc_amplitudes"],
+                self.params[self.current_datakey]["_tc_thresholds"],
+                self.params[self.current_datakey]["_tc_resolution"],
+                self.params[self.current_datakey]["interpolation_factor"],
             )
 
     def idealize_episode(self):
@@ -335,17 +346,17 @@ class Recording(dict):
 
         ana_logger.info(
             f"idealizing episode '{self.n_episode}'\n"
-            f"amplitudes: {self.series._tc_amplitudes}\n"
-            f"thresholds: {self.series._tc_thresholds}\n"
-            f"resolution: {self.series._tc_resolution}\n"
-            f"interpolation_factor: {self.series.interpolation_factor}",
+            f"amplitudes: {self.params[self.current_datakey]['_tc_amplitudes']}\n"
+            f"thresholds: {self.params[self.current_datakey]['_tc_thresholds']}\n"
+            f"resolution: {self.params[self.current_datakey]['_tc_resolution']}\n"
+            f"interpolation_factor: {self.params[self.current_datakey]['interpolation_factor']}",
         )
 
         self.episode.idealize_or_interpolate(
-            self.series._tc_amplitudes,
-            self.series._tc_thresholds,
-            self.series._tc_resolution,
-            self.series.interpolation_factor,
+            self.params[self.current_datakey]["_tc_amplitudes"],
+            self.params[self.current_datakey]["_tc_thresholds"],
+            self.params[self.current_datakey]["_tc_resolution"],
+            self.params[self.current_datakey]["interpolation_factor"],
         )
 
     def detect_fa(self, exclude=[]):
@@ -354,7 +365,7 @@ class Recording(dict):
         debug_logger.debug(f"detect_fa")
 
         [
-            episode.detect_first_activation(self._fa_threshold)
+            episode.detect_first_activation(self.params[self.current_datakey]["_fa_threshold"])
             for episode in self.series
             if episode.n_episode not in exclude
         ]
@@ -375,12 +386,12 @@ class Recording(dict):
         piezos = [episode.piezo for episode in self.series]
         traces = [episode.trace for episode in self.series]
         trace_list = []
-        if not self.has_piezo:
+        if self.episode.piezo is None:
             # this is a failsafe, select_piezo should never be true if has_piezo
             # is false
             if select_piezo:
                 debug_logger.debug(
-                    (f"Tried piezo selection even " "though there is no piezo data!")
+                    (f"Tried piezo selection even though there is no piezo data!")
                 )
             select_piezo = False
         # select the time points that are used for the histogram
@@ -426,7 +437,8 @@ class Recording(dict):
         debug_logger.debug(f"episode_hist")
 
         # failsafe for piezo selection
-        if not self.has_piezo:
+        if self.episode.piezo is None:
+            # TODO add log or warning here!
             select_piezo = False
         # select time points to include in histogram
         if select_piezo:
@@ -660,23 +672,21 @@ class Recording(dict):
             piezo = [None] * n_episodes
         if not command:
             command = [None] * n_episodes
-        recording["raw_"] = Series(
-            [
-                Episode(
-                    time,
-                    current[i],
-                    n_episode=i,
-                    piezo=piezo[i],
-                    command=command[i],
-                    sampling_rate=recording.sampling_rate,
-                    input_time_unit=time_input_unit,
-                    input_trace_unit=trace_input_unit,
-                    input_piezo_unit=piezo_input_unit,
-                    input_command_unit=command_input_unit,
-                )
-                for i in range(n_episodes)
-            ]
-        )
+        recording["raw_"] = [
+                            Episode(
+                                time,
+                                current[i],
+                                n_episode=i,
+                                piezo=piezo[i],
+                                command=command[i],
+                                sampling_rate=recording.sampling_rate,
+                                input_time_unit=time_input_unit,
+                                input_trace_unit=trace_input_unit,
+                                input_piezo_unit=piezo_input_unit,
+                                input_command_unit=command_input_unit,
+                            )
+                            for i in range(n_episodes)
+                        ]
         return recording
 
     @staticmethod
@@ -720,21 +730,19 @@ class Recording(dict):
             piezo = [None] * n_episodes
         if not command:
             command = [None] * n_episodes
-        recording["raw_"] = Series(
-            [
-                Episode(
-                    time,
-                    current[i],
-                    n_episode=i,
-                    piezo=piezo[i],
-                    command=command[i],
-                    sampling_rate=recording.sampling_rate,
-                    input_time_unit=time_input_unit,
-                    input_trace_unit=trace_input_unit,
-                    input_piezo_unit=piezo_input_unit,
-                    input_command_unit=command_input_unit,
-                )
-                for i in range(n_episodes)
-            ]
-        )
+        recording["raw_"] = [
+                        Episode(
+                            time,
+                            current[i],
+                            n_episode=i,
+                            piezo=piezo[i],
+                            command=command[i],
+                            sampling_rate=recording.sampling_rate,
+                            input_time_unit=time_input_unit,
+                            input_trace_unit=trace_input_unit,
+                            input_piezo_unit=piezo_input_unit,
+                            input_command_unit=command_input_unit,
+                        )
+                        for i in range(n_episodes)
+                    ]
         return recording
