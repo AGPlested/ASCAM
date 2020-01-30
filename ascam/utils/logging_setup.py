@@ -51,7 +51,7 @@ def initialize_logger(output_dir=".", verbose=False, debug=False):
 
 def setup_file_handler(output_dir, filename):
     formatter = logging.Formatter(
-            "%(asctime)s:%(levelname)s:%(module)s:%(funcName)s:" "%(lineno)d:%(message)s"
+        "%(asctime)s:%(levelname)s:%(module)s:%(funcName)s:" "%(lineno)d:%(message)s"
     )
     logfile_name = os.path.join(output_dir, filename)
     file_handler = logging.FileHandler(logfile_name, "w")
@@ -69,4 +69,3 @@ def setup_cl_handlers(logger):
     cl_handler = logging.StreamHandler()
     cl_handler.setFormatter(formatter)
     logger.addHandler(cl_handler)
-

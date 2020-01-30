@@ -1,6 +1,16 @@
-from PySide2.QtWidgets import (QListWidget, QLabel, QHBoxLayout, QVBoxLayout, 
-        QGridLayout, QWidget, QPushButton, QMainWindow, QApplication, QToolBar, 
-        QStatusBar)
+from PySide2.QtWidgets import (
+    QListWidget,
+    QLabel,
+    QHBoxLayout,
+    QVBoxLayout,
+    QGridLayout,
+    QWidget,
+    QPushButton,
+    QMainWindow,
+    QApplication,
+    QToolBar,
+    QStatusBar,
+)
 
 import pyqtgraph as pg
 import numpy as np
@@ -9,7 +19,7 @@ import numpy as np
 class PlotFrame(QWidget):
     def __init__(self, main):
         super().__init__()
-        
+
         self.main = main
 
         self.trace_plot = pg.PlotWidget(name=f"trace")
@@ -37,4 +47,3 @@ class PlotFrame(QWidget):
         self.trace_plot.plot(episode.time, episode.trace)
         self.command_plot.plot(episode.time, episode.command)
         self.piezo_plot.plot(episode.time, episode.piezo)
-

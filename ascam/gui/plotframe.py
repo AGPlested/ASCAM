@@ -153,9 +153,13 @@ class PlotFrame(ttk.Frame):
 
     def draw_hist_indicator(self, *args, draw=True):
         logging.debug(f"draw_hist_indicator")
-        max_current = np.max([np.max(episode.trace) for episode in self.parent.data.series])
-        min_current = np.min([np.min(episode.trace) for episode in self.parent.data.series])
-        trace_y = (max_current - min_current)
+        max_current = np.max(
+            [np.max(episode.trace) for episode in self.parent.data.series]
+        )
+        min_current = np.min(
+            [np.min(episode.trace) for episode in self.parent.data.series]
+        )
+        trace_y = max_current - min_current
         hist_indicator = np.ones(self.parent.data.hist_times.size) * (
             min_current - 0.1 * trace_y
         )
@@ -612,8 +616,12 @@ class PlotFrame(ttk.Frame):
         """Create all the plot objects"""
 
         logging.debug(f"plotframe.setup_plots")
-        show_command = self.show_command.get() and (self.parent.data.episode.command is not None)
-        show_piezo = self.show_piezo.get() and (self.parent.data.episode.piezo is not None)
+        show_command = self.show_command.get() and (
+            self.parent.data.episode.command is not None
+        )
+        show_piezo = self.show_piezo.get() and (
+            self.parent.data.episode.piezo is not None
+        )
         # decide how many plots there will be
         num_plots = 1 + show_command + show_piezo
         x_share = None
@@ -623,17 +631,15 @@ class PlotFrame(ttk.Frame):
         pgs = gs.GridSpec(num_plots + 1, 1 + 2 * show_hist)
         if show_command:
             # always plot command voltage on bottom (-1 row)
-            max_command = np.max([np.max(episode.command) for episode in self.parent.data.series])
-            min_command = np.min([np.min(episode.command) for episode in self.parent.data.series])
+            max_command = np.max(
+                [np.max(episode.command) for episode in self.parent.data.series]
+            )
+            min_command = np.min(
+                [np.min(episode.command) for episode in self.parent.data.series]
+            )
             self.command_plot = self.fig.add_subplot(pgs[-1, : 1 + show_hist])
-            c_y = (
-                max_command
-                - min_command
-            )
-            self.command_plot.set_ylim(
-                min_command - 0.1 * c_y,
-                max_command + 0.1 * c_y,
-            )
+            c_y = max_command - min_command
+            self.command_plot.set_ylim(min_command - 0.1 * c_y, max_command + 0.1 * c_y)
             self.command_plot.set_ylabel(
                 ylabel=f"Command [{self.parent.data.command_unit}]"
             )
@@ -648,14 +654,15 @@ class PlotFrame(ttk.Frame):
             pgs[trace_pos : trace_pos + 2, : 1 + show_hist], sharex=x_share
         )
         # set axis limits of current plot so all episodes fit
-        max_current = np.max([np.max(episode.trace) for episode in self.parent.data.series])
-        min_current = np.min([np.min(episode.trace) for episode in self.parent.data.series])
-        trace_y = (
-            max_current - min_current
+        max_current = np.max(
+            [np.max(episode.trace) for episode in self.parent.data.series]
         )
+        min_current = np.min(
+            [np.min(episode.trace) for episode in self.parent.data.series]
+        )
+        trace_y = max_current - min_current
         self.current_plot.set_ylim(
-            min_current - 0.1 * trace_y,
-            max_current + 0.1 * trace_y,
+            min_current - 0.1 * trace_y, max_current + 0.1 * trace_y
         )
         self.current_plot.set_ylabel(f"Current [{self.parent.data.trace_unit}]")
 
@@ -667,17 +674,18 @@ class PlotFrame(ttk.Frame):
         x_share = x_share if show_command else self.current_plot
         if show_piezo:
             # always plots piezo voltage on top
-            max_piezo = np.max([np.max(episode.piezo) for episode in self.parent.data.series])
-            min_piezo = np.min([np.min(episode.piezo) for episode in self.parent.data.series])
+            max_piezo = np.max(
+                [np.max(episode.piezo) for episode in self.parent.data.series]
+            )
+            min_piezo = np.min(
+                [np.min(episode.piezo) for episode in self.parent.data.series]
+            )
             self.piezo_plot = self.fig.add_subplot(
                 pgs[0, : 1 + show_hist], sharex=x_share
             )
-            piezo_y = (
-                max_piezo - min_piezo
-            )
+            piezo_y = max_piezo - min_piezo
             self.piezo_plot.set_ylim(
-                min_piezo - 0.1 * piezo_y,
-                max_piezo + 0.1 * piezo_y,
+                min_piezo - 0.1 * piezo_y, max_piezo + 0.1 * piezo_y
             )
             self.piezo_plot.set_ylabel(f"Piezo [{self.parent.data.piezo_unit}]")
             plt.setp(self.piezo_plot.get_xticklabels(), visible=False)
@@ -689,8 +697,7 @@ class PlotFrame(ttk.Frame):
                 pgs[trace_pos : trace_pos + 2, -1], sharey=self.current_plot
             )
             self.histogram.set_ylim(
-                min_current - 0.1 * trace_y,
-                max_current + 0.1 * trace_y,
+                min_current - 0.1 * trace_y, max_current + 0.1 * trace_y
             )
             self.histogram.set_ylabel(f"Current [{self.parent.data.trace_unit}]")
             self.histogram.yaxis.set_label_position("right")

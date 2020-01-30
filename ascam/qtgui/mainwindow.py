@@ -1,8 +1,19 @@
 import logging
 
-from PySide2.QtWidgets import (QListWidget, QLabel, QHBoxLayout, QVBoxLayout,
-        QGridLayout, QWidget, QPushButton, QMainWindow, QApplication, QToolBar,
-        QStatusBar, QFileDialog)
+from PySide2.QtWidgets import (
+    QListWidget,
+    QLabel,
+    QHBoxLayout,
+    QVBoxLayout,
+    QGridLayout,
+    QWidget,
+    QPushButton,
+    QMainWindow,
+    QApplication,
+    QToolBar,
+    QStatusBar,
+    QFileDialog,
+)
 from PySide2.QtGui import QPalette, QColor
 
 
@@ -40,17 +51,19 @@ class MainWindow(QMainWindow):
     def create_menu(self):
         debug_logger.debug("MainWindow creating menus")
         self.file_menu = self.menuBar().addMenu("File")
-        self.file_menu.addAction('Open File', self.open_file)
-        self.file_menu.addAction('Save', self.save_to_file)
-        self.file_menu.addAction('Export', lambda: ExportFileDialog())
-        self.file_menu.addAction('Export Idealization', self.export_idealization)
-        self.file_menu.addAction('Export Events', self.export_events)
-        self.file_menu.addAction('Export First Activation', lambda: ExportFADialog())
+        self.file_menu.addAction("Open File", self.open_file)
+        self.file_menu.addAction("Save", self.save_to_file)
+        self.file_menu.addAction("Export", lambda: ExportFileDialog())
+        self.file_menu.addAction("Export Idealization", self.export_idealization)
+        self.file_menu.addAction("Export Events", self.export_events)
+        self.file_menu.addAction("Export First Activation", lambda: ExportFADialog())
         self.file_menu.addSeparator()
-        self.file_menu.addAction('Quit', self.close)
+        self.file_menu.addAction("Quit", self.close)
 
         self.processing_menu = self.menuBar().addMenu("Processing")
-        self.processing_menu.addAction("Baseline Correction", lambda: BaselineFrame(self))
+        self.processing_menu.addAction(
+            "Baseline Correction", lambda: BaselineFrame(self)
+        )
         self.processing_menu.addAction("Filter", lambda: FilterFrame(self))
 
         self.analysis_menu = self.menuBar().addMenu("Analysis")
@@ -86,6 +99,6 @@ class MainWindow(QMainWindow):
         self.tc_frame = IdealizationFrame(self)
         self.tc_frame.show()
         self.central_layout.addWidget(self.tc_frame, 1, 1)
-    
+
     def launch_fa_analysis(self):
         pass

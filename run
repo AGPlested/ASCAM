@@ -8,7 +8,7 @@ import logging
 import getopt
 
 from PySide2.QtWidgets import QApplication
-from ascam.qtgui.mainwindow import MainWindow 
+from ascam.qtgui.mainwindow import MainWindow
 from ascam.utils import initialize_logger
 
 
@@ -22,7 +22,6 @@ def parse_options():
         logdir (string) - the directory in which the log should be saved
         test (bool) - if true load example data
     """
-    log_level = "INFO"
     debug = False
     verbose = False
     logdir = "./logfiles"

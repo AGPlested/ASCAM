@@ -1,7 +1,15 @@
 import logging
 
-from PySide2.QtWidgets import (QDialog, QLineEdit, QComboBox,
-        QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QCheckBox)
+from PySide2.QtWidgets import (
+    QDialog,
+    QLineEdit,
+    QComboBox,
+    QVBoxLayout,
+    QHBoxLayout,
+    QPushButton,
+    QLabel,
+    QCheckBox,
+)
 
 from ascam.utils import clear_qt_layout
 
@@ -10,10 +18,9 @@ debug_logger = logging.getLogger("ascam.debug")
 
 
 class BaselineFrame(QDialog):
-
     def __init__(self, main):
         super().__init__()
-        self.setWindowTitle("Baseline Correction") 
+        self.setWindowTitle("Baseline Correction")
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
 
@@ -39,7 +46,7 @@ class BaselineFrame(QDialog):
         selection_box.currentIndexChanged.connect(self.choose_selection_method)
         row_tow.addWidget(selection_label)
         row_tow.addWidget(selection_box)
-        
+
         row_three = QHBoxLayout()
         ok_button = QPushButton("OK")
         ok_button.clicked.connect(self.ok_clicked)
@@ -48,10 +55,10 @@ class BaselineFrame(QDialog):
         row_three.addWidget(ok_button)
         row_three.addWidget(cancel_button)
 
-        self.layout.addLayout(row_one)  
-        self.choose_correction_method(0)  
-        self.layout.addLayout(row_tow)  
-        self.choose_selection_method(0)  
+        self.layout.addLayout(row_one)
+        self.choose_correction_method(0)
+        self.layout.addLayout(row_tow)
+        self.choose_selection_method(0)
         self.layout.addLayout(row_three)
 
     def choose_correction_method(self, index):
@@ -59,9 +66,9 @@ class BaselineFrame(QDialog):
             self.selection_layout = QHBoxLayout()
             debug_logger.debug("Creating polynomial input widgets")
             self.degree_label = QLabel("Degree")
-            self.selection_layout.addWidget(self.degree_label)  
+            self.selection_layout.addWidget(self.degree_label)
             self.degree_entry = QLineEdit("1")
-            self.selection_layout.addWidget(self.degree_entry)  
+            self.selection_layout.addWidget(self.degree_entry)
             self.layout.insertLayout(1, self.selection_layout)
         else:
             debug_logger.debug("Destroying polynomial input widgets")
@@ -80,19 +87,19 @@ class BaselineFrame(QDialog):
         if self.selection_options[index] == "Piezo":
             debug_logger.debug("creating piezo selection widgets")
             self.active_checkbox = QCheckBox("Active/Inactive")
-            self.method_layout.addWidget(self.active_checkbox)  
+            self.method_layout.addWidget(self.active_checkbox)
             self.deviation_label = QLabel("Deviation")
-            self.method_layout.addWidget(self.deviation_label)  
+            self.method_layout.addWidget(self.deviation_label)
             self.deviation_entry = QLineEdit("0.05")
-            self.method_layout.addWidget(self.deviation_entry)  
+            self.method_layout.addWidget(self.deviation_entry)
         else:
             debug_logger.debug("creating interval widgets")
             self.include_checkbox = QCheckBox("Include/Exclude")
-            self.method_layout.addWidget(self.include_checkbox)  
+            self.method_layout.addWidget(self.include_checkbox)
             self.interval_label = QLabel("Intervals")
-            self.method_layout.addWidget(self.interval_label)  
+            self.method_layout.addWidget(self.interval_label)
             self.interval_entry = QLineEdit("")
-            self.method_layout.addWidget(self.interval_entry)  
+            self.method_layout.addWidget(self.interval_entry)
         self.layout.insertLayout(3, self.method_layout)
 
     def ok_clicked(self):

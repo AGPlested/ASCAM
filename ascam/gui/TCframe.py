@@ -41,9 +41,7 @@ class TC_Frame(ttk.Frame):
                     self.parent.data.interpolation_factor,
                 )
             }
-            self.array_into_tkstring(
-                self.parent.data.tc_amplitudes, self.amp_string
-            )
+            self.array_into_tkstring(self.parent.data.tc_amplitudes, self.amp_string)
             if self.parent.data.tc_thresholds is not None:
                 self.array_into_tkstring(
                     self.parent.data.tc_thresholds, self.theta_string

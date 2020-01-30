@@ -1,8 +1,18 @@
 import logging
 
-from PySide2.QtWidgets import (QListWidget, QLabel, QHBoxLayout, QVBoxLayout, 
-        QGridLayout, QWidget, QPushButton, QMainWindow, QApplication, QToolBar, 
-        QStatusBar)
+from PySide2.QtWidgets import (
+    QListWidget,
+    QLabel,
+    QHBoxLayout,
+    QVBoxLayout,
+    QGridLayout,
+    QWidget,
+    QPushButton,
+    QMainWindow,
+    QApplication,
+    QToolBar,
+    QStatusBar,
+)
 
 
 class EpisodeFrame(QListWidget):
@@ -15,7 +25,7 @@ class EpisodeFrame(QListWidget):
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
         self.populate()
-        
+
         self.currentItemChanged.connect(self.on_item_click)
 
     def on_item_click(self, item, previous):
@@ -26,4 +36,3 @@ class EpisodeFrame(QListWidget):
         if data is not None:
             logging.debug("inserting data")
             self.addItems([f"Episode {i+1}" for i in range(len(data.series))])
-

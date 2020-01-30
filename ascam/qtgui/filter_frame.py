@@ -1,7 +1,16 @@
 import logging
 
-from PySide2.QtWidgets import (QDialog, QLineEdit, QComboBox, QFormLayout,
-        QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QCheckBox)
+from PySide2.QtWidgets import (
+    QDialog,
+    QLineEdit,
+    QComboBox,
+    QFormLayout,
+    QVBoxLayout,
+    QHBoxLayout,
+    QPushButton,
+    QLabel,
+    QCheckBox,
+)
 
 from ascam.utils import clear_qt_layout
 
@@ -10,10 +19,9 @@ debug_logger = logging.getLogger("ascam.debug")
 
 
 class FilterFrame(QDialog):
-
     def __init__(self, main):
         super().__init__()
-        self.setWindowTitle("Filter") 
+        self.setWindowTitle("Filter")
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
 
@@ -39,9 +47,9 @@ class FilterFrame(QDialog):
         row_two.addWidget(ok_button)
         row_two.addWidget(cancel_button)
 
-        self.layout.addLayout(row_one)  
-        self.choose_filter_method(0)  
-        self.layout.addLayout(row_two)  
+        self.layout.addLayout(row_one)
+        self.choose_filter_method(0)
+        self.layout.addLayout(row_two)
 
     def choose_filter_method(self, index):
         try:
@@ -53,9 +61,9 @@ class FilterFrame(QDialog):
             self.selection_layout = QHBoxLayout()
             debug_logger.debug("Creating gaussian input widgets")
             self.freq_label = QLabel("Frequency [Hz]")
-            self.selection_layout.addWidget(self.freq_label)  
+            self.selection_layout.addWidget(self.freq_label)
             self.freq_entry = QLineEdit("1000")
-            self.selection_layout.addWidget(self.freq_entry)  
+            self.selection_layout.addWidget(self.freq_entry)
         else:
             debug_logger.debug("creating CK-filter input widgets")
             self.selection_layout = QFormLayout()

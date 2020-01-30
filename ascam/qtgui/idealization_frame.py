@@ -1,15 +1,24 @@
 import logging
 
-from PySide2.QtWidgets import (QTabWidget, QWidget, QVBoxLayout, QHBoxLayout,
-        QGridLayout, QCheckBox,QLineEdit,
-        QToolButton, QTabBar, QPushButton, QLabel)
+from PySide2.QtWidgets import (
+    QTabWidget,
+    QWidget,
+    QVBoxLayout,
+    QHBoxLayout,
+    QGridLayout,
+    QCheckBox,
+    QLineEdit,
+    QToolButton,
+    QTabBar,
+    QPushButton,
+    QLabel,
+)
 
 
 debug_logger = logging.getLogger("ascam.debug")
 
 
 class IdealizationFrame(QWidget):
-
     def __init__(self, main):
         super().__init__()
 
@@ -46,16 +55,15 @@ class IdealizationFrame(QWidget):
 
 
 class IdealizationTabFrame(QTabWidget):
-
     def __init__(self, main):
         super().__init__()
 
         self.tabs = [IdealizationTab(self)]
         self.addTab(self.tabs[0], "1")
 
-        self.insertTab(1, QWidget(), '')
+        self.insertTab(1, QWidget(), "")
         self.new_button = QToolButton()
-        self.new_button.setText('+')
+        self.new_button.setText("+")
         self.new_button.clicked.connect(self.add_tab)
         self.tabBar().setTabButton(1, QTabBar.RightSide, self.new_button)
 
@@ -67,11 +75,10 @@ class IdealizationTabFrame(QTabWidget):
         debug_logger.debug(f"adding new tab with number {title}")
         tab = IdealizationTab(self)
         self.tabs.append(tab)
-        self.insertTab(self.count()-1, tab, title)
+        self.insertTab(self.count() - 1, tab, title)
 
 
 class IdealizationTab(QWidget):
-
     def __init__(self, parent):
         super().__init__()
         self.layout = QVBoxLayout()
@@ -81,7 +88,7 @@ class IdealizationTab(QWidget):
         # button.clicked.connect(lambda *args: self.close())
         # layout.addWidget(button)
         self.create_widgets()
-        
+
     def create_widgets(self):
         row_one = QHBoxLayout()
         amp_label = QLabel("Amplitudes")
@@ -91,7 +98,7 @@ class IdealizationTab(QWidget):
         neg_check = QCheckBox("Negative Values")
         row_one.addWidget(neg_check)
         self.layout.addLayout(row_one)
-        
+
         self.amp_entry = QLineEdit()
         self.layout.addWidget(self.amp_entry)
 
@@ -123,4 +130,3 @@ class IdealizationTab(QWidget):
         interpolate = QCheckBox("Apply")
         row_six.addWidget(interpolate)
         self.layout.addLayout(row_six)
-

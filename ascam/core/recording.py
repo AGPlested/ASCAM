@@ -43,7 +43,7 @@ class Recording(dict):
             f"time_input_unit = {time_input_unit}\n"
             f"trace_input_unit = {trace_input_unit}\n"
             f"piezo_input_unit = {piezo_input_unit}\n"
-            f"command_input_unit = {command_input_unit}",
+            f"command_input_unit = {command_input_unit}"
         )
 
         recording = cls(filename, sampling_rate)
@@ -91,13 +91,15 @@ class Recording(dict):
         self.hist_times = 0
         # parameters for analysis
         # idealization
-        self.params = {"raw_" : {
-                            "_tc_thresholds" : np.array([]),
-                            "_tc_amplitudes" : np.array([]),
-                            "_tc_resolution" : None,
-                            "interpolation_factor" : 1,
-                            "_fa_threshold" : 0.0, }
-                        }
+        self.params = {
+            "raw_": {
+                "_tc_thresholds": np.array([]),
+                "_tc_amplitudes": np.array([]),
+                "_tc_resolution": None,
+                "interpolation_factor": 1,
+                "_fa_threshold": 0.0,
+            }
+        }
         self.tc_unit = "pA"
         # TODO move these to constants.py
         self.tc_unit_factors = {
@@ -121,50 +123,70 @@ class Recording(dict):
 
     @property
     def fa_threshold(self):
-        return self.params[self.current_datakey]["_fa_threshold"] * self.tc_unit_factors[self.tc_unit]
+        return (
+            self.params[self.current_datakey]["_fa_threshold"]
+            * self.tc_unit_factors[self.tc_unit]
+        )
 
     @fa_threshold.setter
     def fa_threshold(self, theta):
         if theta is not None:
-            self.params[self.current_datakey]["_fa_threshold"] = theta / self.tc_unit_factors[self.tc_unit]
+            self.params[self.current_datakey]["_fa_threshold"] = (
+                theta / self.tc_unit_factors[self.tc_unit]
+            )
         else:
             self.params[self.current_datakey]["_fa_threshold"] = None
 
     @property
     def tc_amplitudes(self):
-        return self.params[self.current_datakey]["_tc_amplitudes"] * self.tc_unit_factors[self.tc_unit]
+        return (
+            self.params[self.current_datakey]["_tc_amplitudes"]
+            * self.tc_unit_factors[self.tc_unit]
+        )
 
     @tc_amplitudes.setter
     def tc_amplitudes(self, amps):
         if amps is not None:
-            self.params[self.current_datakey]["_tc_amplitudes"]  = amps / self.tc_unit_factors[self.tc_unit]
+            self.params[self.current_datakey]["_tc_amplitudes"] = (
+                amps / self.tc_unit_factors[self.tc_unit]
+            )
         else:
-            self.params[self.current_datakey]["_tc_amplitudes"]  = np.array([])
+            self.params[self.current_datakey]["_tc_amplitudes"] = np.array([])
 
     @property
     def tc_thresholds(self):
-        return self.params[self.current_datakey]["_tc_thresholds"] * self.tc_unit_factors[self.tc_unit]
+        return (
+            self.params[self.current_datakey]["_tc_thresholds"]
+            * self.tc_unit_factors[self.tc_unit]
+        )
 
     @tc_thresholds.setter
     def tc_thresholds(self, thetas):
         if thetas is not None:
-            self.params[self.current_datakey]["_tc_thresholds"] = thetas / self.tc_unit_factors[self.tc_unit]
+            self.params[self.current_datakey]["_tc_thresholds"] = (
+                thetas / self.tc_unit_factors[self.tc_unit]
+            )
         else:
             self.params[self.current_datakey]["_tc_thresholds"] = np.array([])
 
     @property
     def tc_resolution(self):
         if self.params[self.current_datakey]["_tc_resolution"] is not None:
-            return self.params[self.current_datakey]["_tc_resolution"]  * self.episode.time_unit_factor
+            return (
+                self.params[self.current_datakey]["_tc_resolution"]
+                * self.episode.time_unit_factor
+            )
         else:
             return None
 
     @tc_resolution.setter
     def tc_resolution(self, resolution):
         if resolution is not None:
-            self.params[self.current_datakey]["_tc_resolution"]  = resolution / self.episode.time_unit_factor
+            self.params[self.current_datakey]["_tc_resolution"] = (
+                resolution / self.episode.time_unit_factor
+            )
         else:
-            self.params[self.current_datakey]["_tc_resolution"]  = None
+            self.params[self.current_datakey]["_tc_resolution"] = None
 
     @property
     def interpolation_factor(self):
@@ -236,7 +258,7 @@ class Recording(dict):
             f"{select_piezo}\n"
             f"the selected intervals are {intervals}\n"
             f"select where piezo is active is {active}; the "
-            f"difference to piezo baseline is {deviation}",
+            f"difference to piezo baseline is {deviation}"
         )
         if self.current_datakey == "raw_":
             # if its the first operation drop the 'raw_'
@@ -265,7 +287,7 @@ class Recording(dict):
 
         ana_logger.info(
             f"gauss filtering series '{self.current_datakey}'\n"
-            f"with frequency {filter_freq}",
+            f"with frequency {filter_freq}"
         )
 
         fdatakey = f"GFILTER{filter_freq}_"
@@ -297,7 +319,7 @@ class Recording(dict):
             f"weight_exponent: {weight_exponent}\n"
             f"weight_window: {weight_window}\n"
             f"apriori_f_weights: {apriori_f_weights}\n"
-            f"apriori_b_weights: {apriori_b_weights}",
+            f"apriori_b_weights: {apriori_b_weights}"
         )
 
         n_filters = len(window_lengths)
@@ -329,7 +351,7 @@ class Recording(dict):
             f"amplitudes: {self.params[self.current_datakey]['_tc_amplitudes']}\n"
             f"thresholds: {self.params[self.current_datakey]['_tc_thresholds']}\n"
             f"resolution: {self.params[self.current_datakey]['_tc_resolution']}\n"
-            f"interpolation_factor: {self.params[self.current_datakey]['interpolation_factor']}",
+            f"interpolation_factor: {self.params[self.current_datakey]['interpolation_factor']}"
         )
 
         for episode in self.series:
@@ -349,7 +371,7 @@ class Recording(dict):
             f"amplitudes: {self.params[self.current_datakey]['_tc_amplitudes']}\n"
             f"thresholds: {self.params[self.current_datakey]['_tc_thresholds']}\n"
             f"resolution: {self.params[self.current_datakey]['_tc_resolution']}\n"
-            f"interpolation_factor: {self.params[self.current_datakey]['interpolation_factor']}",
+            f"interpolation_factor: {self.params[self.current_datakey]['interpolation_factor']}"
         )
 
         self.episode.idealize_or_interpolate(
@@ -365,7 +387,9 @@ class Recording(dict):
         debug_logger.debug(f"detect_fa")
 
         [
-            episode.detect_first_activation(self.params[self.current_datakey]["_fa_threshold"])
+            episode.detect_first_activation(
+                self.params[self.current_datakey]["_fa_threshold"]
+            )
             for episode in self.series
             if episode.n_episode not in exclude
         ]
@@ -673,20 +697,20 @@ class Recording(dict):
         if not command:
             command = [None] * n_episodes
         recording["raw_"] = [
-                            Episode(
-                                time,
-                                current[i],
-                                n_episode=i,
-                                piezo=piezo[i],
-                                command=command[i],
-                                sampling_rate=recording.sampling_rate,
-                                input_time_unit=time_input_unit,
-                                input_trace_unit=trace_input_unit,
-                                input_piezo_unit=piezo_input_unit,
-                                input_command_unit=command_input_unit,
-                            )
-                            for i in range(n_episodes)
-                        ]
+            Episode(
+                time,
+                current[i],
+                n_episode=i,
+                piezo=piezo[i],
+                command=command[i],
+                sampling_rate=recording.sampling_rate,
+                input_time_unit=time_input_unit,
+                input_trace_unit=trace_input_unit,
+                input_piezo_unit=piezo_input_unit,
+                input_command_unit=command_input_unit,
+            )
+            for i in range(n_episodes)
+        ]
         return recording
 
     @staticmethod
@@ -731,18 +755,18 @@ class Recording(dict):
         if not command:
             command = [None] * n_episodes
         recording["raw_"] = [
-                        Episode(
-                            time,
-                            current[i],
-                            n_episode=i,
-                            piezo=piezo[i],
-                            command=command[i],
-                            sampling_rate=recording.sampling_rate,
-                            input_time_unit=time_input_unit,
-                            input_trace_unit=trace_input_unit,
-                            input_piezo_unit=piezo_input_unit,
-                            input_command_unit=command_input_unit,
-                        )
-                        for i in range(n_episodes)
-                    ]
+            Episode(
+                time,
+                current[i],
+                n_episode=i,
+                piezo=piezo[i],
+                command=command[i],
+                sampling_rate=recording.sampling_rate,
+                input_time_unit=time_input_unit,
+                input_trace_unit=trace_input_unit,
+                input_piezo_unit=piezo_input_unit,
+                input_command_unit=command_input_unit,
+            )
+            for i in range(n_episodes)
+        ]
         return recording
