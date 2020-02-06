@@ -136,3 +136,8 @@ class IdealizationTab(QWidget):
         interpolate = QCheckBox("Apply")
         row_six.addWidget(interpolate)
         self.layout.addLayout(row_six)
+
+
+class FirstAcivationFrame(QWidget):
+    def __init__(self):
+        super().__init__()

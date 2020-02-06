@@ -16,14 +16,13 @@ from PySide2.QtWidgets import (
 )
 from PySide2.QtGui import QPalette, QColor
 
-
-from ascam.qtgui.export_fa_dialog import ExportFADialog
-from ascam.qtgui.export_file_dialog import ExportFileDialog
-from ascam.qtgui.filter_frame import FilterFrame
-from ascam.qtgui.baseline_frame import BaselineFrame
-from ascam.qtgui.plot_frame import PlotFrame
-from ascam.qtgui.episode_frame import EpisodeFrame
-from ascam.qtgui.idealization_frame import IdealizationFrame
+from ascam.qtgui import ExportFADialog
+from ascam.qtgui import ExportFileDialog
+from ascam.qtgui import FilterFrame
+from ascam.qtgui import BaselineFrame
+from ascam.qtgui import PlotFrame
+from ascam.qtgui import EpisodeFrame
+from ascam.qtgui import IdealizationFrame
 
 from ascam.core.recording import Recording
 
