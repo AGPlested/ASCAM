@@ -1,6 +1,8 @@
 import logging
 
+from PySide2 import QtWidgets
 from PySide2.QtWidgets import (
+    QSpacerItem,
     QTabWidget,
     QWidget,
     QVBoxLayout,
@@ -44,8 +46,12 @@ class IdealizationFrame(QWidget):
         self.close_button.clicked.connect(self.close_tab)
         self.layout.addWidget(self.close_button)
 
+        self.layout.addItem(QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum,
+            QtWidgets.QSizePolicy.Expanding))
+
     def close_tab(self):
-        self.tab_frame.removeTab(self.tab_frame.currentIndex())
+        if self.tab_frame.count() > 1:
+            self.tab_frame.removeTab(self.tab_frame.currentIndex())
 
     def calculate(self):
         pass
