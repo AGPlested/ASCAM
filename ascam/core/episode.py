@@ -6,7 +6,7 @@ import numpy as np
 from ascam.core.filtering import gaussian_filter, ChungKennedyFilter
 from ascam.core.analysis import (
     baseline_correction,
-    detect_first_activation,
+    detectfirst_activation,
     Idealizer,
     interpolate,
 )
@@ -49,7 +49,7 @@ class Episode:
         # units when given input
         self.time = time / TIME_UNIT_FACTORS[input_time_unit]
         self.trace = trace / CURRENT_UNIT_FACTORS[input_trace_unit]
-        self._id_time = time / TIME_UNIT_FACTORS[input_time_unit]        
+        self.id_time = time / TIME_UNIT_FACTORS[input_time_unit]        
 
         if piezo is not None:
             self.piezo = piezo / VOLTAGE_UNIT_FACTORS[input_piezo_unit]
@@ -61,15 +61,15 @@ class Episode:
             self.command = None
 
         # results of analyses
-        self._first_activation = None
-        self._idealization = None
+        self.first_activation = None
+        self.idealization = None
         self._intrp_trace = None
         # metadata about the episode
         self.n_episode = int(n_episode)
         self.sampling_rate = sampling_rate
         self.suspiciousSTD = False
 
-    def gauss_filter_episode(self, filter_frequency=1e3, method="convolution"):
+    def gauss_filter_episode(self, filter_frequency=1e3):
         """Replace the current trace of the episode by the gauss filtered
         version of itself."""
 
@@ -80,7 +80,7 @@ class Episode:
         )
         # sett idealization to None since the newly created episode has no
         # idealization
-        self._idealization = None
+        self.idealization = None
 
     def CK_filter_episode(
         self,
@@ -102,7 +102,7 @@ class Episode:
         self.trace = ck_filter.apply_filter(self.trace)
         # sett idealization to None since the newly created episode has no
         # idealization
-        self._idealization = None
+        self.idealization = None
 
     def baseline_correct_episode(
         self,
@@ -127,15 +127,15 @@ class Episode:
             active=active,
             deviation=deviation,
         )
-        # reset _idealization
-        self._idealization = None
+        # reset idealization
+        self.idealization = None
 
     def idealize_or_interpolate(
         self,
         amplitudes: Array[float, 1, ...]=np.array([]),
         thresholds: Optional[Array[float, 1, ...]]=None,
-        resolution: Optional[int]=None,
-        interpolation_factor: int=1,
+        resolution: Optional[int] = None,
+        interpolation_factor: int = 1,
     ):
         if amplitudes.size != 0:
             self.idealize(amplitudes, thresholds, resolution, interpolation_factor)
@@ -143,7 +143,7 @@ class Episode:
             self.interpolate(interpolation_factor)
 
     def interpolate(self, interpolation_factor):
-        self._intrp_trace, self._id_time = interpolate(
+        self._intrp_trace, self.id_time = interpolate(
             self.trace, self.time, interpolation_factor
         )
 
@@ -157,7 +157,7 @@ class Episode:
             f"resolution = { resolution } \n"
             f"interpolation_factor = { interpolation_factor } "
         )
-        self._idealization, self._intrp_trace, self._id_time = Idealizer.idealize_episode(
+        self.idealization, self._intrp_trace, self.id_time = Idealizer.idealize_episode(
             self.trace,
             self.time,
             amplitudes,
@@ -170,7 +170,7 @@ class Episode:
         """Check the standard deviation of the episode against a reference
         value."""
 
-        _, _, trace = piezo_selection(
+        _, trace = piezo_selection(
             self.time, self.piezo, self.trace, active=False, deviation=0.01
         )
         tracestd = np.std(trace)
@@ -188,10 +188,10 @@ class Episode:
             mean = std = np.nan
         return mean, std
 
-    def detect_first_activation(self, threshold):
+    def detectfirst_activation(self, threshold):
         """Detect the first activation in the episode."""
 
-        self._first_activation = detect_first_activation(
+        self.first_activation = detectfirst_activation(
             self.time, self.trace, threshold
         )
 
@@ -203,4 +203,4 @@ class Episode:
             a table containing the amplitude of an opening, its start and end
             time and its duration"""
 
-        return Idealizer.extract_events(self._idealization, self._id_time)
+        return Idealizer.extract_events(self.idealization, self.id_time)
