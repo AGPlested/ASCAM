@@ -90,7 +90,7 @@ class Recording(dict):
         self.current_datakey = "raw_"
         self.current_ep_ind = 0
 
-        self.hist_times = 0
+        # self.hist_times = 0
         # parameters for analysis
         self.time_unit = 'ms'
         self.piezo_unit = 'uV'
@@ -226,36 +226,36 @@ class Recording(dict):
 
     @property
     def time(self):
-        if self.episode._time is not None:
-            return self.episode._time * TIME_UNIT_FACTORS[self.time_unit]
+        if self.episode.time is not None:
+            return self.episode.time * TIME_UNIT_FACTORS[self.time_unit]
         else:
             return None
 
     @property
     def trace(self):
-        if self.episode._trace is not None:
-            return self.episode._trace * CURRENT_UNIT_FACTORS[self.trace_unit]
+        if self.episode.trace is not None:
+            return self.episode.trace * CURRENT_UNIT_FACTORS[self.trace_unit]
         return None
 
     @property
     def intrp_trace(self):
         if self.episode._intrp_trace is not None:
             return self.episode._intrp_trace * CURRENT_UNIT_FACTORS[self.trace_unit]
-        if self.episode.trace is not None:
-            return self._trace * CURRENT_UNIT_FACTORS[self.trace_unit]
+        if self.trace is not None:
+            return self.episode.trace * CURRENT_UNIT_FACTORS[self.trace_unit]
         return None
 
     @property
     def piezo(self):
-        if self.episode._piezo is not None:
-            return self.episode._piezo * VOLTAGE_UNIT_FACTORS[self.piezo_unit]
+        if self.episode.piezo is not None:
+            return self.episode.piezo * VOLTAGE_UNIT_FACTORS[self.piezo_unit]
         else:
             return None
 
     @property
     def command(self):
-        if self.episode._command is not None:
-            return self.episode._command * VOLTAGE_UNIT_FACTORS[self.command_unit]
+        if self.episode.command is not None:
+            return self.episode.command * VOLTAGE_UNIT_FACTORS[self.command_unit]
         else:
             return None
 
@@ -470,11 +470,9 @@ class Recording(dict):
         debug_logger.debug(f"series_hist")
         # put all piezo traces and all current traces in lists
         piezos = [episode.piezo for episode in self.series]
-        traces = [episode.trace for episode in self.series]
+        traces = [episode.trace for episode in self.series] 
         trace_list = []
-        if self.episode.piezo is None:
-            # this is a failsafe, select_piezo should never be true if has_piezo
-            # is false
+        if self.episode.piezo is None: 
             if select_piezo:
                 debug_logger.debug(
                     (f"Tried piezo selection even though there is no piezo data!")
@@ -487,21 +485,23 @@ class Recording(dict):
                     self.episode.time, piezo, trace, active, deviation
                 )
                 trace_list.extend(trace_points)
-            self.hist_times = np.array(time)
+            # self.hist_times = np.array(time)
         elif intervals:
             for trace in traces:
                 time, trace_points = interval_selection(
                     self.episode.time, trace, intervals, self.sampling_rate
                 )
                 trace_list.extend(trace_points)
-            self.hist_times = np.array(time)
+            # self.hist_times = np.array(time)
         else:
             trace_list = traces
-            self.hist_times = np.array(self.episode.time)
+            # self.hist_times = np.array(self.episode.time)
         # turn the collected traces into a 1D numpy array for the histogram
         # function
         trace_list = np.asarray(trace_list)
         trace_list = trace_list.flatten()
+        trace_list *= CURRENT_UNIT_FACTORS[self.trace_unit]
+
         heights, bins = np.histogram(trace_list, n_bins, density=density)
         # get centers of all the bins
         centers = (bins[:-1] + bins[1:]) / 2
@@ -523,30 +523,31 @@ class Recording(dict):
         debug_logger.debug(f"episode_hist")
 
         # failsafe for piezo selection
-        if self.episode.piezo is None:
+        if self.episode.piezo is None: 
             # TODO add log or warning here!
             select_piezo = False
         # select time points to include in histogram
         if select_piezo:
             time, trace_points = piezo_selection(
                 self.episode.time,
-                self.episode.piezo,
-                self.episode.trace,
+                self.episode.piezo, 
+                self.episode.trace, 
                 active,
                 deviation,
             )
-            self.hist_times = np.array(time)
+            # self.hist_times = np.array(time)
         elif intervals:
             time, trace_points = interval_selection(
-                self.episode.time,
-                self.episode.trace,
+                    self.episode.time, 
+                    self.episode.trace, 
                 intervals,
                 self.episode.sampling_rate,
             )
-            self.hist_times = np.array(time)
+            # self.hist_times = np.array(time)
         else:
-            trace_points = self.episode.trace
-            self.hist_times = np.array(self.episode.time)
+            trace_points = self.episode.trace 
+            # self.hist_times = np.array(self.episode.time) 
+        trace_points *= CURRENT_UNIT_FACTORS[self.trace_unit]
         heights, bins = np.histogram(trace_points, n_bins, density=density)
         # get centers of all the bins
         centers = (bins[:-1] + bins[1:]) / 2
@@ -605,15 +606,15 @@ class Recording(dict):
         for episode in episodes:
             n = str(episode.current_ep_ind).zfill(fill_length)
             export_dict["trace" + n] = (
-                episode._trace * CURRENT_UNIT_FACTORS[trace_unit]
+                episode.trace * CURRENT_UNIT_FACTORS[trace_unit]
             )
             if save_piezo:
                 export_dict["piezo" + n] = (
-                    episode._piezo * VOLTAGE_UNIT_FACTORS[piezo_unit]
+                    episode.piezo * VOLTAGE_UNIT_FACTORS[piezo_unit]
                 )
             if save_command:
                 export_dict["command" + n] = (
-                    episode._command * VOLTAGE_UNIT_FACTORS[command_unit]
+                    episode.command * VOLTAGE_UNIT_FACTORS[command_unit]
                 )
         io.savemat(filepath, export_dict)
 
@@ -642,7 +643,7 @@ class Recording(dict):
         # to write to axgd we need a list as the second argument of the 'write'
         # method, this elements in the lists will be the columns in data table
         # the first column in this will be a list of episode numbers
-        data_list = [self.episode.time]
+        data_list = [self.episode.time] 
 
         # get the episodes we want to save
         indices = list()
@@ -652,7 +653,7 @@ class Recording(dict):
         episodes = np.array(self.series)[indices]
 
         for episode in episodes:
-            data_list.append(np.array(episode._trace))
+            data_list.append(np.array(episode.trace))
             column_names.append(
                 f"Ipatch ({self.trace_unit} ep#{episode.current_ep_ind}"
             )
@@ -660,15 +661,14 @@ class Recording(dict):
                 column_names.append(
                     f"piezo voltage ({self.piezo_unit} ep#{episode.current_ep_ind}"
                 )
-                data_list.append(np.array(episode._piezo))
+                data_list.append(np.array(episode.piezo))
             if save_command:
                 column_names.append(
                     f"command voltage ({self.command_unit} ep#{episode.current_ep_ind})"
                 )
-                data_list.append(np.array(episode._command))
-        file = axographio.file_contents(
-            column_names, data_list
-        )  # pylint: disable=no-member
+                data_list.append(np.array(episode.command))
+        # pylint: disable=no-member
+        file = axographio.file_contents(column_names, data_list)  
         file.write(filepath)
 
     def export_idealization(self, filepath, time_unit, trace_unit):
@@ -679,7 +679,7 @@ class Recording(dict):
         export_array = np.zeros(
             shape=(len(self.selected_episodes) + 1, self.episode._idealization.size)
         )
-        export_array[0] = self.episode._time * TIME_UNIT_FACTORS[time_unit]
+        export_array[0] = self.episode.time * TIME_UNIT_FACTORS[time_unit]
         for k, episode in enumerate(self.selected_episodes):
             export_array[k + 1] = (
                 episode._idealization * CURRENT_UNIT_FACTORS[trace_unit]

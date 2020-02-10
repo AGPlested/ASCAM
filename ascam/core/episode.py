@@ -46,26 +46,19 @@ class Episode:
                           came before this one
             filterType [string] - type of filter used"""
 
-        # units of the data
-        # the units of the private attributes (eg _time) should be SI units
-        # ie seconds, ampere etc
-        # self.time_unit = time_unit
-        # self.trace_unit = trace_unit
-        # self.command_unit = command_unit
-        # self.piezo_unit = piezo_unit
         # units when given input
-        self._time = time / TIME_UNIT_FACTORS[input_time_unit]
-        self._trace = trace / CURRENT_UNIT_FACTORS[input_trace_unit]
+        self.time = time / TIME_UNIT_FACTORS[input_time_unit]
+        self.trace = trace / CURRENT_UNIT_FACTORS[input_trace_unit]
         self._id_time = time / TIME_UNIT_FACTORS[input_time_unit]        
 
         if piezo is not None:
-            self._piezo = piezo / VOLTAGE_UNIT_FACTORS[input_piezo_unit]
+            self.piezo = piezo / VOLTAGE_UNIT_FACTORS[input_piezo_unit]
         else:
-            self._piezo = None
+            self.piezo = None
         if command is not None:
-            self._command = command  / VOLTAGE_UNIT_FACTORS[input_command_unit]
+            self.command = command  / VOLTAGE_UNIT_FACTORS[input_command_unit]
         else:
-            self._command = None
+            self.command = None
 
         # results of analyses
         self._first_activation = None
@@ -76,29 +69,12 @@ class Episode:
         self.sampling_rate = sampling_rate
         self.suspiciousSTD = False
 
-
-    @property
-    def time_unit_factor(self):
-        return self.time_unit_factors[self.time_unit]
-
-    @property
-    def trace_unit_factor(self):
-        return self.trace_unit_factors[self.trace_unit]
-
-    @property
-    def command_unit_factor(self):
-        return self.command_unit_factors[self.command_unit]
-
-    @property
-    def piezo_unit_factor(self):
-        return self.piezo_unit_factors[self.piezo_unit]
-
     def gauss_filter_episode(self, filter_frequency=1e3, method="convolution"):
         """Replace the current trace of the episode by the gauss filtered
         version of itself."""
 
-        self._trace = gaussian_filter(
-            signal=self._trace,
+        self.trace = gaussian_filter(
+            signal=self.trace,
             filter_frequency=filter_frequency,
             sampling_rate=self.sampling_rate,
         )
@@ -123,7 +99,7 @@ class Episode:
             apriori_f_weights,
             apriori_b_weights,
         )
-        self._trace = ck_filter.apply_filter(self._trace)
+        self.trace = ck_filter.apply_filter(self.trace)
         # sett idealization to None since the newly created episode has no
         # idealization
         self._idealization = None
@@ -139,14 +115,14 @@ class Episode:
     ):
         """Apply a baseline correction to the episode."""
 
-        self._trace = baseline_correction(
-            time=self._time,
-            signal=self._trace,
+        self.trace = baseline_correction(
+            time=self.time,
+            signal=self.trace,
             fs=self.sampling_rate,
             intervals=intervals,
             degree=degree,
             method=method,
-            piezo=self._piezo,
+            piezo=self.piezo,
             selection=selection,
             active=active,
             deviation=deviation,
@@ -168,7 +144,7 @@ class Episode:
 
     def interpolate(self, interpolation_factor):
         self._intrp_trace, self._id_time = interpolate(
-            self._trace, self._time, interpolation_factor
+            self.trace, self.time, interpolation_factor
         )
 
     def idealize(self, amplitudes, thresholds, resolution, interpolation_factor):
@@ -182,8 +158,8 @@ class Episode:
             f"interpolation_factor = { interpolation_factor } "
         )
         self._idealization, self._intrp_trace, self._id_time = Idealizer.idealize_episode(
-            self._trace,
-            self._time,
+            self.trace,
+            self.time,
             amplitudes,
             thresholds,
             resolution,
@@ -195,7 +171,7 @@ class Episode:
         value."""
 
         _, _, trace = piezo_selection(
-            self._time, self._piezo, self._trace, active=False, deviation=0.01
+            self.time, self.piezo, self.trace, active=False, deviation=0.01
         )
         tracestd = np.std(trace)
         if tracestd > stdthreshold:
@@ -205,9 +181,9 @@ class Episode:
         """Get the mean and standard deviation of the command voltage of the
         episode."""
 
-        if self._command is not None:
-            mean = np.mean(self._command)
-            std = np.std(self._command)
+        if self.command is not None:
+            mean = np.mean(self.command)
+            std = np.std(self.command)
         else:
             mean = std = np.nan
         return mean, std
@@ -216,7 +192,7 @@ class Episode:
         """Detect the first activation in the episode."""
 
         self._first_activation = detect_first_activation(
-            self._time, self._trace, threshold
+            self.time, self.trace, threshold
         )
 
     def get_events(self):
@@ -227,4 +203,4 @@ class Episode:
             a table containing the amplitude of an opening, its start and end
             time and its duration"""
 
-        return Idealizer.extract_events(self.idealization, self.id_time)
+        return Idealizer.extract_events(self._idealization, self._id_time)
