@@ -3,7 +3,7 @@ import logging
 # pylint: disable=E0611
 from PySide2 import QtWidgets
 from PySide2.QtWidgets import (
-    QSpacerItem,
+    QSpacerItem,QGridLayout,
     QTabWidget,
     QWidget,
     QVBoxLayout,
@@ -46,8 +46,11 @@ class IdealizationFrame(QWidget):
         self.close_button.clicked.connect(self.close_tab)
         self.layout.addWidget(self.close_button)
 
-        self.layout.addItem(QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum,
-            QtWidgets.QSizePolicy.Expanding))
+        self.layout.addItem(
+            QSpacerItem(
+                20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding
+            )
+        )
 
     def close_tab(self):
         if self.tab_frame.count() > 1:
@@ -138,6 +141,26 @@ class IdealizationTab(QWidget):
         self.layout.addLayout(row_six)
 
 
-class FirstAcivationFrame(QWidget):
-    def __init__(self):
+class FirstActivationFrame(QWidget):
+    def __init__(self, main):
         super().__init__()
+        self.layout = QGridLayout()
+        self.setLayout(self.layout)
+
+        self.create_widgets()
+
+    def create_widgets(self):
+        threshold_button = QPushButton("Set threshold")
+        threshold_entry = QLineEdit()
+        self.layout.addWidget(threshold_button, 1, 1)
+        self.layout.addWidget(threshold_entry, 1, 2)
+
+        mark_button = QPushButton("Mark events manually")
+        jump_checkbox = QCheckBox("Click jumps to next episode:")
+        self.layout.addWidget(mark_button, 2, 1)
+        self.layout.addWidget(jump_checkbox, 2, 2)
+
+        finish_button = QPushButton("Finish")
+        cancel_button = QPushButton("Cancel")
+        self.layout.addWidget(finish_button, 3, 1)
+        self.layout.addWidget(cancel_button, 3, 2)

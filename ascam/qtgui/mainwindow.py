@@ -1,12 +1,7 @@
 import logging
 
 # pylint: disable=E0611
-from PySide2.QtWidgets import (
-    QGridLayout,
-    QWidget,
-    QMainWindow,
-    QFileDialog,
-)
+from PySide2.QtWidgets import QGridLayout, QWidget, QMainWindow, QFileDialog
 
 
 from ascam.qtgui import ExportFADialog
@@ -16,6 +11,7 @@ from ascam.qtgui import BaselineFrame
 from ascam.qtgui import PlotFrame
 from ascam.qtgui import EpisodeFrame
 from ascam.qtgui import IdealizationFrame
+from ascam.qtgui import FirstActivationFrame
 
 from ascam.core.recording import Recording
 
@@ -93,4 +89,6 @@ class MainWindow(QMainWindow):
         self.central_layout.addWidget(self.tc_frame, 1, 1)
 
     def launch_fa_analysis(self):
-        pass
+        self.fa_frame = FirstActivationFrame(self)
+        self.fa_frame.show()
+        self.central_layout.addWidget(self.fa_frame, 2, 2)
