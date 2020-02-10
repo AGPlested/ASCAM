@@ -74,8 +74,6 @@ class Idealizer:
             )
 
             thresholds = (amplitudes[1:] + amplitudes[:-1]) / 2
-        else:
-            thresholds = thresholds
 
         # for convenience we include the trivial case of only 1 amplitude
         if amplitudes.size == 1:
@@ -94,10 +92,10 @@ class Idealizer:
 
     @staticmethod
     def apply_resolution(
-        events: Array[float, ..., 4],
-        idealization: Array[float, 1, ...],
-        time: Array[float, 1, ...],
-        resolution: int,
+            events: Array[float, ..., 4],
+            idealization: Array[float, 1, ...],
+            time: Array[float, 1, ...],
+            resolution: int,
     ) -> Array[float, 1, ...]:
         """Remove from the idealization any events that are too short.
 
@@ -142,7 +140,7 @@ class Idealizer:
 
     @staticmethod
     def extract_events(
-        idealization: Array[float, 1, ...], time: Array[float, 1, ...]
+            idealization: Array[float, 1, ...], time: Array[float, 1, ...]
     ) -> Array[float, ..., 4]:
         """Summarize an idealized trace as a list of events.
 
@@ -185,7 +183,7 @@ class Idealizer:
 
 
 def detect_first_activation(
-    time: Array[float, 1, ...], signal: Array[float, 1, ...], threshold: float
+        time: Array[float, 1, ...], signal: Array[float, 1, ...], threshold: float
 ) -> float:
     """Return the time where a signal first crosses below a threshold."""
 
@@ -193,17 +191,16 @@ def detect_first_activation(
 
 
 def baseline_correction(
-    time: Array[float, 1, ...],
-    signal: Array[float, 1, ...],
-    fs: float,
-    intervals: Optional[List] = None,
-    degree: Optional[int] = 1,
-    method: Optional[str] = "poly",
-    select_intvl: Optional[bool] = False,
-    piezo: Optional[Array[float]] = None,
-    select_piezo: Optional[bool] = False,
-    active: Optional[bool] = False,
-    deviation: Optional[float] = 0.05,
+        time: Array[float, 1, ...],
+        signal: Array[float, 1, ...],
+        fs: float,
+        intervals: Optional[List] = None,
+        degree: Optional[int] = 1,
+        method: Optional[str] = "Polynomial",
+        piezo: Optional[Array[float]] = None,
+        selection: Optional[str] = "piezo",
+        active: Optional[bool] = False,
+        deviation: Optional[float] = 0.05,
 ) -> Array[float, 1, ...]:
     """Perform polynomial/offset baseline correction on the given signal.
 
@@ -221,18 +218,18 @@ def baseline_correction(
     Returns:
         original signal less the fitted baseline"""
 
-    if select_intvl:
+    if selection.lower() == "intervals":
         t, s = interval_selection(time, signal, intervals, fs)
-    elif select_piezo:
+    elif selection.lower() == "piezo":
         t, s = piezo_selection(time, piezo, signal, active, deviation)
     else:
         t = time
         s = signal
 
-    if method == "offset":
+    if method.lower() == "offset":
         offset = np.mean(s)
         output = signal - offset
-    elif method == "poly":
+    elif method.lower() == "polynomial":
         coeffs = np.polyfit(t, s, degree)
         baseline = np.zeros_like(time)
         for i in range(degree + 1):

@@ -13,7 +13,7 @@ from PySide2.QtWidgets import (
     QFormLayout,
 )
 
-from ascam.utils import clear_qt_layout
+from ascam.utils import clear_qt_layout, string_to_list
 
 
 debug_logger = logging.getLogger("ascam.debug")
@@ -22,6 +22,7 @@ debug_logger = logging.getLogger("ascam.debug")
 class FilterFrame(QDialog):
     def __init__(self, main):
         super().__init__()
+        self.main = main
         self.setWindowTitle("Filter")
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
@@ -34,11 +35,11 @@ class FilterFrame(QDialog):
     def create_widgets(self):
         row_one = QHBoxLayout()
         method_label = QLabel("Method")
-        method_box = QComboBox()
-        method_box.addItems(self.filter_options)
-        method_box.currentIndexChanged.connect(self.choose_filter_method)
+        self.method_box = QComboBox()
+        self.method_box.addItems(self.filter_options)
+        self.method_box.currentIndexChanged.connect(self.choose_filter_method)
         row_one.addWidget(method_label)
-        row_one.addWidget(method_box)
+        row_one.addWidget(self.method_box)
 
         row_two = QHBoxLayout()
         ok_button = QPushButton("OK")
@@ -92,6 +93,7 @@ class FilterFrame(QDialog):
 class BaselineFrame(QDialog):
     def __init__(self, main):
         super().__init__()
+        self.main = main
         self.setWindowTitle("Baseline Correction")
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
@@ -105,19 +107,19 @@ class BaselineFrame(QDialog):
     def create_widgets(self):
         row_one = QHBoxLayout()
         method_label = QLabel("Method")
-        method_box = QComboBox()
-        method_box.addItems(self.method_options)
-        method_box.currentIndexChanged.connect(self.choose_correction_method)
+        self.method_box = QComboBox()
+        self.method_box.addItems(self.method_options)
+        self.method_box.currentIndexChanged.connect(self.choose_correction_method)
         row_one.addWidget(method_label)
-        row_one.addWidget(method_box)
+        row_one.addWidget(self.method_box)
 
         row_tow = QHBoxLayout()
         selection_label = QLabel("Selection")
-        selection_box = QComboBox()
-        selection_box.addItems(self.selection_options)
-        selection_box.currentIndexChanged.connect(self.choose_selection_method)
+        self.selection_box = QComboBox()
+        self.selection_box.addItems(self.selection_options)
+        self.selection_box.currentIndexChanged.connect(self.choose_selection_method)
         row_tow.addWidget(selection_label)
-        row_tow.addWidget(selection_box)
+        row_tow.addWidget(self.selection_box)
 
         row_three = QHBoxLayout()
         ok_button = QPushButton("OK")
@@ -153,6 +155,8 @@ class BaselineFrame(QDialog):
                 pass
 
     def choose_selection_method(self, index):
+        # TODO: switching back and forth causes double row
+        # (widgets not being cleared)
         try:
             debug_logger.debug("deleting selection widgets")
             clear_qt_layout(self.method_layout)
@@ -162,6 +166,7 @@ class BaselineFrame(QDialog):
         if self.selection_options[index] == "Piezo":
             debug_logger.debug("creating piezo selection widgets")
             self.active_checkbox = QCheckBox("Active/Inactive")
+            self.active_checkbox.setChecked(True)
             self.method_layout.addWidget(self.active_checkbox)
             self.deviation_label = QLabel("Deviation")
             self.method_layout.addWidget(self.deviation_label)
@@ -170,6 +175,7 @@ class BaselineFrame(QDialog):
         else:
             debug_logger.debug("creating interval widgets")
             self.include_checkbox = QCheckBox("Include/Exclude")
+            self.include_checkbox.setChecked(True)
             self.method_layout.addWidget(self.include_checkbox)
             self.interval_label = QLabel("Intervals")
             self.method_layout.addWidget(self.interval_label)
@@ -178,5 +184,29 @@ class BaselineFrame(QDialog):
         self.layout.insertLayout(3, self.method_layout)
 
     def ok_clicked(self):
-        # TODO collect information from widgets and pass to parent
+        method = self.method_options[self.method_box.currentIndex()]
+        degree = int(self.degree_entry.text())
+        selection = self.selection_options[self.selection_box.currentIndex()]
+        if selection == "Piezo":
+            intervals = None
+            include = None
+            deviation = float(self.deviation_entry.text())
+            active = self.active_checkbox.isChecked()
+        elif selection == "Intervals":
+            degree = None
+            deviation = None
+            include = self.include_checkbox.isChecked()
+            intervals = string_to_list(self.interval_entry.text())
+
+        self.main.data.baseline_correction(
+            method=method,
+            degree=degree,
+            intervals=intervals,
+            selection=selection,
+            deviation=deviation,
+            active=active,
+            include=include
+        )
+        self.main.plot_frame.plot_episode()
         self.close()
+

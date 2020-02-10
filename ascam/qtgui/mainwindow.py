@@ -32,6 +32,8 @@ class MainWindow(QMainWindow):
         self.central_widget.setLayout(self.central_layout)
         self.setCentralWidget(self.central_widget)
 
+        self.data = None
+
         self.create_widgets()
 
         self.create_menu()
@@ -72,7 +74,7 @@ class MainWindow(QMainWindow):
     def open_file(self):
         filename = QFileDialog.getOpenFileName(self)[0]
         self.data = Recording.from_file(filename)
-        self.ep_frame.populate(self.data)
+        self.ep_frame.populate()
 
     def save_to_file(self):
         pass

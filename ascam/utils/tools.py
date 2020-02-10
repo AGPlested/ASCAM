@@ -128,7 +128,7 @@ def interval_selection(time, signal, intervals, fs):
     return time_out, signal_out
 
 
-def stringList_parser(list_as_string):
+def string_to_list(list_as_string):
     """
     Parse a string that is an interval or list of intervals (e.g. "[0,5]" or
     "[[0,4],[5,8]]") and returns it as a list
@@ -137,7 +137,6 @@ def stringList_parser(list_as_string):
     Returns:
         whole_list (list of lists of integers)
     """
-    logging.info("""called `stringList_parser`""")
     whole_list = []
     current_list = []
     num_string = ""
@@ -153,8 +152,6 @@ def stringList_parser(list_as_string):
             whole_list.append(current_list)
         else:
             num_string += char
-    # logging.debug("""string was: {}
-    #          returning: {}""".format(list_as_string,whole_list))
     return whole_list
 
 

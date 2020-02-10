@@ -31,9 +31,9 @@ class PlotFrame(QWidget):
         self.command_plot.clear()
         self.piezo_plot.clear()
 
-    def plot_episode(self, n):
+    def plot_episode(self):
         self.clear_plots()
-        episode = self.main.data.series[n]
+        episode = self.main.data.episode
         self.trace_plot.plot(episode.time, episode.trace)
         self.command_plot.plot(episode.time, episode.command)
         self.piezo_plot.plot(episode.time, episode.piezo)

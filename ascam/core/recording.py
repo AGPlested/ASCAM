@@ -4,9 +4,9 @@ import pickle
 
 import numpy as np
 
-from ascam.core.readdata import load_matlab, load_axo
-from ascam.utils.tools import parse_filename, piezo_selection, interval_selection
-from ascam.core.episode import Episode
+from .readdata import load_matlab, load_axo
+from ascam.utils import parse_filename, piezo_selection, interval_selection
+from .episode import Episode
 
 ana_logger = logging.getLogger("ascam.analysis")
 debug_logger = logging.getLogger("ascam.debug")
@@ -15,13 +15,13 @@ debug_logger = logging.getLogger("ascam.debug")
 class Recording(dict):
     @classmethod
     def from_file(
-        cls,
-        filename="data/180426 000 Copy Export.mat",
-        sampling_rate=4e4,
-        time_input_unit="s",
-        trace_input_unit="A",
-        piezo_input_unit="V",
-        command_input_unit="V",
+            cls,
+            filename="data/180426 000 Copy Export.mat",
+            sampling_rate=4e4,
+            time_input_unit="s",
+            trace_input_unit="A",
+            piezo_input_unit="V",
+            command_input_unit="V",
     ):
         """Load data from a file.
 
@@ -86,7 +86,7 @@ class Recording(dict):
         # attributes for storing and managing the data
         self["raw_"] = []
         self.current_datakey = "raw_"
-        self.n_episode = 0
+        self.current_ep_ind = 0
 
         self.hist_times = 0
         # parameters for analysis
@@ -216,7 +216,7 @@ class Recording(dict):
 
     @property
     def episode(self):
-        return self.series[self.n_episode]
+        return self.series[self.current_ep_ind]
 
     @property
     def time_unit(self):
@@ -239,14 +239,14 @@ class Recording(dict):
         self.params[new_datakey] = copy.deepcopy(self.params[self.current_datakey])
 
     def baseline_correction(
-        self,
-        method="poly",
-        degree=1,
-        intervals=[],
-        select_intvl=False,
-        deviation=0.05,
-        select_piezo=True,
-        active=False,
+            self,
+            method="Polynomial",
+            degree=1,
+            intervals=None,
+            deviation=0.05,
+            selection="piezo",
+            active=False,
+            include=True,
     ):
         """Apply a baseline correction to the current series."""
         debug_logger.debug(f"baseline_correction")
@@ -254,8 +254,7 @@ class Recording(dict):
         ana_logger.info(
             f"baseline_correction on series '{self.current_datakey}',"
             f"using method '{method}' with degree {degree}\n"
-            f"select_intvl is {select_intvl}; select_piezo is "
-            f"{select_piezo}\n"
+            f"selection is {selection}\n"
             f"the selected intervals are {intervals}\n"
             f"select where piezo is active is {active}; the "
             f"difference to piezo baseline is {deviation}"
@@ -274,8 +273,7 @@ class Recording(dict):
                 intervals=intervals,
                 method=method,
                 deviation=deviation,
-                select_intvl=select_intvl,
-                select_piezo=select_piezo,
+                selection=selection,
                 active=active,
             )
         self.current_datakey = new_datakey
@@ -367,7 +365,7 @@ class Recording(dict):
         debug_logger.debug(f"idealize_episode")
 
         ana_logger.info(
-            f"idealizing episode '{self.n_episode}'\n"
+            f"idealizing episode '{self.current_ep_ind}'\n"
             f"amplitudes: {self.params[self.current_datakey]['_tc_amplitudes']}\n"
             f"thresholds: {self.params[self.current_datakey]['_tc_thresholds']}\n"
             f"resolution: {self.params[self.current_datakey]['_tc_resolution']}\n"
@@ -391,7 +389,7 @@ class Recording(dict):
                 self.params[self.current_datakey]["_fa_threshold"]
             )
             for episode in self.series
-            if episode.n_episode not in exclude
+            if episode.current_ep_ind not in exclude
         ]
 
     def series_hist(
@@ -541,7 +539,7 @@ class Recording(dict):
         indices = np.array(list(set(indices)))
         episodes = np.array(self[datakey])[indices]
         for episode in episodes:
-            n = str(episode.n_episode).zfill(fill_length)
+            n = str(episode.current_ep_ind).zfill(fill_length)
             export_dict["trace" + n] = (
                 episode._trace * Episode.trace_unit_factors[trace_unit]
             )
@@ -591,18 +589,18 @@ class Recording(dict):
 
         for episode in episodes:
             data_list.append(np.array(episode._trace))
-            column_names.append(f"Ipatch ({self.trace_unit} ep#{episode.n_episode}")
+            column_names.append(f"Ipatch ({self.trace_unit} ep#{episode.current_ep_ind}")
             if save_piezo:
                 column_names.append(
-                    f"piezo voltage ({self.piezo_unit} ep#{episode.n_episode}"
+                    f"piezo voltage ({self.piezo_unit} ep#{episode.current_ep_ind}"
                 )
                 data_list.append(np.array(episode._piezo))
             if save_command:
                 column_names.append(
-                    f"command voltage ({self.command_unit} ep#{episode.n_episode})"
+                    f"command voltage ({self.command_unit} ep#{episode.current_ep_ind})"
                 )
                 data_list.append(np.array(episode._command))
-        file = axographio.file_contents(column_names, data_list)
+        file = axographio.file_contents(column_names, data_list) # pylint: disable=no-member
         file.write(filepath)
 
     def export_idealization(self, filepath, time_unit, trace_unit):
@@ -642,7 +640,7 @@ class Recording(dict):
         for episode in self.series:
             # create a column containing the episode number
             ep_events = episode.get_events()
-            episode_number = episode.n_episode * np.ones(len(ep_events[:, 0]))
+            episode_number = episode.current_ep_ind * np.ones(len(ep_events[:, 0]))
             # glue that column to the event
             ep_events = np.concatenate(
                 (ep_events, episode_number[:, np.newaxis]), axis=1
@@ -663,7 +661,7 @@ class Recording(dict):
         export_array = np.array(
             [
                 (
-                    episode.n_episode,
+                    episode.current_ep_ind,
                     episode._first_activation * Episode.time_unit_factors[time_unit],
                 )
                 for episode in self.selected_episodes

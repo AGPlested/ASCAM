@@ -208,11 +208,10 @@ class Episode:
 
     def baseline_correct_episode(
         self,
-        intervals,
-        method="poly",
+        intervals=None,
+        method="Polynomial",
         degree=1,
-        select_intvl=False,
-        select_piezo=False,
+        selection="piezo",
         active=False,
         deviation=0.05,
     ):
@@ -225,9 +224,8 @@ class Episode:
             intervals=intervals,
             degree=degree,
             method=method,
-            select_intvl=select_intvl,
             piezo=self._piezo,
-            select_piezo=select_piezo,
+            selection=selection,
             active=active,
             deviation=deviation,
         )
