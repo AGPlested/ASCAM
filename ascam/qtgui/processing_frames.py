@@ -27,7 +27,7 @@ class FilterFrame(QDialog):
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
 
-        self.filter_options = ["Gaußian", "Chung-Kennedy"]
+        self.filter_options = ["Gaussian", "Chung-Kennedy"]
 
         self.create_widgets()
         self.exec_()
@@ -61,7 +61,7 @@ class FilterFrame(QDialog):
             clear_qt_layout(self.selection_layout)
         except AttributeError:
             pass
-        if self.filter_options[index] == "Gaußian":
+        if self.filter_options[index] == "Gaussian":
             self.selection_layout = QHBoxLayout()
             debug_logger.debug("Creating gaussian input widgets")
             self.freq_label = QLabel("Frequency [Hz]")
@@ -86,7 +86,18 @@ class FilterFrame(QDialog):
         # self.resize(self.sizeHint())
 
     def ok_clicked(self):
-        # TODO collect information from widgets and pass to parent
+        filter_method = self.filter_options[self.method_box.currentIndex()]
+        if filter_method == "Gaussian":
+            self.main.data.gauss_filter_series(float(self.freq_entry.text()))
+        elif filter_method == "Chung-Kennedy":
+            self.main.data.CK_filter_series(
+                window_lengths=[int(x) for x in self.window_entry.text().split()],
+                weight_exponent=int(self.exponent_entry.text()),
+                weight_window=int(self.window_entry.text()),
+                apriori_f_weights=[int(x) for x in self.forward_entry.text().split()],
+                apriori_b_weights=[int(x) for x in self.backward_entry.text().split()],
+            )
+        self.main.plot_frame.plot_episode()
         self.close()
 
 
@@ -205,8 +216,7 @@ class BaselineFrame(QDialog):
             selection=selection,
             deviation=deviation,
             active=active,
-            include=include
+            include=include,
         )
         self.main.plot_frame.plot_episode()
         self.close()
-

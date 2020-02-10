@@ -92,10 +92,10 @@ class Idealizer:
 
     @staticmethod
     def apply_resolution(
-            events: Array[float, ..., 4],
-            idealization: Array[float, 1, ...],
-            time: Array[float, 1, ...],
-            resolution: int,
+        events: Array[float, ..., 4],
+        idealization: Array[float, 1, ...],
+        time: Array[float, 1, ...],
+        resolution: int,
     ) -> Array[float, 1, ...]:
         """Remove from the idealization any events that are too short.
 
@@ -140,7 +140,7 @@ class Idealizer:
 
     @staticmethod
     def extract_events(
-            idealization: Array[float, 1, ...], time: Array[float, 1, ...]
+        idealization: Array[float, 1, ...], time: Array[float, 1, ...]
     ) -> Array[float, ..., 4]:
         """Summarize an idealized trace as a list of events.
 
@@ -183,7 +183,7 @@ class Idealizer:
 
 
 def detect_first_activation(
-        time: Array[float, 1, ...], signal: Array[float, 1, ...], threshold: float
+    time: Array[float, 1, ...], signal: Array[float, 1, ...], threshold: float
 ) -> float:
     """Return the time where a signal first crosses below a threshold."""
 
@@ -191,16 +191,16 @@ def detect_first_activation(
 
 
 def baseline_correction(
-        time: Array[float, 1, ...],
-        signal: Array[float, 1, ...],
-        fs: float,
-        intervals: Optional[List] = None,
-        degree: Optional[int] = 1,
-        method: Optional[str] = "Polynomial",
-        piezo: Optional[Array[float]] = None,
-        selection: Optional[str] = "piezo",
-        active: Optional[bool] = False,
-        deviation: Optional[float] = 0.05,
+    time: Array[float, 1, ...],
+    signal: Array[float, 1, ...],
+    fs: float,
+    intervals: Optional[List] = None,
+    degree: Optional[int] = 1,
+    method: Optional[str] = "Polynomial",
+    piezo: Optional[Array[float]] = None,
+    selection: Optional[str] = "piezo",
+    active: Optional[bool] = False,
+    deviation: Optional[float] = 0.05,
 ) -> Array[float, 1, ...]:
     """Perform polynomial/offset baseline correction on the given signal.
 

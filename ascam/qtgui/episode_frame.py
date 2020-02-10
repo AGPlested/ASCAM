@@ -1,10 +1,7 @@
 import logging
 
 # pylint: disable=E0611
-from PySide2.QtWidgets import (
-    QListWidget,
-    QVBoxLayout,
-)
+from PySide2.QtWidgets import QListWidget, QVBoxLayout
 
 
 class EpisodeFrame(QListWidget):
@@ -20,7 +17,7 @@ class EpisodeFrame(QListWidget):
 
         self.currentItemChanged.connect(self.on_item_click)
 
-    def on_item_click(self, item, previous): # pylint: disable=unused-argument
+    def on_item_click(self, item, previous):  # pylint: disable=unused-argument
         self.main.data.current_ep_ind = self.row(item)
         self.main.plot_frame.plot_episode()
 

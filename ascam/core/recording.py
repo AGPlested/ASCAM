@@ -15,13 +15,13 @@ debug_logger = logging.getLogger("ascam.debug")
 class Recording(dict):
     @classmethod
     def from_file(
-            cls,
-            filename="data/180426 000 Copy Export.mat",
-            sampling_rate=4e4,
-            time_input_unit="s",
-            trace_input_unit="A",
-            piezo_input_unit="V",
-            command_input_unit="V",
+        cls,
+        filename="data/180426 000 Copy Export.mat",
+        sampling_rate=4e4,
+        time_input_unit="s",
+        trace_input_unit="A",
+        piezo_input_unit="V",
+        command_input_unit="V",
     ):
         """Load data from a file.
 
@@ -239,14 +239,14 @@ class Recording(dict):
         self.params[new_datakey] = copy.deepcopy(self.params[self.current_datakey])
 
     def baseline_correction(
-            self,
-            method="Polynomial",
-            degree=1,
-            intervals=None,
-            deviation=0.05,
-            selection="piezo",
-            active=False,
-            include=True,
+        self,
+        method="Polynomial",
+        degree=1,
+        intervals=None,
+        deviation=0.05,
+        selection="piezo",
+        active=False,
+        include=True,
     ):
         """Apply a baseline correction to the current series."""
         debug_logger.debug(f"baseline_correction")
@@ -589,7 +589,9 @@ class Recording(dict):
 
         for episode in episodes:
             data_list.append(np.array(episode._trace))
-            column_names.append(f"Ipatch ({self.trace_unit} ep#{episode.current_ep_ind}")
+            column_names.append(
+                f"Ipatch ({self.trace_unit} ep#{episode.current_ep_ind}"
+            )
             if save_piezo:
                 column_names.append(
                     f"piezo voltage ({self.piezo_unit} ep#{episode.current_ep_ind}"
@@ -600,7 +602,9 @@ class Recording(dict):
                     f"command voltage ({self.command_unit} ep#{episode.current_ep_ind})"
                 )
                 data_list.append(np.array(episode._command))
-        file = axographio.file_contents(column_names, data_list) # pylint: disable=no-member
+        file = axographio.file_contents(
+            column_names, data_list
+        )  # pylint: disable=no-member
         file.write(filepath)
 
     def export_idealization(self, filepath, time_unit, trace_unit):
