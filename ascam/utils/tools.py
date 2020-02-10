@@ -38,11 +38,11 @@ def parse_filename(filename):
         filetype_long = "matlab"
     elif filetype == "pkl":
         filetype_long = "pickle"
-    elif filetype == "txt" or filetype == "axgt":
+    elif filetype in ("txt", "axgt"):
         filetype = "tdt"
         filetype_long = "tab-delimited-text"
     else:
-        warnings.warning("Could not detect filetype!")
+        warnings.warn("Could not detect filetype!")
     filename = filename[slash + 1 :]
     logging.debug(
         """filetype_long : {}"
@@ -153,6 +153,18 @@ def string_to_list(list_as_string):
         else:
             num_string += char
     return whole_list
+
+
+def string_to_array(string):
+    if "," in string:
+        array = np.array(string.split(","), dtype=np.float)
+    else:
+        array = np.array(string.split(), dtype=np.float)
+    return array
+
+
+def array_to_string(array, seperator=' '):
+    return seperator.join(np.char.mod("%.2f", array))
 
 
 def clear_qt_layout(layout):

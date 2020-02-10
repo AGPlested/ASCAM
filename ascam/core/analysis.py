@@ -35,6 +35,9 @@ class Idealizer:
     ) -> Array[float, 1, ...]:
         """Get idealization for single episode."""
 
+        if thresholds is None or thresholds.size != amplitudes.size-1:
+            thresholds = (amplitudes[1:] + amplitudes[:-1]) / 2
+
         if interpolation_factor != 1:
             signal, time = interpolate(signal, time, interpolation_factor)
 

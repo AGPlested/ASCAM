@@ -17,6 +17,8 @@ from PySide2.QtWidgets import (
     QLabel,
 )
 
+from ascam.utils import string_to_array, array_to_string
+
 
 debug_logger = logging.getLogger("ascam.debug")
 
@@ -58,7 +60,23 @@ class IdealizationFrame(QWidget):
             self.tab_frame.removeTab(self.tab_frame.currentIndex())
 
     def calculate(self):
-        pass
+        amps = string_to_array(self.tab_frame.currentWidget().amp_entry.text())
+        thresh = string_to_array(self.tab_frame.currentWidget().threshold_entry.text())
+        res_string = self.tab_frame.currentWidget().res_entry.text()
+
+        if res_string.strip():
+            resolution = int(res_string)
+        else:
+            resolution = None
+        intrp_string = self.tab_frame.currentWidget().intrp_entry.text()
+
+        if intrp_string.strip():
+            intrp_factor = int(intrp_string)
+        else:
+            intrp_factor = 1
+
+        self.main.data.idealize_episode(amps, thresh, resolution, intrp_factor)
+        self.main.plot_frame.plot_episode()
 
     def apply(self):
         pass
@@ -67,6 +85,7 @@ class IdealizationFrame(QWidget):
 class IdealizationTabFrame(QTabWidget):
     def __init__(self, main):
         super().__init__()
+        self.main = main
 
         self.tabs = [IdealizationTab(self)]
         self.addTab(self.tabs[0], "1")
@@ -91,6 +110,8 @@ class IdealizationTabFrame(QTabWidget):
 class IdealizationTab(QWidget):
     def __init__(self, parent):
         super().__init__()
+        self.parent = parent
+
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
         # layout.addWidget(QLabel("Idealize me baby"))
@@ -141,10 +162,15 @@ class IdealizationTab(QWidget):
         row_six.addWidget(interpolate)
         self.layout.addLayout(row_six)
 
+        self.intrp_entry = QLineEdit()
+        self.layout.addWidget(self.intrp_entry)
+
 
 class FirstActivationFrame(QWidget):
     def __init__(self, main):
         super().__init__()
+        self.main = main
+
         self.layout = QGridLayout()
         self.setLayout(self.layout)
 

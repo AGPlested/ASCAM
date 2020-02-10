@@ -4,9 +4,11 @@ import pickle
 
 import numpy as np
 
-from .readdata import load_matlab, load_axo
+from ascam.constants import CURRENT_UNIT_FACTORS, VOLTAGE_UNIT_FACTORS, TIME_UNIT_FACTORS
 from ascam.utils import parse_filename, piezo_selection, interval_selection
+from .readdata import load_matlab, load_axo
 from .episode import Episode
+
 
 ana_logger = logging.getLogger("ascam.analysis")
 debug_logger = logging.getLogger("ascam.debug")
@@ -90,6 +92,10 @@ class Recording(dict):
 
         self.hist_times = 0
         # parameters for analysis
+        self.time_unit = 'ms'
+        self.piezo_unit = 'uV'
+        self.command_unit = 'mV'
+        self.trace_unit = 'pA'
         # idealization
         self.params = {
             "raw_": {
@@ -101,15 +107,7 @@ class Recording(dict):
             }
         }
         self.tc_unit = "pA"
-        # TODO move these to constants.py
-        self.tc_unit_factors = {
-            "fA": 1e15,
-            "pA": 1e12,
-            "nA": 1e9,
-            "µA": 1e6,
-            "mA": 1e3,
-            "A": 1,
-        }
+        self.fa_unit = "pA"
         self._tc_resolution = None
         # first activation
         self._fa_threshold = 0.0
@@ -125,14 +123,14 @@ class Recording(dict):
     def fa_threshold(self):
         return (
             self.params[self.current_datakey]["_fa_threshold"]
-            * self.tc_unit_factors[self.tc_unit]
+            * CURRENT_UNIT_FACTORS[self.fa_unit]
         )
 
     @fa_threshold.setter
     def fa_threshold(self, theta):
         if theta is not None:
             self.params[self.current_datakey]["_fa_threshold"] = (
-                theta / self.tc_unit_factors[self.tc_unit]
+                theta / CURRENT_UNIT_FACTORS[self.fa_unit]
             )
         else:
             self.params[self.current_datakey]["_fa_threshold"] = None
@@ -141,14 +139,14 @@ class Recording(dict):
     def tc_amplitudes(self):
         return (
             self.params[self.current_datakey]["_tc_amplitudes"]
-            * self.tc_unit_factors[self.tc_unit]
+            * CURRENT_UNIT_FACTORS[self.tc_unit]
         )
 
     @tc_amplitudes.setter
     def tc_amplitudes(self, amps):
         if amps is not None:
             self.params[self.current_datakey]["_tc_amplitudes"] = (
-                amps / self.tc_unit_factors[self.tc_unit]
+                amps / CURRENT_UNIT_FACTORS[self.tc_unit]
             )
         else:
             self.params[self.current_datakey]["_tc_amplitudes"] = np.array([])
@@ -157,14 +155,14 @@ class Recording(dict):
     def tc_thresholds(self):
         return (
             self.params[self.current_datakey]["_tc_thresholds"]
-            * self.tc_unit_factors[self.tc_unit]
+            * CURRENT_UNIT_FACTORS[self.tc_unit]
         )
 
     @tc_thresholds.setter
     def tc_thresholds(self, thetas):
         if thetas is not None:
             self.params[self.current_datakey]["_tc_thresholds"] = (
-                thetas / self.tc_unit_factors[self.tc_unit]
+                thetas / CURRENT_UNIT_FACTORS[self.tc_unit]
             )
         else:
             self.params[self.current_datakey]["_tc_thresholds"] = np.array([])
@@ -174,7 +172,7 @@ class Recording(dict):
         if self.params[self.current_datakey]["_tc_resolution"] is not None:
             return (
                 self.params[self.current_datakey]["_tc_resolution"]
-                * self.episode.time_unit_factor
+                * TIME_UNIT_FACTORS[self.time_unit]
             )
         else:
             return None
@@ -183,7 +181,7 @@ class Recording(dict):
     def tc_resolution(self, resolution):
         if resolution is not None:
             self.params[self.current_datakey]["_tc_resolution"] = (
-                resolution / self.episode.time_unit_factor
+                resolution / TIME_UNIT_FACTORS[self.time_unit]
             )
         else:
             self.params[self.current_datakey]["_tc_resolution"] = None
@@ -218,21 +216,70 @@ class Recording(dict):
     def episode(self):
         return self.series[self.current_ep_ind]
 
-    @property
-    def time_unit(self):
-        return self.episode.time_unit
 
     @property
-    def trace_unit(self):
-        return self.episode.trace_unit
+    def id_time(self):
+        if self.episode.episode._id_time is not None:
+            return self.episode._id_time * TIME_UNIT_FACTORS[self.time_unit]
+        else:
+            return self.time
 
     @property
-    def piezo_unit(self):
-        return self.episode.piezo_unit
+    def time(self):
+        if self.episode._time is not None:
+            return self.episode._time * TIME_UNIT_FACTORS[self.time_unit]
+        else:
+            return None
 
     @property
-    def command_unit(self):
-        return self.episode.command_unit
+    def trace(self):
+        if self.episode._trace is not None:
+            return self.episode._trace * CURRENT_UNIT_FACTORS[self.trace_unit]
+        return None
+
+    @property
+    def intrp_trace(self):
+        if self.episode._intrp_trace is not None:
+            return self.episode._intrp_trace * CURRENT_UNIT_FACTORS[self.trace_unit]
+        if self.episode.trace is not None:
+            return self._trace * CURRENT_UNIT_FACTORS[self.trace_unit]
+        return None
+
+    @property
+    def piezo(self):
+        if self.episode._piezo is not None:
+            return self.episode._piezo * VOLTAGE_UNIT_FACTORS[self.piezo_unit]
+        else:
+            return None
+
+    @property
+    def command(self):
+        if self.episode._command is not None:
+            return self.episode._command * VOLTAGE_UNIT_FACTORS[self.command_unit]
+        else:
+            return None
+
+    @property
+    def first_activation(self):
+        if self.episode._first_activation is not None:
+            return self.episode._first_activation * TIME_UNIT_FACTORS[self.time_unit]
+        else:
+            return None
+
+    @first_activation.setter
+    def first_activation(self, fa):
+        self.episode._first_activation = fa / TIME_UNIT_FACTORS[self.time_unit]
+
+    @property
+    def idealization(self):
+        if self.episode._idealization is not None:
+            return self.episode._idealization * CURRENT_UNIT_FACTORS[self.trace_unit]
+        else:
+            return None
+
+    # @idealization.setter
+    # def idealization(self, idealization):
+    #     self.episode._idealization = idealization / CURRENT_UNIT_FACTORS[self.trace_unit]
 
     def new_series(self, new_datakey):
         self[new_datakey] = copy.deepcopy(self.series)
@@ -340,10 +387,18 @@ class Recording(dict):
             )
         self.current_datakey = new_datakey
 
-    def idealize_series(self):
+    def idealize_series(self, amplitudes, thresholds=None, resolution=None,
+            interpolation_factor=None):
         """Idealize the current series."""
         debug_logger.debug(f"idealize_series")
 
+        self.params[self.current_datakey]['_tc_amplitudes'] = amplitudes/CURRENT_UNIT_FACTORS[self.tc_unit]
+        if thresholds is not None:
+            self.params[self.current_datakey]['_tc_thresholds'] = thresholds/CURRENT_UNIT_FACTORS[self.tc_unit]
+        if resolution is not None:        
+            self.params[self.current_datakey]['_tc_resolution'] = resolution/TIME_UNIT_FACTORS[self.time_unit]
+        if interpolation_factor is not None:    
+            self.params[self.current_datakey]['interpolation_factor'] = interpolation_factor
         ana_logger.info(
             f"idealizing series '{self.current_datakey}'\n"
             f"amplitudes: {self.params[self.current_datakey]['_tc_amplitudes']}\n"
@@ -360,9 +415,18 @@ class Recording(dict):
                 self.params[self.current_datakey]["interpolation_factor"],
             )
 
-    def idealize_episode(self):
+    def idealize_episode(self, amplitudes, thresholds=None, resolution=None,
+            interpolation_factor=None):
         """Idealize current episode."""
         debug_logger.debug(f"idealize_episode")
+
+        self.params[self.current_datakey]['_tc_amplitudes'] = amplitudes/CURRENT_UNIT_FACTORS[self.tc_unit]
+        if thresholds is not None:
+            self.params[self.current_datakey]['_tc_thresholds'] = thresholds/CURRENT_UNIT_FACTORS[self.tc_unit]
+        if resolution is not None:        
+            self.params[self.current_datakey]['_tc_resolution'] = resolution/TIME_UNIT_FACTORS[self.time_unit]
+        if interpolation_factor is not None:    
+            self.params[self.current_datakey]['interpolation_factor'] = interpolation_factor
 
         ana_logger.info(
             f"idealizing episode '{self.current_ep_ind}'\n"
@@ -528,7 +592,7 @@ class Recording(dict):
         # create dict to write matlab file and add the time vector
         export_dict = dict()
         export_dict["time"] = (
-            self["raw_"][0].time * Episode.time_unit_factors[time_unit]
+            self["raw_"][0].time * TIME_UNIT_FACTORS[time_unit]
         )
         no_episodes = len(self[datakey])
         fill_length = len(str(no_episodes))
@@ -541,15 +605,15 @@ class Recording(dict):
         for episode in episodes:
             n = str(episode.current_ep_ind).zfill(fill_length)
             export_dict["trace" + n] = (
-                episode._trace * Episode.trace_unit_factors[trace_unit]
+                episode._trace * CURRENT_UNIT_FACTORS[trace_unit]
             )
             if save_piezo:
                 export_dict["piezo" + n] = (
-                    episode._piezo * Episode.piezo_unit_factors[piezo_unit]
+                    episode._piezo * VOLTAGE_UNIT_FACTORS[piezo_unit]
                 )
             if save_command:
                 export_dict["command" + n] = (
-                    episode._command * Episode.command_unit_factors[command_unit]
+                    episode._command * VOLTAGE_UNIT_FACTORS[command_unit]
                 )
         io.savemat(filepath, export_dict)
 
@@ -615,10 +679,10 @@ class Recording(dict):
         export_array = np.zeros(
             shape=(len(self.selected_episodes) + 1, self.episode._idealization.size)
         )
-        export_array[0] = self.episode._time * Episode.time_unit_factors[time_unit]
+        export_array[0] = self.episode._time * TIME_UNIT_FACTORS[time_unit]
         for k, episode in enumerate(self.selected_episodes):
             export_array[k + 1] = (
-                episode._idealization * Episode.trace_unit_factors[trace_unit]
+                episode._idealization * CURRENT_UNIT_FACTORS[trace_unit]
             )
         # note that we transpose the export array to export the matrix
         # as time x episode
@@ -666,7 +730,7 @@ class Recording(dict):
             [
                 (
                     episode.current_ep_ind,
-                    episode._first_activation * Episode.time_unit_factors[time_unit],
+                    episode._first_activation * TIME_UNIT_FACTORS[time_unit],
                 )
                 for episode in self.selected_episodes
             ]

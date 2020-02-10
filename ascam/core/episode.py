@@ -11,21 +11,9 @@ from ascam.core.analysis import (
     interpolate,
 )
 from ascam.utils.tools import piezo_selection
-
+from ascam.constants import CURRENT_UNIT_FACTORS, VOLTAGE_UNIT_FACTORS, TIME_UNIT_FACTORS
 
 class Episode:
-    trace_unit_factors = {
-        "fA": 1e15,
-        "pA": 1e12,
-        "nA": 1e9,
-        "µA": 1e6,
-        "mA": 1e3,
-        "A": 1,
-    }
-    command_unit_factors = {"uV": 1e6, "mV": 1e3, "V": 1}
-    piezo_unit_factors = {"uV": 1e6, "mV": 1e3, "V": 1}
-    time_unit_factors = {"ms": 1e3, "s": 1}
-
     def __init__(
         self,
         time,
@@ -34,10 +22,10 @@ class Episode:
         piezo=None,
         command=None,
         sampling_rate=4e4,
-        time_unit="ms",
-        piezo_unit="V",
-        command_unit="mV",
-        trace_unit="pA",
+        # time_unit="ms",
+        # piezo_unit="V",
+        # command_unit="mV",
+        # trace_unit="pA",
         input_time_unit="s",
         input_trace_unit="A",
         input_piezo_unit="V",
@@ -61,27 +49,24 @@ class Episode:
         # units of the data
         # the units of the private attributes (eg _time) should be SI units
         # ie seconds, ampere etc
-        self.time_unit = time_unit
-        self.trace_unit = trace_unit
-        self.command_unit = command_unit
-        self.piezo_unit = piezo_unit
+        # self.time_unit = time_unit
+        # self.trace_unit = trace_unit
+        # self.command_unit = command_unit
+        # self.piezo_unit = piezo_unit
         # units when given input
-        input_time_factor = 1 / self.time_unit_factors[input_time_unit]
-        input_trace_unit_factor = 1 / self.trace_unit_factors[input_trace_unit]
-        input_command_unit_factor = 1 / self.command_unit_factors[input_command_unit]
-        input_piezo_unit_factor = 1 / self.piezo_unit_factors[input_piezo_unit]
-        # private attributes storing the actual data
-        self._time = time * input_time_factor
-        self._trace = trace * input_trace_unit_factor
-        self._id_time = time * input_time_factor  # time used for current plots
+        self._time = time / TIME_UNIT_FACTORS[input_time_unit]
+        self._trace = trace / CURRENT_UNIT_FACTORS[input_trace_unit]
+        self._id_time = time / TIME_UNIT_FACTORS[input_time_unit]        
+
         if piezo is not None:
-            self._piezo = piezo * input_piezo_unit_factor
+            self._piezo = piezo / VOLTAGE_UNIT_FACTORS[input_piezo_unit]
         else:
             self._piezo = None
         if command is not None:
-            self._command = command * input_command_unit_factor
+            self._command = command  / VOLTAGE_UNIT_FACTORS[input_command_unit]
         else:
             self._command = None
+
         # results of analyses
         self._first_activation = None
         self._idealization = None
@@ -91,69 +76,6 @@ class Episode:
         self.sampling_rate = sampling_rate
         self.suspiciousSTD = False
 
-    @property
-    def id_time(self):
-        if self._id_time is not None:
-            return self._id_time * self.time_unit_factor
-        else:
-            return self.time
-
-    @property
-    def time(self):
-        if self._time is not None:
-            return self._time * self.time_unit_factor
-        else:
-            return None
-
-    @property
-    def trace(self):
-        if self._trace is not None:
-            return self._trace * self.trace_unit_factor
-        return None
-
-    @property
-    def intrp_trace(self):
-        if self._intrp_trace is not None:
-            return self._intrp_trace * self.trace_unit_factor
-        if self._trace is not None:
-            return self._trace * self.trace_unit_factor
-        return None
-
-    @property
-    def piezo(self):
-        if self._piezo is not None:
-            return self._piezo * self.piezo_unit_factor
-        else:
-            return None
-
-    @property
-    def command(self):
-        if self._command is not None:
-            return self._command * self.command_unit_factor
-        else:
-            return None
-
-    @property
-    def first_activation(self):
-        if self._first_activation is not None:
-            return self._first_activation * self.time_unit_factor
-        else:
-            return None
-
-    @first_activation.setter
-    def first_activation(self, fa):
-        self._first_activation = fa / self.time_unit_factor
-
-    @property
-    def idealization(self):
-        if self._idealization is not None:
-            return self._idealization * self.trace_unit_factor
-        else:
-            return None
-
-    @idealization.setter
-    def idealization(self, id):
-        self._idealization = id
 
     @property
     def time_unit_factor(self):
@@ -234,14 +156,14 @@ class Episode:
 
     def idealize_or_interpolate(
         self,
-        amplitudes: Array[float, 1, ...] = np.array([]),
-        thresholds: Array[float, 1, ...] = np.array([]),
-        resolution: Optional[int] = None,
-        interpolation_factor: int = 1,
+        amplitudes: Array[float, 1, ...]=np.array([]),
+        thresholds: Optional[Array[float, 1, ...]]=None,
+        resolution: Optional[int]=None,
+        interpolation_factor: int=1,
     ):
         if amplitudes.size != 0:
             self.idealize(amplitudes, thresholds, resolution, interpolation_factor)
-        else:
+        elif interpolation_factor != 1:
             self.interpolate(interpolation_factor)
 
     def interpolate(self, interpolation_factor):

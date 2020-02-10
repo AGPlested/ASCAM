@@ -39,7 +39,8 @@ class PlotFrame(QWidget):
 
     def plot_episode(self):
         self.clear_plots()
-        episode = self.main.data.episode
-        self.trace_plot.plot(episode.time, episode.trace)
-        self.command_plot.plot(episode.time, episode.command)
-        self.piezo_plot.plot(episode.time, episode.piezo)
+        self.trace_plot.plot(self.main.data.time, self.main.data.trace)
+        if self.main.data.idealization is not None:
+            self.trace_plot.plot(self.main.data.time, self.main.data.idealization)
+        self.command_plot.plot(self.main.data.time, self.main.data.command)
+        self.piezo_plot.plot(self.main.data.time, self.main.data.piezo)
