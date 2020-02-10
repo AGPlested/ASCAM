@@ -1,3 +1,4 @@
+# pylint: disable=E0611
 from PySide2.QtWidgets import QDialog
 
 

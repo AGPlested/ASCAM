@@ -1,20 +1,13 @@
 import logging
 
+# pylint: disable=E0611
 from PySide2.QtWidgets import (
-    QListWidget,
-    QLabel,
-    QHBoxLayout,
-    QVBoxLayout,
     QGridLayout,
     QWidget,
-    QPushButton,
     QMainWindow,
-    QApplication,
-    QToolBar,
-    QStatusBar,
     QFileDialog,
 )
-from PySide2.QtGui import QPalette, QColor
+
 
 from ascam.qtgui import ExportFADialog
 from ascam.qtgui import ExportFileDialog
@@ -70,7 +63,7 @@ class MainWindow(QMainWindow):
         self.analysis_menu.addAction("First Activation", self.launch_fa_analysis)
 
         self.plot_menu = self.menuBar().addMenu("Plots")
-        self.plot_menu.addAction
+        # self.plot_menu.addAction
         self.histogram_menu = self.menuBar().addMenu("Histogram")
 
     def create_widgets(self):

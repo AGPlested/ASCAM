@@ -1,5 +1,6 @@
 import logging
 
+# pylint: disable=E0611
 from PySide2 import QtWidgets
 from PySide2.QtWidgets import (
     QSpacerItem,
@@ -7,7 +8,6 @@ from PySide2.QtWidgets import (
     QWidget,
     QVBoxLayout,
     QHBoxLayout,
-    QGridLayout,
     QCheckBox,
     QLineEdit,
     QToolButton,

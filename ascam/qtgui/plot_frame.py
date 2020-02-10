@@ -1,15 +1,10 @@
+# pylint: disable=E0611
 from PySide2.QtWidgets import (
-    QListWidget,
     QLabel,
     QHBoxLayout,
     QVBoxLayout,
     QGridLayout,
-    QWidget,
     QPushButton,
-    QMainWindow,
-    QApplication,
-    QToolBar,
-    QStatusBar,
 )
 
 import pyqtgraph as pg
