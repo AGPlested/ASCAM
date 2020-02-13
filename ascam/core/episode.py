@@ -1,5 +1,5 @@
 import logging
-from typing import Optional, List, Tuple
+from typing import Optional
 from nptyping import Array
 import numpy as np
 
@@ -117,13 +117,14 @@ class Episode:
         selection="piezo",
         active=False,
         deviation=0.05,
+        sampling_rate=None
     ):
         """Apply a baseline correction to the episode."""
 
         self.trace = baseline_correction(
             time=self.time,
             signal=self.trace,
-            fs=self.sampling_rate,
+            fs=sampling_rate,
             intervals=intervals,
             degree=degree,
             method=method,
@@ -133,7 +134,7 @@ class Episode:
             deviation=deviation,
         )
         # reset idealization
-        self.idealization = None
+        # self.idealization = None
 
     def idealize_or_interpolate(
         self,

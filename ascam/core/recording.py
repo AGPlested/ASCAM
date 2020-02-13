@@ -290,13 +290,12 @@ class Recording(dict):
 
     def baseline_correction(
         self,
+        intervals=None,
         method="Polynomial",
         degree=1,
-        intervals=None,
-        deviation=0.05,
         selection="piezo",
         active=False,
-        include=True,
+        deviation=0.05,
     ):
         """Apply a baseline correction to the current series."""
 
@@ -306,7 +305,8 @@ class Recording(dict):
             f"selection is {selection}\n"
             f"the selected intervals are {intervals}\n"
             f"select where piezo is active is {active}; the "
-            f"difference to piezo baseline is {deviation}"
+            f"deviation from piezo baseline is {deviation}"
+            f"sampling rate of this recording is {self.sampling_rate}"
         )
         if self.current_datakey == "raw_":
             # if its the first operation drop the 'raw_'
@@ -324,6 +324,7 @@ class Recording(dict):
                 deviation=deviation,
                 selection=selection,
                 active=active,
+                sampling_rate=self.sampling_rate
             )
         self.current_datakey = new_datakey
         debug_logger.debug("keys of the recording are now {}".format(self.keys()))

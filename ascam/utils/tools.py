@@ -1,11 +1,4 @@
-import logging
-import warnings
-
 import numpy as np
-
-
-ana_logger = logging.getLogger("ascam.analysis")
-debug_logger = logging.getLogger("ascam.debug")
 
 
 def parse_filename(filename):
@@ -14,7 +7,6 @@ def parse_filename(filename):
     works by walking through the filename in reverse order and considering
     the filetype to be whatever comes before the first '.' it encounters
     """
-    logging.info("""called `parse_filename` on: {}""".format(filename))
     N = len(filename)
     period = False
     slash = False
@@ -28,12 +20,6 @@ def parse_filename(filename):
             break
     path = filename[:slash]
     filetype = filename[period + 1 :]
-    logging.debug(
-        """path: {}
-                 filetype: {}""".format(
-            path, filetype
-        )
-    )
     if "axg" in filetype:
         filetype_long = "axograph"
     elif filetype == "bin":
@@ -45,15 +31,7 @@ def parse_filename(filename):
     elif filetype in ("txt", "axgt"):
         filetype = "tdt"
         filetype_long = "tab-delimited-text"
-    else:
-        warnings.warn("Could not detect filetype!")
     filename = filename[slash + 1 :]
-    logging.debug(
-        """filetype_long : {}"
-               filename: {} """.format(
-            filetype_long, filename
-        )
-    )
     return filetype, path, filetype_long, filename
 
 
@@ -82,22 +60,13 @@ def piezo_selection(time, piezo, trace, active=True, deviation=0.05):
         trace [1D array of floats] - The current at selected points.
     """
     maxPiezo = np.max(np.abs(piezo))
-    ana_logger.debug("""called `select_piezo` with parameters:
-              active = {}, deviation = {}, maxPiezo = {}, time: {},
-              piezo: {}, trace: {} """.format(active,deviation,maxPiezo,time,piezo,trace))
     if active:
-        # logging.debug("""selecting for active piezo""")
         indices = np.where((maxPiezo - np.abs(piezo)) / maxPiezo < deviation)
     else:
-        # logging.debug("""selecting for inactive piezo""")
         indices = np.where(np.abs(piezo) / maxPiezo < deviation)
     time = time[indices]
     piezo = piezo[indices]
     trace = trace[indices]
-    # ana_logger.debug(f"found indices: {indices}\n"
-    #                   f"times: {time}\n"
-    #                   f'piezo: {piezo}\n'
-    #                   f'trace: {trace}')
     return time, trace
 
 
@@ -107,24 +76,15 @@ def interval_selection(time, signal, intervals, fs):
     the function assumes `time` and `intervals` to have the same units and
     fs to have the reciprocal unit (eg. s, s and hz)
     """
-    logging.info("""called `interval_selection`""")
-    # logging.debug("""parameters are: sampling frequency: {}, time_unit: {}
-    #           time: {}
-    #           signal: {}
-    #           intervals: {}""".format(fs, time_unit, time, signal, intervals))
     time_out = []
     signal_out = []
     if isinstance(intervals[0], list):
-        logging.debug("""`intervals` is a list of intervals""")
         for ival in intervals:
             time_out.extend(time[int(ival[0] * fs) : int(ival[-1] * fs)])
             signal_out.extend(signal[int(ival[0] * fs) : int(ival[-1] * fs)])
     elif type(intervals[0]) in [int, float]:
-        logging.debug("""`intervals` is just one interval""")
         time_out = time[int(intervals[0] * fs) : int(intervals[-1] * fs)]
         signal_out = signal[int(intervals[0] * fs) : int(intervals[1] * fs)]
-    # logging.debug("""selected times: {}
-    #              and signal: {}""".format(time_out,signal_out))
     return time_out, signal_out
 
 

@@ -177,7 +177,7 @@ class BaselineFrame(QDialog):
         if self.selection_options[index] == "Piezo":
             debug_logger.debug("creating piezo selection widgets")
             self.active_checkbox = QCheckBox("Active/Inactive")
-            self.active_checkbox.setChecked(True)
+            self.active_checkbox.setChecked(False)
             self.method_layout.addWidget(self.active_checkbox)
             self.deviation_label = QLabel("Deviation")
             self.method_layout.addWidget(self.deviation_label)
@@ -185,9 +185,6 @@ class BaselineFrame(QDialog):
             self.method_layout.addWidget(self.deviation_entry)
         else:
             debug_logger.debug("creating interval widgets")
-            self.include_checkbox = QCheckBox("Include/Exclude")
-            self.include_checkbox.setChecked(True)
-            self.method_layout.addWidget(self.include_checkbox)
             self.interval_label = QLabel("Intervals")
             self.method_layout.addWidget(self.interval_label)
             self.interval_entry = QLineEdit("")
@@ -200,13 +197,11 @@ class BaselineFrame(QDialog):
         selection = self.selection_options[self.selection_box.currentIndex()]
         if selection == "Piezo":
             intervals = None
-            include = None
             deviation = float(self.deviation_entry.text())
             active = self.active_checkbox.isChecked()
         elif selection == "Intervals":
             degree = None
             deviation = None
-            include = self.include_checkbox.isChecked()
             intervals = string_to_list(self.interval_entry.text())
 
         self.main.data.baseline_correction(
@@ -216,7 +211,6 @@ class BaselineFrame(QDialog):
             selection=selection,
             deviation=deviation,
             active=active,
-            include=include,
         )
         self.main.plot_frame.plot_episode()
         self.close()
