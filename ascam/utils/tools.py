@@ -94,10 +94,10 @@ def piezo_selection(time, piezo, trace, active=True, deviation=0.05):
     time = time[indices]
     piezo = piezo[indices]
     trace = trace[indices]
-    ana_logger.debug(f"found indices: {indices}\n"
-                      f"times: {time}\n"
-                      f'piezo: {piezo}\n'
-                      f'trace: {trace}')
+    # ana_logger.debug(f"found indices: {indices}\n"
+    #                   f"times: {time}\n"
+    #                   f'piezo: {piezo}\n'
+    #                   f'trace: {trace}')
     return time, trace
 
 
