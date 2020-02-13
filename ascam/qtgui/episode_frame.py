@@ -27,3 +27,4 @@ class EpisodeFrame(QListWidget):
             n_eps = len(self.main.data.series)
             logging.debug("inserting data")
             self.addItems([f"Episode {i+1}" for i in range(n_eps)])
+        self.setCurrentRow(0)

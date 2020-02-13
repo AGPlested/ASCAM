@@ -69,7 +69,7 @@ class MainWindow(QMainWindow):
         show_command.triggered.connect(self.plot_frame.toggle_command)
         self.plot_menu.addAction(show_command)
 
-        self.histogram_menu = self.menuBar().addMenu("Histogram")
+        # self.histogram_menu = self.menuBar().addMenu("Histogram")
 
     def create_widgets(self):
         self.plot_frame = PlotFrame(self)
@@ -82,6 +82,7 @@ class MainWindow(QMainWindow):
         filename = QFileDialog.getOpenFileName(self)[0]
         self.data = Recording.from_file(filename)
         self.ep_frame.populate()
+        self.ep_frame.setFocus()
 
     def save_to_file(self):
         pass

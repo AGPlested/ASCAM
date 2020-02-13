@@ -1,17 +1,10 @@
 # pylint: disable=E0611
 from PySide2.QtWidgets import (
-    QLabel,
-    QHBoxLayout,
     QVBoxLayout,
-    QGridLayout,
-    QPushButton,
     QWidget,
 )
 
 import pyqtgraph as pg
-import numpy as np
-
-
 from ascam.utils import clear_qt_layout
 
 
@@ -83,8 +76,10 @@ class PlotFrame(QWidget):
 
     def clear_plots(self):
         self.trace_plot.clear()
-        self.command_plot.clear()
-        self.piezo_plot.clear()
+        if self.show_command:
+            self.command_plot.clear()
+        if self.show_piezo:
+            self.piezo_plot.clear()
 
     def plot_episode(self):
         self.clear_plots()
