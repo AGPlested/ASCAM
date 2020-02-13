@@ -3,15 +3,20 @@ from typing import Optional, List, Tuple
 from nptyping import Array
 import numpy as np
 
-from ascam.core.filtering import gaussian_filter, ChungKennedyFilter
-from ascam.core.analysis import (
+from ascam.utils import piezo_selection
+from ascam.constants import (
+    CURRENT_UNIT_FACTORS,
+    VOLTAGE_UNIT_FACTORS,
+    TIME_UNIT_FACTORS,
+)
+from .filtering import gaussian_filter, ChungKennedyFilter
+from .analysis import (
     baseline_correction,
-    detectfirst_activation,
+    detect_first_activation,
     Idealizer,
     interpolate,
 )
-from ascam.utils.tools import piezo_selection
-from ascam.constants import CURRENT_UNIT_FACTORS, VOLTAGE_UNIT_FACTORS, TIME_UNIT_FACTORS
+
 
 class Episode:
     def __init__(
@@ -49,14 +54,14 @@ class Episode:
         # units when given input
         self.time = time / TIME_UNIT_FACTORS[input_time_unit]
         self.trace = trace / CURRENT_UNIT_FACTORS[input_trace_unit]
-        self.id_time = time / TIME_UNIT_FACTORS[input_time_unit]        
+        self.id_time = time / TIME_UNIT_FACTORS[input_time_unit]
 
         if piezo is not None:
             self.piezo = piezo / VOLTAGE_UNIT_FACTORS[input_piezo_unit]
         else:
             self.piezo = None
         if command is not None:
-            self.command = command  / VOLTAGE_UNIT_FACTORS[input_command_unit]
+            self.command = command / VOLTAGE_UNIT_FACTORS[input_command_unit]
         else:
             self.command = None
 
@@ -132,8 +137,8 @@ class Episode:
 
     def idealize_or_interpolate(
         self,
-        amplitudes: Array[float, 1, ...]=np.array([]),
-        thresholds: Optional[Array[float, 1, ...]]=None,
+        amplitudes: Array[float, 1, ...] = np.array([]),
+        thresholds: Optional[Array[float, 1, ...]] = None,
         resolution: Optional[int] = None,
         interpolation_factor: int = 1,
     ):
@@ -191,9 +196,7 @@ class Episode:
     def detectfirst_activation(self, threshold):
         """Detect the first activation in the episode."""
 
-        self.first_activation = detectfirst_activation(
-            self.time, self.trace, threshold
-        )
+        self.first_activation = detect_first_activation(self.time, self.trace, threshold)
 
     def get_events(self):
         """Get the events (i.e. states) from the idealized trace.

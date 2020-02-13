@@ -4,6 +4,10 @@ import warnings
 import numpy as np
 
 
+ana_logger = logging.getLogger("ascam.analysis")
+debug_logger = logging.getLogger("ascam.debug")
+
+
 def parse_filename(filename):
     """
     detect the type of file from the extension
@@ -78,12 +82,9 @@ def piezo_selection(time, piezo, trace, active=True, deviation=0.05):
         trace [1D array of floats] - The current at selected points.
     """
     maxPiezo = np.max(np.abs(piezo))
-    # logging.debug("""called `select_piezo` with parameters:
-    #           active = {}, deviation = {}, maxPiezo = {}
-    #           time: {}
-    #           piezo: {}
-    #           trace: {}
-    #           """.format(active,deviation,maxPiezo,time,piezo,trace))
+    ana_logger.debug("""called `select_piezo` with parameters:
+              active = {}, deviation = {}, maxPiezo = {}, time: {},
+              piezo: {}, trace: {} """.format(active,deviation,maxPiezo,time,piezo,trace))
     if active:
         # logging.debug("""selecting for active piezo""")
         indices = np.where((maxPiezo - np.abs(piezo)) / maxPiezo < deviation)
@@ -93,10 +94,10 @@ def piezo_selection(time, piezo, trace, active=True, deviation=0.05):
     time = time[indices]
     piezo = piezo[indices]
     trace = trace[indices]
-    # logging.debug("""found indices: {}
-    #           times: {}
-    #           piezo: {}
-    #           trace: {}""".format(indices, time, piezo, trace))
+    ana_logger.debug(f"found indices: {indices}\n"
+                      f"times: {time}\n"
+                      f'piezo: {piezo}\n'
+                      f'trace: {trace}')
     return time, trace
 
 
@@ -111,7 +112,6 @@ def interval_selection(time, signal, intervals, fs):
     #           time: {}
     #           signal: {}
     #           intervals: {}""".format(fs, time_unit, time, signal, intervals))
-    print(intervals)
     time_out = []
     signal_out = []
     if isinstance(intervals[0], list):
@@ -163,7 +163,7 @@ def string_to_array(string):
     return array
 
 
-def array_to_string(array, seperator=' '):
+def array_to_string(array, seperator=" "):
     return seperator.join(np.char.mod("%.2f", array))
 
 

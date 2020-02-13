@@ -5,6 +5,6 @@ from .tools import (
     interval_selection,
     parse_filename,
     array_to_string,
-    string_to_array
+    string_to_array,
 )
 from .logging_setup import initialize_logger

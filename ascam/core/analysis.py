@@ -1,5 +1,6 @@
 import warnings
 import logging
+
 import numpy as np
 from scipy.interpolate import CubicSpline as spCubicSpline
 from typing import Optional, List, Tuple
@@ -8,15 +9,24 @@ from nptyping import Array
 from ascam.utils.tools import interval_selection, piezo_selection
 
 
+ana_logger = logging.getLogger("ascam.analysis")
+debug_logger = logging.getLogger("ascam.debug")
+
+
 def interpolate(
     signal: Array[float, 1, ...], time: Array[float, 1, ...], interpolation_factor: int
 ) -> Tuple[Array[float, 1, ...], Array[float, 1, ...]]:
     """Interpolate the signal with a cubic spline."""
 
+    ana_logger.debug(f'interpolating with factor {interpolation_factor}')
     spline = spCubicSpline(time, signal)
     interpolation_time = np.arange(
         time[0], time[-1], (time[1] - time[0]) / interpolation_factor
     )
+    ana_logger.debug(f'interpolated signal is: \n'
+                    f'{spline(interpolation_time)}\n'
+                    f'for time: \n'
+                    f'{interpolation_time}')
     return spline(interpolation_time), interpolation_time
 
 
@@ -35,7 +45,7 @@ class Idealizer:
     ) -> Array[float, 1, ...]:
         """Get idealization for single episode."""
 
-        if thresholds is None or thresholds.size != amplitudes.size-1:
+        if thresholds is None or thresholds.size != amplitudes.size - 1:
             thresholds = (amplitudes[1:] + amplitudes[:-1]) / 2
 
         if interpolation_factor != 1:
