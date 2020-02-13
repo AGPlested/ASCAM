@@ -82,7 +82,7 @@ def interval_selection(time, signal, intervals, fs):
         for ival in intervals:
             time_out.extend(time[int(ival[0] * fs) : int(ival[-1] * fs)])
             signal_out.extend(signal[int(ival[0] * fs) : int(ival[-1] * fs)])
-    elif type(intervals[0]) in [int, float]:
+    elif isinstance(intervals[0], (float, int)):
         time_out = time[int(intervals[0] * fs) : int(intervals[-1] * fs)]
         signal_out = signal[int(intervals[0] * fs) : int(intervals[1] * fs)]
     return time_out, signal_out

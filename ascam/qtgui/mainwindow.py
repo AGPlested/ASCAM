@@ -3,9 +3,8 @@ import logging
 # pylint: disable=E0611
 from PySide2.QtWidgets import QGridLayout, QWidget, QMainWindow, QFileDialog, QAction
 
-
-from ascam.qtgui import ExportFADialog
-from ascam.qtgui import ExportFileDialog
+# from ascam.qtgui import ExportFADialog
+# from ascam.qtgui import ExportFileDialog
 from ascam.qtgui import FilterFrame
 from ascam.qtgui import BaselineFrame
 from ascam.qtgui import PlotFrame
@@ -43,10 +42,10 @@ class MainWindow(QMainWindow):
         self.file_menu = self.menuBar().addMenu("File")
         self.file_menu.addAction("Open File", self.open_file)
         self.file_menu.addAction("Save", self.save_to_file)
-        self.file_menu.addAction("Export", lambda: ExportFileDialog())
+        self.file_menu.addAction("Export") #, lambda: ExportFileDialog())
         self.file_menu.addAction("Export Idealization", self.export_idealization)
         self.file_menu.addAction("Export Events", self.export_events)
-        self.file_menu.addAction("Export First Activation", lambda: ExportFADialog())
+        self.file_menu.addAction("Export First Activation") #, lambda: ExportFADialog())
         self.file_menu.addSeparator()
         self.file_menu.addAction("Quit", self.close)
 
@@ -79,13 +78,14 @@ class MainWindow(QMainWindow):
         self.central_layout.addWidget(self.ep_frame, 1, 3)
 
     def open_file(self):
-        filename = QFileDialog.getOpenFileName(self)[0]
-        self.data = Recording.from_file(filename)
+        self.filename = QFileDialog.getOpenFileName(self)[0]
+        self.data = Recording.from_file(self.filename)
         self.ep_frame.populate()
         self.ep_frame.setFocus()
 
     def save_to_file(self):
-        pass
+        filename = QFileDialog.getSaveFileName(self, dir=self.filename[:-3]+'pkl',filter='*.pkl')[0]
+        self.data.save_to_pickle(filename)
 
     def export_events(self):
         pass
