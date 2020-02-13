@@ -1,7 +1,7 @@
 import logging
 
 # pylint: disable=E0611
-from PySide2.QtWidgets import QGridLayout, QWidget, QMainWindow, QFileDialog
+from PySide2.QtWidgets import QGridLayout, QWidget, QMainWindow, QFileDialog, QAction
 
 
 from ascam.qtgui import ExportFADialog
@@ -32,7 +32,7 @@ class MainWindow(QMainWindow):
         self.central_widget.setLayout(self.central_layout)
         self.setCentralWidget(self.central_widget)
 
-        self.data = None
+        self.data = Recording()
 
         self.create_widgets()
 
@@ -61,7 +61,14 @@ class MainWindow(QMainWindow):
         self.analysis_menu.addAction("First Activation", self.launch_fa_analysis)
 
         self.plot_menu = self.menuBar().addMenu("Plots")
-        # self.plot_menu.addAction
+        show_piezo = QAction('Show Piezo Voltage', self.plot_menu, checkable=True)
+        show_piezo.triggered.connect(self.plot_frame.toggle_piezo)
+        self.plot_menu.addAction(show_piezo)
+        show_piezo.setChecked(True)
+        show_command = QAction('Show Command Voltage', self.plot_menu, checkable=True)
+        show_command.triggered.connect(self.plot_frame.toggle_command)
+        self.plot_menu.addAction(show_command)
+
         self.histogram_menu = self.menuBar().addMenu("Histogram")
 
     def create_widgets(self):
