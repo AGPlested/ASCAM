@@ -71,17 +71,16 @@ class Episode:
         self._intrp_trace = None
         # metadata about the episode
         self.n_episode = int(n_episode)
-        self.sampling_rate = sampling_rate
         self.suspiciousSTD = False
 
-    def gauss_filter_episode(self, filter_frequency=1e3):
+    def gauss_filter_episode(self, filter_frequency=1e3, sampling_rate=4e4):
         """Replace the current trace of the episode by the gauss filtered
         version of itself."""
 
         self.trace = gaussian_filter(
             signal=self.trace,
             filter_frequency=filter_frequency,
-            sampling_rate=self.sampling_rate,
+            sampling_rate=sampling_rate,
         )
         # sett idealization to None since the newly created episode has no
         # idealization
@@ -117,7 +116,7 @@ class Episode:
         selection="piezo",
         active=False,
         deviation=0.05,
-        sampling_rate=None
+        sampling_rate=4e4
     ):
         """Apply a baseline correction to the episode."""
 

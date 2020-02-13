@@ -81,7 +81,7 @@ class Recording(dict):
         return recording
 
     def __init__(self, filename="", sampling_rate=4e4):
-        debug_logger.debug("""intializing Recording""")
+        super().__init__()
 
         # parameters for loading the data
         self.filename = filename
@@ -336,6 +336,7 @@ class Recording(dict):
         ana_logger.info(
             f"gauss filtering series '{self.current_datakey}'\n"
             f"with frequency {filter_freq}"
+            f'sampling_rate is {self.sampling_rate}'
         )
 
         fdatakey = f"GFILTER{filter_freq}_"
@@ -347,7 +348,7 @@ class Recording(dict):
             new_datakey = self.current_datakey + fdatakey
         self.new_series(new_datakey)
         for episode in self[new_datakey]:
-            episode.gauss_filter_episode(filter_freq)
+            episode.gauss_filter_episode(filter_freq, self.sampling_rate)
         self.current_datakey = new_datakey
 
     def CK_filter_series(
