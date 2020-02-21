@@ -41,7 +41,7 @@ class IdealizationFrame(QWidget):
         self.layout.addWidget(self.tab_frame)
 
         self.calc_button = QPushButton("Calculate idealization")
-        self.calc_button.clicked.connect(self.calculate)
+        self.calc_button.clicked.connect(self.idealize_episode)
         self.layout.addWidget(self.calc_button)
         self.events_button = QPushButton("Create Table of Events")
         self.events_button.clicked.connect(self.get_events)
@@ -68,7 +68,7 @@ class IdealizationFrame(QWidget):
     def get_events(self):
         EventTableFrame(self)
 
-    def calculate(self):
+    def idealize_episode(self):
         amps = string_to_array(self.tab_frame.currentWidget().amp_entry.text())
         thresh = string_to_array(self.tab_frame.currentWidget().threshold_entry.text())
         res_string = self.tab_frame.currentWidget().res_entry.text()
@@ -86,6 +86,24 @@ class IdealizationFrame(QWidget):
 
         self.main.data.idealize_episode(amps, thresh, resolution, intrp_factor)
         self.main.plot_frame.plot_episode()
+
+    def idealize_series(self):
+        amps = string_to_array(self.tab_frame.currentWidget().amp_entry.text())
+        thresh = string_to_array(self.tab_frame.currentWidget().threshold_entry.text())
+        res_string = self.tab_frame.currentWidget().res_entry.text()
+
+        if res_string.strip():
+            resolution = int(res_string)
+        else:
+            resolution = None
+        intrp_string = self.tab_frame.currentWidget().intrp_entry.text()
+
+        if intrp_string.strip():
+            intrp_factor = int(intrp_string)
+        else:
+            intrp_factor = 1
+
+        self.main.data.idealize_series(amps, thresh, resolution, intrp_factor)
 
     def apply(self):
         pass
@@ -190,20 +208,24 @@ class EventTableFrame(QDialog):
 
     def create_table(self):
         events = self.parent.main.data.get_events()
-        self.q_event_table = EventTableModel(events)
+        self.q_event_table = EventTableModel(
+                events,
+                {self.parent.main.data.trace_unit},
+                {self.parent.main.data.time_unit}
+                )
         self.event_table = QTableView()
         self.event_table.setModel(self.q_event_table)
 
 
 class EventTableModel(QAbstractTableModel):
-    def __init__(self, data):
+    def __init__(self, data, current_unit, time_unit):
         super().__init__()
         # super(TableModel, self).__init__()
         self._data = data
 
         self._header = [
-            f"Amplitude [{self.main.data.trace_unit}]",
-            f"Duration [{self.main.data.time_unit}]",
+            f"Amplitude [current_unit]",
+            f"Duration [time_unit]",
             f"t_start",
             "t_stop",
             "Episode #",

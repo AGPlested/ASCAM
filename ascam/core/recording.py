@@ -710,6 +710,13 @@ class Recording(dict):
         np.savetxt(filepath, export_array.T, delimiter=",")
 
     def get_events(self):
+        if any([ep.idealization is None for ep in self.series]):
+            self.idealize_series(
+                    amplitudes=self.params[self.current_datakey]['_tc_amplitudes'],
+                    thresholds=self.params[self.current_datakey]['_tc_thresholds'],
+                    resolution=self.params[self.current_datakey]['_tc_resolution'],
+                    interpolation_factor=self.params[self.current_datakey]['interpolation_factor'],
+                    )
         export_array = np.zeros((0, 5)).astype(object)
         for episode in self.series:
             # create a column containing the episode number
