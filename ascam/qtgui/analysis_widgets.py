@@ -1,8 +1,11 @@
 import logging
 
-# pylint: disable=E0611
+# pylint: disable=no-name-in-module
+from PySide2.QtCore import QAbstractTableModel, Qt
 from PySide2 import QtWidgets
 from PySide2.QtWidgets import (
+        QDialog,
+    QTableView,
     QSpacerItem,
     QGridLayout,
     QTabWidget,
@@ -17,7 +20,7 @@ from PySide2.QtWidgets import (
     QLabel,
 )
 
-from ascam.utils import string_to_array, array_to_string
+from ascam.utils import string_to_array #, array_to_string
 
 
 debug_logger = logging.getLogger("ascam.debug")
@@ -37,9 +40,12 @@ class IdealizationFrame(QWidget):
         self.tab_frame = IdealizationTabFrame(self.main)
         self.layout.addWidget(self.tab_frame)
 
-        self.calc_button = QPushButton("Calculate")
+        self.calc_button = QPushButton("Calculate idealization")
         self.calc_button.clicked.connect(self.calculate)
         self.layout.addWidget(self.calc_button)
+        self.events_button = QPushButton("Create Table of Events")
+        self.events_button.clicked.connect(self.get_events)
+        self.layout.addWidget(self.events_button)
 
         # self.apply_button = QPushButton("Apply")
         # self.apply_button.clicked.connect(self.apply)
@@ -58,6 +64,9 @@ class IdealizationFrame(QWidget):
     def close_tab(self):
         if self.tab_frame.count() > 1:
             self.tab_frame.removeTab(self.tab_frame.currentIndex())
+
+    def get_events(self):
+        EventTableFrame(self)
 
     def calculate(self):
         amps = string_to_array(self.tab_frame.currentWidget().amp_entry.text())
@@ -164,6 +173,55 @@ class IdealizationTab(QWidget):
 
         self.intrp_entry = QLineEdit()
         self.layout.addWidget(self.intrp_entry)
+
+
+class EventTableFrame(QDialog):
+    def __init__(self, parent):
+        super().__init__()
+        self.parent = parent
+        self.setWindowTitle("Events")
+        self.layout = QVBoxLayout()
+        self.setLayout(self.layout)
+
+        self.create_table()
+
+        self.layout.addWidget(self.event_table)
+        self.exec_()
+
+    def create_table(self):
+        events = self.parent.main.data.get_events()
+        self.q_event_table = EventTableModel(events)
+        self.event_table = QTableView()
+        self.event_table.setModel(self.q_event_table)
+
+
+class EventTableModel(QAbstractTableModel):
+    def __init__(self, data):
+        super().__init__()
+        # super(TableModel, self).__init__()
+        self._data = data
+
+        self._header = [
+            f"Amplitude [{self.main.data.trace_unit}]",
+            f"Duration [{self.main.data.time_unit}]",
+            f"t_start",
+            "t_stop",
+            "Episode #",
+        ]
+    def data(self, index, role):
+        if role == Qt.DisplayRole:
+            # See below for the nested-list data structure.
+            # .row() indexes into the outer list,
+            # .column() indexes into the sub-list
+            if index.row() == 0:
+                return self._header[index.column()]
+            return self._data[index.row()-1][index.column()]
+
+    def rowCount(self, index):
+        return len(self._data)
+
+    def columnCount(self, index):
+        return len(self._data[0])
 
 
 class FirstActivationFrame(QWidget):

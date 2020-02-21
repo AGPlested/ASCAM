@@ -709,32 +709,36 @@ class Recording(dict):
         # as time x episode
         np.savetxt(filepath, export_array.T, delimiter=",")
 
-    def export_events(self, filepath):
-        """Export a table of events in the current (idealized) series and
-        duration to a csv file."""
-        debug_logger.debug(f"export_events")
-
-        import pandas as pd
-
-        if not filepath.endswith(".csv"):
-            filepath += ".csv"
+    def get_events(self):
         export_array = np.zeros((0, 5)).astype(object)
-        header = [
-            f"amplitude [{self.trace_unit}]",
-            f"duration [{self.time_unit}]",
-            f"t_start",
-            "t_stop",
-            "episode number",
-        ]
         for episode in self.series:
             # create a column containing the episode number
             ep_events = episode.get_events()
-            episode_number = episode.current_ep_ind * np.ones(len(ep_events[:, 0]))
+            episode_number = episode.n_episode * np.ones(len(ep_events[:, 0]))
             # glue that column to the event
             ep_events = np.concatenate(
                 (ep_events, episode_number[:, np.newaxis]), axis=1
             )
             export_array = np.concatenate((export_array, ep_events), axis=0)
+        return export_array
+
+    def export_events(self, filepath):
+        """Export a table of events in the current (idealized) series and
+        duration to a csv file."""
+        logging.debug(f"export_events")
+
+        import pandas as pd
+
+        if not filepath.endswith(".csv"):
+            filepath += ".csv"
+        # header = [
+        #     f"amplitude [{self.trace_unit}]",
+        #     f"duration [{self.time_unit}]",
+        #     f"t_start",
+        #     "t_stop",
+        #     "episode number",
+        # ]
+        export_array = self.get_events()
         export_array = pd.DataFrame(export_array)
         # truncate floats for duration and timestamps to 3 decimals (standard 1 micro s)
         for i in [1, 2, 3]:

@@ -8,6 +8,9 @@ import pyqtgraph as pg
 from ascam.utils import clear_qt_layout
 
 
+ORANGE=(255,153,0)
+
+
 class PlotFrame(QWidget):
     def __init__(self, main):
         super().__init__()
@@ -87,9 +90,10 @@ class PlotFrame(QWidget):
         pen = pg.mkPen(color='b')
         self.trace_plot.plot(self.main.data.time, self.main.data.trace, pen=pen)
         if self.main.data.idealization is not None:
-            id_pen = pg.mkPen(color='o')
+            id_pen = pg.mkPen(color=ORANGE)
             self.trace_plot.plot(self.main.data.time, self.main.data.idealization, pen=id_pen)
         if self.show_command:
             self.command_plot.plot(self.main.data.time, self.main.data.command, pen=pen)
         if self.show_piezo:
             self.piezo_plot.plot(self.main.data.time, self.main.data.piezo, pen=pen)
+
