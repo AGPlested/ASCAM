@@ -7,6 +7,7 @@ import logging
 
 import getopt
 
+# pylint: disable=no-name-in-module
 from PySide2.QtWidgets import QApplication
 from ascam.qtgui.mainwindow import MainWindow
 from ascam.utils import initialize_logger
@@ -78,6 +79,8 @@ def main():
     app = QApplication([])
     main_window = MainWindow()
     main_window.show()
+    if test:
+        main_window.test_mode()
     sys.exit(app.exec_())
 
 

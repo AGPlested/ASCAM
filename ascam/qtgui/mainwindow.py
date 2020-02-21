@@ -14,6 +14,8 @@ from ascam.qtgui import FirstActivationFrame
 
 from ascam.core.recording import Recording
 
+from ascam.constants import TEST_FILE_NAME
+
 
 ana_logger = logging.getLogger("ascam.analysis")
 debug_logger = logging.getLogger("ascam.debug")
@@ -102,3 +104,18 @@ class MainWindow(QMainWindow):
         self.fa_frame = FirstActivationFrame(self)
         self.fa_frame.show()
         self.central_layout.addWidget(self.fa_frame, 2, 2)
+
+    def test_mode(self):
+        self.data = Recording.from_file(TEST_FILE_NAME)
+        self.data.baseline_correction(
+            method='Polynomial',
+            degree=1,
+            intervals=None,
+            selection='Piezo',
+            deviation=0.05,
+            active=False,
+        )
+        self.data.gauss_filter_series(1000)
+        self.plot_frame.plot_episode()
+        self.launch_idealization()
+        self.tc_frame.tab_frame.currentWidget().amp_entry.setText('0, -.8, -1.2, -1.6')
