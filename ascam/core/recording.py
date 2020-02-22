@@ -101,15 +101,6 @@ class Recording(dict):
         self.command_unit = "mV"
         self.trace_unit = "pA"
         # idealization
-        self.params = {
-            "raw_": {
-                "_tc_thresholds": np.array([]),
-                "_tc_amplitudes": np.array([]),
-                "_tc_resolution": None,
-                "interpolation_factor": 1,
-                "_fa_threshold": 0.0,
-            }
-        }
         self.tc_unit = "pA"
         self.fa_unit = "pA"
         self._tc_resolution = None
@@ -122,84 +113,6 @@ class Recording(dict):
         # of a tuple that is the value under the list's name (as dict key)
         self.lists = dict()
         self.current_lists = ["all"]
-
-    @property
-    def fa_threshold(self):
-        return (
-            self.params[self.current_datakey]["_fa_threshold"]
-            * CURRENT_UNIT_FACTORS[self.fa_unit]
-        )
-
-    @fa_threshold.setter
-    def fa_threshold(self, theta):
-        if theta is not None:
-            self.params[self.current_datakey]["_fa_threshold"] = (
-                theta / CURRENT_UNIT_FACTORS[self.fa_unit]
-            )
-        else:
-            self.params[self.current_datakey]["_fa_threshold"] = None
-
-    @property
-    def tc_amplitudes(self):
-        return (
-            self.params[self.current_datakey]["_tc_amplitudes"]
-            * CURRENT_UNIT_FACTORS[self.tc_unit]
-        )
-
-    @tc_amplitudes.setter
-    def tc_amplitudes(self, amps):
-        if amps is not None:
-            self.params[self.current_datakey]["_tc_amplitudes"] = (
-                amps / CURRENT_UNIT_FACTORS[self.tc_unit]
-            )
-        else:
-            self.params[self.current_datakey]["_tc_amplitudes"] = np.array([])
-
-    @property
-    def tc_thresholds(self):
-        return (
-            self.params[self.current_datakey]["_tc_thresholds"]
-            * CURRENT_UNIT_FACTORS[self.tc_unit]
-        )
-
-    @tc_thresholds.setter
-    def tc_thresholds(self, thetas):
-        if thetas is not None:
-            self.params[self.current_datakey]["_tc_thresholds"] = (
-                thetas / CURRENT_UNIT_FACTORS[self.tc_unit]
-            )
-        else:
-            self.params[self.current_datakey]["_tc_thresholds"] = np.array([])
-
-    @property
-    def tc_resolution(self):
-        if self.params[self.current_datakey]["_tc_resolution"] is not None:
-            return (
-                self.params[self.current_datakey]["_tc_resolution"]
-                * TIME_UNIT_FACTORS[self.time_unit]
-            )
-        else:
-            return None
-
-    @tc_resolution.setter
-    def tc_resolution(self, resolution):
-        if resolution is not None:
-            self.params[self.current_datakey]["_tc_resolution"] = (
-                resolution / TIME_UNIT_FACTORS[self.time_unit]
-            )
-        else:
-            self.params[self.current_datakey]["_tc_resolution"] = None
-
-    @property
-    def interpolation_factor(self):
-        return self.series.interpolation_factor
-
-    @interpolation_factor.setter
-    def interpolation_factor(self, factor):
-        if factor is not None:
-            self.params[self.current_datakey]["interpolation_factor"] = factor
-        else:
-            self.params[self.current_datakey]["interpolation_factor"] = 1
 
     @property
     def selected_episodes(self):
@@ -286,7 +199,6 @@ class Recording(dict):
 
     def new_series(self, new_datakey):
         self[new_datakey] = copy.deepcopy(self.series)
-        self.params[new_datakey] = copy.deepcopy(self.params[self.current_datakey])
 
     def baseline_correction(
         self,
@@ -397,35 +309,25 @@ class Recording(dict):
         """Idealize the current series."""
         debug_logger.debug(f"idealize_series")
 
-        self.params[self.current_datakey]["_tc_amplitudes"] = (
-            amplitudes / CURRENT_UNIT_FACTORS[self.tc_unit]
-        )
-        if thresholds is not None:
-            self.params[self.current_datakey]["_tc_thresholds"] = (
-                thresholds / CURRENT_UNIT_FACTORS[self.tc_unit]
-            )
-        if resolution is not None:
-            self.params[self.current_datakey]["_tc_resolution"] = (
-                resolution / TIME_UNIT_FACTORS[self.time_unit]
-            )
-        if interpolation_factor is not None:
-            self.params[self.current_datakey][
-                "interpolation_factor"
-            ] = interpolation_factor
         ana_logger.info(
             f"idealizing series '{self.current_datakey}'\n"
-            f"amplitudes: {self.params[self.current_datakey]['_tc_amplitudes']}\n"
-            f"thresholds: {self.params[self.current_datakey]['_tc_thresholds']}\n"
-            f"resolution: {self.params[self.current_datakey]['_tc_resolution']}\n"
-            f"interpolation_factor: {self.params[self.current_datakey]['interpolation_factor']}"
+            f"amplitudes: {amplitudes}\n"
+            f"thresholds: {thresholds}\n"
+            f"resolution: {resolution}\n"
+            f"interpolation_factor: {interpolation_factor}"
         )
+        amplitudes /= CURRENT_UNIT_FACTORS[self.trace_unit] 
+        if thresholds is not None:
+            thresholds /= CURRENT_UNIT_FACTORS[self.trace_unit] 
+        if resolution is not None:
+            resolution /= TIME_UNIT_FACTORS[self.time_unit]
 
         for episode in self.series:
             episode.idealize_or_interpolate(
-                self.params[self.current_datakey]["_tc_amplitudes"],
-                self.params[self.current_datakey]["_tc_thresholds"],
-                self.params[self.current_datakey]["_tc_resolution"],
-                self.params[self.current_datakey]["interpolation_factor"],
+                amplitudes,
+                thresholds,
+                resolution,
+                interpolation_factor,
             )
 
     def idealize_episode(
@@ -434,49 +336,35 @@ class Recording(dict):
         """Idealize current episode."""
         debug_logger.debug(f"idealize_episode")
 
-        self.params[self.current_datakey]["_tc_amplitudes"] = (
-            amplitudes / CURRENT_UNIT_FACTORS[self.tc_unit]
-        )
-        if thresholds is not None:
-            self.params[self.current_datakey]["_tc_thresholds"] = (
-                thresholds / CURRENT_UNIT_FACTORS[self.tc_unit]
-            )
-        if resolution is not None:
-            self.params[self.current_datakey]["_tc_resolution"] = (
-                resolution / TIME_UNIT_FACTORS[self.time_unit]
-            )
-        if interpolation_factor is not None:
-            self.params[self.current_datakey][
-                "interpolation_factor"
-            ] = interpolation_factor
-
         ana_logger.info(
-            f"idealizing episode '{self.current_ep_ind}'\n"
-            f"amplitudes: {self.params[self.current_datakey]['_tc_amplitudes']}\n"
-            f"thresholds: {self.params[self.current_datakey]['_tc_thresholds']}\n"
-            f"resolution: {self.params[self.current_datakey]['_tc_resolution']}\n"
-            f"interpolation_factor: {self.params[self.current_datakey]['interpolation_factor']}"
+            f"idealizing series '{self.current_datakey}'\n"
+            f"amplitudes: {amplitudes}[{self.trace_unit}]\n"
+            f"thresholds: {thresholds}[{self.trace_unit}]\n"
+            f"resolution: {resolution}[{self.time_unit}]\n"
+            f"interpolation_factor: {interpolation_factor}"
         )
 
+        amplitudes /= CURRENT_UNIT_FACTORS[self.trace_unit] 
+        if thresholds is not None:
+            thresholds /= CURRENT_UNIT_FACTORS[self.trace_unit] 
+        if resolution is not None:
+            resolution /= TIME_UNIT_FACTORS[self.time_unit]
         self.episode.idealize_or_interpolate(
-            self.params[self.current_datakey]["_tc_amplitudes"],
-            self.params[self.current_datakey]["_tc_thresholds"],
-            self.params[self.current_datakey]["_tc_resolution"],
-            self.params[self.current_datakey]["interpolation_factor"],
+                amplitudes,
+                thresholds,
+                resolution,
+                interpolation_factor,
         )
 
-    def detect_fa(self, exclude=None):
+    def detect_fa(self, threshold, exclude=None):
         """Apply first event detection to all episodes in the selected series"""
 
-        debug_logger.debug(f"detect_fa")
+        ana_logger.debug(f"detect first activation above threshold {threshold}\n")
 
         if exclude is None:
             exclude = []
 
-        [
-            episode.detect_first_activation(
-                self.params[self.current_datakey]["_fa_threshold"]
-            )
+        [ episode.detect_first_activation( threshold)
             for episode in self.series
             if episode.current_ep_ind not in exclude
         ]
@@ -711,23 +599,19 @@ class Recording(dict):
 
     def get_events(self):
         if any([ep.idealization is None for ep in self.series]):
-            self.idealize_series(
-                    amplitudes=self.params[self.current_datakey]['_tc_amplitudes'],
-                    thresholds=self.params[self.current_datakey]['_tc_thresholds'],
-                    resolution=self.params[self.current_datakey]['_tc_resolution'],
-                    interpolation_factor=self.params[self.current_datakey]['interpolation_factor'],
-                    )
-        export_array = np.zeros((0, 5)).astype(object)
-        for episode in self.series:
-            # create a column containing the episode number
-            ep_events = episode.get_events()
-            episode_number = episode.n_episode * np.ones(len(ep_events[:, 0]))
-            # glue that column to the event
-            ep_events = np.concatenate(
-                (ep_events, episode_number[:, np.newaxis]), axis=1
-            )
-            export_array = np.concatenate((export_array, ep_events), axis=0)
-        return export_array
+            debug_logger('tried to get events but not all episodes were idealized')
+        else:
+            export_array = np.zeros((0, 5)).astype(object)
+            for episode in self.series:
+                # create a column containing the episode number
+                ep_events = episode.get_events()
+                episode_number = episode.n_episode * np.ones(len(ep_events[:, 0]))
+                # glue that column to the event
+                ep_events = np.concatenate(
+                    (ep_events, episode_number[:, np.newaxis]), axis=1
+                )
+                export_array = np.concatenate((export_array, ep_events), axis=0)
+            return export_array
 
     def export_events(self, filepath):
         """Export a table of events in the current (idealized) series and

@@ -35,7 +35,7 @@ class Idealizer:
 
     @classmethod
     def idealize_episode(
-        Idealizer,
+        cls,
         signal: Array[float, 1, ...],
         time: Array[float, 1, ...],
         amplitudes: Array[float, 1, ...],
@@ -51,11 +51,11 @@ class Idealizer:
         if interpolation_factor != 1:
             signal, time = interpolate(signal, time, interpolation_factor)
 
-        idealization = Idealizer.threshold_crossing(signal, amplitudes, thresholds)
+        idealization = cls.threshold_crossing(signal, amplitudes, thresholds)
 
         if resolution is not None:
-            events = Idealizer.extract_events(idealization, time)
-            idealization = Idealizer.apply_resolution(
+            events = cls.extract_events(idealization, time)
+            idealization = cls.apply_resolution(
                 events, idealization, time, resolution
             )
         return idealization, signal, time

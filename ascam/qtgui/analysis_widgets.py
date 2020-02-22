@@ -74,6 +74,7 @@ class IdealizationFrame(QWidget):
         self.event_table_frame = EventTableFrame(self, self.current_tab.event_table)
 
     def create_table(self):
+        self.idealize_series()
         events = self.main.data.get_events()
         return EventTableModel(
                 events,
