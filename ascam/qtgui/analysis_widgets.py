@@ -4,6 +4,7 @@ import logging
 from PySide2.QtCore import QAbstractTableModel, Qt
 from PySide2 import QtWidgets
 from PySide2.QtWidgets import (
+        QComboBox,
         QDialog,
     QTableView,
     QSpacerItem,
@@ -20,7 +21,7 @@ from PySide2.QtWidgets import (
     QLabel,
 )
 
-from ascam.utils import string_to_array #, array_to_string
+from ascam.utils import string_to_array, array_to_string
 from ascam.constants import TIME_UNIT_FACTORS, CURRENT_UNIT_FACTORS
 
 
@@ -66,6 +67,17 @@ class IdealizationFrame(QWidget):
             )
         )
 
+    def plot_params(self):
+        amps, thresh, resolution, intrp_factor = self.get_params()
+        if self.current_tab.show_amp_check.isChecked():
+            self.main.plot_frame.plot_amp_lines(amps)
+        else:
+            self.main.plot_frame.clear_amp_lines()
+        if self.current_tab.show_threshold_check.isChecked():
+            self.main.plot_frame.plot_theta_lines(thresh)
+        else:
+            self.main.plot_frame.clear_theta_lines()
+
     def close_tab(self):
         if self.tab_frame.count() > 1:
             self.tab_frame.removeTab(self.tab_frame.currentIndex())
@@ -82,42 +94,37 @@ class IdealizationFrame(QWidget):
                 self.main.data.trace_unit,
                 self.main.data.time_unit
                 )
+    
+    def get_params(self):
+        trace_factor = CURRENT_UNIT_FACTORS[self.current_tab.amp_unit_choice.currentText()]
+        amps = string_to_array(self.current_tab.amp_entry.text()) 
+        thresholds = string_to_array(self.current_tab.threshold_entry.text()) 
+        if thresholds is None or thresholds.size != amps.size - 1:
+            thresholds = (amps[1:] + amps[:-1]) / 2
+            self.current_tab.threshold_entry.setText(array_to_string(thresholds))
+        amps /= trace_factor
+        thresholds /= trace_factor
+        res_string = self.current_tab.res_entry.text()
+        if res_string.strip():
+            resolution = int(res_string)
+        else:
+            resolution = None
+        intrp_string = self.current_tab.intrp_entry.text()
+
+        if intrp_string.strip():
+            intrp_factor = int(intrp_string)
+        else:
+            intrp_factor = 1
+        return amps, thresholds, resolution, intrp_factor
 
     def idealize_episode(self):
-        amps = string_to_array(self.current_tab.amp_entry.text())
-        thresh = string_to_array(self.current_tab.threshold_entry.text())
-        res_string = self.current_tab.res_entry.text()
-
-        if res_string.strip():
-            resolution = int(res_string)
-        else:
-            resolution = None
-        intrp_string = self.current_tab.intrp_entry.text()
-
-        if intrp_string.strip():
-            intrp_factor = int(intrp_string)
-        else:
-            intrp_factor = 1
-
+        amps, thresh, resolution, intrp_factor = self.get_params()
         self.main.data.idealize_episode(amps, thresh, resolution, intrp_factor)
         self.main.plot_frame.plot_episode()
+        self.plot_params()
 
     def idealize_series(self):
-        amps = string_to_array(self.current_tab.amp_entry.text())
-        thresh = string_to_array(self.current_tab.threshold_entry.text())
-        res_string = self.current_tab.res_entry.text()
-
-        if res_string.strip():
-            resolution = int(res_string)
-        else:
-            resolution = None
-        intrp_string = self.current_tab.intrp_entry.text()
-
-        if intrp_string.strip():
-            intrp_factor = int(intrp_string)
-        else:
-            intrp_factor = 1
-
+        amps, thresh, resolution, intrp_factor = self.get_params()
         self.main.data.idealize_series(amps, thresh, resolution, intrp_factor)
 
     def apply(self):
@@ -162,30 +169,30 @@ class IdealizationTab(QWidget):
 
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
-        # layout.addWidget(QLabel("Idealize me baby"))
-        # button = QPushButton("bye")
-        # button.clicked.connect(lambda *args: self.close())
-        # layout.addWidget(button)
         self.create_widgets()
 
     def create_widgets(self):
         row_one = QHBoxLayout()
         amp_label = QLabel("Amplitudes")
         row_one.addWidget(amp_label)
-        show_amp_check = QCheckBox("Show")
-        row_one.addWidget(show_amp_check)
-        neg_check = QCheckBox("Negative Values")
-        row_one.addWidget(neg_check)
+        self.amp_unit_choice = QComboBox()
+        self.amp_unit_choice.addItems(CURRENT_UNIT_FACTORS.keys() )
+        self.amp_unit_choice.setCurrentIndex(1)
+        row_one.addWidget(self.amp_unit_choice)
+        self.show_amp_check = QCheckBox("Show")
+        row_one.addWidget(self.show_amp_check)
+        self.neg_check = QCheckBox("Negative Values")
+        row_one.addWidget(self.neg_check)
         self.layout.addLayout(row_one)
 
         self.amp_entry = QLineEdit()
         self.layout.addWidget(self.amp_entry)
 
         row_three = QHBoxLayout()
-        threshold_label = QLabel("Amplitudes")
+        threshold_label = QLabel("Thresholds")
         row_three.addWidget(threshold_label)
-        show_threshold_check = QCheckBox("Show")
-        row_three.addWidget(show_threshold_check)
+        self.show_threshold_check = QCheckBox("Show")
+        row_three.addWidget(self.show_threshold_check)
         auto_thresholds = QCheckBox("Automatic")
         row_three.addWidget(auto_thresholds)
         self.layout.addLayout(row_three)

@@ -147,56 +147,6 @@ class Recording(dict):
         else:
             return None
 
-    @property
-    def trace(self):
-        if self.episode.trace is not None:
-            return self.episode.trace * CURRENT_UNIT_FACTORS[self.trace_unit]
-        return None
-
-    @property
-    def intrp_trace(self):
-        if self.episode.intrp_trace is not None:
-            return self.episode.intrp_trace * CURRENT_UNIT_FACTORS[self.trace_unit]
-        if self.trace is not None:
-            return self.episode.trace * CURRENT_UNIT_FACTORS[self.trace_unit]
-        return None
-
-    @property
-    def piezo(self):
-        if self.episode.piezo is not None:
-            return self.episode.piezo * VOLTAGE_UNIT_FACTORS[self.piezo_unit]
-        else:
-            return None
-
-    @property
-    def command(self):
-        if self.episode.command is not None:
-            return self.episode.command * VOLTAGE_UNIT_FACTORS[self.command_unit]
-        else:
-            return None
-
-    @property
-    def first_activation(self):
-        if self.episode.first_activation is not None:
-            return self.episode.first_activation * TIME_UNIT_FACTORS[self.time_unit]
-        else:
-            return None
-
-    @first_activation.setter
-    def first_activation(self, fa):
-        self.episode.first_activation = fa / TIME_UNIT_FACTORS[self.time_unit]
-
-    @property
-    def idealization(self):
-        if self.episode.idealization is not None:
-            return self.episode.idealization * CURRENT_UNIT_FACTORS[self.trace_unit]
-        else:
-            return None
-
-    # @idealization.setter
-    # def idealization(self, idealization):
-    #     self.episode.idealization = idealization / CURRENT_UNIT_FACTORS[self.trace_unit]
-
     def new_series(self, new_datakey):
         self[new_datakey] = copy.deepcopy(self.series)
 
@@ -316,11 +266,11 @@ class Recording(dict):
             f"resolution: {resolution}\n"
             f"interpolation_factor: {interpolation_factor}"
         )
-        amplitudes /= CURRENT_UNIT_FACTORS[self.trace_unit] 
-        if thresholds is not None:
-            thresholds /= CURRENT_UNIT_FACTORS[self.trace_unit] 
-        if resolution is not None:
-            resolution /= TIME_UNIT_FACTORS[self.time_unit]
+        # amplitudes /= CURRENT_UNIT_FACTORS[self.trace_unit] 
+        # if thresholds is not None:
+        #     thresholds /= CURRENT_UNIT_FACTORS[self.trace_unit] 
+        # if resolution is not None:
+        #     resolution /= TIME_UNIT_FACTORS[self.time_unit]
 
         for episode in self.series:
             episode.idealize_or_interpolate(
@@ -344,11 +294,11 @@ class Recording(dict):
             f"interpolation_factor: {interpolation_factor}"
         )
 
-        amplitudes /= CURRENT_UNIT_FACTORS[self.trace_unit] 
-        if thresholds is not None:
-            thresholds /= CURRENT_UNIT_FACTORS[self.trace_unit] 
-        if resolution is not None:
-            resolution /= TIME_UNIT_FACTORS[self.time_unit]
+        # amplitudes /= CURRENT_UNIT_FACTORS[self.trace_unit] 
+        # if thresholds is not None:
+        #     thresholds /= CURRENT_UNIT_FACTORS[self.trace_unit] 
+        # if resolution is not None:
+        #     resolution /= TIME_UNIT_FACTORS[self.time_unit]
         self.episode.idealize_or_interpolate(
                 amplitudes,
                 thresholds,
