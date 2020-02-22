@@ -101,7 +101,7 @@ class PlotFrame(QWidget):
         self.trace_plot.plot(self.main.data.episode.time, self.main.data.episode.trace, pen=pen)
         if self.main.data.episode.idealization is not None:
             id_pen = pg.mkPen(color=ORANGE)
-            self.trace_plot.plot(self.main.data.episode.time, self.main.data.episode.idealization, pen=id_pen)
+            self.trace_plot.plot(self.main.data.episode.id_time, self.main.data.episode.idealization, pen=id_pen)
         if self.show_command:
             self.command_plot.plot(self.main.data.episode.time,
                     self.main.data.episode.command, pen=pen)

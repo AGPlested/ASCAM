@@ -18,15 +18,10 @@ def interpolate(
 ) -> Tuple[Array[float, 1, ...], Array[float, 1, ...]]:
     """Interpolate the signal with a cubic spline."""
 
-    ana_logger.debug(f'interpolating with factor {interpolation_factor}')
     spline = spCubicSpline(time, signal)
     interpolation_time = np.arange(
         time[0], time[-1], (time[1] - time[0]) / interpolation_factor
     )
-    ana_logger.debug(f'interpolated signal is: \n'
-                    f'{spline(interpolation_time)}\n'
-                    f'for time: \n'
-                    f'{interpolation_time}')
     return spline(interpolation_time), interpolation_time
 
 

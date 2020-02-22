@@ -27,10 +27,6 @@ class Episode:
         piezo=None,
         command=None,
         sampling_rate=4e4,
-        # time_unit="ms",
-        # piezo_unit="V",
-        # command_unit="mV",
-        # trace_unit="pA",
         input_time_unit="s",
         input_trace_unit="A",
         input_piezo_unit="V",
@@ -54,7 +50,7 @@ class Episode:
         # units when given input
         self.time = time / TIME_UNIT_FACTORS[input_time_unit]
         self.trace = trace / CURRENT_UNIT_FACTORS[input_trace_unit]
-        self.id_time = time / TIME_UNIT_FACTORS[input_time_unit]
+        self._id_time = time / TIME_UNIT_FACTORS[input_time_unit]
 
         if piezo is not None:
             self.piezo = piezo / VOLTAGE_UNIT_FACTORS[input_piezo_unit]
@@ -72,6 +68,10 @@ class Episode:
         # metadata about the episode
         self.n_episode = int(n_episode)
         self.suspiciousSTD = False
+
+    @property
+    def id_time(self):
+        return self.time if self._id_time is None else self._id_time
 
     def gauss_filter_episode(self, filter_frequency=1e3, sampling_rate=4e4):
         """Replace the current trace of the episode by the gauss filtered
@@ -148,7 +148,7 @@ class Episode:
             self.interpolate(interpolation_factor)
 
     def interpolate(self, interpolation_factor):
-        self._intrp_trace, self.id_time = interpolate(
+        self._intrp_trace, self._id_time = interpolate(
             self.trace, self.time, interpolation_factor
         )
 
@@ -162,7 +162,7 @@ class Episode:
             f"resolution = { resolution } \n"
             f"interpolation_factor = { interpolation_factor } "
         )
-        self.idealization, self._intrp_trace, self.id_time = Idealizer.idealize_episode(
+        self.idealization, self._intrp_trace, self._id_time = Idealizer.idealize_episode(
             self.trace,
             self.time,
             amplitudes,
