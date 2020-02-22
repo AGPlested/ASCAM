@@ -99,12 +99,21 @@ class IdealizationFrame(QWidget):
         trace_factor = CURRENT_UNIT_FACTORS[self.current_tab.amp_unit_choice.currentText()]
         amps = string_to_array(self.current_tab.amp_entry.text()) 
         thresholds = string_to_array(self.current_tab.threshold_entry.text()) 
-        if thresholds is None or thresholds.size != amps.size - 1:
+        
+        if self.current_tab.auto_thresholds.isChecked() or (thresholds is None or thresholds.size != amps.size - 1):
             thresholds = (amps[1:] + amps[:-1]) / 2
             self.current_tab.threshold_entry.setText(array_to_string(thresholds))
+            self.current_tab.auto_thresholds.setChecked(True)
+            self.current_tab.threshold_entry.setEnabled(False)
+
         amps /= trace_factor
         thresholds /= trace_factor
         res_string = self.current_tab.res_entry.text()
+
+        if self.current_tab.neg_check.isChecked():
+            amps *= -1
+            thresholds *= -1
+
         if res_string.strip():
             resolution = int(res_string)
         else:
@@ -193,8 +202,9 @@ class IdealizationTab(QWidget):
         row_three.addWidget(threshold_label)
         self.show_threshold_check = QCheckBox("Show")
         row_three.addWidget(self.show_threshold_check)
-        auto_thresholds = QCheckBox("Automatic")
-        row_three.addWidget(auto_thresholds)
+        self.auto_thresholds = QCheckBox("Automatic")
+        self.auto_thresholds.stateChanged.connect(self.toggle_auto_theta)
+        row_three.addWidget(self.auto_thresholds)
         self.layout.addLayout(row_three)
 
         self.threshold_entry = QLineEdit()
@@ -219,6 +229,14 @@ class IdealizationTab(QWidget):
 
         self.intrp_entry = QLineEdit()
         self.layout.addWidget(self.intrp_entry)
+
+    def toggle_auto_theta(self, state):
+        # apparently state==2 if the box is checked and 0
+        # if it is not
+        if state:
+            self.threshold_entry.setEnabled(False)
+        else:
+            self.threshold_entry.setEnabled(True)
 
 
 class EventTableFrame(QDialog):
