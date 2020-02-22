@@ -44,10 +44,12 @@ class MainWindow(QMainWindow):
         self.file_menu = self.menuBar().addMenu("File")
         self.file_menu.addAction("Open File", self.open_file)
         self.file_menu.addAction("Save", self.save_to_file)
-        self.file_menu.addAction("Export") #, lambda: ExportFileDialog())
+        self.file_menu.addAction("Export")  # , lambda: ExportFileDialog())
         self.file_menu.addAction("Export Idealization", self.export_idealization)
         self.file_menu.addAction("Export Events", self.export_events)
-        self.file_menu.addAction("Export First Activation") #, lambda: ExportFADialog())
+        self.file_menu.addAction(
+            "Export First Activation"
+        )  # , lambda: ExportFADialog())
         self.file_menu.addSeparator()
         self.file_menu.addAction("Quit", self.close)
 
@@ -62,11 +64,11 @@ class MainWindow(QMainWindow):
         self.analysis_menu.addAction("First Activation", self.launch_fa_analysis)
 
         self.plot_menu = self.menuBar().addMenu("Plots")
-        show_piezo = QAction('Show Piezo Voltage', self.plot_menu, checkable=True)
+        show_piezo = QAction("Show Piezo Voltage", self.plot_menu, checkable=True)
         show_piezo.triggered.connect(self.plot_frame.toggle_piezo)
         self.plot_menu.addAction(show_piezo)
         show_piezo.setChecked(True)
-        show_command = QAction('Show Command Voltage', self.plot_menu, checkable=True)
+        show_command = QAction("Show Command Voltage", self.plot_menu, checkable=True)
         show_command.triggered.connect(self.plot_frame.toggle_command)
         self.plot_menu.addAction(show_command)
 
@@ -86,7 +88,9 @@ class MainWindow(QMainWindow):
         self.ep_frame.setFocus()
 
     def save_to_file(self):
-        filename = QFileDialog.getSaveFileName(self, dir=self.filename[:-3]+'pkl',filter='*.pkl')[0]
+        filename = QFileDialog.getSaveFileName(
+            self, dir=self.filename[:-3] + "pkl", filter="*.pkl"
+        )[0]
         self.data.save_to_pickle(filename)
 
     def export_events(self):
@@ -108,14 +112,14 @@ class MainWindow(QMainWindow):
     def test_mode(self):
         self.data = Recording.from_file(TEST_FILE_NAME)
         self.data.baseline_correction(
-            method='Polynomial',
+            method="Polynomial",
             degree=1,
             intervals=None,
-            selection='Piezo',
+            selection="Piezo",
             deviation=0.05,
             active=False,
         )
         self.data.gauss_filter_series(1000)
         self.plot_frame.plot_episode()
         self.launch_idealization()
-        self.tc_frame.tab_frame.currentWidget().amp_entry.setText('0, -.8, -1.2, -1.6')
+        self.tc_frame.tab_frame.currentWidget().amp_entry.setText("0, -.8, -1.2, -1.6")

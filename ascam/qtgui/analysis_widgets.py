@@ -4,8 +4,8 @@ import logging
 from PySide2.QtCore import QAbstractTableModel, Qt
 from PySide2 import QtWidgets
 from PySide2.QtWidgets import (
-        QComboBox,
-        QDialog,
+    QComboBox,
+    QDialog,
     QTableView,
     QSpacerItem,
     QGridLayout,
@@ -90,18 +90,18 @@ class IdealizationFrame(QWidget):
         self.idealize_series()
         events = self.main.data.get_events()
         return EventTableModel(
-                events,
-                self.main.data.trace_unit,
-                self.main.data.time_unit
-                )
-    
+            events, self.main.data.trace_unit, self.main.data.time_unit
+        )
+
     def get_params(self):
-        amps = string_to_array(self.current_tab.amp_entry.text()) 
-        thresholds = string_to_array(self.current_tab.threshold_entry.text()) 
+        amps = string_to_array(self.current_tab.amp_entry.text())
+        thresholds = string_to_array(self.current_tab.threshold_entry.text())
         res_string = self.current_tab.res_entry.text()
         intrp_string = self.current_tab.intrp_entry.text()
 
-        if self.current_tab.auto_thresholds.isChecked() or (thresholds is None or thresholds.size != amps.size - 1):
+        if self.current_tab.auto_thresholds.isChecked() or (
+            thresholds is None or thresholds.size != amps.size - 1
+        ):
             thresholds = (amps[1:] + amps[:-1]) / 2
             self.current_tab.threshold_entry.setText(array_to_string(thresholds))
             self.current_tab.auto_thresholds.setChecked(True)
@@ -111,11 +111,12 @@ class IdealizationFrame(QWidget):
             amps *= -1
             thresholds *= -1
 
-        trace_factor = CURRENT_UNIT_FACTORS[self.current_tab.amp_unit_choice.currentText()]
+        trace_factor = CURRENT_UNIT_FACTORS[
+            self.current_tab.amp_unit_choice.currentText()
+        ]
         amps /= trace_factor
         thresholds /= trace_factor
         time_factor = TIME_UNIT_FACTORS[self.current_tab.time_unit_choice.currentText()]
-
 
         if res_string.strip() and self.current_tab.use_res.isChecked():
             resolution = float(res_string)
@@ -189,7 +190,7 @@ class IdealizationTab(QWidget):
         amp_label = QLabel("Amplitudes")
         row_one.addWidget(amp_label)
         self.amp_unit_choice = QComboBox()
-        self.amp_unit_choice.addItems(CURRENT_UNIT_FACTORS.keys() )
+        self.amp_unit_choice.addItems(CURRENT_UNIT_FACTORS.keys())
         self.amp_unit_choice.setCurrentIndex(1)
         row_one.addWidget(self.amp_unit_choice)
         self.show_amp_check = QCheckBox("Show")
@@ -279,10 +280,8 @@ class EventTableFrame(QDialog):
     def create_table(self):
         events = self.parent.main.data.get_events()
         self.q_event_table = EventTableModel(
-                events,
-                self.parent.main.data.trace_unit,
-                self.parent.main.data.time_unit
-                )
+            events, self.parent.main.data.trace_unit, self.parent.main.data.time_unit
+        )
         self.event_table = QTableView()
         self.event_table.setModel(self.q_event_table)
 
@@ -302,6 +301,7 @@ class EventTableModel(QAbstractTableModel):
             "t_stop",
             "Episode #",
         ]
+
     def data(self, index, role):
         if role == Qt.DisplayRole:
             # See below for the nested-list data structure.
@@ -309,7 +309,7 @@ class EventTableModel(QAbstractTableModel):
             # .column() indexes into the sub-list
             if index.row() == 0:
                 return self._header[index.column()]
-            return self._data[index.row()-1][index.column()]
+            return self._data[index.row() - 1][index.column()]
 
     def rowCount(self, index):
         return len(self._data)

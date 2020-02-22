@@ -186,7 +186,7 @@ class Recording(dict):
                 deviation=deviation,
                 selection=selection,
                 active=active,
-                sampling_rate=self.sampling_rate
+                sampling_rate=self.sampling_rate,
             )
         self.current_datakey = new_datakey
         debug_logger.debug("keys of the recording are now {}".format(self.keys()))
@@ -198,7 +198,7 @@ class Recording(dict):
         ana_logger.info(
             f"gauss filtering series '{self.current_datakey}'\n"
             f"with frequency {filter_freq}"
-            f'sampling_rate is {self.sampling_rate}'
+            f"sampling_rate is {self.sampling_rate}"
         )
 
         fdatakey = f"GFILTER{filter_freq}_"
@@ -269,10 +269,7 @@ class Recording(dict):
 
         for episode in self.series:
             episode.idealize_or_interpolate(
-                amplitudes,
-                thresholds,
-                resolution,
-                interpolation_factor,
+                amplitudes, thresholds, resolution, interpolation_factor
             )
 
     def idealize_episode(
@@ -290,10 +287,7 @@ class Recording(dict):
         )
 
         self.episode.idealize_or_interpolate(
-                amplitudes,
-                thresholds,
-                resolution,
-                interpolation_factor,
+            amplitudes, thresholds, resolution, interpolation_factor
         )
 
     def detect_fa(self, threshold, exclude=None):
@@ -304,7 +298,8 @@ class Recording(dict):
         if exclude is None:
             exclude = []
 
-        [ episode.detect_first_activation( threshold)
+        [
+            episode.detect_first_activation(threshold)
             for episode in self.series
             if episode.current_ep_ind not in exclude
         ]
@@ -539,7 +534,7 @@ class Recording(dict):
 
     def get_events(self):
         if any([ep.idealization is None for ep in self.series]):
-            debug_logger('tried to get events but not all episodes were idealized')
+            debug_logger("tried to get events but not all episodes were idealized")
         else:
             export_array = np.zeros((0, 5)).astype(object)
             for episode in self.series:
@@ -583,8 +578,13 @@ class Recording(dict):
         if not filepath.endswith(".csv"):
             filepath += ".csv"
         export_array = np.array(
-            [ ( episode.current_ep_ind, episode.first_activation * TIME_UNIT_FACTORS[time_unit],)
-                for episode in self.selected_episodes ]
+            [
+                (
+                    episode.current_ep_ind,
+                    episode.first_activation * TIME_UNIT_FACTORS[time_unit],
+                )
+                for episode in self.selected_episodes
+            ]
         )
         np.savetxt(filepath, export_array, delimiter=",")
 

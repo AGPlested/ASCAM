@@ -116,7 +116,7 @@ class Episode:
         selection="piezo",
         active=False,
         deviation=0.05,
-        sampling_rate=4e4
+        sampling_rate=4e4,
     ):
         """Apply a baseline correction to the episode."""
 
@@ -196,7 +196,9 @@ class Episode:
     def detectfirst_activation(self, threshold):
         """Detect the first activation in the episode."""
 
-        self.first_activation = detect_first_activation(self.time, self.trace, threshold)
+        self.first_activation = detect_first_activation(
+            self.time, self.trace, threshold
+        )
 
     def get_events(self):
         """Get the events (i.e. states) from the idealized trace.
