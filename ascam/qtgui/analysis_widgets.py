@@ -36,15 +36,19 @@ class IdealizationFrame(QWidget):
 
         self.create_widgets()
 
+    @property
+    def current_tab(self):
+        return self.tab_frame.currentWidget()
+
     def create_widgets(self):
-        self.tab_frame = IdealizationTabFrame(self.main)
+        self.tab_frame = IdealizationTabFrame(self)
         self.layout.addWidget(self.tab_frame)
 
         self.calc_button = QPushButton("Calculate idealization")
         self.calc_button.clicked.connect(self.idealize_episode)
         self.layout.addWidget(self.calc_button)
         self.events_button = QPushButton("Create Table of Events")
-        self.events_button.clicked.connect(self.get_events)
+        self.events_button.clicked.connect(self.create_event_frame)
         self.layout.addWidget(self.events_button)
 
         # self.apply_button = QPushButton("Apply")
@@ -65,19 +69,28 @@ class IdealizationFrame(QWidget):
         if self.tab_frame.count() > 1:
             self.tab_frame.removeTab(self.tab_frame.currentIndex())
 
-    def get_events(self):
-        EventTableFrame(self)
+    def create_event_frame(self):
+        self.current_tab.event_table = self.create_table()
+        self.event_table_frame = EventTableFrame(self, self.current_tab.event_table)
+
+    def create_table(self):
+        events = self.main.data.get_events()
+        return EventTableModel(
+                events,
+                {self.main.data.trace_unit},
+                {self.main.data.time_unit}
+                )
 
     def idealize_episode(self):
-        amps = string_to_array(self.tab_frame.currentWidget().amp_entry.text())
-        thresh = string_to_array(self.tab_frame.currentWidget().threshold_entry.text())
-        res_string = self.tab_frame.currentWidget().res_entry.text()
+        amps = string_to_array(self.current_tab.amp_entry.text())
+        thresh = string_to_array(self.current_tab.threshold_entry.text())
+        res_string = self.current_tab.res_entry.text()
 
         if res_string.strip():
             resolution = int(res_string)
         else:
             resolution = None
-        intrp_string = self.tab_frame.currentWidget().intrp_entry.text()
+        intrp_string = self.current_tab.intrp_entry.text()
 
         if intrp_string.strip():
             intrp_factor = int(intrp_string)
@@ -88,15 +101,15 @@ class IdealizationFrame(QWidget):
         self.main.plot_frame.plot_episode()
 
     def idealize_series(self):
-        amps = string_to_array(self.tab_frame.currentWidget().amp_entry.text())
-        thresh = string_to_array(self.tab_frame.currentWidget().threshold_entry.text())
-        res_string = self.tab_frame.currentWidget().res_entry.text()
+        amps = string_to_array(self.current_tab.amp_entry.text())
+        thresh = string_to_array(self.current_tab.threshold_entry.text())
+        res_string = self.current_tab.res_entry.text()
 
         if res_string.strip():
             resolution = int(res_string)
         else:
             resolution = None
-        intrp_string = self.tab_frame.currentWidget().intrp_entry.text()
+        intrp_string = self.current_tab.intrp_entry.text()
 
         if intrp_string.strip():
             intrp_factor = int(intrp_string)
@@ -110,9 +123,9 @@ class IdealizationFrame(QWidget):
 
 
 class IdealizationTabFrame(QTabWidget):
-    def __init__(self, main):
+    def __init__(self, parent):
         super().__init__()
-        self.main = main
+        self.parent = parent
 
         self.tabs = [IdealizationTab(self)]
         self.addTab(self.tabs[0], "1")
@@ -126,12 +139,18 @@ class IdealizationTabFrame(QTabWidget):
         self.setTabsClosable(True)
         self.tabBar().tabCloseRequested.connect(self.removeTab)
 
+        self.currentChanged.connect(self.switch_tab)
+
     def add_tab(self):
         title = str(self.count())
         debug_logger.debug(f"adding new tab with number {title}")
         tab = IdealizationTab(self)
         self.tabs.append(tab)
-        self.insertTab(self.count() - 1, tab, title)
+        ind = self.insertTab(self.count() - 1, tab, title)
+        self.setCurrentIndex(ind)
+
+    def switch_tab(self):
+        self.parent.idealize_episode()
 
 
 class IdealizationTab(QWidget):
@@ -194,17 +213,19 @@ class IdealizationTab(QWidget):
 
 
 class EventTableFrame(QDialog):
-    def __init__(self, parent):
+    def __init__(self, parent, table_view):
         super().__init__()
         self.parent = parent
         self.setWindowTitle("Events")
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
 
-        self.create_table()
+        self.event_table = QTableView()
+        self.event_table.setModel(table_view)
 
         self.layout.addWidget(self.event_table)
-        self.exec_()
+        self.setModal(False)
+        self.show()
 
     def create_table(self):
         events = self.parent.main.data.get_events()
