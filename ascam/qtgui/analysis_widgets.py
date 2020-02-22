@@ -96,34 +96,38 @@ class IdealizationFrame(QWidget):
                 )
     
     def get_params(self):
-        trace_factor = CURRENT_UNIT_FACTORS[self.current_tab.amp_unit_choice.currentText()]
         amps = string_to_array(self.current_tab.amp_entry.text()) 
         thresholds = string_to_array(self.current_tab.threshold_entry.text()) 
-        
+        res_string = self.current_tab.res_entry.text()
+        intrp_string = self.current_tab.intrp_entry.text()
+
         if self.current_tab.auto_thresholds.isChecked() or (thresholds is None or thresholds.size != amps.size - 1):
             thresholds = (amps[1:] + amps[:-1]) / 2
             self.current_tab.threshold_entry.setText(array_to_string(thresholds))
             self.current_tab.auto_thresholds.setChecked(True)
             self.current_tab.threshold_entry.setEnabled(False)
 
-        amps /= trace_factor
-        thresholds /= trace_factor
-        res_string = self.current_tab.res_entry.text()
-
         if self.current_tab.neg_check.isChecked():
             amps *= -1
             thresholds *= -1
 
-        if res_string.strip():
-            resolution = int(res_string)
+        trace_factor = CURRENT_UNIT_FACTORS[self.current_tab.amp_unit_choice.currentText()]
+        amps /= trace_factor
+        thresholds /= trace_factor
+        time_factor = TIME_UNIT_FACTORS[self.current_tab.time_unit_choice.currentText()]
+
+
+        if res_string.strip() and self.current_tab.use_res.isChecked():
+            resolution = float(res_string)
+            resolution /= time_factor
         else:
             resolution = None
-        intrp_string = self.current_tab.intrp_entry.text()
 
-        if intrp_string.strip():
+        if intrp_string.strip() and self.current_tab.interpolate.isChecked():
             intrp_factor = int(intrp_string)
         else:
             intrp_factor = 1
+
         return amps, thresholds, resolution, intrp_factor
 
     def idealize_episode(self):
@@ -213,8 +217,13 @@ class IdealizationTab(QWidget):
         row_four = QHBoxLayout()
         res_label = QLabel("Resolution")
         row_four.addWidget(res_label)
-        use_res = QCheckBox("Apply")
-        row_four.addWidget(use_res)
+        self.time_unit_choice = QComboBox()
+        self.time_unit_choice.addItems(TIME_UNIT_FACTORS.keys())
+        self.time_unit_choice.setCurrentIndex(1)
+        row_four.addWidget(self.time_unit_choice)
+        self.use_res = QCheckBox("Apply")
+        self.use_res.stateChanged.connect(self.toggle_resolution)
+        row_four.addWidget(self.use_res)
         self.layout.addLayout(row_four)
 
         self.res_entry = QLineEdit()
@@ -223,12 +232,25 @@ class IdealizationTab(QWidget):
         row_six = QHBoxLayout()
         intrp_label = QLabel("Interpolation")
         row_six.addWidget(intrp_label)
-        interpolate = QCheckBox("Apply")
-        row_six.addWidget(interpolate)
+        self.interpolate = QCheckBox("Apply")
+        self.interpolate.stateChanged.connect(self.toggle_interpolation)
+        row_six.addWidget(self.interpolate)
         self.layout.addLayout(row_six)
 
         self.intrp_entry = QLineEdit()
         self.layout.addWidget(self.intrp_entry)
+
+    def toggle_interpolation(self, state):
+        if not state:
+            self.intrp_entry.setEnabled(False)
+        else:
+            self.intrp_entry.setEnabled(True)
+
+    def toggle_resolution(self, state):
+        if not state:
+            self.res_entry.setEnabled(False)
+        else:
+            self.res_entry.setEnabled(True)
 
     def toggle_auto_theta(self, state):
         # apparently state==2 if the box is checked and 0

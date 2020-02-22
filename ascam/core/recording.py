@@ -266,11 +266,6 @@ class Recording(dict):
             f"resolution: {resolution}\n"
             f"interpolation_factor: {interpolation_factor}"
         )
-        # amplitudes /= CURRENT_UNIT_FACTORS[self.trace_unit] 
-        # if thresholds is not None:
-        #     thresholds /= CURRENT_UNIT_FACTORS[self.trace_unit] 
-        # if resolution is not None:
-        #     resolution /= TIME_UNIT_FACTORS[self.time_unit]
 
         for episode in self.series:
             episode.idealize_or_interpolate(
@@ -288,17 +283,12 @@ class Recording(dict):
 
         ana_logger.info(
             f"idealizing series '{self.current_datakey}'\n"
-            f"amplitudes: {amplitudes}[{self.trace_unit}]\n"
-            f"thresholds: {thresholds}[{self.trace_unit}]\n"
-            f"resolution: {resolution}[{self.time_unit}]\n"
+            f"amplitudes: {amplitudes}\n"
+            f"thresholds: {thresholds}\n"
+            f"resolution: {resolution}\n"
             f"interpolation_factor: {interpolation_factor}"
         )
 
-        # amplitudes /= CURRENT_UNIT_FACTORS[self.trace_unit] 
-        # if thresholds is not None:
-        #     thresholds /= CURRENT_UNIT_FACTORS[self.trace_unit] 
-        # if resolution is not None:
-        #     resolution /= TIME_UNIT_FACTORS[self.time_unit]
         self.episode.idealize_or_interpolate(
                 amplitudes,
                 thresholds,
