@@ -21,6 +21,7 @@ from PySide2.QtWidgets import (
 )
 
 from ascam.utils import string_to_array #, array_to_string
+from ascam.constants import TIME_UNIT_FACTORS, CURRENT_UNIT_FACTORS
 
 
 debug_logger = logging.getLogger("ascam.debug")
@@ -78,8 +79,8 @@ class IdealizationFrame(QWidget):
         events = self.main.data.get_events()
         return EventTableModel(
                 events,
-                {self.main.data.trace_unit},
-                {self.main.data.time_unit}
+                self.main.data.trace_unit,
+                self.main.data.time_unit
                 )
 
     def idealize_episode(self):
@@ -232,8 +233,8 @@ class EventTableFrame(QDialog):
         events = self.parent.main.data.get_events()
         self.q_event_table = EventTableModel(
                 events,
-                {self.parent.main.data.trace_unit},
-                {self.parent.main.data.time_unit}
+                self.parent.main.data.trace_unit,
+                self.parent.main.data.time_unit
                 )
         self.event_table = QTableView()
         self.event_table.setModel(self.q_event_table)
@@ -244,10 +245,12 @@ class EventTableModel(QAbstractTableModel):
         super().__init__()
         # super(TableModel, self).__init__()
         self._data = data
+        self._data[:, 0] *= CURRENT_UNIT_FACTORS[current_unit]
+        self._data[:, 1:] *= TIME_UNIT_FACTORS[time_unit]
 
         self._header = [
-            f"Amplitude [current_unit]",
-            f"Duration [time_unit]",
+            f"Amplitude [{current_unit}]",
+            f"Duration [{time_unit}]",
             f"t_start",
             "t_stop",
             "Episode #",
