@@ -1,8 +1,8 @@
 import logging
 
 # pylint: disable=E0611
-from PySide2 import QtCore, QtWidgets
-from PySide2.QtWidgets import QVBoxLayout, QWidget, QHBoxLayout, QSpacerItem
+from PySide2 import QtCore 
+from PySide2.QtWidgets import QWidget, QGridLayout
 import numpy as np
 import pyqtgraph as pg
 
@@ -21,12 +21,8 @@ class PlotFrame(QWidget):
         self.main = main
 
         # qt attributes
-        self.layout = QHBoxLayout()
+        self.layout = QGridLayout()
         self.setLayout(self.layout)
-        self.plot_layout = QVBoxLayout()
-        self.hist_layout = QVBoxLayout()
-        self.layout.addLayout(self.plot_layout)
-        self.layout.addLayout(self.hist_layout)
 
         # plot variables
         self.show_piezo = True
@@ -43,7 +39,7 @@ class PlotFrame(QWidget):
         self.trace_plot.setBackground("w")
         self.trace_plot.setLabel("left", "Current", units="A")
         ind = int(self.show_command)
-        self.plot_layout.insertWidget(ind, self.trace_plot)
+        self.layout.addWidget(self.trace_plot, ind, 0, )
 
         if self.show_piezo:
             self.piezo_plot = pg.PlotWidget(name=f"piezo")
@@ -52,7 +48,7 @@ class PlotFrame(QWidget):
             self.piezo_plot.setLabel("bottom", "time", units="s")
             self.piezo_plot.setXLink(self.trace_plot)
             ind = 1 + int(self.show_command)
-            self.plot_layout.insertWidget(ind, self.piezo_plot)
+            self.layout.addWidget(self.piezo_plot, ind, 0, )
         else:
             self.trace_plot.setLabel("bottom", "time", units="s")
 
@@ -61,7 +57,7 @@ class PlotFrame(QWidget):
             self.command_plot.setBackground("w")
             self.command_plot.setLabel("left", "Command", units="V")
             self.command_plot.setXLink(self.trace_plot)
-            self.plot_layout.insertWidget(0, self.command_plot)
+            self.layout.addWidget(self.command_plot, 0, 0)
 
         if self.show_grid:
             self.trace_plot.showGrid(x=True, y=True)
@@ -75,19 +71,8 @@ class PlotFrame(QWidget):
 
     def init_hist(self):
         self.hist = pg.PlotWidget()
-        if self.show_command:
-            self.hist_layout.addItem(
-                QSpacerItem(
-                    20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding
-                )
-            )
-        self.hist_layout.addWidget(self.hist)
-        if self.show_piezo:
-            self.hist_layout.addItem(
-                QSpacerItem(
-                    20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding
-                )
-            )
+        row = int(self.show_command)
+        self.layout.addWidget(self.hist, row, 1, )
         self.hist.setLabel("right", "Current", units="A")
         self.hist.getAxis('left').setTicks([])
         self.hist.setBackground("w")
@@ -204,8 +189,7 @@ class PlotFrame(QWidget):
             self.trace_plot.removeItem(a)
 
     def togggle_grid(self):
-        clear_qt_layout(self.plot_layout)
-        clear_qt_layout(self.hist_layout)
+        clear_qt_layout(self.layout)
         self.show_grid = not self.show_grid
         self.init_plots()
         self.init_hist()
@@ -214,8 +198,7 @@ class PlotFrame(QWidget):
         self.draw_episode_hist()
 
     def toggle_command(self):
-        clear_qt_layout(self.plot_layout)
-        clear_qt_layout(self.hist_layout)
+        clear_qt_layout(self.layout)
         self.show_command = not self.show_command
         self.init_plots()
         self.init_hist()
@@ -224,8 +207,7 @@ class PlotFrame(QWidget):
         self.draw_episode_hist()
 
     def toggle_piezo(self):
-        clear_qt_layout(self.plot_layout)
-        clear_qt_layout(self.hist_layout)
+        clear_qt_layout(self.layout)
         self.show_piezo = not self.show_piezo
         self.init_plots()
         self.init_hist()
