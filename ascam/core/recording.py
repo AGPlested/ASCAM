@@ -348,7 +348,6 @@ class Recording(dict):
         # function
         trace_list = np.asarray(trace_list)
         trace_list = trace_list.flatten()
-        trace_list *= CURRENT_UNIT_FACTORS[self.trace_unit]
 
         heights, bins = np.histogram(trace_list, n_bins, density=density)
         # get centers of all the bins
@@ -395,7 +394,6 @@ class Recording(dict):
         else:
             trace_points = self.episode.trace
             # self.hist_times = np.array(self.episode.time)
-        trace_points *= CURRENT_UNIT_FACTORS[self.trace_unit]
         heights, bins = np.histogram(trace_points, n_bins, density=density)
         # get centers of all the bins
         centers = (bins[:-1] + bins[1:]) / 2

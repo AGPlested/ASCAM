@@ -3,14 +3,14 @@ import logging
 # pylint: disable=E0611
 from PySide2.QtWidgets import QGridLayout, QWidget, QMainWindow, QFileDialog, QAction
 
-# from ascam.qtgui import ExportFADialog
-# from ascam.qtgui import ExportFileDialog
-from ascam.qtgui import FilterFrame
-from ascam.qtgui import BaselineFrame
-from ascam.qtgui import PlotFrame
-from ascam.qtgui import EpisodeFrame
-from ascam.qtgui import IdealizationFrame
-from ascam.qtgui import FirstActivationFrame
+# from ascam.gui import ExportFADialog
+# from ascam.gui import ExportFileDialog
+from ascam.gui import FilterFrame
+from ascam.gui import BaselineFrame
+from ascam.gui import PlotFrame
+from ascam.gui import EpisodeFrame
+from ascam.gui import IdealizationFrame
+from ascam.gui import FirstActivationFrame
 
 from ascam.core.recording import Recording
 
@@ -86,6 +86,7 @@ class MainWindow(QMainWindow):
         self.data = Recording.from_file(self.filename)
         self.ep_frame.populate()
         self.ep_frame.setFocus()
+        self.plot_frame.plot_all()
 
     def save_to_file(self):
         filename = QFileDialog.getSaveFileName(
@@ -111,6 +112,8 @@ class MainWindow(QMainWindow):
 
     def test_mode(self):
         self.data = Recording.from_file(TEST_FILE_NAME)
+        self.ep_frame.populate()
+        self.ep_frame.setFocus()
         self.data.baseline_correction(
             method="Polynomial",
             degree=1,
@@ -120,6 +123,6 @@ class MainWindow(QMainWindow):
             active=False,
         )
         self.data.gauss_filter_series(1000)
-        self.plot_frame.plot_episode()
+        self.plot_frame.plot_all()
         self.launch_idealization()
         self.tc_frame.tab_frame.currentWidget().amp_entry.setText("0, -.8, -1.2, -1.6")

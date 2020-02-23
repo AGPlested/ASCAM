@@ -9,7 +9,7 @@ import getopt
 
 # pylint: disable=no-name-in-module
 from PySide2.QtWidgets import QApplication
-from ascam.qtgui.mainwindow import MainWindow
+from ascam.gui.mainwindow import MainWindow
 from ascam.utils import initialize_logger
 
 
