@@ -126,7 +126,7 @@ class PlotFrame(QWidget):
             y_max = self.hist_y_max
         self.hist.getAxis('bottom').setRange(0, y_max)
         if self.hist_x_range is not None:
-            self.hist.getAxis('bottom').setRange(*self.hist_x_range)
+            self.hist.getAxis('right').setRange(*self.hist_x_range)
 
     def draw_series_hist(self):
         pen = pg.mkPen(color=(200,50,50))

@@ -367,8 +367,6 @@ class Recording(dict):
     ):
         """Create a histogram of the current in the presently selected episode.
         """
-        debug_logger.debug(f"episode_hist")
-
         # failsafe for piezo selection
         if self.episode.piezo is None:
             # TODO add log or warning here!
