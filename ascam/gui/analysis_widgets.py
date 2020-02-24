@@ -47,7 +47,7 @@ class IdealizationFrame(QWidget):
         self.layout.addWidget(self.tab_frame)
 
         self.calc_button = QPushButton("Calculate idealization")
-        self.calc_button.clicked.connect(self.idealize_episode)
+        self.calc_button.clicked.connect(self.calculate_click)
         self.layout.addWidget(self.calc_button)
         self.events_button = QPushButton("Show Table of Events")
         self.events_button.clicked.connect(self.create_event_frame)
@@ -126,13 +126,18 @@ class IdealizationFrame(QWidget):
 
         return amps, thresholds, resolution, intrp_factor
 
-    def idealize_episode(self):
-        amps, thresh, resolution, intrp_factor = self.get_params()
-        self.main.data.idealize_episode(amps, thresh, resolution, intrp_factor)
+    def calculate_click(self):
+        self.idealize_episode()
         self.main.plot_frame.plot_episode()
         self.plot_params()
 
+    def idealize_episode(self):
+        debug_logger.debug(f'idealizing episode {self.main.data.episode.n_episode} of series {self.main.data.current_datakey}')
+        amps, thresh, resolution, intrp_factor = self.get_params()
+        self.main.data.idealize_episode(amps, thresh, resolution, intrp_factor)
+
     def idealize_series(self):
+        debug_logger.debug(f'idealizing series {self.main.data.current_datakey}')
         amps, thresh, resolution, intrp_factor = self.get_params()
         self.main.data.idealize_series(amps, thresh, resolution, intrp_factor)
 

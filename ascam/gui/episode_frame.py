@@ -54,9 +54,8 @@ class EpisodeList(QListWidget):
         super(EpisodeList, self).__init__(*args, **kwargs)
         self.parent = parent
         self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Expanding)
-        self.populate()
-
         self.currentItemChanged.connect(self.on_item_click)
+        self.populate()
 
     def on_item_click(self, item, previous):
         self.parent.main.data.current_ep_ind = self.row(item)
@@ -67,9 +66,11 @@ class EpisodeList(QListWidget):
         self.parent.main.plot_frame.update_plots()
 
     def populate(self):
+        self.currentItemChanged.disconnect(self.on_item_click)
         self.clear()
         if self.parent.main.data is not None:
             n_eps = len(self.parent.main.data.series)
             debug_logger.debug("inserting data")
             self.addItems([f"Episode {i+1}" for i in range(n_eps)])
         self.setCurrentRow(0)
+        self.currentItemChanged.connect(self.on_item_click)
