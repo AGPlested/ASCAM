@@ -49,7 +49,7 @@ class IdealizationFrame(QWidget):
         self.calc_button = QPushButton("Calculate idealization")
         self.calc_button.clicked.connect(self.idealize_episode)
         self.layout.addWidget(self.calc_button)
-        self.events_button = QPushButton("Create Table of Events")
+        self.events_button = QPushButton("Show Table of Events")
         self.events_button.clicked.connect(self.create_event_frame)
         self.layout.addWidget(self.events_button)
 
@@ -60,12 +60,7 @@ class IdealizationFrame(QWidget):
         self.close_button = QPushButton("Close Tab")
         self.close_button.clicked.connect(self.close_tab)
         self.layout.addWidget(self.close_button)
-
-        self.layout.addItem(
-            QSpacerItem(
-                20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding
-            )
-        )
+        self.layout.addStretch()
 
     def plot_params(self):
         amps, thresh, resolution, intrp_factor = self.get_params()

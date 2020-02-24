@@ -23,6 +23,7 @@ class EpisodeFrame(QListWidget):
 
     def on_item_click(self, item, previous):  # pylint: disable=unused-argument
         self.main.data.current_ep_ind = self.row(item)
+        self.main.tc_frame.idealize_episode()
         self.main.plot_frame.update_plots()
 
     def populate(self):
