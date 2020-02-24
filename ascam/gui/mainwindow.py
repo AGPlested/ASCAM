@@ -112,7 +112,7 @@ class MainWindow(QMainWindow):
 
     def test_mode(self):
         self.data = Recording.from_file(TEST_FILE_NAME)
-        self.ep_frame.populate()
+        self.ep_frame.ep_list.populate()
         self.ep_frame.setFocus()
         self.data.baseline_correction(
             method="Polynomial",
@@ -123,6 +123,7 @@ class MainWindow(QMainWindow):
             active=False,
         )
         self.data.gauss_filter_series(1000)
+        self.ep_frame.update_combo_box()
         self.plot_frame.plot_all()
         self.launch_idealization()
         self.tc_frame.tab_frame.currentWidget().amp_entry.setText("0, -.8, -1.2, -1.6")

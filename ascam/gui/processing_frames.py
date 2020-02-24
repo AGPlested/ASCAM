@@ -97,7 +97,7 @@ class FilterFrame(QDialog):
                 apriori_f_weights=[int(x) for x in self.forward_entry.text().split()],
                 apriori_b_weights=[int(x) for x in self.backward_entry.text().split()],
             )
-        self.main.plot_frame.plot_episode()
+        self.main.plot_frame.plot_all()
         self.main.ep_frame.update_combo_box()
         self.close()
 
@@ -213,6 +213,6 @@ class BaselineFrame(QDialog):
             deviation=deviation,
             active=active,
         )
-        self.main.plot_frame.plot_episode()
         self.main.ep_frame.update_combo_box()
+        self.main.plot_frame.plot_all()
         self.close()

@@ -81,11 +81,12 @@ class PlotFrame(QWidget):
             self.hist.showGrid(x=True, y=True)
 
     def plot_all(self):
+        debug_logger.debug(f'redoing all plots for {self.main.data.current_datakey}')
         self.clear_plots()
         self.clear_hist()
-        self.plot_episode()
         self.draw_series_hist()
         self.draw_episode_hist()
+        self.plot_episode()
 
     def update_plots(self):
         self.update_episode()
@@ -125,13 +126,11 @@ class PlotFrame(QWidget):
         self.hist.getAxis('bottom').setRange(0, self.hist_y_max)
 
     def plot_episode(self):
+        debug_logger.debug(f"plotting episode {self.main.data.episode.n_episode} of series {self.main.data.current_datakey}")
         pen = pg.mkPen(color="b")
         self.trace_plot.plot(
             self.main.data.episode.time, self.main.data.episode.trace, pen=pen
         )
-        if self.hist_x_range is not None:
-            self.trace_plot.getAxis('left').setRange(*self.hist_x_range)
-            self.hist.setYLink(self.trace_plot)
         if self.main.data.episode.idealization is not None:
             id_pen = pg.mkPen(color=ORANGE)
             self.trace_plot.plot(
@@ -171,9 +170,11 @@ class PlotFrame(QWidget):
             )
 
     def clear_hist(self):
+        debug_logger.debug(f"clearing histogram")
         self.hist.clear()
 
     def clear_plots(self):
+        debug_logger.debug(f"clearing plots")
         self.trace_plot.clear()
         if self.show_command:
             self.command_plot.clear()

@@ -1,6 +1,5 @@
 import logging
 
-# pylint: disable=E0611
 from PySide2.QtWidgets import (QWidget, QListWidget, QVBoxLayout, QSizePolicy, 
                                QComboBox)
 
@@ -12,7 +11,6 @@ class EpisodeFrame(QWidget):
     def __init__(self, main, *args, **kwargs):
         super(EpisodeFrame, self).__init__(*args, **kwargs)
         self.main = main
-        # self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Expanding)
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
 
@@ -28,13 +26,24 @@ class EpisodeFrame(QWidget):
         self.ep_list = EpisodeList(self)
         self.layout.addWidget(self.ep_list)
 
-    def switch_series(self, datakey):
-        self.main.data.current_datakey = datakey
+    def switch_series(self, index):
+        debug_logger.debug(f"switching series to index {index}")
+        self.main.data.current_datakey = index
         self.main.plot_frame.plot_all()
 
     def update_combo_box(self):
+        self.series_selection.currentTextChanged.disconnect(self.switch_series)
         self.series_selection.clear()
+        debug_logger.debug(f"updating series selection; new keys are"
+                           f"{self.main.data.keys()}")
         self.series_selection.addItems(self.main.data.keys())
+        ind = 0
+        for k in self.main.data.keys():
+            if k == self.main.data.current_datakey:
+                break
+            ind += 1
+        self.series_selection.setCurrentIndex(ind)
+        self.series_selection.currentTextChanged.connect(self.switch_series)
 
 
 class EpisodeList(QListWidget):
@@ -49,7 +58,7 @@ class EpisodeList(QListWidget):
 
         self.currentItemChanged.connect(self.on_item_click)
 
-    def on_item_click(self, item, previous):  # pylint: disable=unused-argument
+    def on_item_click(self, item, previous):
         self.parent.main.data.current_ep_ind = self.row(item)
         try:
             self.parent.main.tc_frame.idealize_episode()
