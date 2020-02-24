@@ -42,7 +42,6 @@ class Recording(dict):
             command_unit - the units in which the command voltage is given
         Returns:
             recording - instance of the Recording class containing the data"""
-        debug_logger.debug(f"Recording.from_file")
         ana_logger.info(
             f"Loading data from file {filename}\n"
             f"sampling_rate = {sampling_rate}\n"
@@ -76,7 +75,7 @@ class Recording(dict):
         else:
             raise ValueError(f"Cannot load from filetype {filetype}.")
 
-        recording.lists = {"all": (list(range(len(recording["raw_"]))), "white", None)}
+        recording.lists = {"all": (list(range(len(recording["raw_"]))), None)}
 
         return recording
 
@@ -94,18 +93,12 @@ class Recording(dict):
         self.current_datakey = "raw_"
         self.current_ep_ind = 0
 
-        # self.hist_times = 0
         # parameters for analysis
         self.time_unit = "ms"
         self.piezo_unit = "uV"
         self.command_unit = "mV"
         self.trace_unit = "pA"
-        # idealization
-        self.tc_unit = "pA"
-        self.fa_unit = "pA"
-        self._tc_resolution = None
-        # first activation
-        self._fa_threshold = 0.0
+
         # variables for user created lists of episodes
         # `lists` stores the indices of the episodes in the list in the first
         # element, their color in the GUI in the second and the associated key
@@ -126,29 +119,11 @@ class Recording(dict):
 
     @property
     def series(self):
-        # debug_logger.debug(f"Returning series {self.current_datakey}")
         return self[self.current_datakey]
 
     @property
     def episode(self):
         return self.series[self.current_ep_ind]
-
-    @property
-    def id_time(self):
-        if self.episode.episode.id_time is not None:
-            return self.episode.id_time * TIME_UNIT_FACTORS[self.time_unit]
-        else:
-            return self.time
-
-    @property
-    def time(self):
-        if self.episode.time is not None:
-            return self.episode.time * TIME_UNIT_FACTORS[self.time_unit]
-        else:
-            return None
-
-    def new_series(self, new_datakey):
-        self[new_datakey] = copy.deepcopy(self.series)
 
     def baseline_correction(
         self,
@@ -177,7 +152,7 @@ class Recording(dict):
             # if operations have been done before combine the names
             new_datakey = self.current_datakey + "BC_"
         logging.info(f"new datakey is {new_datakey}")
-        self.new_series(new_datakey)
+        self[new_datakey] = copy.deepcopy(self.series)
         for episode in self[new_datakey]:
             episode.baseline_correct_episode(
                 degree=degree,
@@ -193,8 +168,6 @@ class Recording(dict):
 
     def gauss_filter_series(self, filter_freq):
         """Filter the current series using a gaussian filter"""
-        debug_logger.debug(f"gaussian_filter")
-
         ana_logger.info(
             f"gauss filtering series '{self.current_datakey}'\n"
             f"with frequency {filter_freq}"
@@ -208,7 +181,7 @@ class Recording(dict):
         else:
             # if operations have been done before combine the names
             new_datakey = self.current_datakey + fdatakey
-        self.new_series(new_datakey)
+        self[new_datakey] = copy.deepcopy(self.series)
         for episode in self[new_datakey]:
             episode.gauss_filter_episode(filter_freq, self.sampling_rate)
         self.current_datakey = new_datakey
@@ -222,7 +195,6 @@ class Recording(dict):
         apriori_b_weights=False,
     ):
         """Filter the current series using the Chung-Kennedy filter banks"""
-        debug_logger.debug(f"CK_filter_series")
         ana_logger.info(
             f"Chung-Kennedy filtering on series "
             f"'{self.current_datakey}'\n"
@@ -279,7 +251,7 @@ class Recording(dict):
         debug_logger.debug(f"idealize_episode")
 
         ana_logger.info(
-            f"idealizing series '{self.current_datakey}'\n"
+            f"idealizing episode {self.episode.n_episode} of '{self.current_datakey}'\n"
             f"amplitudes: {amplitudes}\n"
             f"thresholds: {thresholds}\n"
             f"resolution: {resolution}\n"

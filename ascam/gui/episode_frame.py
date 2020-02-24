@@ -55,8 +55,6 @@ class ListFrame(QWidget):
         self.parent = parent
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
-        
-        # self.create_widgets()
 
         self.lists = []
         self.new_list('All')
@@ -82,6 +80,7 @@ class ListFrame(QWidget):
         layout.addWidget(self.name_entry, 0, 1)
         layout.addWidget(QLabel('Key:'), 1, 0)
         self.key_entry = QLineEdit()
+        self.key_entry.setMaxLength(1)
         layout.addWidget(self.key_entry, 1, 1)
 
         ok_button = QPushButton('Ok')
