@@ -84,7 +84,7 @@ class MainWindow(QMainWindow):
     def open_file(self):
         self.filename = QFileDialog.getOpenFileName(self)[0]
         self.data = Recording.from_file(self.filename)
-        self.ep_frame.populate()
+        self.ep_frame.ep_list.populate()
         self.ep_frame.setFocus()
         self.plot_frame.plot_all()
 
@@ -125,4 +125,5 @@ class MainWindow(QMainWindow):
         self.data.gauss_filter_series(1000)
         self.plot_frame.plot_all()
         self.launch_idealization()
+        self.tc_frame.tab_frame.currentWidget().amp_entry.setText("0, -.8, -1.2, -1.6")
         self.tc_frame.tab_frame.currentWidget().amp_entry.setText("0, -.8, -1.2, -1.6")
