@@ -29,7 +29,7 @@ class PlotFrame(QWidget):
         self.show_command = False
         self.show_grid = True
         self.hist_x_range = None
-        self.hist_y_max = None
+        self.hist_y_range = None
 
         self.init_plots()
         self.init_hist()
@@ -95,35 +95,42 @@ class PlotFrame(QWidget):
     def update_episode(self):
         self.clear_plots()
         self.plot_episode()
+        self.plot_tc_params()
 
     def update_episode_hist(self):
-        heights, bins, = self.main.data.episode_hist(density=True)[:2]
+        heights, bins, = self.main.data.episode_hist()[:2]
+        heights = np.asarray(heights, dtype=np.float)
+        heights /= np.max(heights)
         self.episode_hist.setData(bins,heights)
 
     def draw_episode_hist(self):
         pen = pg.mkPen(color='b')
-        heights, bins, = self.main.data.episode_hist(density=True)[:2]
+        heights, bins, = self.main.data.episode_hist()[:2]
+        heights = np.asarray(heights, dtype=np.float)
+        heights /= np.max(heights)
         self.episode_hist = pg.PlotDataItem(bins,heights,stepMode=True,pen=pen)
         self.hist.addItem(self.episode_hist)
         self.hist.getPlotItem().invertX(True)
         self.episode_hist.rotate(90)
-        y_max = self.hist.getAxis('bottom').range[1]
-        if self.hist_y_max is not None:
-            y_max = self.hist_y_max
+        y_max = self.hist.getAxis('bottom').range
+        if self.hist_y_range is not None:
+            y_max = self.hist_y_range[1]
         self.hist.getAxis('bottom').setRange(0, y_max)
         if self.hist_x_range is not None:
             self.hist.getAxis('right').setRange(*self.hist_x_range)
 
     def draw_series_hist(self):
         pen = pg.mkPen(color=(200,50,50))
-        heights, bins, = self.main.data.series_hist(density=True)[:2]
+        heights, bins, = self.main.data.series_hist()[:2]
+        heights = np.asarray(heights, dtype=np.float)
+        heights /= np.max(heights)
         self.series_hist = pg.PlotDataItem(bins,heights,stepMode=True,pen=pen)
         self.hist.addItem(self.series_hist)
         self.hist.getPlotItem().invertX(True)
         self.series_hist.rotate(90)
-        self.hist_y_max = self.hist.getAxis('bottom').range[1]
+        self.hist_y_range = self.hist.getAxis('bottom').range
         self.hist_x_range = self.hist.getAxis('right').range
-        self.hist.getAxis('bottom').setRange(0, self.hist_y_max)
+        self.hist.getAxis('bottom').setRange(0, self.hist_y_range[1])
 
     def plot_episode(self):
         debug_logger.debug(f"plotting episode {self.main.data.episode.n_episode} of series {self.main.data.current_datakey}")
@@ -164,10 +171,23 @@ class PlotFrame(QWidget):
         self.clear_amp_lines()
         self.amp_lines = []
         time = self.main.data.episode.time
+        hist_x = np.arange(np.min([*self.hist_y_range]), np.max([*self.hist_y_range]), 0.1)
         for amp in amps:
             self.amp_lines.append(
                 self.trace_plot.plot(time, np.ones(len(time)) * amp, pen=pen)
             )
+            self.amp_lines.append( self.hist.plot(hist_x, np.ones(len(hist_x)) * amp, pen=pen))
+
+    def plot_tc_params(self):
+        amps, thresh, resolution, intrp_factor = self.main.tc_frame.get_params()
+        if self.main.tc_frame.current_tab.show_amp_check.isChecked():
+            self.plot_amp_lines(amps)
+        else:
+            self.clear_amp_lines()
+        if self.main.tc_frame.current_tab.show_threshold_check.isChecked():
+            self.plot_theta_lines(thresh)
+        else:
+            self.clear_theta_lines()
 
     def clear_hist(self):
         debug_logger.debug(f"clearing histogram")
@@ -214,4 +234,5 @@ class PlotFrame(QWidget):
         self.init_hist()
         self.plot_episode()
         self.draw_series_hist()
+        self.draw_episode_hist()
         self.draw_episode_hist()

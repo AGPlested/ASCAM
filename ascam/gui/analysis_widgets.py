@@ -62,16 +62,6 @@ class IdealizationFrame(QWidget):
         self.layout.addWidget(self.close_button)
         self.layout.addStretch()
 
-    def plot_params(self):
-        amps, thresh, resolution, intrp_factor = self.get_params()
-        if self.current_tab.show_amp_check.isChecked():
-            self.main.plot_frame.plot_amp_lines(amps)
-        else:
-            self.main.plot_frame.clear_amp_lines()
-        if self.current_tab.show_threshold_check.isChecked():
-            self.main.plot_frame.plot_theta_lines(thresh)
-        else:
-            self.main.plot_frame.clear_theta_lines()
 
     def close_tab(self):
         if self.tab_frame.count() > 1:
@@ -129,7 +119,7 @@ class IdealizationFrame(QWidget):
     def calculate_click(self):
         self.idealize_episode()
         self.main.plot_frame.plot_episode()
-        self.plot_params()
+        self.main.plot_frame.plot_tc_params()
 
     def idealize_episode(self):
         debug_logger.debug(f'idealizing episode {self.main.data.episode.n_episode} of series {self.main.data.current_datakey}')
@@ -194,6 +184,7 @@ class IdealizationTab(QWidget):
         self.amp_unit_choice.setCurrentIndex(1)
         row_one.addWidget(self.amp_unit_choice)
         self.show_amp_check = QCheckBox("Show")
+        self.show_amp_check.setChecked(True)
         row_one.addWidget(self.show_amp_check)
         self.neg_check = QCheckBox("Negative Values")
         row_one.addWidget(self.neg_check)

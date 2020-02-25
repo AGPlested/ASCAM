@@ -149,6 +149,7 @@ class ListFrame(QWidget):
     def keyPressEvent(self,event):
         event.ignore()
 
+
 class EpisodeList(QListWidget):
     """Widget holding the scrollable list of episodes and the episode list
     selection"""
