@@ -95,23 +95,27 @@ class ListFrame(QWidget):
     def add_to_list(self, name, key, index):
         if index not in self.parent.main.data.lists[name][0]:
             self.parent.main.data.lists[name][0].append(index)
-            assigned_keys = [x[1] for x in self.parent.main.data.lists.values() if index in x[0]]
+            assigned_keys = [x[1] for x in self.parent.main.data.lists.values() if index in x[0] and x[1] is not None]
             n = f'Episode {index+1} '
             assigned_keys.sort()
+            s = ''
             for k in assigned_keys:
                 if k is not None:
-                    n += f'[{k}]'
+                    s += f'[{k}]'
+            n += s.rjust(40-len(n), ' ')
             self.parent.ep_list.item(index).setText(n)
             ana_logger.debug(f'added episode {index} to list {name}')
         else:
             self.parent.main.data.lists[name][0].remove(index)
             n = self.parent.ep_list.item(index).text()
-            assigned_keys = [x[1] for x in self.parent.main.data.lists.values() if index in x[0]]
+            assigned_keys = [x[1] for x in self.parent.main.data.lists.values() if index in x[0] and x[1] is not None]
             assigned_keys.sort()
             n = f'Episode {index+1} '
+            s = ''
             for k in assigned_keys:
                 if k is not None:
-                    n += f'[{k}]'
+                    s += f'[{k}]'
+            n += s.rjust(40-len(n), ' ')
             self.parent.ep_list.item(index).setText(n)
             ana_logger.debug(f'removed episode {index} from list {name}')
 
