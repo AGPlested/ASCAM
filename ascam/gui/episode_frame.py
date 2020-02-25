@@ -61,15 +61,11 @@ class EpisodeFrame(QWidget):
     def key_pressed(self, key):
         assigned_keys = [x[1] for x in self.main.data.lists.values()]
         if key in assigned_keys:
-            names = []
             for l in self.list_frame.lists:
-                if l.isChecked():
-                    # need the first component of split because the label of the checkbox
-                    # contains the hotkey
-                    names.append(l.text().split()[0])  
-            index = self.ep_list.currentRow()
-            for name in names:
-                self.list_frame.add_to_list(name, index)
+                if f'[{key}]' in l.text():
+                    name = l.text().split()[0]
+                    index = self.ep_list.currentRow()
+                    self.list_frame.add_to_list(name, key, index)
 
 
 class ListFrame(QWidget):
@@ -91,16 +87,32 @@ class ListFrame(QWidget):
     def new_list(self, name, key=None):
         label = f'{name} [{key}]' if key is not None else name
         check_box = QCheckBox(label)
+        check_box.setChecked(True)
         self.lists.append(check_box)
         self.layout.insertWidget(0, check_box)
         self.parent.main.data.lists[name] = ([], key)
 
-    def add_to_list(self, name, index):
-        if index not in self.parent.main.data.lists[name]:
+    def add_to_list(self, name, key, index):
+        if index not in self.parent.main.data.lists[name][0]:
             self.parent.main.data.lists[name][0].append(index)
+            assigned_keys = [x[1] for x in self.parent.main.data.lists.values() if index in x[0]]
+            n = f'Episode {index+1} '
+            assigned_keys.sort()
+            for k in assigned_keys:
+                if k is not None:
+                    n += f'[{k}]'
+            self.parent.ep_list.item(index).setText(n)
             ana_logger.debug(f'added episode {index} to list {name}')
         else:
             self.parent.main.data.lists[name][0].remove(index)
+            n = self.parent.ep_list.item(index).text()
+            assigned_keys = [x[1] for x in self.parent.main.data.lists.values() if index in x[0]]
+            assigned_keys.sort()
+            n = f'Episode {index+1} '
+            for k in assigned_keys:
+                if k is not None:
+                    n += f'[{k}]'
+            self.parent.ep_list.item(index).setText(n)
             ana_logger.debug(f'removed episode {index} from list {name}')
 
     def create_widgets(self):
