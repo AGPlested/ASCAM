@@ -1,13 +1,17 @@
 import logging
 
+from PySide2 import QtCore
 from PySide2.QtWidgets import (QWidget, QListWidget, QVBoxLayout, QSizePolicy, 
  QCheckBox,QLineEdit,                 QDialog,QLabel,         QPushButton,    QGridLayout, QComboBox)
 
 
 debug_logger = logging.getLogger("ascam.debug")
+ana_logger = logging.getLogger("ascam.analysis")
 
 
 class EpisodeFrame(QWidget):
+    keyPressed = QtCore.Signal(str)
+
     def __init__(self, main, *args, **kwargs):
         super(EpisodeFrame, self).__init__(*args, **kwargs)
         self.main = main
@@ -16,6 +20,8 @@ class EpisodeFrame(QWidget):
 
         self.create_widgets()
         
+        self.keyPressed.connect(self.key_pressed)
+
     def create_widgets(self):
         self.list_frame = ListFrame(self)
         self.layout.addWidget(self.list_frame)
@@ -48,8 +54,27 @@ class EpisodeFrame(QWidget):
         self.series_selection.setCurrentIndex(ind)
         self.series_selection.currentTextChanged.connect(self.switch_series)
 
+    def keyPressEvent(self,event):
+        super().keyPressEvent(event)
+        self.keyPressed.emit(event.text())
+
+    def key_pressed(self, key):
+        assigned_keys = [x[1] for x in self.main.data.lists.values()]
+        if key in assigned_keys:
+            names = []
+            for l in self.list_frame.lists:
+                if l.isChecked():
+                    # need the first component of split because the label of the checkbox
+                    # contains the hotkey
+                    names.append(l.text().split()[0])  
+            index = self.ep_list.currentRow()
+            for name in names:
+                self.list_frame.add_to_list(name, index)
+
 
 class ListFrame(QWidget):
+    keyPressed = QtCore.Signal(str)
+
     def __init__(self, parent, *args, **kwargs):
         super(ListFrame, self).__init__(*args, **kwargs)
         self.parent = parent
@@ -68,6 +93,15 @@ class ListFrame(QWidget):
         check_box = QCheckBox(label)
         self.lists.append(check_box)
         self.layout.insertWidget(0, check_box)
+        self.parent.main.data.lists[name] = ([], key)
+
+    def add_to_list(self, name, index):
+        if index not in self.parent.main.data.lists[name]:
+            self.parent.main.data.lists[name][0].append(index)
+            ana_logger.debug(f'added episode {index} to list {name}')
+        else:
+            self.parent.main.data.lists[name][0].remove(index)
+            ana_logger.debug(f'removed episode {index} from list {name}')
 
     def create_widgets(self):
         self.dialog = QDialog()
@@ -96,10 +130,13 @@ class ListFrame(QWidget):
         self.new_list(self.name_entry.text(), self.key_entry.text())
         self.dialog.close()
 
+    def keyPressEvent(self,event):
+        event.ignore()
 
 class EpisodeList(QListWidget):
     """Widget holding the scrollable list of episodes and the episode list
     selection"""
+    keyPressed = QtCore.Signal(str)
 
     def __init__(self, parent, *args, **kwargs):
         super(EpisodeList, self).__init__(*args, **kwargs)
@@ -125,3 +162,6 @@ class EpisodeList(QListWidget):
             self.addItems([f"Episode {i+1}" for i in range(n_eps)])
         self.setCurrentRow(0)
         self.currentItemChanged.connect(self.on_item_click)
+
+    def keyPressEvent(self,event):
+        event.ignore()

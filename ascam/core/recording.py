@@ -93,17 +93,9 @@ class Recording(dict):
         self.current_datakey = "raw_"
         self.current_ep_ind = 0
 
-        # parameters for analysis
-        self.time_unit = "ms"
-        self.piezo_unit = "uV"
-        self.command_unit = "mV"
-        self.trace_unit = "pA"
-
         # variables for user created lists of episodes
         # `lists` stores the indices of the episodes in the list in the first
-        # element, their color in the GUI in the second and the associated key
-        # (i.e. for adding selected episodes to the list in the third element
-        # of a tuple that is the value under the list's name (as dict key)
+        # element and the associated key as the second
         self.lists = dict()
         self.current_lists = ["all"]
 
@@ -111,6 +103,17 @@ class Recording(dict):
     def selected_episodes(self):
         indices = list()
         for listname in self.current_lists:
+            indices.extend(self.lists[listname][0])
+        # remove duplicate indices
+        indices = np.array(list(set(indices)))
+        debug_logger.debug(f"Selected episodes: {indices}")
+        return np.array(self.series)[indices]
+
+    def episodes_in_lists(self, names):
+        if isinstance(str, names):
+            names = [names]
+        indices = list()
+        for listname in names:
             indices.extend(self.lists[listname][0])
         # remove duplicate indices
         indices = np.array(list(set(indices)))
@@ -450,7 +453,7 @@ class Recording(dict):
 
         import axographio
 
-        column_names = [f"time ({self.time_unit})"]
+        column_names = [f"time (s)"]
 
         # to write to axgd we need a list as the second argument of the 'write'
         # method, this elements in the lists will be the columns in data table
@@ -467,19 +470,18 @@ class Recording(dict):
         for episode in episodes:
             data_list.append(np.array(episode.trace))
             column_names.append(
-                f"Ipatch ({self.trace_unit} ep#{episode.current_ep_ind}"
+                f"Ipatch (A) ep#{episode.current_ep_ind}"
             )
             if save_piezo:
                 column_names.append(
-                    f"piezo voltage ({self.piezo_unit} ep#{episode.current_ep_ind}"
+                    f"piezo voltage (V) ep#{episode.current_ep_ind}"
                 )
                 data_list.append(np.array(episode.piezo))
             if save_command:
                 column_names.append(
-                    f"command voltage ({self.command_unit} ep#{episode.current_ep_ind})"
+                    f"command voltage (V) ep#{episode.current_ep_ind}"
                 )
                 data_list.append(np.array(episode.command))
-        # pylint: disable=no-member
         file = axographio.file_contents(column_names, data_list)
         file.write(filepath)
 
