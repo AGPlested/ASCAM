@@ -37,6 +37,8 @@ class IdealizationFrame(QWidget):
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
 
+        self.main.plot_frame.tc_tracking = True
+
         self.create_widgets()
 
     @property
@@ -63,10 +65,12 @@ class IdealizationFrame(QWidget):
         self.layout.addWidget(self.close_button)
         self.layout.addStretch()
 
-
     def close_tab(self):
         if self.tab_frame.count() > 1:
             self.tab_frame.removeTab(self.tab_frame.currentIndex())
+        else:
+            self.main.plot_frame.tc_tracking = False
+            self.close()
 
     def create_event_frame(self):
         self.current_tab.event_table = self.create_table()
@@ -213,8 +217,15 @@ class IdealizationTab(QWidget):
         row_one.addWidget(self.neg_check)
         self.layout.addLayout(row_one)
 
-        self.amp_entry = QLineEdit()
-        self.layout.addWidget(self.amp_entry)
+        row_two = QHBoxLayout()
+        self.amp_entry = QLineEdit()  # TODO add button to toggle plot interaction
+        row_two.addWidget(self.amp_entry)
+        self.drag_amp_toggle = QToolButton()
+        self.drag_amp_toggle.setCheckable(True)
+        self.drag_amp_toggle.setChecked(self.parent.parent.main.plot_frame.tc_tracking)
+        self.drag_amp_toggle.clicked.connect(self.toggle_drag_params)
+        row_two.addWidget(self.drag_amp_toggle)
+        self.layout.addLayout(row_two)
 
         row_three = QHBoxLayout()
         threshold_label = QLabel("Thresholds")
@@ -254,6 +265,9 @@ class IdealizationTab(QWidget):
 
         self.intrp_entry = QLineEdit()
         self.layout.addWidget(self.intrp_entry)
+
+    def toggle_drag_params(self, checked):
+        self.parent.parent.main.plot_frame.tc_tracking = checked
 
     def toggle_interpolation(self, state):
         if not state:
