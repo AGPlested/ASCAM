@@ -4,7 +4,7 @@ import logging
 from PySide2.QtWidgets import QGridLayout, QWidget, QMainWindow, QFileDialog, QAction
 
 # from ascam.gui import ExportFADialog
-# from ascam.gui import ExportFileDialog
+from ascam.gui import ExportFileDialog
 from ascam.gui import FilterFrame
 from ascam.gui import BaselineFrame
 from ascam.gui import PlotFrame
@@ -43,8 +43,8 @@ class MainWindow(QMainWindow):
         debug_logger.debug("MainWindow creating menus")
         self.file_menu = self.menuBar().addMenu("File")
         self.file_menu.addAction("Open File", self.open_file)
-        self.file_menu.addAction("Save", self.save_to_file)
-        self.file_menu.addAction("Export")  # , lambda: ExportFileDialog())
+        # self.file_menu.addAction("Save", self.save_to_file)
+        self.file_menu.addAction("Export", lambda: ExportFileDialog(self))
         self.file_menu.addAction("Export Idealization", self.export_idealization)
         self.file_menu.addAction("Export Events", self.export_events)
         self.file_menu.addAction(
@@ -83,10 +83,11 @@ class MainWindow(QMainWindow):
 
     def open_file(self):
         self.filename = QFileDialog.getOpenFileName(self)[0]
-        self.data = Recording.from_file(self.filename)
-        self.ep_frame.ep_list.populate()
-        self.ep_frame.setFocus()
-        self.plot_frame.plot_all()
+        if self.filename:
+            self.data = Recording.from_file(self.filename)
+            self.ep_frame.ep_list.populate()
+            self.ep_frame.setFocus()
+            self.plot_frame.plot_all()
 
     def save_to_file(self):
         filename = QFileDialog.getSaveFileName(

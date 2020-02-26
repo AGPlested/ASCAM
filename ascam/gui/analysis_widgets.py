@@ -222,6 +222,7 @@ class IdealizationTab(QWidget):
         row_two.addWidget(self.amp_entry)
         self.drag_amp_toggle = QToolButton()
         self.drag_amp_toggle.setCheckable(True)
+        self.drag_amp_toggle.setText("M")
         self.drag_amp_toggle.setChecked(self.parent.parent.main.plot_frame.tc_tracking)
         self.drag_amp_toggle.clicked.connect(self.toggle_drag_params)
         row_two.addWidget(self.drag_amp_toggle)
