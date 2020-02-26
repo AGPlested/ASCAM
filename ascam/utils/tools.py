@@ -88,6 +88,18 @@ def interval_selection(time, signal, intervals, fs):
     return time_out, signal_out
 
 
+def update_number_in_string(new_val, string_var):
+    """Update a list of floats held in a qt widget that can
+    hold text so that the value closest to new_val becomes new_val."""
+    array = string_to_array(string_var.text())
+    differences = np.abs(array - new_val)
+    i = np.argmin(differences)
+    sep = ", " if "," in string_var.text() else " "
+    split_string = string_var.text().split(sep)
+    split_string[i] = f"{new_val:.2f}"
+    string_var.setText(sep.join(split_string))
+
+
 def string_to_list(list_as_string):
     """
     Parse a string that is an interval or list of intervals (e.g. "[0,5]" or

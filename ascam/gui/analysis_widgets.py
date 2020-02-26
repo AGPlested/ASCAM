@@ -1,5 +1,6 @@
 import logging
 
+import numpy as np
 # pylint: disable=no-name-in-module
 from PySide2.QtCore import QAbstractTableModel, Qt
 from PySide2 import QtWidgets
@@ -21,7 +22,7 @@ from PySide2.QtWidgets import (
     QLabel,
 )
 
-from ascam.utils import string_to_array, array_to_string
+from ascam.utils import string_to_array, array_to_string, update_number_in_string
 from ascam.constants import TIME_UNIT_FACTORS, CURRENT_UNIT_FACTORS
 
 
@@ -118,8 +119,7 @@ class IdealizationFrame(QWidget):
 
     def calculate_click(self):
         self.idealize_episode()
-        self.main.plot_frame.plot_episode()
-        self.main.plot_frame.plot_tc_params()
+        self.main.plot_frame.update_episode()
 
     def idealize_episode(self):
         debug_logger.debug(f'idealizing episode {self.main.data.episode.n_episode} of series {self.main.data.current_datakey}')
@@ -133,6 +133,29 @@ class IdealizationFrame(QWidget):
 
     def apply(self):
         pass
+
+    def track_cursor(self, y_pos):
+        """Track the position of the mouse cursor over the plot and if mouse 1
+        is pressed adjust the nearest threshold/amplitude line by dragging the
+        cursor."""
+
+        amps, thetas = self.get_params()[:2]
+        if thetas.size > 0:
+            tc_diff = np.min(np.abs(thetas - y_pos))
+        else:
+            tc_diff = np.inf
+        if amps.size > 0:
+            amp_diff = np.min(np.abs(amps - y_pos))
+        else:
+            amp_diff = np.inf
+
+        y_pos *= CURRENT_UNIT_FACTORS[self.current_tab.amp_unit_choice.currentText()]
+        if tc_diff < amp_diff and self.current_tab.show_threshold_check.isChecked():
+            update_number_in_string(y_pos, self.current_tab.threshold_entry)
+            self.current_tab.auto_thresholds.setChecked(False)
+        elif self.current_tab.show_amp_check.isChecked():
+            update_number_in_string(y_pos, self.current_tab.amp_entry)
+        self.calculate_click()
 
 
 class IdealizationTabFrame(QTabWidget):

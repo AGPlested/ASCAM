@@ -35,14 +35,14 @@ class PlotFrame(QWidget):
         self.init_hist()
 
     def init_plots(self):
-        self.trace_plot = pg.PlotWidget(name=f"trace")
+        self.trace_plot = pg.PlotWidget(viewBox=CustomViewBox(self), name=f"trace")
         self.trace_plot.setBackground("w")
         self.trace_plot.setLabel("left", "Current", units="A")
         ind = int(self.show_command)
         self.layout.addWidget(self.trace_plot, ind, 0, )
 
         if self.show_piezo:
-            self.piezo_plot = pg.PlotWidget(name=f"piezo")
+            self.piezo_plot = pg.PlotWidget(viewBox=CustomViewBox(self), name=f"piezo")
             self.piezo_plot.setLabel("left", "Piezo", units="V")
             self.piezo_plot.setBackground("w")
             self.piezo_plot.setLabel("bottom", "time", units="s")
@@ -53,7 +53,7 @@ class PlotFrame(QWidget):
             self.trace_plot.setLabel("bottom", "time", units="s")
 
         if self.show_command:
-            self.command_plot = pg.PlotWidget(name=f"command")
+            self.command_plot = pg.PlotWidget(viewBox=CustomViewBox(self), name=f"command")
             self.command_plot.setBackground("w")
             self.command_plot.setLabel("left", "Command", units="V")
             self.command_plot.setXLink(self.trace_plot)
@@ -67,10 +67,12 @@ class PlotFrame(QWidget):
                 self.command_plot.showGrid(x=True, y=True)
 
         self.amp_lines = []
+        self.amp_hist_lines = []
         self.theta_lines = []
+        self.theta_hist_lines = []
 
     def init_hist(self):
-        self.hist = pg.PlotWidget()
+        self.hist = pg.PlotWidget(viewBox=CustomViewBox(self))
         row = int(self.show_command)
         self.layout.addWidget(self.hist, row, 1, )
         self.hist.setLabel("right", "Current", units="A")
@@ -109,7 +111,7 @@ class PlotFrame(QWidget):
         heights = np.asarray(heights, dtype=np.float)
         heights /= np.max(heights)
         self.episode_hist = pg.PlotDataItem(bins,heights,stepMode=True,pen=pen)
-        self.hist.addItem(self.episode_hist)
+        self.hist.addItem(self.episode_hist)  # ignoreBounds=True?
         self.hist.getPlotItem().invertX(True)
         self.episode_hist.rotate(90)
         y_max = self.hist.getAxis('bottom').range
@@ -159,24 +161,28 @@ class PlotFrame(QWidget):
         thetas = np.asarray(thetas)
         self.clear_theta_lines()
         self.theta_lines = []
+        self.theta_hist_lines = []
         time = self.main.data.episode.time
+        hist_x = np.arange(np.min([*self.hist_y_range]), np.max([*self.hist_y_range]), 0.1)
         for theta in thetas:
             self.theta_lines.append(
                 self.trace_plot.plot(time, np.ones(len(time)) * theta, pen=pen)
             )
+            self.theta_hist_lines.append( self.hist.plot(hist_x, np.ones(len(hist_x)) * theta, pen=pen))
 
     def plot_amp_lines(self, amps):
         debug_logger.debug(f"plotting amps at {amps}")
         pen = pg.mkPen(color=ORANGE, style=QtCore.Qt.DashLine)
         self.clear_amp_lines()
         self.amp_lines = []
+        self.amp_hist_lines = []
         time = self.main.data.episode.time
         hist_x = np.arange(np.min([*self.hist_y_range]), np.max([*self.hist_y_range]), 0.1)
         for amp in amps:
             self.amp_lines.append(
                 self.trace_plot.plot(time, np.ones(len(time)) * amp, pen=pen)
             )
-            self.amp_lines.append( self.hist.plot(hist_x, np.ones(len(hist_x)) * amp, pen=pen))
+            self.amp_hist_lines.append( self.hist.plot(hist_x, np.ones(len(hist_x)) * amp, pen=pen))
 
     def plot_tc_params(self):
         amps, thresh, resolution, intrp_factor = self.main.tc_frame.get_params()
@@ -204,10 +210,14 @@ class PlotFrame(QWidget):
     def clear_amp_lines(self):
         for a in self.amp_lines:
             self.trace_plot.removeItem(a)
+        for a in self.amp_hist_lines:
+            self.hist.removeItem(a)
 
     def clear_theta_lines(self):
         for a in self.theta_lines:
             self.trace_plot.removeItem(a)
+        for a in self.theta_hist_lines:
+            self.hist.removeItem(a)
 
     def togggle_grid(self):
         clear_qt_layout(self.layout)
@@ -235,4 +245,26 @@ class PlotFrame(QWidget):
         self.plot_episode()
         self.draw_series_hist()
         self.draw_episode_hist()
-        self.draw_episode_hist()
+
+
+class CustomViewBox(pg.ViewBox):
+    def __init__(self, parent, *args, **kwds):
+        pg.ViewBox.__init__(self, *args, **kwds)
+        self.setMouseMode(self.RectMode)
+        self.parent = parent
+
+        self.track_mode = True
+        
+    def mouseClickEvent(self, ev):
+        if ev.button() == QtCore.Qt.RightButton:
+            self.autoRange()
+        ev.accept()
+            
+    def mouseDragEvent(self, ev, axis=1):
+        if ev.button() == QtCore.Qt.LeftButton and self.track_mode:
+            pos = self.mapSceneToView(ev.pos()).y()
+            self.parent.main.tc_frame.track_cursor(pos)
+        else:
+            pg.ViewBox.mouseDragEvent(self, ev)
+        ev.accept()
+
