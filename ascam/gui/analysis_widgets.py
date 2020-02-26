@@ -66,7 +66,7 @@ class IdealizationFrame(QWidget):
         self.layout.addStretch()
 
     def close_tab(self):
-        if self.tab_frame.count() > 1:
+        if self.tab_frame.count() > 2:
             self.tab_frame.removeTab(self.tab_frame.currentIndex())
         else:
             self.main.plot_frame.tc_tracking = False
@@ -80,7 +80,7 @@ class IdealizationFrame(QWidget):
         self.idealize_series()
         events = self.main.data.get_events()
         return EventTableModel(
-            events, self.main.data.trace_unit, self.main.data.time_unit
+            events, self.current_tab.trace_unit.currentText(), self.current_tab.time_unit.currentText()
         )
 
     def get_params(self):
@@ -102,11 +102,11 @@ class IdealizationFrame(QWidget):
             thresholds *= -1
 
         trace_factor = CURRENT_UNIT_FACTORS[
-            self.current_tab.amp_unit_choice.currentText()
+            self.current_tab.trace_unit.currentText()
         ]
         amps /= trace_factor
         thresholds /= trace_factor
-        time_factor = TIME_UNIT_FACTORS[self.current_tab.time_unit_choice.currentText()]
+        time_factor = TIME_UNIT_FACTORS[self.current_tab.time_unit.currentText()]
 
         if res_string.strip() and self.current_tab.use_res.isChecked():
             resolution = float(res_string)
@@ -153,7 +153,9 @@ class IdealizationFrame(QWidget):
         else:
             amp_diff = np.inf
 
-        y_pos *= CURRENT_UNIT_FACTORS[self.current_tab.amp_unit_choice.currentText()]
+        y_pos *= CURRENT_UNIT_FACTORS[self.current_tab.trace_unit.currentText()]
+        if self.current_tab.neg_check.isChecked():
+            y_pos *= -1
         if tc_diff < amp_diff and self.current_tab.show_threshold_check.isChecked():
             update_number_in_string(y_pos, self.current_tab.threshold_entry)
             self.current_tab.auto_thresholds.setChecked(False)
@@ -206,10 +208,10 @@ class IdealizationTab(QWidget):
         row_one = QHBoxLayout()
         amp_label = QLabel("Amplitudes")
         row_one.addWidget(amp_label)
-        self.amp_unit_choice = QComboBox()
-        self.amp_unit_choice.addItems(CURRENT_UNIT_FACTORS.keys())
-        self.amp_unit_choice.setCurrentIndex(1)
-        row_one.addWidget(self.amp_unit_choice)
+        self.trace_unit = QComboBox()
+        self.trace_unit.addItems(CURRENT_UNIT_FACTORS.keys())
+        self.trace_unit.setCurrentIndex(1)
+        row_one.addWidget(self.trace_unit)
         self.show_amp_check = QCheckBox("Show")
         self.show_amp_check.setChecked(True)
         row_one.addWidget(self.show_amp_check)
@@ -244,10 +246,10 @@ class IdealizationTab(QWidget):
         row_four = QHBoxLayout()
         res_label = QLabel("Resolution")
         row_four.addWidget(res_label)
-        self.time_unit_choice = QComboBox()
-        self.time_unit_choice.addItems(TIME_UNIT_FACTORS.keys())
-        self.time_unit_choice.setCurrentIndex(1)
-        row_four.addWidget(self.time_unit_choice)
+        self.time_unit = QComboBox()
+        self.time_unit.addItems(TIME_UNIT_FACTORS.keys())
+        self.time_unit.setCurrentIndex(1)
+        row_four.addWidget(self.time_unit)
         self.use_res = QCheckBox("Apply")
         self.use_res.stateChanged.connect(self.toggle_resolution)
         row_four.addWidget(self.use_res)
@@ -306,13 +308,13 @@ class EventTableFrame(QDialog):
         self.setModal(False)
         self.show()
 
-    def create_table(self):
-        events = self.parent.main.data.get_events()
-        self.q_event_table = EventTableModel(
-            events, self.parent.main.data.trace_unit, self.parent.main.data.time_unit
-        )
-        self.event_table = QTableView()
-        self.event_table.setModel(self.q_event_table)
+    # def create_table(self):
+    #     events = self.parent.main.data.get_events()
+    #     self.q_event_table = EventTableModel(
+    #         events, self.parent.main.data.trace_unit, self.parent.main.data.time_unit
+    #     )
+    #     self.event_table = QTableView()
+    #     self.event_table.setModel(self.q_event_table)
 
 
 class EventTableModel(QAbstractTableModel):

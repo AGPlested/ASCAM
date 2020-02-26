@@ -36,6 +36,11 @@ class PlotFrame(QWidget):
         self.init_plots()
         self.init_hist()
 
+        self.amp_lines = []
+        self.amp_hist_lines = []
+        self.theta_lines = []
+        self.theta_hist_lines = []
+
     def init_plots(self):
         self.trace_plot = pg.PlotWidget(viewBox=CustomViewBox(self), name=f"trace")
         self.trace_plot.setBackground("w")
@@ -68,11 +73,6 @@ class PlotFrame(QWidget):
             if self.show_command:
                 self.command_plot.showGrid(x=True, y=True)
 
-        self.amp_lines = []
-        self.amp_hist_lines = []
-        self.theta_lines = []
-        self.theta_hist_lines = []
-
     def init_hist(self):
         self.hist = pg.PlotWidget(viewBox=CustomViewBox(self))
         row = int(self.show_command)
@@ -99,7 +99,10 @@ class PlotFrame(QWidget):
     def update_episode(self):
         self.clear_plots()
         self.plot_episode()
-        self.plot_tc_params()
+        try:
+            self.plot_tc_params()
+        except AttributeError:
+            pass
 
     def update_episode_hist(self):
         heights, bins, = self.main.data.episode_hist()[:2]

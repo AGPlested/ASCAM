@@ -1,7 +1,7 @@
 import logging
 
 # pylint: disable=E0611
-from PySide2.QtWidgets import QGridLayout, QWidget, QMainWindow, QFileDialog, QAction
+from PySide2.QtWidgets import QGridLayout, QWidget, QMainWindow, QFileDialog, QAction, QSizePolicy
 
 # from ascam.gui import ExportFADialog
 from ascam.gui import ExportFileDialog
@@ -27,6 +27,8 @@ class MainWindow(QMainWindow):
         debug_logger.debug("MainWindow initializing")
 
         self.setWindowTitle("cuteSCAM")
+        # self.setGeometry(0,0,800,600)
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
         self.central_layout = QGridLayout()
         self.central_widget = QWidget()
