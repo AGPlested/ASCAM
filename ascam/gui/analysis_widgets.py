@@ -301,6 +301,10 @@ class EventTableFrame(QDialog):
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
 
+        height =800
+        width = 500
+        self.setGeometry(parent.x()+width/4, parent.y()+height/3, width, height)
+
         self.event_table = QTableView()
         self.event_table.setModel(table_view)
 
