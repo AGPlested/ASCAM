@@ -28,7 +28,7 @@ class EpisodeFrame(QWidget):
 
         self.series_selection = QComboBox()
         self.series_selection.setDuplicatesEnabled(False)
-        self.series_selection.addItems(self.main.data.keys())
+        self.series_selection.addItems(list(self.main.data.keys()))
         self.series_selection.currentTextChanged.connect(self.switch_series)
         self.layout.addWidget(self.series_selection)
 
@@ -45,7 +45,7 @@ class EpisodeFrame(QWidget):
         self.series_selection.clear()
         debug_logger.debug(f"updating series selection; new keys are"
                            f"{self.main.data.keys()}")
-        self.series_selection.addItems(self.main.data.keys())
+        self.series_selection.addItems(list(self.main.data.keys()))
         ind = 0
         for k in self.main.data.keys():
             if k == self.main.data.current_datakey:

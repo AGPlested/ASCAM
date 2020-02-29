@@ -25,7 +25,7 @@ class ExportFileDialog(QDialog):
         
     def create_widgets(self):
         self.series_selection = QComboBox()
-        self.series_selection.addItems(self.main.data.keys())
+        self.series_selection.addItems(list(self.main.data.keys()))
         self.layout.addWidget(self.series_selection)
 
         row_two = QHBoxLayout()
@@ -36,7 +36,7 @@ class ExportFileDialog(QDialog):
         self.layout.addLayout(row_two)
 
         self.list_selection = QListWidget()
-        self.list_selection.addItems(self.main.data.lists.keys())
+        self.list_selection.addItems(list(self.main.data.lists.keys()))
         self.list_selection.setSelectionMode(QtGui.QAbstractItemView.MultiSelection)
         self.list_selection.setCurrentRow(0)
         self.layout.addWidget(self.list_selection)
@@ -45,7 +45,7 @@ class ExportFileDialog(QDialog):
         label = QLabel('Time Unit:')
         row_four.addWidget(label)
         self.time_unit_selection = QComboBox()
-        self.time_unit_selection.addItems(TIME_UNIT_FACTORS.keys())
+        self.time_unit_selection.addItems(list(TIME_UNIT_FACTORS.keys()))
         self.time_unit_selection.setCurrentIndex(2)
         self.layout.addLayout(row_four)
         
@@ -53,7 +53,7 @@ class ExportFileDialog(QDialog):
         label = QLabel('Current Unit:')
         row_five.addWidget(label)
         self.trace_unit_selection = QComboBox()
-        self.trace_unit_selection.addItems(CURRENT_UNIT_FACTORS.keys())
+        self.trace_unit_selection.addItems(list(CURRENT_UNIT_FACTORS.keys()))
         self.trace_unit_selection.setCurrentIndex(4)
         self.layout.addLayout(row_five)
 
@@ -61,7 +61,7 @@ class ExportFileDialog(QDialog):
         label = QLabel('Piezo Unit:')
         row_six.addWidget(label)
         self.piezo_unit_selection = QComboBox()
-        self.piezo_unit_selection.addItems(VOLTAGE_UNIT_FACTORS.keys())
+        self.piezo_unit_selection.addItems(list(VOLTAGE_UNIT_FACTORS.keys()))
         self.piezo_unit_selection.setCurrentIndex(2)
         self.layout.addLayout(row_six)
 
@@ -69,7 +69,7 @@ class ExportFileDialog(QDialog):
         label = QLabel('Command Unit:')
         row_seven.addWidget(label)
         self.command_unit_selection = QComboBox()
-        self.command_unit_selection.addItems(VOLTAGE_UNIT_FACTORS.keys())
+        self.command_unit_selection.addItems(list(VOLTAGE_UNIT_FACTORS.keys()))
         self.command_unit_selection.setCurrentIndex(2)
         self.layout.addLayout(row_seven)
 
