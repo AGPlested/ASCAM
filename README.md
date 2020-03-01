@@ -8,8 +8,10 @@ A straightforward installation can be achieved by first installing Anaconda to g
 
 After successful installation of Anaconda, if you have Git installed, you can clone the ASCAM directory from Github onto your machine with the following command in the Terminal: *git clone https://github.com/AGPlested/ASCAM*. But if you had Git installed, you almost certainly knew that already. 
 
+200301: Note, with the migration to Qt, some problems may be encountered on the Mac if you already have installations of Qt4+. Our investigations so far suggest a fresh install of Anaconda can help. 
+
 If you don't have Git, you can just copy ASCAM directory and then navigate to it manually.
 
-Start ASCAM from within its own directory by executing the file `ASCAM`. (Enter `./ASCAM` in the terminal)
+Start ASCAM from within its own directory by executing the file `run`. (Enter `./run` in the Terminal)
 
 There is an example raw data file in the ASCAM/data folder. This recording was sampled at 40 kHz.
