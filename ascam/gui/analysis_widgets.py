@@ -36,7 +36,8 @@ class IdealizationFrame(QWidget):
         self.main = main
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
-
+        self.setFixedWidth(250)
+        
         self.main.plot_frame.tc_tracking = True
 
         self.create_widgets()
@@ -208,20 +209,22 @@ class IdealizationTab(QWidget):
         row_one = QHBoxLayout()
         amp_label = QLabel("Amplitudes")
         row_one.addWidget(amp_label)
-        self.trace_unit = QComboBox()
-        self.trace_unit.addItems(list(CURRENT_UNIT_FACTORS.keys()))
-        self.trace_unit.setCurrentIndex(1)
-        row_one.addWidget(self.trace_unit)
+        
         self.show_amp_check = QCheckBox("Show")
         self.show_amp_check.setChecked(True)
         row_one.addWidget(self.show_amp_check)
-        self.neg_check = QCheckBox("Negative Values")
-        row_one.addWidget(self.neg_check)
         self.layout.addLayout(row_one)
-
+        
+        self.neg_check = QCheckBox("Treat as negative")
+        self.layout.addWidget(self.neg_check)
+        
         row_two = QHBoxLayout()
         self.amp_entry = QLineEdit()  # TODO add button to toggle plot interaction
         row_two.addWidget(self.amp_entry)
+        self.trace_unit = QComboBox()
+        self.trace_unit.addItems(list(CURRENT_UNIT_FACTORS.keys()))
+        self.trace_unit.setCurrentIndex(1)
+        row_two.addWidget(self.trace_unit)
         self.drag_amp_toggle = QToolButton()
         self.drag_amp_toggle.setCheckable(True)
         self.drag_amp_toggle.setText("M")
@@ -235,10 +238,14 @@ class IdealizationTab(QWidget):
         row_three.addWidget(threshold_label)
         self.show_threshold_check = QCheckBox("Show")
         row_three.addWidget(self.show_threshold_check)
-        self.auto_thresholds = QCheckBox("Automatic")
-        self.auto_thresholds.stateChanged.connect(self.toggle_auto_theta)
-        row_three.addWidget(self.auto_thresholds)
+        
+        
+        #row_three.addWidget(self.auto_thresholds)
         self.layout.addLayout(row_three)
+
+        self.auto_thresholds = QCheckBox("Auto-Generate")
+        self.auto_thresholds.stateChanged.connect(self.toggle_auto_theta)
+        self.layout.addWidget(self.auto_thresholds)
 
         self.threshold_entry = QLineEdit()
         self.layout.addWidget(self.threshold_entry)
@@ -246,17 +253,21 @@ class IdealizationTab(QWidget):
         row_four = QHBoxLayout()
         res_label = QLabel("Resolution")
         row_four.addWidget(res_label)
-        self.time_unit = QComboBox()
-        self.time_unit.addItems(list(TIME_UNIT_FACTORS.keys()))
-        self.time_unit.setCurrentIndex(1)
-        row_four.addWidget(self.time_unit)
+        
         self.use_res = QCheckBox("Apply")
         self.use_res.stateChanged.connect(self.toggle_resolution)
         row_four.addWidget(self.use_res)
         self.layout.addLayout(row_four)
 
+        row_five = QHBoxLayout()
         self.res_entry = QLineEdit()
-        self.layout.addWidget(self.res_entry)
+        row_five.addWidget(self.res_entry)
+        
+        self.time_unit = QComboBox()
+        self.time_unit.addItems(list(TIME_UNIT_FACTORS.keys()))
+        self.time_unit.setCurrentIndex(1)
+        row_five.addWidget(self.time_unit)
+        self.layout.addLayout(row_five)
 
         row_six = QHBoxLayout()
         intrp_label = QLabel("Interpolation")

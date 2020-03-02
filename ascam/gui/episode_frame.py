@@ -17,6 +17,7 @@ class EpisodeFrame(QWidget):
         self.main = main
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
+        self.setFixedWidth(150)
 
         self.create_widgets()
         
