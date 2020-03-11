@@ -15,3 +15,5 @@ If you don't have Git, you can just copy ASCAM directory and then navigate to it
 Start ASCAM from within its own directory by executing the file `run`. (Enter `./run` in the Terminal)
 
 There is an example raw data file in the ASCAM/data folder. This recording was sampled at 40 kHz.
+
+![macOS Screenshot](cuteSCAM.png)
