@@ -1,4 +1,4 @@
-ASCAM can be used to browse, organize and analize episodic recordings of single ion channel currents.
+ASCAM can be used to browse, organize and analyze episodic recordings of single ion channel currents.
 
 Requires python>=3.6 and Numpy>=1.16 
 Further required packages can be found in 'requirements.txt' and installed with 
@@ -12,8 +12,8 @@ After successful installation of Anaconda, if you have Git installed, you can cl
 
 If you don't have Git, you can just copy ASCAM directory and then navigate to it manually.
 
-Start ASCAM from within its own directory by executing the file `run`. (Enter `./run` in the Terminal)
+Start ASCAM from within its own directory by executing the file `run`. (Enter `./run` in the terminal)
 
-There is an example raw data file in the ASCAM/data folder. This recording was sampled at 40 kHz.
+There is an example raw data file of an AMPA receptor single channel patch in the ASCAM/data folder. This recording was sampled at 40 kHz.
 
 ![macOS Screenshot](cuteSCAM.png)
