@@ -22,7 +22,7 @@ class ExportFileDialog(QDialog):
         self.create_widgets()
 
         self.exec_()
-        
+
     def create_widgets(self):
         self.series_selection = QComboBox()
         self.series_selection.addItems(list(self.main.data.keys()))
@@ -48,7 +48,7 @@ class ExportFileDialog(QDialog):
         self.time_unit_selection.addItems(list(TIME_UNIT_FACTORS.keys()))
         self.time_unit_selection.setCurrentIndex(2)
         self.layout.addLayout(row_four)
-        
+
         row_five = QHBoxLayout()
         label = QLabel('Current Unit:')
         row_five.addWidget(label)
@@ -86,7 +86,7 @@ class ExportFileDialog(QDialog):
         # if not self.list_selection.selectedItems():
         #     print('empty')
         filename, filetye = QFileDialog.getSaveFileName(
-            self, dir=self.main.filename[:-3] + "pkl", filter="Axograph (*.axgd);; Matlab (*.mat)")
+            self, dir=self.main.filename[:-4], filter="Axograph (*.axgd);; Matlab (*.mat)")
         if filename:
             if 'Matlab' in filetye:
                 self.main.data.export_matlab(
@@ -108,4 +108,4 @@ class ExportFileDialog(QDialog):
                     save_piezo=self.save_piezo.isChecked(),
                     save_command=self.save_command.isChecked(),
                     )
-        
+

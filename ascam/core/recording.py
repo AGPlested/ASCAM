@@ -128,6 +128,18 @@ class Recording(dict):
     def episode(self):
         return self.series[self.current_ep_ind]
 
+    @property
+    def has_command(self):
+        if self.series:
+            return True if self.episode.command is not None else False
+        return False
+
+    @property
+    def has_piezo(self):
+        if self.series:
+            return True if self.episode.piezo is not None else False
+        return False
+
     def baseline_correction(
         self,
         intervals=None,
@@ -276,7 +288,7 @@ class Recording(dict):
         [
             episode.detect_first_activation(threshold)
             for episode in self.series
-            if episode.current_ep_ind not in exclude
+            if episode.n_episode not in exclude
         ]
 
     def series_hist(
@@ -421,7 +433,7 @@ class Recording(dict):
         indices = np.array(list(set(indices)))
         episodes = np.array(self[datakey])[indices]
         for episode in episodes:
-            n = str(episode.current_ep_ind).zfill(fill_length)
+            n = str(episode.n_episode).zfill(fill_length)
             export_dict["trace" + n] = episode.trace * CURRENT_UNIT_FACTORS[trace_unit]
             if save_piezo:
                 export_dict["piezo" + n] = (
@@ -465,21 +477,21 @@ class Recording(dict):
         for listname in lists_to_save:
             indices.extend(self.lists[listname][0])
         indices = np.array(list(set(indices)))
-        episodes = np.array(self.series)[indices]
+        episodes = np.array(self[datakey])[indices]
 
         for episode in episodes:
             data_list.append(np.array(episode.trace))
             column_names.append(
-                f"Ipatch (A) ep#{episode.current_ep_ind}"
+                f"Ipatch (A) ep#{episode.n_episode}"
             )
             if save_piezo:
                 column_names.append(
-                    f"piezo voltage (V) ep#{episode.current_ep_ind}"
+                    f"piezo voltage (V) ep#{episode.n_episode}"
                 )
                 data_list.append(np.array(episode.piezo))
             if save_command:
                 column_names.append(
-                    f"command voltage (V) ep#{episode.current_ep_ind}"
+                    f"command voltage (V) ep#{episode.n_episode}"
                 )
                 data_list.append(np.array(episode.command))
         file = axographio.file_contents(column_names, data_list)
@@ -550,7 +562,7 @@ class Recording(dict):
         export_array = np.array(
             [
                 (
-                    episode.current_ep_ind,
+                    episode.n_episode,
                     episode.first_activation * TIME_UNIT_FACTORS[time_unit],
                 )
                 for episode in self.selected_episodes

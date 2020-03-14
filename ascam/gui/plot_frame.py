@@ -25,8 +25,6 @@ class PlotFrame(QWidget):
         self.setLayout(self.layout)
 
         # plot variables
-        self.show_piezo = True
-        self.show_command = False
         self.show_grid = True
         self.hist_x_range = None
         self.hist_y_range = None
@@ -40,6 +38,23 @@ class PlotFrame(QWidget):
         self.amp_hist_lines = []
         self.theta_lines = []
         self.theta_hist_lines = []
+
+    @property
+    def show_command(self):
+        return self.main.show_command.isChecked() and self.main.data.has_command
+
+    @show_command.setter
+    def show_command(self, val):
+        self._show_command = val
+
+    @property
+    def show_piezo(self):
+        debug_logger.debug(f"data has piezo = {self.main.data.has_piezo}")
+        return self.main.show_piezo.isChecked() and self.main.data.has_piezo
+
+    @show_piezo.setter
+    def show_piezo(self, val):
+        self._show_piezo = val
 
     def init_plots(self):
         self.trace_plot = pg.PlotWidget(viewBox=CustomViewBox(self), name=f"trace")
@@ -61,6 +76,7 @@ class PlotFrame(QWidget):
             self.layout.addWidget(self.piezo_plot, ind, 0, )
             self.layout.setRowStretch(ind, 1)
         else:
+            self.piezo_plot = None
             self.trace_plot.setLabel("bottom", "time", units="s")
 
         if self.show_command:
@@ -70,6 +86,8 @@ class PlotFrame(QWidget):
             self.command_plot.setXLink(self.trace_plot)
             self.layout.addWidget(self.command_plot, 0, 0)
             self.layout.setRowStretch(0, 1)
+        else:
+            self.command_plot = None
 
         if self.show_grid:
             self.trace_plot.showGrid(x=True, y=True)
@@ -212,9 +230,9 @@ class PlotFrame(QWidget):
     def clear_plots(self):
         debug_logger.debug(f"clearing plots")
         self.trace_plot.clear()
-        if self.show_command:
+        if self.show_command and self.command_plot is not None:
             self.command_plot.clear()
-        if self.show_piezo:
+        if self.show_piezo and self.piezo_plot is not None:
             self.piezo_plot.clear()
 
     def clear_amp_lines(self):
@@ -239,8 +257,8 @@ class PlotFrame(QWidget):
         self.draw_episode_hist()
 
     def toggle_command(self):
+        debug_logger.debug("toggling command plot")
         clear_qt_layout(self.layout)
-        self.show_command = not self.show_command
         self.init_plots()
         self.init_hist()
         self.plot_episode()
@@ -248,8 +266,8 @@ class PlotFrame(QWidget):
         self.draw_episode_hist()
 
     def toggle_piezo(self):
+        debug_logger.debug("toggling piezo plot")
         clear_qt_layout(self.layout)
-        self.show_piezo = not self.show_piezo
         self.init_plots()
         self.init_hist()
         self.plot_episode()

@@ -37,16 +37,16 @@ class MainWindow(QMainWindow):
 
         self.data = Recording()
 
-        self.create_widgets()
-
         self.create_menu()
+
+        self.create_widgets()
 
     def create_menu(self):
         debug_logger.debug("MainWindow creating menus")
         self.file_menu = self.menuBar().addMenu("File")
         self.file_menu.addAction("Open File", self.open_file)
         # self.file_menu.addAction("Save", self.save_to_file)
-        self.file_menu.addAction("Export", lambda: ExportFileDialog(self))
+        self.file_menu.addAction("Export Series", lambda: ExportFileDialog(self))
         self.file_menu.addAction("Export Idealization", self.export_idealization)
         self.file_menu.addAction("Export Events", self.export_events)
         self.file_menu.addAction(
@@ -66,18 +66,17 @@ class MainWindow(QMainWindow):
         self.analysis_menu.addAction("First Activation", self.launch_fa_analysis)
 
         self.plot_menu = self.menuBar().addMenu("Plots")
-        show_piezo = QAction("Show Piezo Voltage", self.plot_menu, checkable=True)
-        show_piezo.triggered.connect(self.plot_frame.toggle_piezo)
-        self.plot_menu.addAction(show_piezo)
-        show_piezo.setChecked(True)
-        show_command = QAction("Show Command Voltage", self.plot_menu, checkable=True)
-        show_command.triggered.connect(self.plot_frame.toggle_command)
-        self.plot_menu.addAction(show_command)
+        self.show_piezo = QAction("Show Piezo Voltage", self.plot_menu, checkable=True)
+        self.plot_menu.addAction(self.show_piezo)
+        self.show_command = QAction("Show Command Voltage", self.plot_menu, checkable=True)
+        self.plot_menu.addAction(self.show_command)
 
         # self.histogram_menu = self.menuBar().addMenu("Histogram")
 
     def create_widgets(self):
         self.plot_frame = PlotFrame(self)
+        self.show_piezo.triggered.connect(self.plot_frame.toggle_piezo)
+        self.show_command.triggered.connect(self.plot_frame.toggle_command)
         self.central_layout.addWidget(self.plot_frame, 1, 2)
 
         self.ep_frame = EpisodeFrame(self)
@@ -114,6 +113,7 @@ class MainWindow(QMainWindow):
         self.central_layout.addWidget(self.fa_frame, 2, 2)
 
     def test_mode(self):
+        self.filename = TEST_FILE_NAME
         self.data = Recording.from_file(TEST_FILE_NAME)
         self.ep_frame.ep_list.populate()
         self.ep_frame.setFocus()
