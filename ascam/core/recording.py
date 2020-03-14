@@ -514,9 +514,9 @@ class Recording(dict):
         # as time x episode
         np.savetxt(filepath, export_array.T, delimiter=",")
 
-    def get_events(self):
+    def get_events(self, time_unit='us', current_unit='pA'):
         if any([ep.idealization is None for ep in self.series]):
-            debug_logger("tried to get events but not all episodes were idealized")
+            debug_logger.debug("tried to get events but not all episodes were idealized")
         else:
             export_array = np.zeros((0, 5)).astype(object)
             for episode in self.series:
@@ -525,32 +525,41 @@ class Recording(dict):
                 episode_number = episode.n_episode * np.ones(len(ep_events[:, 0]))
                 # glue that column to the event
                 ep_events = np.concatenate(
-                    (ep_events, episode_number[:, np.newaxis]), axis=1
+                    (episode_number[:, np.newaxis], ep_events), axis=1
                 )
                 export_array = np.concatenate((export_array, ep_events), axis=0)
+            export_array[:, 1] *= CURRENT_UNIT_FACTORS[current_unit]
+            export_array[:, 2:] *= TIME_UNIT_FACTORS[time_unit]
             return export_array
 
-    def export_events(self, filepath):
+    def export_events(self, filepath, time_unit='us', current_unit='pA'):
         """Export a table of events in the current (idealized) series and
         duration to a csv file."""
-        logging.debug(f"export_events")
+        debug_logger.debug(f"export_events")
 
         import pandas as pd
 
         if not filepath.endswith(".csv"):
             filepath += ".csv"
-        # header = [
-        #     f"amplitude [{self.trace_unit}]",
-        #     f"duration [{self.time_unit}]",
-        #     f"t_start",
-        #     "t_stop",
-        #     "episode number",
-        # ]
-        export_array = self.get_events()
-        export_array = pd.DataFrame(export_array)
+        header = [
+            "Episode Number",
+            f"Amplitude {current_unit}",
+            f"Duration {time_unit}",
+            f"t_start {time_unit}",
+            f"t_stop {time_unit}",
+        ]
+        export_array = self.get_events(time_unit, current_unit)
+        export_array = pd.DataFrame(export_array, columns=header)
         # truncate floats for duration and timestamps to 3 decimals (standard 1 micro s)
-        for i in [1, 2, 3]:
-            export_array[i] = export_array[i].map(lambda x: f"{x:.3f}")
+        if time_unit == 'us':
+            for i in header:
+                export_array[i] = export_array[i].map(lambda x: f"{x:.0f}")
+        if time_unit == 'ms':
+            for i in header:
+                export_array[i] = export_array[i].map(lambda x: f"{x:.3f}")
+        if time_unit == 'ms':
+            for i in header:
+                export_array[i] = export_array[i].map(lambda x: f"{x:.6f}")
         export_array.to_csv(filepath)
 
     def export_first_activation(self, filepath, time_unit):

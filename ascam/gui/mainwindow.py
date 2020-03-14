@@ -97,7 +97,11 @@ class MainWindow(QMainWindow):
         self.data.save_to_pickle(filename)
 
     def export_events(self):
-        pass
+        filename = QFileDialog.getSaveFileName(
+            self, dir=self.filename[:-3] + "csv", filter="*.csv"
+        )[0]
+        self.tc_frame.idealize_series()
+        self.data.export_events(filename)
 
     def export_idealization(self):
         pass

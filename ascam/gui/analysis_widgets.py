@@ -79,9 +79,14 @@ class IdealizationFrame(QWidget):
 
     def create_table(self):
         self.idealize_series()
-        events = self.main.data.get_events()
+        events = self.main.data.get_events(
+                current_unit=self.current_tab.trace_unit.currentText(),
+                time_unit=self.current_tab.time_unit.currentText()
+                )
         return EventTableModel(
-            events, self.current_tab.trace_unit.currentText(), self.current_tab.time_unit.currentText()
+            events,
+            self.current_tab.trace_unit.currentText(),
+            self.current_tab.time_unit.currentText()
         )
 
     def get_params(self):
@@ -337,15 +342,15 @@ class EventTableModel(QAbstractTableModel):
         super().__init__()
         # super(TableModel, self).__init__()
         self._data = data
-        self._data[:, 0] *= CURRENT_UNIT_FACTORS[current_unit]
-        self._data[:, 1:] *= TIME_UNIT_FACTORS[time_unit]
+        self._data[:, 0]
+        self._data[:, 1:]
 
         self._header = [
+            "Episode #",
             f"Amplitude [{current_unit}]",
             f"Duration [{time_unit}]",
-            f"t_start",
-            "t_stop",
-            "Episode #",
+            f"t_start [{time_unit}]",
+            f"t_stop [{time_unit}]",
         ]
 
     def data(self, index, role):
