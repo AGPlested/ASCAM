@@ -3,7 +3,7 @@ import logging
 import numpy as np
 from PySide2.QtCore import QAbstractTableModel, Qt
 from PySide2.QtWidgets import (
-    QComboBox,
+    QComboBox,QFileDialog,
     QDialog,
     QTableView,
     QGridLayout,
@@ -51,9 +51,18 @@ class IdealizationFrame(QWidget):
         self.calc_button = QPushButton("Calculate idealization")
         self.calc_button.clicked.connect(self.calculate_click)
         self.layout.addWidget(self.calc_button)
+
         self.events_button = QPushButton("Show Table of Events")
         self.events_button.clicked.connect(self.create_event_frame)
         self.layout.addWidget(self.events_button)
+
+        self.export_events_button = QPushButton("Export Table of Events")
+        self.export_events_button.clicked.connect(self.export_events)
+        self.layout.addWidget(self.export_events_button)
+
+        self.export_idealization_button = QPushButton("Export Idealization")
+        self.export_idealization_button.clicked.connect(self.export_idealization)
+        self.layout.addWidget(self.export_idealization_button)
 
         self.close_button = QPushButton("Close Tab")
         self.close_button.clicked.connect(self.close_tab)
@@ -72,7 +81,6 @@ class IdealizationFrame(QWidget):
         self.event_table_frame = EventTableFrame(self, self.current_tab.event_table)
 
     def create_table(self):
-        # self.idealize_series()
         self.get_params()
         events = self.current_tab.idealization_cache.get_events(
                 current_unit=self.current_tab.trace_unit.currentText(),
@@ -83,6 +91,25 @@ class IdealizationFrame(QWidget):
             self.current_tab.trace_unit.currentText(),
             self.current_tab.time_unit.currentText()
         )
+
+    def export_events(self):
+        self.get_params()
+        self.current_tab.idealization_cache.get_events()
+        filename = QFileDialog.getSaveFileName( self, dir=self.main.filename[:-4] + "_events.csv", filter="*.csv")[0]
+        self.current_tab.idealization_cache.export_events(filename,
+                self.current_tab.time_unit.currentText(),
+                self.current_tab.trace_unit.currentText(),
+                )
+
+    def export_idealization(self):
+        self.get_params()
+        self.idealize_series()
+        filename = QFileDialog.getSaveFileName( self, dir=self.main.filename[:-4] + "_idealization.csv", filter="*.csv")[0]
+        self.current_tab.idealization_cache.export_idealization(filename,
+                self.current_tab.time_unit.currentText(),
+                self.current_tab.trace_unit.currentText(),
+                )
+
 
     def get_params(self):
         return self.current_tab.get_params()
