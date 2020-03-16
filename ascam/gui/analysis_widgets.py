@@ -3,7 +3,8 @@ import logging
 import numpy as np
 from PySide2.QtCore import QAbstractTableModel, Qt
 from PySide2.QtWidgets import (
-    QComboBox,QFileDialog,
+    QComboBox,
+    QFileDialog,
     QDialog,
     QTableView,
     QGridLayout,
@@ -80,39 +81,46 @@ class IdealizationFrame(QWidget):
         self.current_tab.event_table = self.create_table()
         self.event_table_frame = EventTableFrame(self, self.current_tab.event_table)
         params = self.get_params()
-        self.event_table_frame.setWindowTitle(f"Amp={params[0]}; Thresh={params[1]}; "
-                                        f"Res={params[2]}; Intrp={params[3]}")
+        self.event_table_frame.setWindowTitle(
+            f"Amp={params[0]}; Thresh={params[1]}; "
+            f"Res={params[2]}; Intrp={params[3]}"
+        )
 
     def create_table(self):
         self.get_params()
         events = self.current_tab.idealization_cache.get_events(
-                current_unit=self.current_tab.trace_unit.currentText(),
-                time_unit=self.current_tab.time_unit.currentText()
-                )
+            current_unit=self.current_tab.trace_unit.currentText(),
+            time_unit=self.current_tab.time_unit.currentText(),
+        )
         return EventTableModel(
             events,
             self.current_tab.trace_unit.currentText(),
-            self.current_tab.time_unit.currentText()
+            self.current_tab.time_unit.currentText(),
         )
 
     def export_events(self):
         self.get_params()
         self.current_tab.idealization_cache.get_events()
-        filename = QFileDialog.getSaveFileName( self, dir=self.main.filename[:-4] + "_events.csv", filter="*.csv")[0]
-        self.current_tab.idealization_cache.export_events(filename,
-                self.current_tab.time_unit.currentText(),
-                self.current_tab.trace_unit.currentText(),
-                )
+        filename = QFileDialog.getSaveFileName(
+            self, dir=self.main.filename[:-4] + "_events.csv", filter="*.csv"
+        )[0]
+        self.current_tab.idealization_cache.export_events(
+            filename,
+            self.current_tab.time_unit.currentText(),
+            self.current_tab.trace_unit.currentText(),
+        )
 
     def export_idealization(self):
         self.get_params()
         self.idealize_series()
-        filename = QFileDialog.getSaveFileName( self, dir=self.main.filename[:-4] + "_idealization.csv", filter="*.csv")[0]
-        self.current_tab.idealization_cache.export_idealization(filename,
-                self.current_tab.time_unit.currentText(),
-                self.current_tab.trace_unit.currentText(),
-                )
-
+        filename = QFileDialog.getSaveFileName(
+            self, dir=self.main.filename[:-4] + "_idealization.csv", filter="*.csv"
+        )[0]
+        self.current_tab.idealization_cache.export_idealization(
+            filename,
+            self.current_tab.time_unit.currentText(),
+            self.current_tab.trace_unit.currentText(),
+        )
 
     def get_params(self):
         return self.current_tab.get_params()
@@ -204,15 +212,15 @@ class IdealizationTab(QWidget):
         row_one = QHBoxLayout()
         amp_label = QLabel("Amplitudes")
         row_one.addWidget(amp_label)
-        
+
         self.show_amp_check = QCheckBox("Show")
         self.show_amp_check.setChecked(True)
         row_one.addWidget(self.show_amp_check)
         self.layout.addLayout(row_one)
-        
+
         self.neg_check = QCheckBox("Treat as negative")
         self.layout.addWidget(self.neg_check)
-        
+
         row_two = QHBoxLayout()
         self.amp_entry = QLineEdit()  # TODO add button to toggle plot interaction
         row_two.addWidget(self.amp_entry)
@@ -233,9 +241,8 @@ class IdealizationTab(QWidget):
         row_three.addWidget(threshold_label)
         self.show_threshold_check = QCheckBox("Show")
         row_three.addWidget(self.show_threshold_check)
-        
-        
-        #row_three.addWidget(self.auto_thresholds)
+
+        # row_three.addWidget(self.auto_thresholds)
         self.layout.addLayout(row_three)
 
         self.auto_thresholds = QCheckBox("Auto-Generate")
@@ -248,7 +255,7 @@ class IdealizationTab(QWidget):
         row_four = QHBoxLayout()
         res_label = QLabel("Resolution")
         row_four.addWidget(res_label)
-        
+
         self.use_res = QCheckBox("Apply")
         self.use_res.stateChanged.connect(self.toggle_resolution)
         row_four.addWidget(self.use_res)
@@ -257,7 +264,7 @@ class IdealizationTab(QWidget):
         row_five = QHBoxLayout()
         self.res_entry = QLineEdit()
         row_five.addWidget(self.res_entry)
-        
+
         self.time_unit = QComboBox()
         self.time_unit.addItems(list(TIME_UNIT_FACTORS.keys()))
         self.time_unit.setCurrentIndex(1)
@@ -316,9 +323,7 @@ class IdealizationTab(QWidget):
             amps *= -1
             thresholds *= -1
 
-        trace_factor = CURRENT_UNIT_FACTORS[
-            self.trace_unit.currentText()
-        ]
+        trace_factor = CURRENT_UNIT_FACTORS[self.trace_unit.currentText()]
         amps /= trace_factor
         thresholds /= trace_factor
         time_factor = TIME_UNIT_FACTORS[self.time_unit.currentText()]
@@ -335,28 +340,31 @@ class IdealizationTab(QWidget):
             intrp_factor = 1
 
         if not self.check_params_unchanged(amps, thresholds, resolution, intrp_factor):
-            debug_logger.debug(f'creating new idealization cache for\n'
-                               f'amp = {amps} \n'
-                               f'thresholds = {thresholds}\n'
-                               f'resolution = {res_string}\n'
-                               f'interpolation = {intrp_string}')
-            self.idealization_cache = IdealizationCache(self.parent.parent.main.data,
-                            amps, thresholds, resolution, intrp_factor)
+            debug_logger.debug(
+                f"creating new idealization cache for\n"
+                f"amp = {amps} \n"
+                f"thresholds = {thresholds}\n"
+                f"resolution = {res_string}\n"
+                f"interpolation = {intrp_string}"
+            )
+            self.idealization_cache = IdealizationCache(
+                self.parent.parent.main.data, amps, thresholds, resolution, intrp_factor
+            )
         return amps, thresholds, resolution, intrp_factor
 
-    def check_params_unchanged(self,amp, theta,res, intrp):
+    def check_params_unchanged(self, amp, theta, res, intrp):
         try:
             if set(amp) != set(self.idealization_cache.amplitudes):
-                debug_logger.debug('amps have changed')
+                debug_logger.debug("amps have changed")
                 return False
             if set(theta) != set(self.idealization_cache.thresholds):
-                debug_logger.debug('thresholds have changed')
+                debug_logger.debug("thresholds have changed")
                 return False
             if res != self.idealization_cache.resolution:
-                debug_logger.debug('resolution has changed')
+                debug_logger.debug("resolution has changed")
                 return False
             if intrp != self.idealization_cache.interpolation_factor:
-                debug_logger.debug('interpolation factor has changed')
+                debug_logger.debug("interpolation factor has changed")
                 return False
             return True
         except AttributeError:
@@ -371,9 +379,9 @@ class EventTableFrame(QDialog):
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
 
-        height =800
+        height = 800
         width = 500
-        self.setGeometry(parent.x()+width/4, parent.y()+height/3, width, height)
+        self.setGeometry(parent.x() + width / 4, parent.y() + height / 3, width, height)
 
         self.event_table = QTableView()
         self.event_table.setModel(table_view)
@@ -381,6 +389,7 @@ class EventTableFrame(QDialog):
         self.layout.addWidget(self.event_table)
         self.setModal(False)
         self.show()
+
 
 class EventTableModel(QAbstractTableModel):
     def __init__(self, data, current_unit, time_unit):

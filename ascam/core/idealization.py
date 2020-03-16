@@ -2,18 +2,21 @@ import logging
 import numpy as np
 
 from .analysis import Idealizer
-from ascam.constants import (
-    CURRENT_UNIT_FACTORS,
-    TIME_UNIT_FACTORS,
-)
+from ascam.constants import CURRENT_UNIT_FACTORS, TIME_UNIT_FACTORS
 
 
 debug_logger = logging.getLogger("ascam.debug")
 
 
 class IdealizationCache:
-    def __init__(self, data, amplitudes, thresholds=None, resolution=None,
-                 interpolation_factor=None):
+    def __init__(
+        self,
+        data,
+        amplitudes,
+        thresholds=None,
+        resolution=None,
+        interpolation_factor=None,
+    ):
         self.data = data
 
         self.amplitudes = amplitudes
@@ -55,27 +58,30 @@ class IdealizationCache:
         if n_episode is None:
             n_episode = self.data.current_ep_ind
         if n_episode not in self.ind_idealized:
-            debug_logger.debug(f'idealizing episode {n_episode} of '
-                               f'series {self.data.current_datakey}')
+            debug_logger.debug(
+                f"idealizing episode {n_episode} of "
+                f"series {self.data.current_datakey}"
+            )
             idealization, trace, time = Idealizer.idealize_episode(
-                                    self.data.series[n_episode].trace,
-                                    self.data.episode.time,
-                                    self.amplitudes,
-                                    self.thresholds,
-                                    self.resolution,
-                                    self.interpolation_factor)
+                self.data.series[n_episode].trace,
+                self.data.episode.time,
+                self.amplitudes,
+                self.thresholds,
+                self.resolution,
+                self.interpolation_factor,
+            )
             self.episodes.append(Idealization(idealization, time, n_episode))
             self.ind_idealized.add(n_episode)
         else:
             debug_logger.debug("episode already idealized")
 
     def idealize_series(self):
-        debug_logger.debug(f'idealizing series {self.data.current_datakey}')
+        debug_logger.debug(f"idealizing series {self.data.current_datakey}")
         to_idealize = self.all_ep_inds - self.ind_idealized
         for i in to_idealize:
             self.idealize_episode(i)
 
-    def get_events(self, time_unit='us', current_unit='pA'):
+    def get_events(self, time_unit="us", current_unit="pA"):
         if self.all_ep_inds != self.ind_idealized:
             self.idealize_series()
         export_array = np.zeros((0, 5)).astype(object)
@@ -107,15 +113,17 @@ class IdealizationCache:
                 episode.idealization * CURRENT_UNIT_FACTORS[trace_unit]
             )
         # note that we transpose the export array to export the matrix
-        np.savetxt(filepath, export_array.T, delimiter=",", 
-                    header=f"amplitudes = {self.amplitudes};"
-                           f"thresholds = {self.thresholds};"
-                           f"resolution = {self.resolution};"
-                           f"interpolation_factor = {self.interpolation_factor}"
-                            )
+        np.savetxt(
+            filepath,
+            export_array.T,
+            delimiter=",",
+            header=f"amplitudes = {self.amplitudes};"
+            f"thresholds = {self.thresholds};"
+            f"resolution = {self.resolution};"
+            f"interpolation_factor = {self.interpolation_factor}",
+        )
 
-
-    def export_events(self, filepath, time_unit='us', current_unit='pA'):
+    def export_events(self, filepath, time_unit="us", current_unit="pA"):
         """Export a table of events in the current (idealized) series and
         duration to a csv file."""
         debug_logger.debug(f"export_events")
@@ -131,25 +139,27 @@ class IdealizationCache:
             f"t_start [{time_unit}]",
             f"t_stop [{time_unit}]",
         ]
-        params=f"amplitudes = {self.amplitudes};" \
-               +f"thresholds = {self.thresholds};" \
-               +f"resolution = {self.resolution};" \
-               +f"interpolation_factor = {self.interpolation_factor}\n"
+        params = (
+            f"amplitudes = {self.amplitudes};"
+            + f"thresholds = {self.thresholds};"
+            + f"resolution = {self.resolution};"
+            + f"interpolation_factor = {self.interpolation_factor}\n"
+        )
         export_array = self.get_events(time_unit, current_unit)
         export_array = pd.DataFrame(export_array, columns=header)
         # truncate floats for duration and timestamps to 3 decimals (standard 1 micro s)
-        if time_unit == 'us':
+        if time_unit == "us":
             for i in header:
                 export_array[i] = export_array[i].map(lambda x: f"{x:.0f}")
-        if time_unit == 'ms':
+        if time_unit == "ms":
             for i in header:
                 export_array[i] = export_array[i].map(lambda x: f"{x:.3f}")
-        if time_unit == 's':
+        if time_unit == "s":
             for i in header:
                 export_array[i] = export_array[i].map(lambda x: f"{x:.6f}")
-        with open(filepath, 'w') as f:
+        with open(filepath, "w") as f:
             f.write(params)
-        export_array.to_csv(filepath,mode='a')
+        export_array.to_csv(filepath, mode="a")
 
 
 class Idealization:

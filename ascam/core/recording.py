@@ -444,18 +444,12 @@ class Recording(dict):
 
         for episode in episodes:
             data_list.append(np.array(episode.trace))
-            column_names.append(
-                f"Ipatch (A) ep#{episode.n_episode}"
-            )
+            column_names.append(f"Ipatch (A) ep#{episode.n_episode}")
             if save_piezo:
-                column_names.append(
-                    f"piezo voltage (V) ep#{episode.n_episode}"
-                )
+                column_names.append(f"piezo voltage (V) ep#{episode.n_episode}")
                 data_list.append(np.array(episode.piezo))
             if save_command:
-                column_names.append(
-                    f"command voltage (V) ep#{episode.n_episode}"
-                )
+                column_names.append(f"command voltage (V) ep#{episode.n_episode}")
                 data_list.append(np.array(episode.command))
         file = axographio.file_contents(column_names, data_list)
         file.write(filepath)

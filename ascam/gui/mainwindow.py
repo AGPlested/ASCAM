@@ -1,7 +1,14 @@
 import logging
 
 # pylint: disable=E0611
-from PySide2.QtWidgets import QGridLayout, QWidget, QMainWindow, QFileDialog, QAction, QSizePolicy
+from PySide2.QtWidgets import (
+    QGridLayout,
+    QWidget,
+    QMainWindow,
+    QFileDialog,
+    QAction,
+    QSizePolicy,
+)
 
 # from ascam.gui import ExportFADialog
 from ascam.gui import ExportFileDialog
@@ -68,7 +75,9 @@ class MainWindow(QMainWindow):
         self.plot_menu = self.menuBar().addMenu("Plots")
         self.show_piezo = QAction("Show Piezo Voltage", self.plot_menu, checkable=True)
         self.plot_menu.addAction(self.show_piezo)
-        self.show_command = QAction("Show Command Voltage", self.plot_menu, checkable=True)
+        self.show_command = QAction(
+            "Show Command Voltage", self.plot_menu, checkable=True
+        )
         self.plot_menu.addAction(self.show_command)
 
         # self.histogram_menu = self.menuBar().addMenu("Histogram")

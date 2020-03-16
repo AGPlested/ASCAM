@@ -1,7 +1,7 @@
 import logging
 
 # pylint: disable=E0611
-from PySide2 import QtCore 
+from PySide2 import QtCore
 from PySide2.QtWidgets import QWidget, QGridLayout
 import numpy as np
 import pyqtgraph as pg
@@ -61,7 +61,7 @@ class PlotFrame(QWidget):
         self.trace_plot.setBackground("w")
         self.trace_plot.setLabel("left", "Current", units="A")
         ind = int(self.show_command)
-        self.layout.addWidget(self.trace_plot, ind, 0, )
+        self.layout.addWidget(self.trace_plot, ind, 0)
         self.layout.setRowStretch(ind, 2)
         self.layout.setColumnStretch(0, 2)
         self.layout.setColumnStretch(1, 1)
@@ -73,14 +73,16 @@ class PlotFrame(QWidget):
             self.piezo_plot.setLabel("bottom", "time", units="s")
             self.piezo_plot.setXLink(self.trace_plot)
             ind = 1 + int(self.show_command)
-            self.layout.addWidget(self.piezo_plot, ind, 0, )
+            self.layout.addWidget(self.piezo_plot, ind, 0)
             self.layout.setRowStretch(ind, 1)
         else:
             self.piezo_plot = None
             self.trace_plot.setLabel("bottom", "time", units="s")
 
         if self.show_command:
-            self.command_plot = pg.PlotWidget(viewBox=CustomViewBox(self), name=f"command")
+            self.command_plot = pg.PlotWidget(
+                viewBox=CustomViewBox(self), name=f"command"
+            )
             self.command_plot.setBackground("w")
             self.command_plot.setLabel("left", "Command", units="V")
             self.command_plot.setXLink(self.trace_plot)
@@ -99,16 +101,16 @@ class PlotFrame(QWidget):
     def init_hist(self):
         self.hist = pg.PlotWidget(viewBox=CustomViewBox(self))
         row = int(self.show_command)
-        self.layout.addWidget(self.hist, row, 1, )
+        self.layout.addWidget(self.hist, row, 1)
         self.hist.setLabel("right", "Current", units="A")
-        self.hist.getAxis('left').setTicks([])
+        self.hist.getAxis("left").setTicks([])
         self.hist.setBackground("w")
         self.hist.setYLink(self.trace_plot)
         if self.show_grid:
             self.hist.showGrid(x=True, y=True)
 
     def plot_all(self):
-        debug_logger.debug(f'redoing all plots for {self.main.data.current_datakey}')
+        debug_logger.debug(f"redoing all plots for {self.main.data.current_datakey}")
         self.clear_plots()
         self.clear_hist()
         self.draw_series_hist()
@@ -131,39 +133,41 @@ class PlotFrame(QWidget):
         heights, bins, = self.main.data.episode_hist()[:2]
         heights = np.asarray(heights, dtype=np.float)
         heights /= np.max(heights)
-        self.episode_hist.setData(bins,heights)
+        self.episode_hist.setData(bins, heights)
 
     def draw_episode_hist(self):
-        pen = pg.mkPen(color='b')
+        pen = pg.mkPen(color="b")
         heights, bins, = self.main.data.episode_hist()[:2]
         heights = np.asarray(heights, dtype=np.float)
         heights /= np.max(heights)
-        self.episode_hist = pg.PlotDataItem(bins,heights,stepMode=True,pen=pen)
+        self.episode_hist = pg.PlotDataItem(bins, heights, stepMode=True, pen=pen)
         self.hist.addItem(self.episode_hist)  # ignoreBounds=True?
         self.hist.getPlotItem().invertX(True)
         self.episode_hist.rotate(90)
-        y_max = self.hist.getAxis('bottom').range
+        y_max = self.hist.getAxis("bottom").range
         if self.hist_y_range is not None:
             y_max = self.hist_y_range[1]
-        self.hist.getAxis('bottom').setRange(0, y_max)
+        self.hist.getAxis("bottom").setRange(0, y_max)
         if self.hist_x_range is not None:
-            self.hist.getAxis('right').setRange(*self.hist_x_range)
+            self.hist.getAxis("right").setRange(*self.hist_x_range)
 
     def draw_series_hist(self):
-        pen = pg.mkPen(color=(200,50,50))
+        pen = pg.mkPen(color=(200, 50, 50))
         heights, bins, = self.main.data.series_hist()[:2]
         heights = np.asarray(heights, dtype=np.float)
         heights /= np.max(heights)
-        self.series_hist = pg.PlotDataItem(bins,heights,stepMode=True,pen=pen)
+        self.series_hist = pg.PlotDataItem(bins, heights, stepMode=True, pen=pen)
         self.hist.addItem(self.series_hist)
         self.hist.getPlotItem().invertX(True)
         self.series_hist.rotate(90)
-        self.hist_y_range = self.hist.getAxis('bottom').range
-        self.hist_x_range = self.hist.getAxis('right').range
-        self.hist.getAxis('bottom').setRange(0, self.hist_y_range[1])
+        self.hist_y_range = self.hist.getAxis("bottom").range
+        self.hist_x_range = self.hist.getAxis("right").range
+        self.hist.getAxis("bottom").setRange(0, self.hist_y_range[1])
 
     def plot_episode(self):
-        debug_logger.debug(f"plotting episode {self.main.data.episode.n_episode} of series {self.main.data.current_datakey}")
+        debug_logger.debug(
+            f"plotting episode {self.main.data.episode.n_episode} of series {self.main.data.current_datakey}"
+        )
         pen = pg.mkPen(color="b")
         self.trace_plot.plot(
             self.main.data.episode.time, self.main.data.episode.trace, pen=pen
@@ -196,12 +200,16 @@ class PlotFrame(QWidget):
         self.theta_lines = []
         self.theta_hist_lines = []
         time = self.main.data.episode.time
-        hist_x = np.arange(np.min([*self.hist_y_range]), np.max([*self.hist_y_range]), 0.1)
+        hist_x = np.arange(
+            np.min([*self.hist_y_range]), np.max([*self.hist_y_range]), 0.1
+        )
         for theta in thetas:
             self.theta_lines.append(
                 self.trace_plot.plot(time, np.ones(len(time)) * theta, pen=pen)
             )
-            self.theta_hist_lines.append( self.hist.plot(hist_x, np.ones(len(hist_x)) * theta, pen=pen))
+            self.theta_hist_lines.append(
+                self.hist.plot(hist_x, np.ones(len(hist_x)) * theta, pen=pen)
+            )
 
     def plot_amp_lines(self, amps):
         debug_logger.debug(f"plotting amps at {amps}")
@@ -210,12 +218,16 @@ class PlotFrame(QWidget):
         self.amp_lines = []
         self.amp_hist_lines = []
         time = self.main.data.episode.time
-        hist_x = np.arange(np.min([*self.hist_y_range]), np.max([*self.hist_y_range]), 0.1)
+        hist_x = np.arange(
+            np.min([*self.hist_y_range]), np.max([*self.hist_y_range]), 0.1
+        )
         for amp in amps:
             self.amp_lines.append(
                 self.trace_plot.plot(time, np.ones(len(time)) * amp, pen=pen)
             )
-            self.amp_hist_lines.append( self.hist.plot(hist_x, np.ones(len(hist_x)) * amp, pen=pen))
+            self.amp_hist_lines.append(
+                self.hist.plot(hist_x, np.ones(len(hist_x)) * amp, pen=pen)
+            )
 
     def plot_tc_params(self):
         amps, thresh, resolution, intrp_factor = self.main.tc_frame.get_params()
@@ -285,12 +297,12 @@ class CustomViewBox(pg.ViewBox):
         pg.ViewBox.__init__(self, *args, **kwds)
         self.setMouseMode(self.RectMode)
         self.parent = parent
-        
+
     def mouseClickEvent(self, ev):
         if ev.button() == QtCore.Qt.RightButton:
             self.autoRange()
         ev.accept()
-            
+
     def mouseDragEvent(self, ev, axis=1):
         if ev.button() == QtCore.Qt.LeftButton and self.parent.tc_tracking:
             pos = self.mapSceneToView(ev.pos()).y()
@@ -298,4 +310,3 @@ class CustomViewBox(pg.ViewBox):
         else:
             pg.ViewBox.mouseDragEvent(self, ev)
         ev.accept()
-
