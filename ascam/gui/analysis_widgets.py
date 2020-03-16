@@ -55,10 +55,6 @@ class IdealizationFrame(QWidget):
         self.events_button.clicked.connect(self.create_event_frame)
         self.layout.addWidget(self.events_button)
 
-        # self.apply_button = QPushButton("Apply")
-        # self.apply_button.clicked.connect(self.apply)
-        # self.layout.addWidget(self.apply_button)
-
         self.close_button = QPushButton("Close Tab")
         self.close_button.clicked.connect(self.close_tab)
         self.layout.addWidget(self.close_button)
@@ -76,8 +72,9 @@ class IdealizationFrame(QWidget):
         self.event_table_frame = EventTableFrame(self, self.current_tab.event_table)
 
     def create_table(self):
-        self.idealize_series()
-        events = self.main.data.get_events(
+        # self.idealize_series()
+        self.get_params()
+        events = self.current_tab.idealization_cache.get_events(
                 current_unit=self.current_tab.trace_unit.currentText(),
                 time_unit=self.current_tab.time_unit.currentText()
                 )
