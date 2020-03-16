@@ -79,6 +79,9 @@ class IdealizationFrame(QWidget):
     def create_event_frame(self):
         self.current_tab.event_table = self.create_table()
         self.event_table_frame = EventTableFrame(self, self.current_tab.event_table)
+        params = self.get_params()
+        self.event_table_frame.setWindowTitle(f"Amp={params[0]}; Thresh={params[1]}; "
+                                        f"Res={params[2]}; Intrp={params[3]}")
 
     def create_table(self):
         self.get_params()
@@ -364,7 +367,7 @@ class EventTableFrame(QDialog):
     def __init__(self, parent, table_view):
         super().__init__()
         self.parent = parent
-        self.setWindowTitle("Events")
+        # self.setWindowTitle("Events")
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
 
