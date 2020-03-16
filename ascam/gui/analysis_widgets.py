@@ -1,14 +1,11 @@
 import logging
 
 import numpy as np
-# pylint: disable=no-name-in-module
 from PySide2.QtCore import QAbstractTableModel, Qt
-from PySide2 import QtWidgets
 from PySide2.QtWidgets import (
     QComboBox,
     QDialog,
     QTableView,
-    QSpacerItem,
     QGridLayout,
     QTabWidget,
     QWidget,
@@ -24,6 +21,7 @@ from PySide2.QtWidgets import (
 
 from ascam.utils import string_to_array, array_to_string, update_number_in_string
 from ascam.constants import TIME_UNIT_FACTORS, CURRENT_UNIT_FACTORS
+from ascam.core import IdealizationCache
 
 
 debug_logger = logging.getLogger("ascam.debug")
@@ -37,7 +35,7 @@ class IdealizationFrame(QWidget):
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
         self.setFixedWidth(250)
-        
+
         self.main.plot_frame.tc_tracking = True
 
         self.create_widgets()
@@ -90,59 +88,24 @@ class IdealizationFrame(QWidget):
         )
 
     def get_params(self):
-        amps = string_to_array(self.current_tab.amp_entry.text())
-        thresholds = string_to_array(self.current_tab.threshold_entry.text())
-        res_string = self.current_tab.res_entry.text()
-        intrp_string = self.current_tab.intrp_entry.text()
+        return self.current_tab.get_params()
 
-        if self.current_tab.auto_thresholds.isChecked() or (
-            thresholds is None or thresholds.size != amps.size - 1
-        ):
-            thresholds = (amps[1:] + amps[:-1]) / 2
-            self.current_tab.threshold_entry.setText(array_to_string(thresholds))
-            self.current_tab.auto_thresholds.setChecked(True)
-            self.current_tab.threshold_entry.setEnabled(False)
+    def idealization(self, n_episode=None):
+        return self.current_tab.idealization_cache.idealization(n_episode)
 
-        if self.current_tab.neg_check.isChecked():
-            amps *= -1
-            thresholds *= -1
-
-        trace_factor = CURRENT_UNIT_FACTORS[
-            self.current_tab.trace_unit.currentText()
-        ]
-        amps /= trace_factor
-        thresholds /= trace_factor
-        time_factor = TIME_UNIT_FACTORS[self.current_tab.time_unit.currentText()]
-
-        if res_string.strip() and self.current_tab.use_res.isChecked():
-            resolution = float(res_string)
-            resolution /= time_factor
-        else:
-            resolution = None
-
-        if intrp_string.strip() and self.current_tab.interpolate.isChecked():
-            intrp_factor = int(intrp_string)
-        else:
-            intrp_factor = 1
-
-        return amps, thresholds, resolution, intrp_factor
+    def time(self, n_episode=None):
+        return self.current_tab.idealization_cache.time(n_episode)
 
     def calculate_click(self):
+        self.get_params()
         self.idealize_episode()
         self.main.plot_frame.update_episode()
 
     def idealize_episode(self):
-        debug_logger.debug(f'idealizing episode {self.main.data.episode.n_episode} of series {self.main.data.current_datakey}')
-        amps, thresh, resolution, intrp_factor = self.get_params()
-        self.main.data.idealize_episode(amps, thresh, resolution, intrp_factor)
+        self.current_tab.idealization_cache.idealize_episode()
 
     def idealize_series(self):
-        debug_logger.debug(f'idealizing series {self.main.data.current_datakey}')
-        amps, thresh, resolution, intrp_factor = self.get_params()
-        self.main.data.idealize_series(amps, thresh, resolution, intrp_factor)
-
-    def apply(self):
-        pass
+        self.current_tab.idealization_cache.idealize_series()
 
     def track_cursor(self, y_pos):
         """Track the position of the mouse cursor over the plot and if mouse 1
@@ -308,6 +271,70 @@ class IdealizationTab(QWidget):
         else:
             self.threshold_entry.setEnabled(True)
 
+    def get_params(self):
+        amps = string_to_array(self.amp_entry.text())
+        thresholds = string_to_array(self.threshold_entry.text())
+        res_string = self.res_entry.text()
+        intrp_string = self.intrp_entry.text()
+
+        if self.auto_thresholds.isChecked() or (
+            thresholds is None or thresholds.size != amps.size - 1
+        ):
+            thresholds = (amps[1:] + amps[:-1]) / 2
+            self.threshold_entry.setText(array_to_string(thresholds))
+            self.auto_thresholds.setChecked(True)
+            self.threshold_entry.setEnabled(False)
+
+        if self.neg_check.isChecked():
+            amps *= -1
+            thresholds *= -1
+
+        trace_factor = CURRENT_UNIT_FACTORS[
+            self.trace_unit.currentText()
+        ]
+        amps /= trace_factor
+        thresholds /= trace_factor
+        time_factor = TIME_UNIT_FACTORS[self.time_unit.currentText()]
+
+        if res_string.strip() and self.use_res.isChecked():
+            resolution = float(res_string)
+            resolution /= time_factor
+        else:
+            resolution = None
+
+        if intrp_string.strip() and self.interpolate.isChecked():
+            intrp_factor = int(intrp_string)
+        else:
+            intrp_factor = 1
+
+        if not self.check_params_unchanged(amps, thresholds, resolution, intrp_factor):
+            debug_logger.debug(f'creating new idealization cache for\n'
+                               f'amp = {amps} \n'
+                               f'thresholds = {thresholds}\n'
+                               f'resolution = {res_string}\n'
+                               f'interpolation = {intrp_string}')
+            self.idealization_cache = IdealizationCache(self.parent.parent.main.data,
+                            amps, thresholds, resolution, intrp_factor)
+        return amps, thresholds, resolution, intrp_factor
+
+    def check_params_unchanged(self,amp, theta,res, intrp):
+        try:
+            if set(amp) != set(self.idealization_cache.amplitudes):
+                debug_logger.debug('amps have changed')
+                return False
+            if set(theta) != set(self.idealization_cache.thresholds):
+                debug_logger.debug('thresholds have changed')
+                return False
+            if res != self.idealization_cache.resolution:
+                debug_logger.debug('resolution has changed')
+                return False
+            if intrp != self.idealization_cache.interpolation_factor:
+                debug_logger.debug('interpolation factor has changed')
+                return False
+            return True
+        except AttributeError:
+            return False
+
 
 class EventTableFrame(QDialog):
     def __init__(self, parent, table_view):
@@ -328,19 +355,9 @@ class EventTableFrame(QDialog):
         self.setModal(False)
         self.show()
 
-    # def create_table(self):
-    #     events = self.parent.main.data.get_events()
-    #     self.q_event_table = EventTableModel(
-    #         events, self.parent.main.data.trace_unit, self.parent.main.data.time_unit
-    #     )
-    #     self.event_table = QTableView()
-    #     self.event_table.setModel(self.q_event_table)
-
-
 class EventTableModel(QAbstractTableModel):
     def __init__(self, data, current_unit, time_unit):
         super().__init__()
-        # super(TableModel, self).__init__()
         self._data = data
         self._data[:, 0]
         self._data[:, 1:]

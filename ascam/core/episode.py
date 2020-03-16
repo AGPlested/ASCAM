@@ -1,6 +1,3 @@
-import logging
-from typing import Optional
-from nptyping import Array
 import numpy as np
 
 from ascam.utils import piezo_selection
@@ -13,8 +10,8 @@ from .filtering import gaussian_filter, ChungKennedyFilter
 from .analysis import (
     baseline_correction,
     detect_first_activation,
-    Idealizer,
-    interpolate,
+    # Idealizer,
+    # interpolate,
 )
 
 
@@ -63,8 +60,6 @@ class Episode:
 
         # results of analyses
         self.first_activation = None
-        self.idealization = None
-        self._intrp_trace = None
         # metadata about the episode
         self.n_episode = int(n_episode)
         self.suspiciousSTD = False
@@ -82,9 +77,6 @@ class Episode:
             filter_frequency=filter_frequency,
             sampling_rate=sampling_rate,
         )
-        # sett idealization to None since the newly created episode has no
-        # idealization
-        self.idealization = None
 
     def CK_filter_episode(
         self,
@@ -104,9 +96,6 @@ class Episode:
             apriori_b_weights,
         )
         self.trace = ck_filter.apply_filter(self.trace)
-        # sett idealization to None since the newly created episode has no
-        # idealization
-        self.idealization = None
 
     def baseline_correct_episode(
         self,
@@ -131,44 +120,6 @@ class Episode:
             selection=selection,
             active=active,
             deviation=deviation,
-        )
-        # reset idealization
-        # self.idealization = None
-
-    def idealize_or_interpolate(
-        self,
-        amplitudes: Array[float, 1, ...] = np.array([]),
-        thresholds: Optional[Array[float, 1, ...]] = None,
-        resolution: Optional[int] = None,
-        interpolation_factor: int = 1,
-    ):
-        if amplitudes.size != 0:
-            self.idealize(amplitudes, thresholds, resolution, interpolation_factor)
-        elif interpolation_factor != 1:
-            self.interpolate(interpolation_factor)
-
-    def interpolate(self, interpolation_factor):
-        self._intrp_trace, self._id_time = interpolate(
-            self.trace, self.time, interpolation_factor
-        )
-
-    def idealize(self, amplitudes, thresholds, resolution, interpolation_factor):
-        """Idealize the episode using threshold crossing."""
-
-        logging.debug(
-            f"Idealizing episode #{self.n_episode}\n"
-            f"amplitudes = {amplitudes}\n"
-            f"thresholds = { thresholds } \n"
-            f"resolution = { resolution } \n"
-            f"interpolation_factor = { interpolation_factor } "
-        )
-        self.idealization, self._intrp_trace, self._id_time = Idealizer.idealize_episode(
-            self.trace,
-            self.time,
-            amplitudes,
-            thresholds,
-            resolution,
-            interpolation_factor,
         )
 
     def check_standarddeviation_all(self, stdthreshold=5e-13):
@@ -199,13 +150,3 @@ class Episode:
         self.first_activation = detect_first_activation(
             self.time, self.trace, threshold
         )
-
-    def get_events(self):
-        """Get the events (i.e. states) from the idealized trace.
-
-        Assumes time and trace to be of equal length and time to start not at 0
-        Returns:
-            a table containing the amplitude of an opening, its start and end
-            time and its duration"""
-
-        return Idealizer.extract_events(self.idealization, self.id_time)

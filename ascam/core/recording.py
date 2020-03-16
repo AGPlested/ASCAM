@@ -240,43 +240,6 @@ class Recording(dict):
             )
         self.current_datakey = new_datakey
 
-    def idealize_series(
-        self, amplitudes, thresholds=None, resolution=None, interpolation_factor=None
-    ):
-        """Idealize the current series."""
-        debug_logger.debug(f"idealize_series")
-
-        ana_logger.info(
-            f"idealizing series '{self.current_datakey}'\n"
-            f"amplitudes: {amplitudes}\n"
-            f"thresholds: {thresholds}\n"
-            f"resolution: {resolution}\n"
-            f"interpolation_factor: {interpolation_factor}"
-        )
-
-        for episode in self.series:
-            episode.idealize_or_interpolate(
-                amplitudes, thresholds, resolution, interpolation_factor
-            )
-
-    def idealize_episode(
-        self, amplitudes, thresholds=None, resolution=None, interpolation_factor=None
-    ):
-        """Idealize current episode."""
-        debug_logger.debug(f"idealize_episode")
-
-        ana_logger.info(
-            f"idealizing episode {self.episode.n_episode} of '{self.current_datakey}'\n"
-            f"amplitudes: {amplitudes}\n"
-            f"thresholds: {thresholds}\n"
-            f"resolution: {resolution}\n"
-            f"interpolation_factor: {interpolation_factor}"
-        )
-
-        self.episode.idealize_or_interpolate(
-            amplitudes, thresholds, resolution, interpolation_factor
-        )
-
     def detect_fa(self, threshold, exclude=None):
         """Apply first event detection to all episodes in the selected series"""
 
@@ -496,71 +459,6 @@ class Recording(dict):
                 data_list.append(np.array(episode.command))
         file = axographio.file_contents(column_names, data_list)
         file.write(filepath)
-
-    def export_idealization(self, filepath, time_unit, trace_unit):
-        debug_logger.debug(f"export_idealization")
-
-        if not filepath.endswith(".csv"):
-            filepath += ".csv"
-        export_array = np.zeros(
-            shape=(len(self.selected_episodes) + 1, self.episode.idealization.size)
-        )
-        export_array[0] = self.episode.time * TIME_UNIT_FACTORS[time_unit]
-        for k, episode in enumerate(self.selected_episodes):
-            export_array[k + 1] = (
-                episode.idealization * CURRENT_UNIT_FACTORS[trace_unit]
-            )
-        # note that we transpose the export array to export the matrix
-        # as time x episode
-        np.savetxt(filepath, export_array.T, delimiter=",")
-
-    def get_events(self, time_unit='us', current_unit='pA'):
-        if any([ep.idealization is None for ep in self.series]):
-            debug_logger.debug("tried to get events but not all episodes were idealized")
-        else:
-            export_array = np.zeros((0, 5)).astype(object)
-            for episode in self.series:
-                # create a column containing the episode number
-                ep_events = episode.get_events()
-                episode_number = episode.n_episode * np.ones(len(ep_events[:, 0]))
-                # glue that column to the event
-                ep_events = np.concatenate(
-                    (episode_number[:, np.newaxis], ep_events), axis=1
-                )
-                export_array = np.concatenate((export_array, ep_events), axis=0)
-            export_array[:, 1] *= CURRENT_UNIT_FACTORS[current_unit]
-            export_array[:, 2:] *= TIME_UNIT_FACTORS[time_unit]
-            return export_array
-
-    def export_events(self, filepath, time_unit='us', current_unit='pA'):
-        """Export a table of events in the current (idealized) series and
-        duration to a csv file."""
-        debug_logger.debug(f"export_events")
-
-        import pandas as pd
-
-        if not filepath.endswith(".csv"):
-            filepath += ".csv"
-        header = [
-            "Episode Number",
-            f"Amplitude {current_unit}",
-            f"Duration {time_unit}",
-            f"t_start {time_unit}",
-            f"t_stop {time_unit}",
-        ]
-        export_array = self.get_events(time_unit, current_unit)
-        export_array = pd.DataFrame(export_array, columns=header)
-        # truncate floats for duration and timestamps to 3 decimals (standard 1 micro s)
-        if time_unit == 'us':
-            for i in header:
-                export_array[i] = export_array[i].map(lambda x: f"{x:.0f}")
-        if time_unit == 'ms':
-            for i in header:
-                export_array[i] = export_array[i].map(lambda x: f"{x:.3f}")
-        if time_unit == 'ms':
-            for i in header:
-                export_array[i] = export_array[i].map(lambda x: f"{x:.6f}")
-        export_array.to_csv(filepath)
 
     def export_first_activation(self, filepath, time_unit):
         """Export csv file of first activation times."""

@@ -11,7 +11,6 @@ from ascam.constants import TIME_UNIT_FACTORS, CURRENT_UNIT_FACTORS, VOLTAGE_UNI
 #     def __init__(self):
 #         pass
 
-
 class ExportFileDialog(QDialog):
     def __init__(self, main):
         super().__init__()
