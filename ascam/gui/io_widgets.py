@@ -27,23 +27,25 @@ from ascam.constants import (
 
 
 class OpenFileDialog(QDialog):
-    def __init__(self, main):
+    def __init__(self, main, filename):
         super().__init__()
         self.main = main
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
+        self.setFixedWidth(300)
 
+        self.filename=filename
         self.create_widgets()
 
         self.exec_()
 
     def create_widgets(self):
         row_one = QHBoxLayout()
-        file_button = QPushButton("File:")
-        file_button.clicked.connect(self.open_file)
+        file_button = QLabel("File:")
+        # file_button.clicked.connect(self.open_file)
         row_one.addWidget(file_button)
-        self.file_name_label = QLineEdit()
-        self.file_name_label.textEdited.connect(self.changed_filename)
+        self.file_name_label = QLabel(self.filename)
+        # self.file_name_label.textEdited.connect(self.changed_filename)
         row_one.addWidget(self.file_name_label)
         self.layout.addLayout(row_one)
 
@@ -103,21 +105,15 @@ class OpenFileDialog(QDialog):
         self.main.data = Recording.from_file(
                 filename=self.main.filename,
                 sampling_rate=self.sampling_entry.text(),
-                time_input_unit=self.time_unit.text(),
-                trace_input_unit=self.trace_unit.text(),
-                piezo_input_unit=self.piezo_unit.text(),
-                command_input_unit=self.command_unit.text())
+                time_input_unit=self.time_unit.currentText(),
+                trace_input_unit=self.trace_unit.currentText(),
+                piezo_input_unit=self.piezo_unit.currentText(),
+                command_input_unit=self.command_unit.currentText())
         self.main.ep_frame.ep_list.populate()
         self.main.ep_frame.setFocus()
         self.main.plot_frame.plot_all()
+        self.main.setWindowTitle(f"cuteSCAM {self.main.filename}")
         self.close()
-
-    def changed_filename(self):
-        self.main.filename = self.file_name_label.text()
-
-    def open_file(self):
-        self.main.filename = QFileDialog.getOpenFileName(self)[0]
-        self.file_name_label.setText(self.main.filename)
 
 
 class ExportFileDialog(QDialog):

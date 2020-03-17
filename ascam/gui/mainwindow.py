@@ -19,9 +19,8 @@ from ascam.gui import (
     IdealizationFrame,
     FirstActivationFrame,
 )
-
+from ascam.utils import parse_filename
 from ascam.core import Recording
-
 from ascam.constants import TEST_FILE_NAME
 
 
@@ -52,7 +51,7 @@ class MainWindow(QMainWindow):
     def create_menu(self):
         debug_logger.debug("MainWindow creating menus")
         self.file_menu = self.menuBar().addMenu("File")
-        self.file_menu.addAction("Open File", lambda: OpenFileDialog(self))
+        self.file_menu.addAction("Open File", self.open_file)
         # self.file_menu.addAction("Save", self.save_to_file)
         self.file_menu.addAction("Export Series", lambda: ExportFileDialog(self))
         # self.file_menu.addAction(
@@ -89,6 +88,11 @@ class MainWindow(QMainWindow):
 
         self.ep_frame = EpisodeFrame(self)
         self.central_layout.addWidget(self.ep_frame, 1, 3)
+
+    def open_file(self):
+        self.filename = QFileDialog.getOpenFileName(self)[0]
+        _, _, _, filename_short = parse_filename(self.filename)
+        OpenFileDialog(self, filename_short)
 
     def save_to_file(self):
         filename = QFileDialog.getSaveFileName(
