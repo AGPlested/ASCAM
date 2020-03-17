@@ -79,25 +79,7 @@ class IdealizationFrame(QWidget):
             self.close()
 
     def create_event_frame(self):
-        self.current_tab.event_table = self.create_table()
-        self.event_table_frame = EventTableFrame(self, self.current_tab.event_table)
-        params = self.get_params()
-        self.event_table_frame.setWindowTitle(
-            f"Amp={params[0]}; Thresh={params[1]}; "
-            f"Res={params[2]}; Intrp={params[3]}"
-        )
-
-    def create_table(self):
-        self.get_params()
-        events = self.current_tab.idealization_cache.get_events(
-            current_unit=self.current_tab.trace_unit.currentText(),
-            time_unit=self.current_tab.time_unit.currentText(),
-        )
-        return EventTableModel(
-            events,
-            self.current_tab.trace_unit.currentText(),
-            self.current_tab.time_unit.currentText(),
-        )
+        self.current_tab.create_event_frame()
 
     def export_events(self):
         self.get_params()
@@ -223,7 +205,7 @@ class IdealizationTab(QWidget):
         self.layout.addWidget(self.neg_check)
 
         row_two = QHBoxLayout()
-        self.amp_entry = QLineEdit()  # TODO add button to toggle plot interaction
+        self.amp_entry = QLineEdit()
         row_two.addWidget(self.amp_entry)
         self.trace_unit = QComboBox()
         self.trace_unit.addItems(list(CURRENT_UNIT_FACTORS.keys()))
@@ -370,6 +352,28 @@ class IdealizationTab(QWidget):
             return True
         except AttributeError:
             return False
+
+    def create_event_frame(self):
+        self.event_table = self.create_table()
+        self.event_table_frame = EventTableFrame(self, self.event_table)
+        params = self.get_params()
+        self.event_table_frame.setWindowTitle(
+            f"Amp={params[0]}; Thresh={params[1]}; "
+            f"Res={params[2]}; Intrp={params[3]}"
+        )
+
+    def create_table(self):
+        self.get_params()
+        events = self.idealization_cache.get_events(
+            current_unit=self.trace_unit.currentText(),
+            time_unit=self.time_unit.currentText(),
+        )
+        return EventTableModel(
+            events,
+            self.trace_unit.currentText(),
+            self.time_unit.currentText(),
+        )
+
 
 
 class EventTableFrame(QDialog):

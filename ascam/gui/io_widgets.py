@@ -42,10 +42,8 @@ class OpenFileDialog(QDialog):
     def create_widgets(self):
         row_one = QHBoxLayout()
         file_button = QLabel("File:")
-        # file_button.clicked.connect(self.open_file)
         row_one.addWidget(file_button)
         self.file_name_label = QLabel(self.filename)
-        # self.file_name_label.textEdited.connect(self.changed_filename)
         row_one.addWidget(self.file_name_label)
         self.layout.addLayout(row_one)
 
@@ -187,8 +185,6 @@ class ExportFileDialog(QDialog):
         self.layout.addLayout(row_eight)
 
     def save_click(self):
-        # if not self.list_selection.selectedItems():
-        #     print('empty')
         filename, filetye = QFileDialog.getSaveFileName(
             self,
             dir=self.main.filename[:-4],
