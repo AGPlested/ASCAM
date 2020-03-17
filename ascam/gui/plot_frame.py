@@ -182,7 +182,6 @@ class PlotFrame(QWidget):
                 pen=id_pen,
             )
         except AttributeError as e:
-            print(e)
             debug_logger.debug("cannot plot idealization")
         if self.show_command:
             self.command_plot.plot(

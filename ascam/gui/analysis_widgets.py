@@ -75,6 +75,7 @@ class IdealizationFrame(QWidget):
             self.tab_frame.removeTab(self.tab_frame.currentIndex())
         else:
             self.main.plot_frame.tc_tracking = False
+            del self.main.tc_frame
             self.close()
 
     def create_event_frame(self):

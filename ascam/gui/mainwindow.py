@@ -54,11 +54,9 @@ class MainWindow(QMainWindow):
         self.file_menu.addAction("Open File", self.open_file)
         # self.file_menu.addAction("Save", self.save_to_file)
         self.file_menu.addAction("Export Series", lambda: ExportFileDialog(self))
-        self.file_menu.addAction("Export Idealization", self.export_idealization)
-        self.file_menu.addAction("Export Events", self.export_events)
-        self.file_menu.addAction(
-            "Export First Activation"
-        )  # , lambda: ExportFADialog())
+        # self.file_menu.addAction(
+        #     "Export First Activation"
+        # )  # , lambda: ExportFADialog())
         self.file_menu.addSeparator()
         self.file_menu.addAction("Quit", self.close)
 
@@ -105,16 +103,6 @@ class MainWindow(QMainWindow):
         )[0]
         self.data.save_to_pickle(filename)
 
-    def export_events(self):
-        filename = QFileDialog.getSaveFileName(
-            self, dir=self.filename[:-3] + "csv", filter="*.csv"
-        )[0]
-        self.tc_frame.idealize_series()
-        self.data.export_events(filename)
-
-    def export_idealization(self):
-        pass
-
     def launch_idealization(self):
         self.tc_frame = IdealizationFrame(self)
         self.tc_frame.show()
@@ -142,5 +130,4 @@ class MainWindow(QMainWindow):
         self.ep_frame.update_combo_box()
         self.plot_frame.plot_all()
         self.launch_idealization()
-        self.tc_frame.tab_frame.currentWidget().amp_entry.setText("0, -.8, -1.2, -1.6")
         self.tc_frame.tab_frame.currentWidget().amp_entry.setText("0, -.8, -1.2, -1.6")
