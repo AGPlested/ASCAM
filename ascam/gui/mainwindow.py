@@ -1,6 +1,5 @@
 import logging
 
-# pylint: disable=E0611
 from PySide2.QtWidgets import (
     QGridLayout,
     QWidget,
@@ -10,16 +9,18 @@ from PySide2.QtWidgets import (
     QSizePolicy,
 )
 
-# from ascam.gui import ExportFADialog
-from ascam.gui import ExportFileDialog
-from ascam.gui import FilterFrame
-from ascam.gui import BaselineFrame
-from ascam.gui import PlotFrame
-from ascam.gui import EpisodeFrame
-from ascam.gui import IdealizationFrame
-from ascam.gui import FirstActivationFrame
+from ascam.gui import (
+    ExportFileDialog,
+    OpenFileDialog,
+    FilterFrame,
+    BaselineFrame,
+    PlotFrame,
+    EpisodeFrame,
+    IdealizationFrame,
+    FirstActivationFrame,
+)
 
-from ascam.core.recording import Recording
+from ascam.core import Recording
 
 from ascam.constants import TEST_FILE_NAME
 
@@ -51,7 +52,7 @@ class MainWindow(QMainWindow):
     def create_menu(self):
         debug_logger.debug("MainWindow creating menus")
         self.file_menu = self.menuBar().addMenu("File")
-        self.file_menu.addAction("Open File", self.open_file)
+        self.file_menu.addAction("Open File", lambda: OpenFileDialog(self))
         # self.file_menu.addAction("Save", self.save_to_file)
         self.file_menu.addAction("Export Series", lambda: ExportFileDialog(self))
         # self.file_menu.addAction(
@@ -88,14 +89,6 @@ class MainWindow(QMainWindow):
 
         self.ep_frame = EpisodeFrame(self)
         self.central_layout.addWidget(self.ep_frame, 1, 3)
-
-    def open_file(self):
-        self.filename = QFileDialog.getOpenFileName(self)[0]
-        if self.filename:
-            self.data = Recording.from_file(self.filename)
-            self.ep_frame.ep_list.populate()
-            self.ep_frame.setFocus()
-            self.plot_frame.plot_all()
 
     def save_to_file(self):
         filename = QFileDialog.getSaveFileName(

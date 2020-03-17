@@ -1,6 +1,6 @@
-# pylint: disable=E0611
 from PySide2 import QtGui
 from PySide2.QtWidgets import (
+    QLineEdit,
     QDialog,
     QComboBox,
     QCheckBox,
@@ -13,6 +13,7 @@ from PySide2.QtWidgets import (
 )
 
 
+from ascam.core import Recording
 from ascam.constants import (
     TIME_UNIT_FACTORS,
     CURRENT_UNIT_FACTORS,
@@ -23,6 +24,100 @@ from ascam.constants import (
 # class ExportFADialog(QDialog):
 #     def __init__(self):
 #         pass
+
+
+class OpenFileDialog(QDialog):
+    def __init__(self, main):
+        super().__init__()
+        self.main = main
+        self.layout = QVBoxLayout()
+        self.setLayout(self.layout)
+
+        self.create_widgets()
+
+        self.exec_()
+
+    def create_widgets(self):
+        row_one = QHBoxLayout()
+        file_button = QPushButton("File:")
+        file_button.clicked.connect(self.open_file)
+        row_one.addWidget(file_button)
+        self.file_name_label = QLineEdit()
+        self.file_name_label.textEdited.connect(self.changed_filename)
+        row_one.addWidget(self.file_name_label)
+        self.layout.addLayout(row_one)
+
+        row_two = QHBoxLayout()
+        sampling_label = QLabel('Smapling rate [Hz]')
+        row_two.addWidget(sampling_label)
+        self.sampling_entry = QLineEdit('40000')
+        row_two.addWidget(self.sampling_entry)
+        self.layout.addLayout(row_two)
+
+        row_three = QHBoxLayout()
+        t_unit_label = QLabel("Time unit")
+        row_three.addWidget(t_unit_label)
+        self.time_unit = QComboBox()
+        self.time_unit.addItems(list(TIME_UNIT_FACTORS.keys()))
+        self.time_unit.setCurrentIndex(2)
+        row_three.addWidget(self.time_unit)
+        self.layout.addLayout(row_three)
+
+        row_four = QHBoxLayout()
+        t_unit_label = QLabel("Time unit")
+        row_four.addWidget(t_unit_label)
+        self.trace_unit = QComboBox()
+        self.trace_unit.addItems(list(CURRENT_UNIT_FACTORS.keys()))
+        self.trace_unit.setCurrentIndex(5)
+        row_four.addWidget(self.trace_unit)
+        self.layout.addLayout(row_four)
+
+        row_five = QHBoxLayout()
+        t_unit_label = QLabel("Time unit")
+        row_five.addWidget(t_unit_label)
+        self.piezo_unit = QComboBox()
+        self.piezo_unit.addItems(list(VOLTAGE_UNIT_FACTORS.keys()))
+        self.piezo_unit.setCurrentIndex(2)
+        row_five.addWidget(self.piezo_unit)
+        self.layout.addLayout(row_five)
+
+        row_six = QHBoxLayout()
+        t_unit_label = QLabel("Time unit")
+        row_six.addWidget(t_unit_label)
+        self.command_unit = QComboBox()
+        self.command_unit.addItems(list(VOLTAGE_UNIT_FACTORS.keys()))
+        self.command_unit.setCurrentIndex(2)
+        row_six.addWidget(self.command_unit)
+        self.layout.addLayout(row_six)
+
+        row_seven = QHBoxLayout()
+        ok_button = QPushButton("OK")
+        ok_button.clicked.connect(self.ok_clicked)
+        row_seven.addWidget(ok_button)
+        cancel_button = QPushButton("Cancel")
+        cancel_button.clicked.connect(self.close)
+        row_seven.addWidget(cancel_button)
+        self.layout.addLayout(row_seven)
+
+    def ok_clicked(self):
+        self.main.data = Recording.from_file(
+                filename=self.main.filename,
+                sampling_rate=self.sampling_entry.text(),
+                time_input_unit=self.time_unit.text(),
+                trace_input_unit=self.trace_unit.text(),
+                piezo_input_unit=self.piezo_unit.text(),
+                command_input_unit=self.command_unit.text())
+        self.main.ep_frame.ep_list.populate()
+        self.main.ep_frame.setFocus()
+        self.main.plot_frame.plot_all()
+        self.close()
+
+    def changed_filename(self):
+        self.main.filename = self.file_name_label.text()
+
+    def open_file(self):
+        self.main.filename = QFileDialog.getOpenFileName(self)[0]
+        self.file_name_label.setText(self.main.filename)
 
 
 class ExportFileDialog(QDialog):
