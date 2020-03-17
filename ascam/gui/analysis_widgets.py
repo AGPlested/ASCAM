@@ -322,7 +322,7 @@ class IdealizationTab(QWidget):
         else:
             intrp_factor = 1
 
-        if not self.check_params_unchanged(amps, thresholds, resolution, intrp_factor):
+        if self.check_params_changed(amps, thresholds, resolution, intrp_factor):
             debug_logger.debug(
                 f"creating new idealization cache for\n"
                 f"amp = {amps} \n"
@@ -335,23 +335,29 @@ class IdealizationTab(QWidget):
             )
         return amps, thresholds, resolution, intrp_factor
 
-    def check_params_unchanged(self, amp, theta, res, intrp):
+    def check_params_changed(self, amp, theta, res, intrp):
+        changed = True
         try:
             if set(amp) != set(self.idealization_cache.amplitudes):
                 debug_logger.debug("amps have changed")
-                return False
-            if set(theta) != set(self.idealization_cache.thresholds):
+            elif set(theta) != set(self.idealization_cache.thresholds):
                 debug_logger.debug("thresholds have changed")
-                return False
-            if res != self.idealization_cache.resolution:
+            elif res != self.idealization_cache.resolution:
                 debug_logger.debug("resolution has changed")
-                return False
-            if intrp != self.idealization_cache.interpolation_factor:
+            elif intrp != self.idealization_cache.interpolation_factor:
                 debug_logger.debug("interpolation factor has changed")
-                return False
-            return True
+            else:
+                changed = False
         except AttributeError:
-            return False
+            pass
+        if changed:
+            try:
+                debug_logger.debug('changing name of old event table')
+                name = self.event_table_frame.windowTitle()
+                self.event_table_frame.setWindowTitle(f"outdated - {name}")
+            except AttributeError:
+                pass
+        return changed
 
     def create_event_frame(self):
         self.event_table = self.create_table()
@@ -380,7 +386,6 @@ class EventTableFrame(QDialog):
     def __init__(self, parent, table_view):
         super().__init__()
         self.parent = parent
-        # self.setWindowTitle("Events")
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
 
