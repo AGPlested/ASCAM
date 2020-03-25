@@ -57,7 +57,8 @@ class PlotFrame(QWidget):
         self._show_piezo = val
 
     def init_plots(self):
-        self.trace_plot = pg.PlotWidget(viewBox=CustomViewBox(self), name=f"trace")
+        self.trace_viewbox = CustomHorizontalViewBox(self)
+        self.trace_plot = pg.PlotWidget(viewBox=self.trace_viewbox, name=f"trace")
         self.trace_plot.setBackground("w")
         self.trace_plot.setLabel("left", "Current", units="A")
         ind = int(self.show_command)
@@ -67,7 +68,8 @@ class PlotFrame(QWidget):
         self.layout.setColumnStretch(1, 1)
 
         if self.show_piezo:
-            self.piezo_plot = pg.PlotWidget(viewBox=CustomViewBox(self), name=f"piezo")
+            self.piezo_viewbox = CustomHorizontalViewBox(self)
+            self.piezo_plot = pg.PlotWidget(viewBox=self.piezo_viewbox, name=f"piezo")
             self.piezo_plot.setLabel("left", "Piezo", units="V")
             self.piezo_plot.setBackground("w")
             self.piezo_plot.setLabel("bottom", "time", units="s")
@@ -80,9 +82,8 @@ class PlotFrame(QWidget):
             self.trace_plot.setLabel("bottom", "time", units="s")
 
         if self.show_command:
-            self.command_plot = pg.PlotWidget(
-                viewBox=CustomViewBox(self), name=f"command"
-            )
+            self.command_viewbox = CustomHorizontalViewBox(self)
+            self.command_plot = pg.PlotWidget(viewBox=self.trace_viewbox, name=f"trace")
             self.command_plot.setBackground("w")
             self.command_plot.setLabel("left", "Command", units="V")
             self.command_plot.setXLink(self.trace_plot)
@@ -99,7 +100,8 @@ class PlotFrame(QWidget):
                 self.command_plot.showGrid(x=True, y=True)
 
     def init_hist(self):
-        self.hist = pg.PlotWidget(viewBox=CustomViewBox(self))
+        self.hist_viewbox = CustomVerticalViewBox(self)
+        self.hist = pg.PlotWidget(viewBox=self.hist_viewbox)
         row = int(self.show_command)
         self.layout.addWidget(self.hist, row, 1)
         self.hist.setLabel("right", "Current", units="A")
@@ -133,6 +135,7 @@ class PlotFrame(QWidget):
         heights, bins, = self.main.data.episode_hist()[:2]
         heights = np.asarray(heights, dtype=np.float)
         heights /= np.max(heights)
+        heights*=-1
         self.episode_hist.setData(bins, heights)
 
     def draw_episode_hist(self):
@@ -140,9 +143,9 @@ class PlotFrame(QWidget):
         heights, bins, = self.main.data.episode_hist()[:2]
         heights = np.asarray(heights, dtype=np.float)
         heights /= np.max(heights)
+        heights*=-1
         self.episode_hist = pg.PlotDataItem(bins, heights, stepMode=True, pen=pen)
         self.hist.addItem(self.episode_hist)  # ignoreBounds=True?
-        self.hist.getPlotItem().invertX(True)
         self.episode_hist.rotate(90)
         y_max = self.hist.getAxis("bottom").range
         if self.hist_y_range is not None:
@@ -156,9 +159,9 @@ class PlotFrame(QWidget):
         heights, bins, = self.main.data.series_hist()[:2]
         heights = np.asarray(heights, dtype=np.float)
         heights /= np.max(heights)
+        heights*=-1  # this compensates the x-axis inversion created by rotating
         self.series_hist = pg.PlotDataItem(bins, heights, stepMode=True, pen=pen)
         self.hist.addItem(self.series_hist)
-        self.hist.getPlotItem().invertX(True)
         self.series_hist.rotate(90)
         self.hist_y_range = self.hist.getAxis("bottom").range
         self.hist_x_range = self.hist.getAxis("right").range
@@ -189,6 +192,35 @@ class PlotFrame(QWidget):
             self.piezo_plot.plot(
                 self.main.data.episode.time, self.main.data.episode.piezo, pen=pen
             )
+        self.set_viewbox_limits()
+
+    def set_viewbox_limits(self):
+        time_max = np.max(self.main.data.episode.time)
+        time_min = np.min(self.main.data.episode.time)
+        time_range = time_max - time_min
+        time_max += 0.05*time_range
+        time_min -= 0.05*time_range
+        trace_max = np.max(self.main.data.episode.trace)
+        trace_min = np.min(self.main.data.episode.trace)
+        trace_range = trace_max - trace_min
+        trace_max += 0.05*trace_range
+        trace_min -= 0.05*trace_range
+        self.trace_viewbox.setLimits( xMin=time_min, yMin=trace_min, xMax=time_max, yMax=trace_max,)
+        if self.show_piezo:
+            piezo_max = np.max(self.main.data.episode.piezo)
+            piezo_min = np.min(self.main.data.episode.piezo)
+            piezo_range = piezo_max - piezo_min
+            piezo_max += 0.05*piezo_range
+            piezo_min -= 0.05*piezo_range
+            self.piezo_viewbox.setLimits( xMin=time_min, yMin=piezo_min, xMax=time_max, yMax=piezo_max,)
+        if self.show_command:
+            command_max = np.max(self.main.data.episode.command)
+            command_min = np.min(self.main.data.episode.command)
+            command_range = command_max - command_min
+            command_max += 0.05*command_range
+            command_min -= 0.05*command_range
+            self.command_viewbox.setLimits( xMin=time_min, yMin=command_min, xMax=time_max, yMax=command_max,)
+        self.hist_viewbox.setLimits(xMin=-0.05, xMax=1.05, yMin=trace_min, yMax=trace_max)
 
     def plot_theta_lines(self, thetas):
         pen = pg.mkPen(color="r", style=QtCore.Qt.DashLine)
@@ -299,14 +331,10 @@ class CustomViewBox(pg.ViewBox):
         pg.ViewBox.__init__(self, *args, **kwds)
         self.setMouseMode(self.PanMode)
         self.parent = parent
-        self.setMouseEnabled(x=True, y=False)
-        self.setAutoVisible(x=False, y=True)
 
     def mouseClickEvent(self, ev):
         if ev.button() == QtCore.Qt.RightButton:
             self.autoRange()
-            self.enableAutoRange(x=False, y=True)
-            self.setAutoVisible(x=False, y=True)
         ev.accept()
 
     def mouseDragEvent(self, ev, axis=1):
@@ -324,4 +352,28 @@ class CustomViewBox(pg.ViewBox):
         else:
             pg.ViewBox.mouseDragEvent(self, ev)
         ev.accept()
+
+
+class CustomVerticalViewBox(CustomViewBox):
+    def __init__(self, parent, *args, **kwargs):
+        super().__init__(parent, *args, **kwargs)
+
+
+class CustomHorizontalViewBox(CustomViewBox):
+    def __init__(self, parent, *args, **kwargs):
+        super().__init__(parent, *args, **kwargs)
         self.setMouseEnabled(x=True, y=False)
+        self.setAutoVisible(x=False, y=True)
+
+    def mouseClickEvent(self, ev):
+        super().mouseClickEvent(ev)
+        if ev.button() == QtCore.Qt.RightButton:
+            self.enableAutoRange(x=False, y=True)
+            self.setAutoVisible(x=False, y=True)
+
+    def mouseDragEvent(self, ev, axis=1):
+        super().mouseDragEvent(ev)
+        if ev.isFinish():
+            self.setMouseEnabled(x=True, y=False)
+            self.enableAutoRange(x=False, y=True)
+            self.setAutoVisible(x=False, y=True)
