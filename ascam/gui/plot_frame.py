@@ -296,14 +296,20 @@ class CustomViewBox(pg.ViewBox):
         pg.ViewBox.__init__(self, *args, **kwds)
         self.setMouseMode(self.PanMode)
         self.parent = parent
+        self.setMouseEnabled(x=True, y=False)
+        self.enableAutoRange(x=False, y=True)
+        self.setAutoVisible(x=False, y=True)
 
     def mouseClickEvent(self, ev):
         if ev.button() == QtCore.Qt.RightButton:
             self.autoRange()
+            self.enableAutoRange(x=False, y=True)
+            self.setAutoVisible(x=False, y=True)
         ev.accept()
 
     def mouseDragEvent(self, ev, axis=1):
         if ev.button() == QtCore.Qt.LeftButton:
+            self.setMouseEnabled(x=True, y=True)
             if self.parent.tc_tracking:
                 pos = self.mapSceneToView(ev.pos()).y()
                 self.parent.main.tc_frame.track_cursor(pos)
@@ -316,3 +322,4 @@ class CustomViewBox(pg.ViewBox):
         else:
             pg.ViewBox.mouseDragEvent(self, ev)
         ev.accept()
+        self.setMouseEnabled(x=True, y=False)
