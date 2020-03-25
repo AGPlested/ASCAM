@@ -177,8 +177,6 @@ class PlotFrame(QWidget):
             self.trace_plot.plot(
                 self.main.tc_frame.time(),
                 self.main.tc_frame.idealization(),
-                # self.main.data.episode.id_time,
-                # self.main.data.episode.idealization,
                 pen=id_pen,
             )
         except AttributeError as e:
@@ -246,10 +244,15 @@ class PlotFrame(QWidget):
     def clear_plots(self):
         debug_logger.debug(f"clearing plots")
         self.trace_plot.clear()
+        self.clear_tc_lines()
         if self.show_command and self.command_plot is not None:
             self.command_plot.clear()
         if self.show_piezo and self.piezo_plot is not None:
             self.piezo_plot.clear()
+
+    def clear_tc_lines(self):
+        self.clear_amp_lines()
+        self.clear_theta_lines()
 
     def clear_amp_lines(self):
         for a in self.amp_lines:

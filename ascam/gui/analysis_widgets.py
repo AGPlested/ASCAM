@@ -76,6 +76,7 @@ class IdealizationFrame(QWidget):
         else:
             self.main.plot_frame.tc_tracking = False
             del self.main.tc_frame
+            self.main.plot_frame.update_plots()
             self.close()
 
     def create_event_frame(self):
