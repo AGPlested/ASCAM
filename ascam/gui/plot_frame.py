@@ -294,7 +294,7 @@ class PlotFrame(QWidget):
 class CustomViewBox(pg.ViewBox):
     def __init__(self, parent, *args, **kwds):
         pg.ViewBox.__init__(self, *args, **kwds)
-        self.setMouseMode(self.RectMode)
+        self.setMouseMode(self.PanMode)
         self.parent = parent
 
     def mouseClickEvent(self, ev):
@@ -303,9 +303,16 @@ class CustomViewBox(pg.ViewBox):
         ev.accept()
 
     def mouseDragEvent(self, ev, axis=1):
-        if ev.button() == QtCore.Qt.LeftButton and self.parent.tc_tracking:
-            pos = self.mapSceneToView(ev.pos()).y()
-            self.parent.main.tc_frame.track_cursor(pos)
+        if ev.button() == QtCore.Qt.LeftButton:
+            if self.parent.tc_tracking:
+                pos = self.mapSceneToView(ev.pos()).y()
+                self.parent.main.tc_frame.track_cursor(pos)
+            elif ev.modifiers() == QtCore.Qt.ControlModifier:
+                self.setMouseMode(self.RectMode)
+                pg.ViewBox.mouseDragEvent(self, ev)
+            else:
+                self.setMouseMode(self.PanMode)
+                pg.ViewBox.mouseDragEvent(self, ev)
         else:
             pg.ViewBox.mouseDragEvent(self, ev)
         ev.accept()
