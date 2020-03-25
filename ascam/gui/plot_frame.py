@@ -297,7 +297,6 @@ class CustomViewBox(pg.ViewBox):
         self.setMouseMode(self.PanMode)
         self.parent = parent
         self.setMouseEnabled(x=True, y=False)
-        self.enableAutoRange(x=False, y=True)
         self.setAutoVisible(x=False, y=True)
 
     def mouseClickEvent(self, ev):
