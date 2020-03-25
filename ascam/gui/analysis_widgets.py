@@ -37,7 +37,7 @@ class IdealizationFrame(QWidget):
         self.setLayout(self.layout)
         self.setFixedWidth(250)
 
-        self.main.plot_frame.tc_tracking = True
+        self.main.plot_frame.tc_tracking = False
 
         self.create_widgets()
 
@@ -225,8 +225,6 @@ class IdealizationTab(QWidget):
         row_three.addWidget(threshold_label)
         self.show_threshold_check = QCheckBox("Show")
         row_three.addWidget(self.show_threshold_check)
-
-        # row_three.addWidget(self.auto_thresholds)
         self.layout.addLayout(row_three)
 
         self.auto_thresholds = QCheckBox("Auto-Generate")
