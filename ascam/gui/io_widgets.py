@@ -64,7 +64,7 @@ class OpenFileDialog(QDialog):
         self.layout.addLayout(row_three)
 
         row_four = QHBoxLayout()
-        t_unit_label = QLabel("Time unit")
+        t_unit_label = QLabel("Current unit")
         row_four.addWidget(t_unit_label)
         self.trace_unit = QComboBox()
         self.trace_unit.addItems(list(CURRENT_UNIT_FACTORS.keys()))
@@ -73,7 +73,7 @@ class OpenFileDialog(QDialog):
         self.layout.addLayout(row_four)
 
         row_five = QHBoxLayout()
-        t_unit_label = QLabel("Time unit")
+        t_unit_label = QLabel("Piezo unit")
         row_five.addWidget(t_unit_label)
         self.piezo_unit = QComboBox()
         self.piezo_unit.addItems(list(VOLTAGE_UNIT_FACTORS.keys()))
@@ -82,7 +82,7 @@ class OpenFileDialog(QDialog):
         self.layout.addLayout(row_five)
 
         row_six = QHBoxLayout()
-        t_unit_label = QLabel("Time unit")
+        t_unit_label = QLabel("Command unit")
         row_six.addWidget(t_unit_label)
         self.command_unit = QComboBox()
         self.command_unit.addItems(list(VOLTAGE_UNIT_FACTORS.keys()))
