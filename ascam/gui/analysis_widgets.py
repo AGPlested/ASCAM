@@ -3,6 +3,7 @@ import logging
 import numpy as np
 from PySide2.QtCore import QAbstractTableModel, Qt
 from PySide2.QtWidgets import (
+        QSizePolicy,
     QComboBox,
     QFileDialog,
     QDialog,
@@ -23,7 +24,7 @@ from PySide2.QtWidgets import (
 from ascam.utils import string_to_array, array_to_string, update_number_in_string
 from ascam.constants import TIME_UNIT_FACTORS, CURRENT_UNIT_FACTORS
 from ascam.core import IdealizationCache
-
+from ascam.utils.widgets import TextEdit
 
 debug_logger = logging.getLogger("ascam.debug")
 
@@ -145,10 +146,12 @@ class IdealizationFrame(QWidget):
         if self.current_tab.neg_check.isChecked():
             y_pos *= -1
         if tc_diff < amp_diff and self.current_tab.show_threshold_check.isChecked():
-            update_number_in_string(y_pos, self.current_tab.threshold_entry)
+            new_str = update_number_in_string(y_pos, self.current_tab.threshold_entry.toPlainText())
+            self.current_tab.threshold_entry.setPlainText(new_str)
             self.current_tab.auto_thresholds.setChecked(False)
         elif self.current_tab.show_amp_check.isChecked():
-            update_number_in_string(y_pos, self.current_tab.amp_entry)
+            new_str = update_number_in_string(y_pos, self.current_tab.amp_entry.toPlainText())
+            self.current_tab.amp_entry.setPlainText(new_str)
         self.calculate_click()
 
 
@@ -206,7 +209,7 @@ class IdealizationTab(QWidget):
         self.layout.addWidget(self.neg_check)
 
         row_two = QHBoxLayout()
-        self.amp_entry = QLineEdit()
+        self.amp_entry = TextEdit()
         row_two.addWidget(self.amp_entry)
         self.trace_unit = QComboBox()
         self.trace_unit.addItems(list(CURRENT_UNIT_FACTORS.keys()))
@@ -231,7 +234,7 @@ class IdealizationTab(QWidget):
         self.auto_thresholds.stateChanged.connect(self.toggle_auto_theta)
         self.layout.addWidget(self.auto_thresholds)
 
-        self.threshold_entry = QLineEdit()
+        self.threshold_entry = TextEdit()
         self.layout.addWidget(self.threshold_entry)
 
         row_four = QHBoxLayout()
@@ -288,7 +291,7 @@ class IdealizationTab(QWidget):
             self.threshold_entry.setEnabled(True)
 
     def get_params(self):
-        amps = string_to_array(self.amp_entry.text())
+        amps = string_to_array(self.amp_entry.toPlainText())
         thresholds = string_to_array(self.threshold_entry.text())
         res_string = self.res_entry.text()
         intrp_string = self.intrp_entry.text()

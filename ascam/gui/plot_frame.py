@@ -223,7 +223,7 @@ class PlotFrame(QWidget):
         self.hist_viewbox.setLimits(xMin=-0.05, xMax=1.05, yMin=trace_min, yMax=trace_max)
 
     def plot_theta_lines(self, thetas):
-        pen = pg.mkPen(color="r", style=QtCore.Qt.DashLine)
+        pen = pg.mkPen(color="r", style=QtCore.Qt.DashLine, width=0.4)
         thetas = np.asarray(thetas)
         self.clear_theta_lines()
         self.theta_lines = []
@@ -242,7 +242,7 @@ class PlotFrame(QWidget):
 
     def plot_amp_lines(self, amps):
         debug_logger.debug(f"plotting amps at {amps}")
-        pen = pg.mkPen(color=ORANGE, style=QtCore.Qt.DashLine)
+        pen = pg.mkPen(color=ORANGE, style=QtCore.Qt.DashLine, width=0.4)
         self.clear_amp_lines()
         self.amp_lines = []
         self.amp_hist_lines = []

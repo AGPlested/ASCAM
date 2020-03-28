@@ -88,16 +88,16 @@ def interval_selection(time, signal, intervals, fs):
     return time_out, signal_out
 
 
-def update_number_in_string(new_val, string_var):
+def update_number_in_string(new_val, string):
     """Update a list of floats held in a qt widget that can
     hold text so that the value closest to new_val becomes new_val."""
-    array = string_to_array(string_var.text())
+    array = string_to_array(string)
     differences = np.abs(array - new_val)
     i = np.argmin(differences)
-    sep = ", " if "," in string_var.text() else " "
-    split_string = string_var.text().split(sep)
+    sep = ", " if "," in string else " "
+    split_string = string.split(sep)
     split_string[i] = f"{new_val:.2f}"
-    string_var.setText(sep.join(split_string))
+    return sep.join(split_string)
 
 
 def string_to_list(list_as_string):
