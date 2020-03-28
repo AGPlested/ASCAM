@@ -1,6 +1,7 @@
 import logging
 
 import numpy as np
+import pyqtgraph as pg
 from PySide2.QtCore import QAbstractTableModel, Qt
 from PySide2.QtWidgets import (
         QSizePolicy,
@@ -58,6 +59,10 @@ class IdealizationFrame(QWidget):
         self.events_button.clicked.connect(self.create_event_frame)
         self.layout.addWidget(self.events_button)
 
+        self.hist_button = QPushButton("Show Dwell Time Histogram")
+        self.hist_button.clicked.connect(self.create_histogram_frame)
+        self.layout.addWidget(self.hist_button)
+
         self.export_events_button = QPushButton("Export Table of Events")
         self.export_events_button.clicked.connect(self.export_events)
         self.layout.addWidget(self.export_events_button)
@@ -79,6 +84,9 @@ class IdealizationFrame(QWidget):
             del self.main.tc_frame
             self.main.plot_frame.update_plots()
             self.close()
+
+    def create_histogram_frame(self):
+        self.current_tab.create_histogram_frame()
 
     def create_event_frame(self):
         self.current_tab.create_event_frame()
@@ -217,7 +225,7 @@ class IdealizationTab(QWidget):
         row_two.addWidget(self.trace_unit)
         self.drag_amp_toggle = QToolButton()
         self.drag_amp_toggle.setCheckable(True)
-        self.drag_amp_toggle.setText("M")
+        self.drag_amp_toggle.setText("Drag")
         self.drag_amp_toggle.setChecked(self.parent.parent.main.plot_frame.tc_tracking)
         self.drag_amp_toggle.clicked.connect(self.toggle_drag_params)
         row_two.addWidget(self.drag_amp_toggle)
@@ -354,12 +362,26 @@ class IdealizationTab(QWidget):
             pass
         if changed:
             try:
+                debug_logger.debug('changing name of old histogram frame')
+                name = self.hist_frame.windowTitle()
+                self.event_table_frame.setWindowTitle(f"outdated - {name}")
+            except AttributeError:
+                pass
+            try:
                 debug_logger.debug('changing name of old event table')
                 name = self.event_table_frame.windowTitle()
                 self.event_table_frame.setWindowTitle(f"outdated - {name}")
             except AttributeError:
                 pass
         return changed
+
+    def create_histogram_frame(self):
+        params = self.get_params()
+        self.hist_frame = HistogramFrame(self)
+        self.hist_frame.setWindowTitle(
+            f"Amp={params[0]}; Thresh={params[1]}; "
+            f"Res={params[2]}; Intrp={params[3]}"
+        )
 
     def create_event_frame(self):
         self.event_table = self.create_table()
@@ -382,6 +404,41 @@ class IdealizationTab(QWidget):
             self.time_unit.currentText(),
         )
 
+
+class HistogramFrame(QDialog):
+    def __init__(self, parent):
+        super().__init__()
+        self.parent = parent
+        self.layout = QGridLayout()
+        self.setLayout(self.layout)
+
+        height = 800
+        width = 1200
+        self.setGeometry(parent.x() + width / 4, parent.y() + height / 3, width, height)
+
+        self.create_histograms()
+        self.setModal(False)
+        self.show()
+
+    def create_histograms(self):
+        hists = self.parent.idealization_cache.event_hist()
+        n_cols = np.round(np.sqrt(len(hists)))
+        # heights /= np.max(heights)
+        pen = pg.mkPen(width=2)
+        
+        self.hist_widgets = []
+        i = j =0
+        for key, (heights, bins) in hists.items():
+            hist_widget = pg.PlotWidget(title=f'{key}', labels={'left': ('Sqrt Count'), 'bottom': ("Log10 Duration")})
+            hist_widget.setBackground("w")
+            hist_widget.plot(bins, heights, stepMode=True,
+                    pen=pen)
+            self.hist_widgets.append(hist_widget)
+            self.layout.addWidget(hist_widget, i, j)
+            j += 1
+            if j > n_cols:
+                i += 1
+                j = 0
 
 
 class EventTableFrame(QDialog):

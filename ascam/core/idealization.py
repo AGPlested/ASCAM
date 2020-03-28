@@ -6,6 +6,7 @@ from ascam.constants import CURRENT_UNIT_FACTORS, TIME_UNIT_FACTORS
 
 
 debug_logger = logging.getLogger("ascam.debug")
+ana_logger = logging.getLogger("ascam.analysis")
 
 
 class IdealizationCache:
@@ -81,7 +82,7 @@ class IdealizationCache:
         for i in to_idealize:
             self.idealize_episode(i)
 
-    def get_events(self, time_unit="us", current_unit="pA"):
+    def get_events(self, time_unit="s", current_unit="A"):
         if self.all_ep_inds != self.ind_idealized:
             self.idealize_series()
         export_array = np.zeros((0, 5)).astype(object)
@@ -122,6 +123,31 @@ class IdealizationCache:
             f"resolution = {self.resolution};"
             f"interpolation_factor = {self.interpolation_factor}",
         )
+
+    def event_hist(self, time_unit='us', current_unit='pA'):
+        """Create histograms (bins and their y-values) of the dwell times for
+        each amplitude in the current idealization."""
+        events = self.get_events(time_unit, current_unit)
+        hists = {}
+        for a in self.amplitudes:
+            debug_logger.debug(f'getting events for amplitude {a}')
+            mask = np.isclose(np.asarray(events[:, 1], dtype=np.float), a*CURRENT_UNIT_FACTORS[current_unit])
+            data = events[:, 2][mask]
+            data = np.log10(data.astype(float))
+            debug_logger.debug(f'there are {len(data)} events')
+            n_bins = int(self.get_n_bins(data))
+            heights, bins = np.histogram(data, n_bins)
+            heights = np.asarray(heights, dtype=np.float)
+            heights = np.sqrt(heights)
+            hists[a] = (heights, bins)
+        ana_logger.debug(f'returning {len(hists)} histograms \n {hists}')
+        return hists
+
+    @staticmethod
+    def get_n_bins(data):
+        n = len(data)
+        std = np.std(data)
+        return round(3.49 * std * n**(1/3))
 
     def export_events(self, filepath, time_unit="us", current_unit="pA"):
         """Export a table of events in the current (idealized) series and
