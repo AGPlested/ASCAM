@@ -292,7 +292,7 @@ class IdealizationTab(QWidget):
 
     def get_params(self):
         amps = string_to_array(self.amp_entry.toPlainText())
-        thresholds = string_to_array(self.threshold_entry.text())
+        thresholds = string_to_array(self.threshold_entry.toPlainText())
         res_string = self.res_entry.text()
         intrp_string = self.intrp_entry.text()
 
