@@ -1,6 +1,8 @@
 import logging
 
+from PySide2.QtCore import Qt
 from PySide2.QtWidgets import (
+        QDockWidget,
     QGridLayout,
     QWidget,
     QMainWindow,
@@ -102,8 +104,13 @@ class MainWindow(QMainWindow):
 
     def launch_idealization(self):
         self.tc_frame = IdealizationFrame(self)
-        self.tc_frame.show()
+        # self.tc_frame.show()
+        # dock_widget = QDockWidget(self)
+        # dock_widget.setAllowedAreas(Qt.LeftDockWidgetArea)
+        # dock_widget.setWidget(self.tc_frame)
+        # self.addDockWidget(Qt.LeftDockWidgetArea, dock_widget)
         self.central_layout.addWidget(self.tc_frame, 1, 1)
+        self.central_widget.adjustSize()
 
     def launch_fa_analysis(self):
         self.fa_frame = FirstActivationFrame(self)
