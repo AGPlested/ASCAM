@@ -2,12 +2,12 @@
 """
 ASCAM for processing and analysis of data from single ion channels.
 """
+import os
 import sys
 import logging
 
 import getopt
 
-# pylint: disable=no-name-in-module
 from PySide2.QtWidgets import QApplication
 from ascam.gui.mainwindow import MainWindow
 from ascam.utils import initialize_logger
@@ -70,11 +70,27 @@ def display_help():
     )
 
 
+def get_version():
+    stream = os.popen('pip freeze')
+    pip_freeze = stream.read()
+
+    stream = os.popen('git show')
+    git_info = stream.read()
+    git_info = '\n'.join(git_info.split('\n')[:3])
+
+    return pip_freeze, git_info
+
+
 def main():
     verbose, logdir, test, debug = parse_options()
 
     initialize_logger(logdir, verbose, debug)
     logging.info("-" * 20 + "Start of new ASCAM session" + "-" * 20)
+
+    pip_freeze, git_info = get_version()
+
+    logging.info(git_info)
+    logging.info(pip_freeze)
 
     app = QApplication([])
     main_window = MainWindow()
