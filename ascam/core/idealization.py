@@ -89,7 +89,6 @@ class IdealizationCache:
         for episode in self.data.series:
             # create a column containing the episode number
             ep_events = Idealizer.extract_events(self.idealization(), self.time())
-            # ep_events = episode.get_events()
             episode_number = episode.n_episode * np.ones(len(ep_events[:, 0]))
             # glue that column to the event
             ep_events = np.concatenate(
@@ -124,7 +123,7 @@ class IdealizationCache:
             f"interpolation_factor = {self.interpolation_factor}",
         )
 
-    def event_hist(self, time_unit='us', current_unit='pA'):
+    def event_hist(self, time_unit='ms', current_unit='pA'):
         """Create histograms (bins and their y-values) of the dwell times for
         each amplitude in the current idealization."""
         events = self.get_events(time_unit, current_unit)
