@@ -71,10 +71,13 @@ def display_help():
 
 
 def get_version():
-    stream = os.popen('pip freeze')
+    here = os.path.abspath(os.path.dirname(__file__))
+    with open(os.path.join(here, 'README.md'), encoding='utf-8') as f:
+        long_description = f.read()
+    stream = os.popen(f'cd {here}; pip freeze')
     pip_freeze = stream.read()
 
-    stream = os.popen('git show')
+    stream = os.popen(f'cd {here}; git show')
     git_info = stream.read()
     git_info = '\n'.join(git_info.split('\n')[:3])
 

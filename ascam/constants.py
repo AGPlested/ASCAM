@@ -5,3 +5,4 @@ VOLTAGE_UNIT_FACTORS = {"uV": 1e6, "mV": 1e3, "V": 1}
 TIME_UNIT_FACTORS = {"us": 1e6, "ms": 1e3, "s": 1}
 
 TEST_FILE_NAME = "data/GluA2_T1_SC-recording_40kHzSR.mat"
+VERSION = 0.1
