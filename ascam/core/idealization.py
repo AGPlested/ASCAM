@@ -146,7 +146,7 @@ class IdealizationCache:
     def get_n_bins(data):
         n = len(data)
         std = np.std(data)
-        return round(3.49 * std * n**(1/3))
+        return round(5.49 * std * n**(1/3))
 
     def export_events(self, filepath, time_unit="us", current_unit="pA"):
         """Export a table of events in the current (idealized) series and
