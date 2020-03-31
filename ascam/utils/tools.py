@@ -7,6 +7,8 @@ def parse_filename(filename):
     works by walking through the filename in reverse order and considering
     the filetype to be whatever comes before the first '.' it encounters
     """
+    if not filename:
+        raise Exception("Cannot parse empty filename")
     N = len(filename)
     period = False
     slash = False

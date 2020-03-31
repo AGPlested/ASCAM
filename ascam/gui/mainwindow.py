@@ -93,6 +93,7 @@ class MainWindow(QMainWindow):
 
     def open_file(self):
         self.filename = QFileDialog.getOpenFileName(self)[0]
+        debug_logger.debug(f'filename is {self.filename}')
         _, _, _, filename_short = parse_filename(self.filename)
         OpenFileDialog(self, filename_short)
 

@@ -165,9 +165,9 @@ class IdealizationCache:
             f"t_stop [{time_unit}]",
         ]
         params = (
-            f"amplitudes = {self.amplitudes};"
-            + f"thresholds = {self.thresholds};"
-            + f"resolution = {self.resolution};"
+            f"amplitudes = {self.amplitudes} [A];"
+            + f"thresholds = {self.thresholds} [A];"
+            + f"resolution = {self.resolution} [s];"
             + f"interpolation_factor = {self.interpolation_factor}\n"
         )
         export_array = self.get_events(time_unit, current_unit)
