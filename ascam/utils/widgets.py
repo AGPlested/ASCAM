@@ -21,6 +21,8 @@ class TextEdit(QTextEdit):
 class CustomViewBox(pg.ViewBox):
     def __init__(self, parent=None):
         # self.setRectMode() # Set mouse mode to rect for convenient zooming
+        super().__init__()
+        self.exportDialog = None
         self.menu = None # Override pyqtgraph ViewBoxMenu
         self.menu = self.getMenu() # Create the menu
 
@@ -28,6 +30,9 @@ class CustomViewBox(pg.ViewBox):
         if not self.menuEnabled():
             return
         menu = self.getMenu()
+        menu = self.scene().addParentContextMenus(self, menu, ev)
+        menu.removeAction(menu.actions()[-2])  # remove the "Plot Options" menu item
+
         pos  = ev.screenPos()
         menu.popup(QtCore.QPoint(pos.x(), pos.y()))
 
@@ -38,7 +43,7 @@ class CustomViewBox(pg.ViewBox):
             self.viewAll.triggered.connect(self.autoRange)
             self.menu.addAction(self.viewAll)
 
-            self.leftMenu = QtGui.QMenu("Mode clic gauche")
+            # self.leftMenu = QtGui.QMenu("Mode clic gauche")
             # group = QtGui.QActionGroup(self)
             # pan = QtGui.QAction(u'Déplacer', self.leftMenu)
             # zoom = QtGui.QAction(u'Zoomer', self.leftMenu)
@@ -53,3 +58,4 @@ class CustomViewBox(pg.ViewBox):
             # self.menu.addMenu(self.leftMenu)
             # self.menu.addSeparator()
         return self.menu
+
