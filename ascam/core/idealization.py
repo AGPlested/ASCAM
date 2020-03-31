@@ -123,30 +123,37 @@ class IdealizationCache:
             f"interpolation_factor = {self.interpolation_factor}",
         )
 
-    def event_hist(self, time_unit='ms', current_unit='pA'):
+    def event_hist(self, time_unit='ms', n_bins=None):
         """Create histograms (bins and their y-values) of the dwell times for
         each amplitude in the current idealization."""
-        events = self.get_events(time_unit, current_unit)
+        events = self.get_events(time_unit)
         hists = {}
         for a in self.amplitudes:
-            debug_logger.debug(f'getting events for amplitude {a}')
-            mask = np.isclose(np.asarray(events[:, 1], dtype=np.float), a*CURRENT_UNIT_FACTORS[current_unit])
-            data = events[:, 2][mask]
-            data = np.log10(data.astype(float))
-            debug_logger.debug(f'there are {len(data)} events')
-            n_bins = int(self.get_n_bins(data))
-            heights, bins = np.histogram(data, n_bins)
-            heights = np.asarray(heights, dtype=np.float)
-            heights = np.sqrt(heights)
+            heights, bins = self.dwell_time_hist(a, n_bins, time_unit, events)
             hists[a] = (heights, bins)
         ana_logger.debug(f'returning {len(hists)} histograms \n {hists}')
         return hists
+    
+    def dwell_time_hist(self, amp, n_bins=None, time_unit='ms', events=None):
+        if events is None:
+            events = self.get_events(time_unit)
+        debug_logger.debug(f'getting events for amplitude {amp}')
+        mask = np.isclose(np.asarray(events[:, 1], dtype=np.float), amp)
+        data = events[:, 2][mask]
+        data = np.log10(data.astype(float))
+        debug_logger.debug(f'there are {len(data)} events')
+        if n_bins is None:
+            n_bins = int(self.get_n_bins(data))
+        heights, bins = np.histogram(data, n_bins)
+        heights = np.asarray(heights, dtype=np.float)
+        heights = np.sqrt(heights)
+        return heights, bins
 
     @staticmethod
     def get_n_bins(data):
         n = len(data)
         std = np.std(data)
-        return round(5.49 * std * n**(1/3))
+        return round(3.49 * std * n**(1/3))
 
     def export_events(self, filepath, time_unit="us", current_unit="pA"):
         """Export a table of events in the current (idealized) series and
