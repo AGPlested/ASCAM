@@ -25,7 +25,7 @@ from PySide2.QtWidgets import (
 from ascam.utils import string_to_array, array_to_string, update_number_in_string
 from ascam.constants import TIME_UNIT_FACTORS, CURRENT_UNIT_FACTORS
 from ascam.core import IdealizationCache
-from ascam.utils.widgets import TextEdit
+from ascam.utils.widgets import TextEdit, CustomViewBox
 
 debug_logger = logging.getLogger("ascam.debug")
 
@@ -433,7 +433,8 @@ class HistogramFrame(QDialog):
         self.hist_widgets = []
         i = j =0
         for key, (heights, bins) in hists.items():
-            hist_widget = pg.PlotWidget(title=f'{key}', labels={'left': ('Sqrt Count'), 'bottom': ("Log10 Duration")})
+            hist_viewbox = CustomViewBox(self)
+            hist_widget = pg.PlotWidget(viewBox=hist_viewbox, title=f'{key}', labels={'left': ('Sqrt Count'), 'bottom': ("Log10 Duration")})
             hist_widget.setBackground("w")
             hist_widget.plot(bins, heights, stepMode=True,
                     pen=pen)
