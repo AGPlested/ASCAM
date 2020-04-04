@@ -5,6 +5,7 @@ from PySide2.QtWidgets import (
 import pyqtgraph as pg
 
 from ascam.constants import TIME_UNIT_FACTORS
+from ascam.utils import clear_qt_layout
 
 class TextEdit(QTextEdit):
     def __init__(self, *args, **kwargs):
@@ -22,13 +23,16 @@ class TextEdit(QTextEdit):
 
 
 class CustomViewBox(pg.ViewBox):
-    def __init__(self, parent=None, n_bins=None, amp=None, time_unit='ms'):
+    def __init__(self, parent=None, n_bins=None, amp=None, time_unit='ms',
+                 log_times=True, root_counts=True):
         # self.setRectMode() # Set mouse mode to rect for convenient zooming
         super().__init__()
         self.parent = parent
         self.amp = amp
         self.n_bins = n_bins
         self.time_unit = time_unit
+        self.log_times = log_times
+        self.root_counts = root_counts
         self.exportDialog = None
         self.menu = None # Override pyqtgraph ViewBoxMenu
         self.menu = self.get_menu() # Create the menu
@@ -47,17 +51,63 @@ class CustomViewBox(pg.ViewBox):
         self.hist_config = EventHistConfig(self)
         self.hist_config.show()
 
+    def open_nbins_dialog(self):
+        self.hist_config = NBinsDialog(self)
+        self.hist_config.show()
+
     def get_menu(self):
         if self.menu is None:
             self.menu = QtGui.QMenu()
+
             self.viewAll = QtGui.QAction("View All", self.menu)
             self.viewAll.triggered.connect(self.autoRange)
             self.menu.addAction(self.viewAll)
 
+            self.n_bins_dialog = QtGui.QAction("Number of Bins", self.menu)
+            self.n_bins_dialog.triggered.connect(self.open_nbins_dialog)
+            self.menu.addAction(self.n_bins_dialog)
+
+            self.menu.addSeparator()
             self.hist_config_item = QtGui.QAction("Configure Histogram", self.menu)
             self.hist_config_item.triggered.connect(self.open_hist_config)
             self.menu.addAction(self.hist_config_item)
         return self.menu
+
+
+class NBinsDialog(QDialog):
+    def __init__(self, parent):
+        super().__init__()
+        self.parent = parent
+        self.layout = QVBoxLayout()
+        self.setLayout(self.layout)
+
+        self.create_widgets()
+        self.show()
+
+    def create_widgets(self):
+        row = QHBoxLayout()
+        label = QLabel("Number of bins:")
+        row.addWidget(label)
+        self.n_bins = QLineEdit(str(self.parent.n_bins))
+        row.addWidget(self.n_bins)
+        self.layout.addLayout(row)
+
+        row = QHBoxLayout()
+        ok_button = QPushButton("OK")
+        ok_button.clicked.connect(self.ok_click)
+        row.addWidget(ok_button)
+
+        cancel_button = QPushButton("cancel")
+        cancel_button.clicked.connect(self.close)
+        row.addWidget(cancel_button)
+        self.layout.addLayout(row)
+
+    def ok_click(self):
+        self.parent.parent.update_hist(
+                amp=self.parent.amp,
+                n_bins = int(self.n_bins.text()),
+                )
+        self.close()
 
 
 class EventHistConfig(QDialog):
@@ -71,20 +121,6 @@ class EventHistConfig(QDialog):
 
     def create_widgets(self):
         row = QHBoxLayout()
-        label = QLabel("Number of bins:")
-        row.addWidget(label)
-        self.n_bins = QLineEdit(str(self.parent.n_bins))
-        row.addWidget(self.n_bins)
-        self.layout.addLayout(row)
-
-        # row = QHBoxLayout()
-        # label = QLabel('Binning Formula')
-        # row.addWidget(label)
-        # self.n_bins = QLineEdit()
-        # row.addWidget(self.n_bins)
-        # self.layout.addLayout(row)
-
-        row = QHBoxLayout()
         label = QLabel('Time Unit')
         row.addWidget(label)
         self.time_unit = QComboBox()
@@ -97,7 +133,7 @@ class EventHistConfig(QDialog):
         label = QLabel('Square Root Counts')
         row.addWidget(label)
         self.root_counts = QCheckBox()
-        self.root_counts.setChecked(True)
+        self.root_counts.setChecked(self.parent.root_counts)
         self.root_counts.stateChanged.connect(self.set_root_counts)
         row.addWidget(self.root_counts)
         self.layout.addLayout(row)
@@ -106,10 +142,16 @@ class EventHistConfig(QDialog):
         label = QLabel('Log10 Dwell Times')
         row.addWidget(label)
         self.log_times = QCheckBox()
-        self.log_times.setChecked(True)
+        self.log_times.setChecked(self.parent.log_times)
         self.log_times.stateChanged.connect(self.set_log_times)
         row.addWidget(self.log_times)
         self.layout.addLayout(row)
+        # row = QHBoxLayout()
+        # label = QLabel('Binning Formula')
+        # row.addWidget(label)
+        # self.n_bins = QLineEdit()
+        # row.addWidget(self.n_bins)
+        # self.layout.addLayout(row)
 
 #         row = QHBoxLayout()
 #         label = QLabel('Time Transform')
@@ -131,10 +173,12 @@ class EventHistConfig(QDialog):
         ok_button = QPushButton("OK")
         ok_button.clicked.connect(self.ok_click)
         row.addWidget(ok_button)
+
         cancel_button = QPushButton("cancel")
         cancel_button.clicked.connect(self.close)
         row.addWidget(cancel_button)
         self.layout.addLayout(row)
+
 
     def set_root_counts(self, val):
         print(val)
@@ -143,10 +187,11 @@ class EventHistConfig(QDialog):
         pass
 
     def ok_click(self):
-        self.parent.parent.update_hist(
-                amp=self.parent.amp,
-                n_bins = int(self.n_bins.text()),
-                time_unit=self.time_unit.currentText()
-                )
+        clear_qt_layout(self.parent.parent.layout)
+        self.parent.parent.create_histograms(
+            log_times = self.log_times.isChecked(),
+            root_counts = self.root_counts.isChecked(),
+            time_unit=self.time_unit.currentText() 
+            )
         self.close()
 

@@ -122,19 +122,9 @@ class IdealizationCache:
             f"resolution = {self.resolution};"
             f"interpolation_factor = {self.interpolation_factor}",
         )
-
-    def event_hist(self, time_unit='ms', n_bins=None):
-        """Create histograms (bins and their y-values) of the dwell times for
-        each amplitude in the current idealization."""
-        events = self.get_events(time_unit)
-        hists = {}
-        for a in self.amplitudes:
-            heights, bins = self.dwell_time_hist(a, n_bins, time_unit, events)
-            hists[a] = (heights, bins)
-        ana_logger.debug(f'returning {len(hists)} histograms \n {hists}')
-        return hists
     
-    def dwell_time_hist(self, amp, n_bins=None, time_unit='ms', events=None):
+    def dwell_time_hist(self, amp, n_bins=None, time_unit='ms', events=None,
+                        log_times=True, root_counts=True):
         if events is None:
             events = self.get_events(time_unit)
         debug_logger.debug(f'getting events for amplitude {amp}')
@@ -145,13 +135,15 @@ class IdealizationCache:
         mask = np.isclose(np.asarray(events[:, 1], dtype=np.float)*factor, amp*factor)
         debug_logger.debug(f'multiplied amps by pA, amp={amp*factor}')
         data = events[:, 2][mask]
-        data = np.log10(data.astype(float))
+        if log_times:
+            data = np.log10(data.astype(float))
         debug_logger.debug(f'there are {len(data)} events')
         if n_bins is None:
             n_bins = int(self.get_n_bins(data))
         heights, bins = np.histogram(data, n_bins)
         heights = np.asarray(heights, dtype=np.float)
-        heights = np.sqrt(heights)
+        if root_counts:
+            heights = np.sqrt(heights)
         return heights, bins
 
     @staticmethod
