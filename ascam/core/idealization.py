@@ -138,7 +138,12 @@ class IdealizationCache:
         if events is None:
             events = self.get_events(time_unit)
         debug_logger.debug(f'getting events for amplitude {amp}')
-        mask = np.isclose(np.asarray(events[:, 1], dtype=np.float), amp)
+        # np.isclose works best on order of unity (with default tolerances
+        # rather than figure out tolerances for e-12 multiply the
+        # amp values by the expected units pA
+        factor = CURRENT_UNIT_FACTORS['pA']
+        mask = np.isclose(np.asarray(events[:, 1], dtype=np.float)*factor, amp*factor)
+        debug_logger.debug(f'multiplied amps by pA, amp={amp*factor}')
         data = events[:, 2][mask]
         data = np.log10(data.astype(float))
         debug_logger.debug(f'there are {len(data)} events')

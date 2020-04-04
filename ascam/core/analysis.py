@@ -1,4 +1,5 @@
 import warnings
+import copy
 import logging
 
 import numpy as np
@@ -67,7 +68,7 @@ class Idealizer:
             thresholds - the thresholds above/below which signal is mapped
                 to an amplitude"""
 
-        amplitudes.sort()  # sort amplitudes in descending order
+        amplitudes = copy.copy(np.sort(amplitudes))  # sort amplitudes in descending order
         amplitudes = amplitudes[::-1]
 
         # if thresholds are not or incorrectly supplied take midpoint between

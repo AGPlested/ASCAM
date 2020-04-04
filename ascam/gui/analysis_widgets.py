@@ -381,7 +381,7 @@ class IdealizationTab(QWidget):
 
     def create_histogram_frame(self):
         params = self.get_params()
-        self.hist_frame = HistogramFrame(self)
+        self.hist_frame = HistogramFrame(self, amps=params[0])
         self.hist_frame.setWindowTitle(
             f"Amp={params[0]}; Thresh={params[1]}; "
             f"Res={params[2]}; Intrp={params[3]}"
@@ -410,9 +410,10 @@ class IdealizationTab(QWidget):
 
 
 class HistogramFrame(QDialog):
-    def __init__(self, parent):
+    def __init__(self, parent, amps):
         super().__init__()
         self.parent = parent
+        self.amps = amps
         self.layout = QGridLayout()
         self.setLayout(self.layout)
 
@@ -424,26 +425,40 @@ class HistogramFrame(QDialog):
         self.setModal(False)
         self.show()
 
+    def create_histogram(self, amp, n_bins=None, time_unit='ms'):
+        heights, bins = self.parent.idealization_cache.dwell_time_hist(amp, n_bins, time_unit)
+        hist_viewbox = CustomViewBox(self, amp=amp, n_bins=len(bins)-1, time_unit=time_unit)
+        hist_widget = pg.PlotWidget(viewBox=hist_viewbox, title=f'{amp}', labels={'left': ('Sqrt Count'), 'bottom': ("Log10 Duration")})
+        hist_widget.setBackground("w")
+        hist_widget.plot(bins, heights, stepMode=True, pen=pg.mkPen(width=2))
+        return hist_widget, len(bins)-1
+
     def create_histograms(self):
-        hists = self.parent.idealization_cache.event_hist()
-        n_cols = np.round(np.sqrt(len(hists)))
-        # heights /= np.max(heights)
-        pen = pg.mkPen(width=2)
-        
-        self.hist_widgets = []
+        n_cols = np.round(np.sqrt(len(self.amps)))
+        self.hist_widgets = {}
         i = j =0
-        for key, (heights, bins) in hists.items():
-            hist_viewbox = CustomViewBox(self)
-            hist_widget = pg.PlotWidget(viewBox=hist_viewbox, title=f'{key}', labels={'left': ('Sqrt Count'), 'bottom': ("Log10 Duration")})
-            hist_widget.setBackground("w")
-            hist_widget.plot(bins, heights, stepMode=True,
-                    pen=pen)
-            self.hist_widgets.append(hist_widget)
+        for amp in self.amps:
+            debug_logger.debug(f'getting hist for {amp}')
+            hist_widget, n_bins = self.create_histogram(amp)
+            self.hist_widgets[amp] = (hist_widget, i, j, n_bins)
             self.layout.addWidget(hist_widget, i, j)
             j += 1
             if j > n_cols:
                 i += 1
                 j = 0
+
+    def update_hist(self, amp, n_bins=None, time_unit='ms'):
+        heights, bins = self.parent.idealization_cache.dwell_time_hist(amp, n_bins, time_unit)
+        widget, row, col, n_bins = self.hist_widgets[amp]
+        widget.deleteLater()
+        hist_viewbox = CustomViewBox(self, amp=amp, n_bins=len(bins)-1,
+                time_unit=time_unit)
+        
+        hist_widget = pg.PlotWidget(viewBox=hist_viewbox, title=f'{amp}', labels={'left': ('Sqrt Count'), 'bottom': ("Log10 Duration")})
+        hist_widget.setBackground("w")
+        hist_widget.plot(bins, heights, stepMode=True, pen=pg.mkPen(width=2))
+        self.layout.addWidget(hist_widget, row, col)
+        self.hist_widgets[amp] = (hist_widget, row, col, len(bins)-1)
 
 
 class EventTableFrame(QDialog):
