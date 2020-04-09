@@ -434,7 +434,7 @@ class HistogramFrame(QDialog):
         y_label = f"Sqrt(Counts)" if root_counts else "Counts"
         hist_widget = pg.PlotWidget(viewBox=hist_viewbox, title=f'{amp}', labels={'left': (y_label), 'bottom': (x_label)})
         hist_widget.setBackground("w")
-        hist_widget.plot(bins, heights, stepMode=True, pen=pg.mkPen(width=2))
+        hist_widget.plot(bins, heights, stepMode=True, pen=pg.mkPen(width=2), fillLevel=0, fillOutline=True, brush=(0,0,255,150))
         return hist_widget, len(bins)-1
 
     def create_histograms(self, log_times=True, root_counts=True, time_unit='ms'):
@@ -467,7 +467,7 @@ class HistogramFrame(QDialog):
         y_label = f"Sqrt(Counts)" if root_counts else "Counts"
         hist_widget = pg.PlotWidget(viewBox=hist_viewbox, title=f'{amp}', labels={'left': (y_label), 'bottom': (x_label)})
         hist_widget.setBackground("w")
-        hist_widget.plot(bins, heights, stepMode=True, pen=pg.mkPen(width=2))
+        hist_widget.plot(bins, heights, stepMode=True, pen=pg.mkPen(width=2), fillLevel=0, fillOutline=True, brush=(0,0,255,150))
         self.layout.addWidget(hist_widget, row, col)
         self.hist_widgets[amp] = (hist_widget, row, col, len(bins)-1)
 
