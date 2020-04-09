@@ -1,4 +1,4 @@
-#!python
+#!/usr/bin/env python
 """
 ASCAM for processing and analysis of data from single ion channels.
 """
