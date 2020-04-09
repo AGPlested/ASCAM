@@ -88,7 +88,7 @@ class IdealizationCache:
         export_array = np.zeros((0, 5)).astype(object)
         for episode in self.data.series:
             # create a column containing the episode number
-            ep_events = Idealizer.extract_events(self.idealization(), self.time())
+            ep_events = Idealizer.extract_events(self.idealization(episode.n_episode), self.time())
             episode_number = episode.n_episode * np.ones(len(ep_events[:, 0]))
             # glue that column to the event
             ep_events = np.concatenate(
