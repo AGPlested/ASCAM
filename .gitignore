@@ -13,6 +13,7 @@ __pycache__/
 *notes*
 *pyc
 .eggs/
+*egg-info*
 .idea/
 *log*
 todo
