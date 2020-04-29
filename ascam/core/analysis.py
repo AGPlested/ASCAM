@@ -159,10 +159,9 @@ class Idealizer:
                 the event, its duration, the time it starts and the time it
                 end in its columns"""
 
-        diff = idealization[1:] - idealization[:-1]
-        events = np.where(diff != 0)[0]
-        # diff+1 marks the indices of the first time point of a new event
-        # starting from 0 to diff[0] is the first event, and from diff[-1] to
+        events = np.where(idealization[1:] != idealization[:-1])[0]
+        # events+1 marks the indices of the first time point of a new event
+        # starting from 0 to events[0] is the first event, and from events[-1] to
         # t_end is the last event, hence
         n_events = events.size + 1
         # init the array that will be final output table, events in rows and

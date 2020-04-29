@@ -85,7 +85,7 @@ class IdealizationCache:
     def get_events(self, time_unit="s", current_unit="A"):
         if self.all_ep_inds != self.ind_idealized:
             self.idealize_series()
-        export_array = np.zeros((0, 5)).astype(object)
+        event_array = np.zeros((0, 5)).astype(object)
         for episode in self.data.series:
             # create a column containing the episode number
             ep_events = Idealizer.extract_events(self.idealization(episode.n_episode), self.time())
@@ -94,10 +94,14 @@ class IdealizationCache:
             ep_events = np.concatenate(
                 (episode_number[:, np.newaxis], ep_events), axis=1
             )
-            export_array = np.concatenate((export_array, ep_events), axis=0)
-        export_array[:, 1] *= CURRENT_UNIT_FACTORS[current_unit]
-        export_array[:, 2:] *= TIME_UNIT_FACTORS[time_unit]
-        return export_array
+            event_array = np.concatenate((event_array, ep_events), axis=0)
+        event_array[:, 1] *= CURRENT_UNIT_FACTORS[current_unit]
+        event_array[:, 2:] *= TIME_UNIT_FACTORS[time_unit]
+        zeros = event_array[:, 2] == 0
+        if np.any(zeros):
+            debug_logger.debug("removing events of length 0")
+            event_array = event_array[np.where(zeros == False)]
+        return event_array
 
     def export_idealization(self, filepath, time_unit, trace_unit):
         debug_logger.debug(f"export_idealization")
