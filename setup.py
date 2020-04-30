@@ -20,13 +20,13 @@ setup(
     packages=find_packages(where='ASCAM'),
     python_requires='>=3.7',
     install_requires=[
-        'pyqtgraph==0.11.0rc0',
-        'PySide2>5',
-        'numpy>1.18',
-        'pandas',
-        'scipy',
-        'axographio',
-        'nptyping',
+        'pyqtgraph>=0.11.0rc0',
+        'PySide2==5.14.0',
+        'numpy>=1.18',
+        'pandas>=0.24.0',
+        'scipy>=1.2.0',
+        'axographio>=0.3.1',
+        'nptyping>=0.3.1'
         ],
     entry_points={  
             'console_scripts': [
