@@ -160,8 +160,9 @@ class Idealizer:
                 end in its columns"""
 
         events = np.where(idealization[1:] != idealization[:-1])[0]
-        # events+1 marks the indices of the first time point of a new event
-        # starting from 0 to events[0] is the first event, and from events[-1] to
+        # events+1 marks the indices of the last time point of an event
+        # starting from 0 to events[0] is the first event, from events[0]+1
+        # to events[1] is the second...  and from events[-1]+1 to
         # t_end is the last event, hence
         n_events = events.size + 1
         # init the array that will be final output table, events in rows and
@@ -178,13 +179,17 @@ class Idealizer:
             event_list[0][3] = time[int(events[0])]
             for i, t in enumerate(events[:-1]):
                 event_list[i + 1][0] = idealization[int(t) + 1]
-                event_list[i + 1][2] = time[int(events[i])]
+                event_list[i + 1][2] = time[int(events[i])+1]
                 event_list[i + 1][3] = time[int(events[i + 1])]
             event_list[-1][0] = idealization[int(events[-1]) + 1]
-            event_list[-1][2] = time[(int(events[-1]))]
+            event_list[-1][2] = time[(int(events[-1]))+1]
             event_list[-1][3] = time[-1]
         # get the duration column
-        event_list[:, 1] = event_list[:, 3] - event_list[:, 2]
+        # because the start and end times of events are inclusive bounds
+        # ie [a,b] the length is b-a+1, so we need to add to each event the
+        # sampling interval
+        sampling_interval = time[1] - time[0]
+        event_list[:, 1] = event_list[:, 3] - event_list[:, 2] + sampling_interval
         return event_list
 
 

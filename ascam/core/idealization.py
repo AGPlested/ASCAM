@@ -97,10 +97,6 @@ class IdealizationCache:
             event_array = np.concatenate((event_array, ep_events), axis=0)
         event_array[:, 1] *= CURRENT_UNIT_FACTORS[current_unit]
         event_array[:, 2:] *= TIME_UNIT_FACTORS[time_unit]
-        zeros = event_array[:, 2] == 0
-        if np.any(zeros):
-            debug_logger.debug("removing events of length 0")
-            event_array = event_array[np.where(zeros == False)]
         return event_array
 
     def export_idealization(self, filepath, time_unit, trace_unit):
