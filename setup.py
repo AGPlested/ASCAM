@@ -1,9 +1,9 @@
 from setuptools import setup, find_packages
 from os import path
 
-from ascam.constants import VERSION, INSTALL_PATH
+from ascam.constants import VERSION
 
-here = INSTALL_PATH  #path.abspath(path.dirname(__file__))
+here = path.abspath(path.dirname(__file__))
 
 # Get the long description from the README file
 with open(path.join(here, 'README.md'), encoding='utf-8') as f:
@@ -12,12 +12,13 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 setup(
     name='ASCAM',
     version=VERSION,
-    description='GUI for analysis of episodic single ion channel data.',
+    description='Analysis of episodic single ion channel data.',
     long_description=long_description,
     url='https://github.com/AGPlested/ASCAM',
     author='Nikolai Zaki',
     author_email='kol@posteo.de',
-    packages=find_packages(where='ASCAM'),
+    package_dir={'': 'ascam'},
+    packages=find_packages(where=path.join(here, 'ascam')),
     python_requires='>=3.7',
     install_requires=[
         'pyqtgraph>=0.11.0rc0',
