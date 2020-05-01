@@ -11,7 +11,6 @@ import getopt
 from PySide2.QtWidgets import QApplication
 from ascam.gui.mainwindow import MainWindow
 from ascam.utils import initialize_logger
-from ascam.constants import INSTALL_PATH
 
 
 debug_logger = logging.getLogger('ascam.debug')
@@ -75,8 +74,8 @@ def display_help():
 
 
 def get_version():
-    here = INSTALL_PATH  #os.path.abspath(os.path.dirname(__file__))
-    stream = os.popen(f'cd {here}; pip freeze')
+    here = os.path.abspath(os.path.dirname(__file__))
+    stream = os.popen(f'pip freeze')
     pip_freeze = stream.read()
 
     stream = os.popen(f'cd {here}; git show')
@@ -91,7 +90,6 @@ def main():
 
     initialize_logger(logdir, verbose, debug)
     logging.info("-" * 20 + "Start of new ASCAM session" + "-" * 20)
-    debug_logger.debug(f"ascam install path is {INSTALL_PATH}")
 
     pip_freeze, git_info = get_version()
 

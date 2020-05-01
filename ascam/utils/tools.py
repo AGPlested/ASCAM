@@ -152,8 +152,3 @@ def clear_qt_layout(layout):
             elif child.layout() is not None:
                 clear_qt_layout(child.layout())
 
-
-def get_install_path():
-    path = os.path.split(os.path.split(os.path.abspath(os.path.dirname(__file__)))[0])[0]
-    return path
-
