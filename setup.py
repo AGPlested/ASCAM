@@ -17,7 +17,6 @@ setup(
     url='https://github.com/AGPlested/ASCAM',
     author='Nikolai Zaki',
     author_email='kol@posteo.de',
-    # package_dir={'': 'ascam'},
     packages=find_packages(where=here),
     python_requires='>=3.7',
     install_requires=[
