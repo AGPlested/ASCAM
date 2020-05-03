@@ -17,8 +17,8 @@ setup(
     url='https://github.com/AGPlested/ASCAM',
     author='Nikolai Zaki',
     author_email='kol@posteo.de',
-    package_dir={'': 'ascam'},
-    packages=find_packages(where=path.join(here, 'ascam')),
+    # package_dir={'': 'ascam'},
+    packages=find_packages(where=here),
     python_requires='>=3.7',
     install_requires=[
         'pyqtgraph>=0.11.0rc0',
