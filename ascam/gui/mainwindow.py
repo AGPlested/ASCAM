@@ -1,5 +1,5 @@
 import logging
-from os import path
+import os
 
 from PySide2.QtCore import Qt
 from PySide2.QtWidgets import (
@@ -120,7 +120,9 @@ class MainWindow(QMainWindow):
         self.central_layout.addWidget(self.fa_frame, 2, 2)
 
     def test_mode(self):
-        self.filename = path.join(path.dirname(__file__), TEST_FILE_NAME)
+        path = os.path.split(os.path.split(os.path.dirname(os.path.abspath(__file__)))[0])[0]  # data is in project root, ie 2 above this file
+        path = os.path.join(path, 'data')
+        self.filename = os.path.join(path, TEST_FILE_NAME)
         self.data = Recording.from_file(self.filename)
         self.ep_frame.ep_list.populate()
         self.ep_frame.setFocus()

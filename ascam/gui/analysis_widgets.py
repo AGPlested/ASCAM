@@ -432,7 +432,7 @@ class HistogramFrame(QDialog):
         hist_viewbox = CustomViewBox(self, amp=amp, n_bins=len(bins)-1, time_unit=time_unit)
         x_label = f"Log10 Dwell Time [log({time_unit})]" if log_times else f"Dwell Time [{time_unit}]"
         y_label = f"Sqrt(Counts)" if root_counts else "Counts"
-        hist_widget = pg.PlotWidget(viewBox=hist_viewbox, title=f'{amp}', labels={'left': (y_label), 'bottom': (x_label)})
+        hist_widget = pg.PlotWidget(viewBox=hist_viewbox, title=f'{amp:.3g}', labels={'left': (y_label), 'bottom': (x_label)})
         hist_widget.setBackground("w")
         hist_widget.plot(bins, heights, stepMode=True, pen=pg.mkPen(width=2), fillLevel=0, fillOutline=True, brush=(0,0,255,150))
         return hist_widget, len(bins)-1
@@ -465,7 +465,7 @@ class HistogramFrame(QDialog):
                 time_unit=time_unit)
         x_label = f"Log10 Dwell Time [log({time_unit})]" if log_times else f"Dwell Time [{time_unit}]"
         y_label = f"Sqrt(Counts)" if root_counts else "Counts"
-        hist_widget = pg.PlotWidget(viewBox=hist_viewbox, title=f'{amp}', labels={'left': (y_label), 'bottom': (x_label)})
+        hist_widget = pg.PlotWidget(viewBox=hist_viewbox, title=f'{amp:.3g}', labels={'left': (y_label), 'bottom': (x_label)})
         hist_widget.setBackground("w")
         hist_widget.plot(bins, heights, stepMode=True, pen=pg.mkPen(width=2), fillLevel=0, fillOutline=True, brush=(0,0,255,150))
         self.layout.addWidget(hist_widget, row, col)
