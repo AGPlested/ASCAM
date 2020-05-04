@@ -25,7 +25,7 @@ from PySide2.QtWidgets import (
 from ascam.utils import string_to_array, array_to_string, update_number_in_string
 from ascam.constants import TIME_UNIT_FACTORS, CURRENT_UNIT_FACTORS
 from ascam.core import IdealizationCache
-from ascam.utils.widgets import TextEdit, CustomViewBox
+from ascam.utils.widgets import TextEdit, HistogramViewBox
 
 debug_logger = logging.getLogger("ascam.debug")
 
@@ -425,51 +425,101 @@ class HistogramFrame(QDialog):
         self.setModal(False)
         self.show()
 
-    def create_histogram(self, amp, n_bins=None, time_unit='ms', log_times=True,
-                         root_counts=True):
-        heights, bins = self.parent.idealization_cache.dwell_time_hist(amp,
-                n_bins, time_unit, log_times=log_times, root_counts=root_counts)
-        hist_viewbox = CustomViewBox(self, amp=amp, n_bins=len(bins)-1, time_unit=time_unit)
-        x_label = f"Log10 Dwell Time [log({time_unit})]" if log_times else f"Dwell Time [{time_unit}]"
-        y_label = f"Sqrt(Counts)" if root_counts else "Counts"
-        hist_widget = pg.PlotWidget(viewBox=hist_viewbox, title=f'{amp:.3g}', labels={'left': (y_label), 'bottom': (x_label)})
-        hist_widget.setBackground("w")
-        hist_widget.plot(bins, heights, stepMode=True, pen=pg.mkPen(width=2), fillLevel=0, fillOutline=True, brush=(0,0,255,150))
-        return hist_widget, len(bins)-1
-
-    def create_histograms(self, log_times=True, root_counts=True, time_unit='ms'):
+    def create_histograms(self, log_times=True, root_counts=True, time_unit='ms', n_bins=None):
+        if n_bins is not None and len(n_bins) != len(self.amps):
+            n_bins = None
+            debug_logger.debubg(f"argument n_bins is being ignoroed because it is incorrect n_bins={n_bins}")
         n_cols = np.round(np.sqrt(len(self.amps)))
-        self.hist_widgets = {}
+        self.histograms = []
         i = j =0
         for amp in self.amps:
             debug_logger.debug(f'getting hist for {amp}')
-            hist_widget, n_bins = self.create_histogram(
-                    amp=amp,
-                    log_times=log_times,
-                    root_counts=root_counts,
-                    time_unit=time_unit)
-            self.hist_widgets[amp] = (hist_widget, i, j, n_bins)
-            self.layout.addWidget(hist_widget, i, j)
+            if n_bins is None:
+                histogram = Histogram(
+                        histogram_frame=self,
+                        idealization_cache=self.parent.idealization_cache,
+                        amp=amp,
+                        log_times=log_times,
+                        root_counts=root_counts,
+                        time_unit=time_unit)
+            else:
+                histogram = Histogram(
+                        histogram_frame=self,
+                        idealization_cache=self.parent.idealization_cache,
+                        n_bins=n_bins[amp],
+                        amp=amp,
+                        log_times=log_times,
+                        root_counts=root_counts,
+                        time_unit=time_unit)
+            self.histograms.append(histogram)
+            self.layout.addWidget(histogram.widget, i, j)
+            histogram.row = i
+            histogram.col = j
             j += 1
             if j > n_cols:
                 i += 1
                 j = 0
 
-    def update_hist(self, amp, n_bins=None, time_unit='ms', log_times=True,
-                    root_counts=True):
-        heights, bins = self.parent.idealization_cache.dwell_time_hist(amp,
-                n_bins, time_unit, log_times=log_times, root_counts=root_counts)
-        widget, row, col, n_bins = self.hist_widgets[amp]
-        widget.deleteLater()
-        hist_viewbox = CustomViewBox(self, amp=amp, n_bins=len(bins)-1,
-                time_unit=time_unit)
-        x_label = f"Log10 Dwell Time [log({time_unit})]" if log_times else f"Dwell Time [{time_unit}]"
-        y_label = f"Sqrt(Counts)" if root_counts else "Counts"
-        hist_widget = pg.PlotWidget(viewBox=hist_viewbox, title=f'{amp:.3g}', labels={'left': (y_label), 'bottom': (x_label)})
+
+class Histogram():
+    def __init__(self, histogram_frame=None, idealization_cache=None, amp=None, n_bins=None, 
+                time_unit='ms', log_times=True, root_counts=True, current_unit='pA'):
+        self.histogram_frame = histogram_frame
+        self.idealization_cache = idealization_cache
+        self.amp = amp
+        self.n_bins = n_bins
+        self.time_unit = time_unit
+        self.log_times = log_times
+        self.root_counts = root_counts
+        self.current_unit = current_unit
+
+        self.widget = self.create_widget()
+        self.row = None
+        self.col = None
+        
+    def create_widget(self):
+        heights, bins = self.idealization_cache.dwell_time_hist(
+                self.amp,
+                self.n_bins, 
+                self.time_unit, 
+                self.log_times, 
+                self.root_counts)
+        self.n_bins = len(bins)-1
+        hist_viewbox = HistogramViewBox(
+                histogram=self,
+                histogram_frame=self.histogram_frame,
+                amp=self.amp,
+                n_bins=self.n_bins,
+                time_unit=self.time_unit)
+        x_label = f"Log10 Dwell Time [log({self.time_unit})]" if self.log_times else f"Dwell Time [{self.time_unit}]"
+        y_label = f"Sqrt(Counts)" if self.root_counts else "Counts"
+        hist_widget = pg.PlotWidget(viewBox=hist_viewbox, title=f'{self.amp:.3g}', labels={'left': (y_label), 'bottom': (x_label)})
         hist_widget.setBackground("w")
         hist_widget.plot(bins, heights, stepMode=True, pen=pg.mkPen(width=2), fillLevel=0, fillOutline=True, brush=(0,0,255,150))
-        self.layout.addWidget(hist_widget, row, col)
-        self.hist_widgets[amp] = (hist_widget, row, col, len(bins)-1)
+        return hist_widget 
+
+    def update_hist(self):
+        debug_logger.debug(f"updating histogram for {self.amp} with n_bins={self.n_bins}, time_unit={self.time_unit}, "
+                           f"log_times={self.log_times}, root_counts={self.root_counts}")
+        heights, bins = self.idealization_cache.dwell_time_hist(
+                self.amp,
+                self.n_bins, 
+                self.time_unit, 
+                self.log_times, 
+                self.root_counts)
+        self.widget.deleteLater()
+        hist_viewbox = HistogramViewBox(
+                histogram=self,
+                histogram_frame=self.histogram_frame,
+                amp=self.amp,
+                n_bins=self.n_bins,
+                time_unit=self.time_unit)
+        x_label = f"Log10 Dwell Time [log({self.time_unit})]" if self.log_times else f"Dwell Time [{self.time_unit}]"
+        y_label = f"Sqrt(Counts)" if self.root_counts else "Counts"
+        self.widget = pg.PlotWidget(viewBox=hist_viewbox, title=f'{self.amp:.3g}', labels={'left': (y_label), 'bottom': (x_label)})
+        self.widget.setBackground("w")
+        self.widget.plot(bins, heights, stepMode=True, pen=pg.mkPen(width=2), fillLevel=0, fillOutline=True, brush=(0,0,255,150))
+        self.histogram_frame.layout.addWidget(self.widget, self.row, self.col)
 
 
 class EventTableFrame(QDialog):

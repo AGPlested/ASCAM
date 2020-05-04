@@ -123,10 +123,9 @@ class IdealizationCache:
             f"interpolation_factor = {self.interpolation_factor}",
         )
     
-    def dwell_time_hist(self, amp, n_bins=None, time_unit='ms', events=None,
+    def dwell_time_hist(self, amp, n_bins=None, time_unit='ms', 
                         log_times=True, root_counts=True):
-        if events is None:
-            events = self.get_events(time_unit)
+        events = self.get_events(time_unit)
         debug_logger.debug(f'getting events for amplitude {amp}')
         # np.isclose works best on order of unity (with default tolerances
         # rather than figure out tolerances for e-12 multiply the
