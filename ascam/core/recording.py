@@ -240,7 +240,7 @@ class Recording(dict):
             )
         self.current_datakey = new_datakey
 
-    def detect_fa(self, threshold, exclude=None):
+    def detect_fa(self, threshold):
         """Apply first event detection to all episodes in the selected series"""
 
         ana_logger.debug(f"detect first activation above threshold {threshold}\n")
@@ -248,11 +248,7 @@ class Recording(dict):
         if exclude is None:
             exclude = []
 
-        [
-            episode.detect_first_activation(threshold)
-            for episode in self.series
-            if episode.n_episode not in exclude
-        ]
+        [episode.detect_first_activation(threshold) for episode in self.series]
 
     def series_hist(
         self,

@@ -1,6 +1,5 @@
 import logging
 
-# pylint: disable=E0611
 from PySide2 import QtCore
 from PySide2.QtWidgets import QWidget, QGridLayout
 import numpy as np
