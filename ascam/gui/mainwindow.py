@@ -84,13 +84,13 @@ class MainWindow(QMainWindow):
         # self.histogram_menu = self.menuBar().addMenu("Histogram")
 
     def create_widgets(self):
+        self.ep_frame = EpisodeFrame(self)
+        self.central_layout.addWidget(self.ep_frame, 1, 3)
+
         self.plot_frame = PlotFrame(self)
         self.show_piezo.triggered.connect(self.plot_frame.toggle_piezo)
         self.show_command.triggered.connect(self.plot_frame.toggle_command)
         self.central_layout.addWidget(self.plot_frame, 1, 2)
-
-        self.ep_frame = EpisodeFrame(self)
-        self.central_layout.addWidget(self.ep_frame, 1, 3)
 
     def open_file(self):
         self.filename = QFileDialog.getOpenFileName(self)[0]

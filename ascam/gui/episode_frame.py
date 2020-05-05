@@ -186,17 +186,12 @@ class EpisodeList(QListWidget):
         self.parent = parent
         self.setSelectionMode(QtGui.QAbstractItemView.ExtendedSelection)
         self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Expanding)
-        # self.itemClicked.connect(self.on_item_click)
-        self.currentItemChanged.connect(self.on_item_click)
+        self.currentItemChanged.connect(self.on_item_click, type=QtCore.Qt.DirectConnection)
         self.populate()
 
     def on_item_click(self, item, _):
+        debug_logger.debug(f"clicked new episode")
         self.parent.main.data.current_ep_ind = self.row(item)
-        try:
-            self.parent.main.tc_frame.idealize_episode()
-        except AttributeError:
-            pass
-        self.parent.main.plot_frame.update_plots()
 
     def populate(self):
         self.currentItemChanged.disconnect(self.on_item_click)
@@ -206,7 +201,7 @@ class EpisodeList(QListWidget):
             debug_logger.debug("inserting data")
             self.addItems([f"Episode {i+1}" for i in range(n_eps)])
         self.setCurrentRow(0)
-        self.currentItemChanged.connect(self.on_item_click)
+        self.currentItemChanged.connect(self.on_item_click, type=QtCore.Qt.DirectConnection)
 
     def keyPressEvent(self, event):
         if event.text().isalpha():

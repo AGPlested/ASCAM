@@ -43,6 +43,8 @@ class IdealizationFrame(QWidget):
 
         self.create_widgets()
 
+        self.main.ep_frame.ep_list.currentItemChanged.connect(self.on_episode_click)
+
     @property
     def current_tab(self):
         return self.tab_frame.currentWidget()
@@ -76,10 +78,16 @@ class IdealizationFrame(QWidget):
         self.layout.addWidget(self.close_button)
         self.layout.addStretch()
 
+    def on_episode_click(self, item, *args):
+        debug_logger.debug(f"clicked new episode")
+        self.idealize_episode()
+        # self.parent.main.plot_frame.update_plots()
+
     def close_tab(self):
         if self.tab_frame.count() > 2:
             self.tab_frame.removeTab(self.tab_frame.currentIndex())
         else:
+            self.main.ep_frame.ep_list.currentItemChanged.disconnect(self.on_episode_click)
             self.main.plot_frame.tc_tracking = False
             del self.main.tc_frame
             self.main.plot_frame.update_plots()

@@ -38,6 +38,9 @@ class PlotFrame(QWidget):
         self.theta_lines = []
         self.theta_hist_lines = []
 
+        self.main.ep_frame.ep_list.currentItemChanged.connect(self.update_plots,
+                type=QtCore.Qt.QueuedConnection)
+
     @property
     def show_command(self):
         return self.main.show_command.isChecked() and self.main.data.has_command
