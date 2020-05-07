@@ -1,4 +1,5 @@
-from .analysis_widgets import IdealizationFrame, FirstActivationFrame
+from .first_activation_frame import FirstActivationFrame
+from .analysis_widgets import IdealizationFrame 
 from .processing_frames import BaselineFrame, FilterFrame
 from .io_widgets import ExportFileDialog, OpenFileDialog
 from .plot_frame import PlotFrame
