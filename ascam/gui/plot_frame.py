@@ -33,6 +33,10 @@ class PlotFrame(QWidget):
         self.init_plots()
         self.init_hist()
 
+        self.fa_line = None
+        self.fa_thresh_line = None
+        self.fa_thresh_hist = None
+
         self.amp_lines = []
         self.amp_hist_lines = []
         self.theta_lines = []
@@ -224,6 +228,30 @@ class PlotFrame(QWidget):
             command_min -= 0.05*command_range
             self.command_viewbox.setLimits( xMin=time_min, yMin=command_min, xMax=time_max, yMax=command_max,)
         self.hist_viewbox.setLimits(xMin=-0.05, xMax=1.05, yMin=trace_min, yMax=trace_max)
+
+    def plot_fa_threshold(self, threshold):
+        debug_logger.debug(f"plotting first activation threshold at {threshold}")
+        pen = pg.mkPen(color=ORANGE, style=QtCore.Qt.DashLine, width=0.4)
+        self.clear_fa_threshold()
+        hist_x = np.arange( np.min([*self.hist_y_range]), np.max([*self.hist_y_range]), 0.1)
+        self.fa_thresh_hist = self.hist.plot(hist_x, np.ones(len(hist_x)) * threshold, pen=pen)
+        self.fa_thresh_line = pg.InfiniteLine(pos=threshold, angle=0, pen=pen, movable=True)
+        self.trace_plot.addItem(self.fa_thresh_line)
+
+    def plot_fa_line(self, fa):
+        debug_logger.debug(f"plotting first activation at {fa}")
+        self.clear_fa()
+        self.fa_line = pg.InfiniteLine(pos=fa, angle=90)
+        self.trace_plot.addItem(self.fa_line)
+
+    def clear_fa_threshold(self):
+        if self.fa_thresh_line is not None:
+            self.trace_plot.removeItem(self.fa_thresh_line)
+            self.hist.removeItem(self.fa_thresh_hist)
+
+    def clear_fa(self):
+        if self.fa_line is not None:
+            self.trace_plot.removeItem(self.fa_line)
 
     def plot_theta_lines(self, thetas):
         pen = pg.mkPen(color="r", style=QtCore.Qt.DashLine, width=0.4)
