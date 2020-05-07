@@ -79,9 +79,7 @@ class IdealizationFrame(QWidget):
         self.layout.addStretch()
 
     def on_episode_click(self, item, *args):
-        debug_logger.debug(f"clicked new episode")
         self.idealize_episode()
-        # self.parent.main.plot_frame.update_plots()
 
     def close_tab(self):
         if self.tab_frame.count() > 2:
@@ -580,57 +578,3 @@ class EventTableModel(QAbstractTableModel):
         return len(self._data[0])
 
 
-class FirstActivationFrame(QWidget):
-    def __init__(self, main):
-        super().__init__()
-        self.main = main
-
-        self.layout = QVBoxLayout()
-        self.setLayout(self.layout)
-
-        self.create_widgets()
-
-    def create_widgets(self):
-        row = QHBoxLayout()
-        self.threshold_button = QPushButton("Set threshold")
-        row.addWidget(self.threshold_button)
-        self.threshold_entry = QLineEdit()
-        row.addWidget(self.threshold_entry)
-        self.layout.addLayout(row)
-
-        row = QHBoxLayout()
-        self.manual_marking_toggle = QToolButton()
-        self.manual_marking_toggle.setCheckable(True)
-        self.manual_marking_toggle.setText("Mark events manually")
-        # self.manual_marking_toggle.setChecked(self.parent.parent.main.plot_frame.tc_tracking)  # should be false initially
-        self.manual_marking_toggle.clicked.connect(self.toggle_manual_marking)
-        row.addWidget(self.manual_marking_toggle)
-        self.jump_checkbox = QCheckBox("Click jumps to next episode:")
-        self.jump_checkbox.stateChanged.connect(self.toggle_click_auto_jump)
-        row.addWidget(self.jump_checkbox)
-        self.layout.addLayout(row)
-
-        row = QHBoxLayout()
-        finish_button = QPushButton("Finish")
-        finish_button.clicked.connect(self.close)
-        cancel_button = QPushButton("Cancel")
-        cancel_button.clicked.connect(self.click_cancel)
-        row.addWidget(finish_button)
-        row.addWidget(cancel_button)
-        self.layout.addLayout(row)
-
-    def toggle_manual_marking(self):
-        raise NotImplementedError
-
-    def toggle_click_auto_jump(self):
-        raise NotImplementedError
-
-    def click_set_threshold(self):
-        self.main.data.detect_fa( float(self.threshold_entry.text()) )
-        # TODO update plots
-
-    def click_cancel(self):
-        for e in self.main.data.series:
-            e.first_activation = None
-        # TODO clear FA plots
-        self.close()

@@ -51,7 +51,6 @@ class PlotFrame(QWidget):
 
     @property
     def show_piezo(self):
-        debug_logger.debug(f"data has piezo = {self.main.data.has_piezo}")
         return self.main.show_piezo.isChecked() and self.main.data.has_piezo
 
     @show_piezo.setter
@@ -141,6 +140,7 @@ class PlotFrame(QWidget):
         self.episode_hist.setData(bins, heights)
 
     def draw_episode_hist(self):
+        debug_logger.debug("drawing episode hist")
         pen = pg.mkPen(color="b")
         heights, bins, = self.main.data.episode_hist()[:2]
         heights = np.asarray(heights, dtype=np.float)
@@ -157,6 +157,7 @@ class PlotFrame(QWidget):
             self.hist.getAxis("right").setRange(*self.hist_x_range)
 
     def draw_series_hist(self):
+        debug_logger.debug("drawing series hist")
         pen = pg.mkPen(color=(200, 50, 50))
         heights, bins, = self.main.data.series_hist()[:2]
         heights = np.asarray(heights, dtype=np.float)
@@ -177,7 +178,7 @@ class PlotFrame(QWidget):
         self.trace_plot.plot(
             self.main.data.episode.time, self.main.data.episode.trace, pen=pen
         )
-        try:
+        try:  # TODO replace this with 'if self.show_idealization' 
             id_pen = pg.mkPen(color=ORANGE)
             self.trace_plot.plot(
                 self.main.tc_frame.time(),
