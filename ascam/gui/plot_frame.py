@@ -24,6 +24,7 @@ class PlotFrame(QWidget):
         self.setLayout(self.layout)
 
         # plot variables
+        self.plots_are_draggable = True
         self.show_grid = True
         self.hist_x_range = None
         self.hist_y_range = None
@@ -235,7 +236,7 @@ class PlotFrame(QWidget):
         self.clear_fa_threshold()
         hist_x = np.arange( np.min([*self.hist_y_range]), np.max([*self.hist_y_range]), 0.1)
         self.fa_thresh_hist = self.hist.plot(hist_x, np.ones(len(hist_x)) * threshold, pen=pen)
-        self.fa_thresh_line = pg.InfiniteLine(pos=threshold, angle=0, pen=pen, movable=True)
+        self.fa_thresh_line = pg.InfiniteLine(pos=threshold, angle=0, pen=pen)
         self.trace_plot.addItem(self.fa_thresh_line)
 
     def plot_fa_line(self, fa):
@@ -371,7 +372,7 @@ class CustomViewBox(pg.ViewBox):
     def mouseDragEvent(self, ev, axis=1):
         if ev.button() == QtCore.Qt.LeftButton:
             self.setMouseEnabled(x=True, y=True)
-            if self.parent.tc_tracking:
+            if self.parent.tc_tracking or not self.parent.plots_are_draggable:  # TODO remove the first part in favor of dragging infinite lines
                 pos = self.mapSceneToView(ev.pos()).y()
                 self.parent.main.tc_frame.track_cursor(pos)
             elif ev.modifiers() == QtCore.Qt.ControlModifier:

@@ -40,7 +40,6 @@ class FirstActivationFrame(QWidget):
         self.setLayout(self.layout)
 
         self.main.plot_frame.plot_fa_threshold(0)
-        self.main.plot_frame.fa_thresh_line.sigDragged.connect(self.drag_fa_threshold)
 
         self.create_widgets()
         self.main.ep_frame.ep_list.currentItemChanged.connect(self.on_episode_click, type=Qt.QueuedConnection)
@@ -49,14 +48,20 @@ class FirstActivationFrame(QWidget):
         thresh = float(self.threshold_entry.text()) 
         thresh /= CURRENT_UNIT_FACTORS[self.trace_unit.currentText()]
         self.main.plot_frame.plot_fa_threshold(thresh)
-        self.main.plot_frame.fa_thresh_line.sigDragged.connect(self.drag_fa_threshold)
-        self.click_set_threshold()
+        if self.drag_threshold_button.isChecked():
+            self.main.plot_frame.fa_thresh_line.sigDragged.connect(self.drag_fa_threshold)
+        self.set_threshold()
 
     def create_widgets(self):
         row = QHBoxLayout()
         self.threshold_button = QPushButton("Set threshold")
-        self.threshold_button.clicked.connect(self.click_set_threshold)
+        self.threshold_button.clicked.connect(self.set_threshold)
         row.addWidget(self.threshold_button)
+        self.drag_threshold_button = QToolButton()
+        self.drag_threshold_button.setText("Draggable")
+        self.drag_threshold_button.setCheckable(True)
+        self.drag_threshold_button.clicked.connect(self.toggle_dragging_threshold)
+        row.addWidget(self.drag_threshold_button)
         self.trace_unit = QComboBox()
         self.trace_unit.addItems(list(CURRENT_UNIT_FACTORS.keys()))
         self.trace_unit.setCurrentIndex(1)
@@ -84,6 +89,16 @@ class FirstActivationFrame(QWidget):
         row.addWidget(finish_button)
         row.addWidget(cancel_button)
         self.layout.addLayout(row)
+
+    def toggle_dragging_threshold(self, *args):
+        if self.drag_threshold_button.isChecked():
+            self.main.plot_frame.fa_thresh_line.sigDragged.connect(self.drag_fa_threshold)
+            self.main.plot_frame.fa_thresh_line.setMovable(True)
+            self.main.plot_frame.plots_are_draggable = False
+        else:
+            self.main.ep_frame.ep_list.currentItemChanged.disconnect(self.change_episode)
+            self.main.plot_frame.plots_are_draggable = True
+            self.main.plot_frame.fa_thresh_line.setMovable(False)
 
     def toggle_manual_marking(self):
         raise NotImplementedError
