@@ -242,7 +242,6 @@ class Recording(dict):
 
     def detect_fa(self, threshold):
         """Apply first event detection to all episodes in the selected series"""
-        ana_logger.debug(f"detect first activation above threshold {threshold}\n")
 
         [episode.detect_first_activation(threshold) for episode in self.series]
 

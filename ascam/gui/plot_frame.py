@@ -234,13 +234,12 @@ class PlotFrame(QWidget):
         debug_logger.debug(f"plotting first activation threshold at {threshold}")
         pen = pg.mkPen(color=ORANGE, style=QtCore.Qt.DashLine, width=0.4)
         self.clear_fa_threshold()
-        hist_x = np.arange( np.min([*self.hist_y_range]), np.max([*self.hist_y_range]), 0.1)
-        self.fa_thresh_hist = self.hist.plot(hist_x, np.ones(len(hist_x)) * threshold, pen=pen)
+        self.fa_thresh_hist_line = pg.InfiniteLine(pos=threshold, angle=0, pen=pen)
+        self.hist.addItem(self.fa_thresh_hist_line)
         self.fa_thresh_line = pg.InfiniteLine(pos=threshold, angle=0, pen=pen)
         self.trace_plot.addItem(self.fa_thresh_line)
 
     def plot_fa_line(self, fa):
-        debug_logger.debug(f"plotting first activation at {fa}")
         self.clear_fa()
         self.fa_line = pg.InfiniteLine(pos=fa, angle=90)
         self.trace_plot.addItem(self.fa_line)
@@ -248,7 +247,7 @@ class PlotFrame(QWidget):
     def clear_fa_threshold(self):
         if self.fa_thresh_line is not None:
             self.trace_plot.removeItem(self.fa_thresh_line)
-            self.hist.removeItem(self.fa_thresh_hist)
+            self.hist.removeItem(self.fa_thresh_hist_line)
 
     def clear_fa(self):
         if self.fa_line is not None:
@@ -372,13 +371,13 @@ class CustomViewBox(pg.ViewBox):
     def mouseDragEvent(self, ev, axis=1):
         if ev.button() == QtCore.Qt.LeftButton:
             self.setMouseEnabled(x=True, y=True)
-            if self.parent.tc_tracking or not self.parent.plots_are_draggable:  # TODO remove the first part in favor of dragging infinite lines
+            if self.parent.tc_tracking:  # TODO remove the first part in favor of dragging infinite lines
                 pos = self.mapSceneToView(ev.pos()).y()
                 self.parent.main.tc_frame.track_cursor(pos)
             elif ev.modifiers() == QtCore.Qt.ControlModifier:
                 self.setMouseMode(self.RectMode)
                 pg.ViewBox.mouseDragEvent(self, ev)
-            else:
+            elif self.parent.plots_are_draggable:
                 self.setMouseMode(self.PanMode)
                 pg.ViewBox.mouseDragEvent(self, ev)
         else:

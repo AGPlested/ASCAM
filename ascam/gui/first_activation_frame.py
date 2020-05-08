@@ -44,13 +44,10 @@ class FirstActivationFrame(QWidget):
         self.create_widgets()
         self.main.ep_frame.ep_list.currentItemChanged.connect(self.on_episode_click, type=Qt.QueuedConnection)
 
-    def on_episode_click(self, item, *args):
+    @property
+    def threshold(self):
         thresh = float(self.threshold_entry.text()) 
-        thresh /= CURRENT_UNIT_FACTORS[self.trace_unit.currentText()]
-        self.main.plot_frame.plot_fa_threshold(thresh)
-        if self.drag_threshold_button.isChecked():
-            self.main.plot_frame.fa_thresh_line.sigDragged.connect(self.drag_fa_threshold)
-        self.set_threshold()
+        return thresh / CURRENT_UNIT_FACTORS[self.trace_unit.currentText()]
 
     def create_widgets(self):
         row = QHBoxLayout()
@@ -90,44 +87,69 @@ class FirstActivationFrame(QWidget):
         row.addWidget(cancel_button)
         self.layout.addLayout(row)
 
+    def on_episode_click(self, item, *args):
+        self.main.plot_frame.plot_fa_threshold(self.threshold)
+        if self.drag_threshold_button.isChecked():
+            self.main.plot_frame.fa_thresh_hist_line.sigDragged.connect(self.drag_fa_threshold)
+            self.main.plot_frame.fa_thresh_hist_line.setMovable(True)
+            self.main.plot_frame.fa_thresh_line.sigDragged.connect(self.drag_fa_threshold)
+            self.main.plot_frame.fa_thresh_line.setMovable(True)
+        self.set_threshold()
+
     def toggle_dragging_threshold(self, *args):
         if self.drag_threshold_button.isChecked():
+            self.main.plot_frame.fa_thresh_hist_line.sigDragged.connect(self.drag_fa_threshold_hist)
+            self.main.plot_frame.fa_thresh_hist_line.setMovable(True)
             self.main.plot_frame.fa_thresh_line.sigDragged.connect(self.drag_fa_threshold)
             self.main.plot_frame.fa_thresh_line.setMovable(True)
             self.main.plot_frame.plots_are_draggable = False
         else:
-            self.main.ep_frame.ep_list.currentItemChanged.disconnect(self.change_episode)
+            self.main.plot_frame.fa_thresh_hist_line.sigDragged.disconnect(self.drag_fa_threshold)
+            self.main.plot_frame.fa_thresh_hist_line.setMovable(False)
+            self.main.ep_frame.ep_list.currentItemChanged.disconnect(self.on_episode_click)
             self.main.plot_frame.plots_are_draggable = True
             self.main.plot_frame.fa_thresh_line.setMovable(False)
 
     def toggle_manual_marking(self):
         raise NotImplementedError
 
+    def drag_fa_threshold_hist(self):
+        self.main.plot_frame.fa_thresh_line.setValue(self.main.plot_frame.fa_thresh_hist_line.value())
+        self.threshold_entry.setText(str(self.main.plot_frame.fa_thresh_hist_line.value()*CURRENT_UNIT_FACTORS[self.trace_unit.currentText()]))
+        self.set_threshold()
+
     def drag_fa_threshold(self):
+        self.main.plot_frame.fa_thresh_hist_line.setValue(self.main.plot_frame.fa_thresh_line.value())
         self.threshold_entry.setText(str(self.main.plot_frame.fa_thresh_line.value()*CURRENT_UNIT_FACTORS[self.trace_unit.currentText()]))
-        self.click_set_threshold()
+        self.set_threshold()
 
     def toggle_click_auto_jump(self):
         raise NotImplementedError
 
-    def click_set_threshold(self):
-        thresh = float(self.threshold_entry.text()) 
-        thresh /= CURRENT_UNIT_FACTORS[self.trace_unit.currentText()]
-        debug_logger.debug(f"setting first activation threshold at {thresh}")
-        self.main.data.detect_fa(thresh)
-        self.main.plot_frame.fa_thresh_line.setValue(thresh)
+    def set_threshold(self):
+        self.main.data.detect_fa(self.threshold)
         self.main.plot_frame.plot_fa_line(self.main.data.episode.first_activation)
 
+    def click_set_threshold(self):
+        debug_logger.debug(f"setting first activation threshold at {self.threshold}")
+        self.set_threshold()
+        self.main.plot_frame.fa_thresh_line.setValue(self.threshold)
+        self.main.plot_frame.fa_thresh_hist_line.setValue(self.threshold)
+
+
     def click_cancel(self):
-        for e in self.main.data.series:
-            e.first_activation = None
+        for episode in self.main.data.series:
+            episode.first_activation = None
         self.main.plot_frame.clear_fa()
         self.main.plot_frame.clear_fa_threshold()
-        self.main.ep_frame.ep_list.currentItemChanged.disconnect(self.change_episode)
+        self.main.plot_frame.plots_are_draggable = True
+        self.main.ep_frame.ep_list.currentItemChanged.disconnect(self.on_episode_click)
         self.close()
 
     def click_finish(self):
+        self.main.data.detect_fa(self.threshold)
         self.main.plot_frame.clear_fa()
         self.main.plot_frame.clear_fa_threshold()
-        self.main.ep_frame.ep_list.currentItemChanged.disconnect(self.change_episode)
+        self.main.plot_frame.plots_are_draggable = True
+        self.main.ep_frame.ep_list.currentItemChanged.disconnect(self.on_episode_click)
         self.close()
