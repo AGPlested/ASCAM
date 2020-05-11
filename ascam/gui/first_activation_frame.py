@@ -1,34 +1,24 @@
 import logging
 
-import numpy as np
 import pyqtgraph as pg
-from PySide2.QtCore import QAbstractTableModel, Qt
+from PySide2 import QtCore 
 from PySide2.QtWidgets import (
-        QSizePolicy,
-        QSpacerItem,
     QComboBox,
-    QFileDialog,
-    QDialog,
-    QTableView,
-    QGridLayout,
-    QTabWidget,
     QWidget,
     QVBoxLayout,
     QHBoxLayout,
     QCheckBox,
     QLineEdit,
     QToolButton,
-    QTabBar,
     QPushButton,
-    QLabel,
 )
 
-from ascam.utils import string_to_array, array_to_string, update_number_in_string
-from ascam.constants import TIME_UNIT_FACTORS, CURRENT_UNIT_FACTORS
-from ascam.core import IdealizationCache
-from ascam.utils.widgets import TextEdit, HistogramViewBox
+from ascam.constants import CURRENT_UNIT_FACTORS
 
 debug_logger = logging.getLogger("ascam.debug")
+
+
+GREEN = (100, 255, 150)
 
 
 class FirstActivationFrame(QWidget):
@@ -41,8 +31,10 @@ class FirstActivationFrame(QWidget):
 
         self.main.plot_frame.plot_fa_threshold(0)
 
+        self.marking_indicator = None
+
         self.create_widgets()
-        self.main.ep_frame.ep_list.currentItemChanged.connect(self.on_episode_click, type=Qt.QueuedConnection)
+        self.main.ep_frame.ep_list.currentItemChanged.connect(self.on_episode_click, type=QtCore.Qt.QueuedConnection)
 
     @property
     def threshold(self):

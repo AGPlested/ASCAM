@@ -137,5 +137,5 @@ class MainWindow(QMainWindow):
         self.data.gauss_filter_series(1000)
         self.ep_frame.update_combo_box()
         self.plot_frame.plot_all()
-        self.launch_idealization()
-        self.tc_frame.tab_frame.currentWidget().amp_entry.setText("0, -.8, -1.2, -1.6")
+        # self.launch_fa_analysis()
+        # self.fa_frame.threshold_entry.setText("-0.4")
