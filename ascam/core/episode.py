@@ -60,9 +60,9 @@ class Episode:
 
         # results of analyses
         self.first_activation = None
+        self.manual_first_activation = False
         # metadata about the episode
         self.n_episode = int(n_episode)
-        self.suspiciousSTD = False
 
     @property
     def id_time(self):
