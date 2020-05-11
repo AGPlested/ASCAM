@@ -64,6 +64,7 @@ class FirstActivationFrame(QWidget):
         self.trace_unit.setCurrentIndex(1)
         row.addWidget(self.trace_unit)
         self.threshold_entry = QLineEdit()
+        self.threshold_entry.setText("0")
         row.addWidget(self.threshold_entry)
         self.layout.addLayout(row)
 
@@ -80,7 +81,7 @@ class FirstActivationFrame(QWidget):
 
         row = QHBoxLayout()
         finish_button = QPushButton("Finish")
-        finish_button.clicked.connect(self.click_finish)
+        finish_button.clicked.connect(self.clean_up_and_close)
         cancel_button = QPushButton("Cancel")
         cancel_button.clicked.connect(self.click_cancel)
         row.addWidget(finish_button)
@@ -96,22 +97,76 @@ class FirstActivationFrame(QWidget):
             self.main.plot_frame.fa_thresh_line.setMovable(True)
         self.set_threshold()
 
+    def drag_manual_indicator(self, pos):
+        mousePoint = self.main.plot_frame.trace_viewbox.mapSceneToView(pos)
+        self.marking_label.setText( f"({mousePoint.x():.5g}, {mousePoint.y():.5g})" )
+        time = self.main.data.episode.time
+        pos_percentage = mousePoint.x() / ( time[-1] - time[0] )
+        self.curve_point.setPos(pos_percentage)
+        self.marking_indicator.setPos(mousePoint.x())
+
     def toggle_dragging_threshold(self, *args):
         if self.drag_threshold_button.isChecked():
+            self.clean_up_marking()
+            self.manual_marking_toggle.setChecked(False)
             self.main.plot_frame.fa_thresh_hist_line.sigDragged.connect(self.drag_fa_threshold_hist)
             self.main.plot_frame.fa_thresh_hist_line.setMovable(True)
             self.main.plot_frame.fa_thresh_line.sigDragged.connect(self.drag_fa_threshold)
             self.main.plot_frame.fa_thresh_line.setMovable(True)
             self.main.plot_frame.plots_are_draggable = False
         else:
-            self.main.plot_frame.fa_thresh_hist_line.sigDragged.disconnect(self.drag_fa_threshold)
-            self.main.plot_frame.fa_thresh_hist_line.setMovable(False)
-            self.main.ep_frame.ep_list.currentItemChanged.disconnect(self.on_episode_click)
+            self.clean_up_thresh_dragging()
             self.main.plot_frame.plots_are_draggable = True
-            self.main.plot_frame.fa_thresh_line.setMovable(False)
 
     def toggle_manual_marking(self):
-        raise NotImplementedError
+        if self.manual_marking_toggle.isChecked():
+            self.curve_point = pg.CurvePoint(self.main.plot_frame.trace_line)
+            self.main.plot_frame.trace_plot.addItem(self.curve_point)
+            self.marking_label = pg.TextItem("", anchor=(0.5, -1))
+            self.marking_label.setParentItem(self.curve_point)
+
+            self.drag_threshold_button.setChecked(False)
+            self.clean_up_thresh_dragging()
+
+            pen = pg.mkPen(color=GREEN, style=QtCore.Qt.DashLine, width=0.3)
+            self.marking_indicator = pg.InfiniteLine(pos=0, angle=90)
+            self.main.plot_frame.trace_plot.addItem(self.marking_indicator)
+            self.main.plot_frame.trace_plot.scene().sigMouseMoved.connect(self.drag_manual_indicator)
+            self.main.plot_frame.trace_plot.scene().sigMouseClicked.connect(self.mark_fa_manually)
+            self.main.plot_frame.plots_are_draggable = False
+        else:
+            self.clean_up_marking()
+            self.main.plot_frame.plots_are_draggable = True
+
+    def clean_up_marking(self):
+        if self.marking_indicator is not None:
+            self.main.plot_frame.trace_plot.removeItem(self.marking_indicator)
+        try:
+            self.main.plot_frame.trace_plot.scene().sigMouseMoved.disconnect(self.drag_manual_indicator)
+            self.main.plot_frame.trace_plot.scene().sigMouseClicked.disconnect(self.mark_fa_manually)
+        except RuntimeError as error:
+            if "Failed to disconnect signal" in str(error):
+                pass
+            else:
+                raise RuntimeError(error)
+
+    def clean_up_thresh_dragging(self):
+        self.main.plot_frame.fa_thresh_hist_line.setMovable(False)
+        self.main.plot_frame.fa_thresh_line.setMovable(False)
+        try:
+            self.main.plot_frame.fa_thresh_hist_line.sigDragged.disconnect(self.drag_fa_threshold)
+            self.main.ep_frame.ep_list.currentItemChanged.disconnect(self.on_episode_click)
+        except RuntimeError as error:
+            if "Failed to disconnect signal" in str(error):
+                pass
+            else:
+                raise RuntimeError(error)
+
+    def mark_fa_manually(self, evt):
+        if evt.button() == QtCore.Qt.MouseButton.LeftButton:
+            self.main.data.episode.first_activation = self.marking_indicator.value()
+            self.main.plot_frame.plot_fa_line()
+            self.main.data.episode.manual_first_activation = True
 
     def drag_fa_threshold_hist(self):
         self.main.plot_frame.fa_thresh_line.setValue(self.main.plot_frame.fa_thresh_hist_line.value())
@@ -128,7 +183,7 @@ class FirstActivationFrame(QWidget):
 
     def set_threshold(self):
         self.main.data.detect_fa(self.threshold)
-        self.main.plot_frame.plot_fa_line(self.main.data.episode.first_activation)
+        self.main.plot_frame.plot_fa_line()
 
     def click_set_threshold(self):
         debug_logger.debug(f"setting first activation threshold at {self.threshold}")
@@ -136,18 +191,13 @@ class FirstActivationFrame(QWidget):
         self.main.plot_frame.fa_thresh_line.setValue(self.threshold)
         self.main.plot_frame.fa_thresh_hist_line.setValue(self.threshold)
 
-
     def click_cancel(self):
         for episode in self.main.data.series:
             episode.first_activation = None
-        self.main.plot_frame.clear_fa()
-        self.main.plot_frame.clear_fa_threshold()
-        self.main.plot_frame.plots_are_draggable = True
-        self.main.ep_frame.ep_list.currentItemChanged.disconnect(self.on_episode_click)
-        self.close()
+            episode.manual_first_activation = False
+        self.clean_up_and_close()
 
-    def click_finish(self):
-        self.main.data.detect_fa(self.threshold)
+    def clean_up_and_close(self):
         self.main.plot_frame.clear_fa()
         self.main.plot_frame.clear_fa_threshold()
         self.main.plot_frame.plots_are_draggable = True

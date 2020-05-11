@@ -180,7 +180,7 @@ class PlotFrame(QWidget):
             f"plotting episode {self.main.data.episode.n_episode} of series {self.main.data.current_datakey}"
         )
         pen = pg.mkPen(color="b")
-        self.trace_plot.plot(
+        self.trace_line = self.trace_plot.plot(
             self.main.data.episode.time, self.main.data.episode.trace, pen=pen
         )
         try:  # TODO replace this with 'if self.show_idealization' 
@@ -239,9 +239,10 @@ class PlotFrame(QWidget):
         self.fa_thresh_line = pg.InfiniteLine(pos=threshold, angle=0, pen=pen)
         self.trace_plot.addItem(self.fa_thresh_line)
 
-    def plot_fa_line(self, fa):
+    def plot_fa_line(self):
         self.clear_fa()
-        self.fa_line = pg.InfiniteLine(pos=fa, angle=90)
+        pen = pg.mkPen(color=GREEN, style=QtCore.Qt.DashLine, width=1)
+        self.fa_line = pg.InfiniteLine(pos=self.main.data.episode.first_activation, angle=90)
         self.trace_plot.addItem(self.fa_line)
 
     def clear_fa_threshold(self):
