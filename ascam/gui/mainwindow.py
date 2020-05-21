@@ -3,7 +3,7 @@ import os
 
 from PySide2.QtCore import Qt
 from PySide2.QtWidgets import (
-        QDockWidget,
+    QDockWidget,
     QGridLayout,
     QWidget,
     QMainWindow,
@@ -94,7 +94,7 @@ class MainWindow(QMainWindow):
 
     def open_file(self):
         self.filename = QFileDialog.getOpenFileName(self)[0]
-        debug_logger.debug(f'filename is {self.filename}')
+        debug_logger.debug(f"filename is {self.filename}")
         _, _, _, filename_short = parse_filename(self.filename)
         OpenFileDialog(self, filename_short)
 
@@ -120,8 +120,12 @@ class MainWindow(QMainWindow):
         self.central_layout.addWidget(self.fa_frame, 2, 2)
 
     def test_mode(self):
-        path = os.path.split(os.path.split(os.path.dirname(os.path.abspath(__file__)))[0])[0]  # data is in project root, ie 2 above this file
-        path = os.path.join(path, 'data')
+        path = os.path.split(
+            os.path.split(os.path.dirname(os.path.abspath(__file__)))[0]
+        )[
+            0
+        ]  # data is in project root, ie 2 above this file
+        path = os.path.join(path, "data")
         self.filename = os.path.join(path, TEST_FILE_NAME)
         self.data = Recording.from_file(self.filename)
         self.ep_frame.ep_list.populate()

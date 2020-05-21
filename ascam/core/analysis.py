@@ -68,7 +68,9 @@ class Idealizer:
             thresholds - the thresholds above/below which signal is mapped
                 to an amplitude"""
 
-        amplitudes = copy.copy(np.sort(amplitudes))  # sort amplitudes in descending order
+        amplitudes = copy.copy(
+            np.sort(amplitudes)
+        )  # sort amplitudes in descending order
         amplitudes = amplitudes[::-1]
 
         # if thresholds are not or incorrectly supplied take midpoint between
@@ -130,8 +132,10 @@ class Idealizer:
                     events[i, 3] = events[i + 1, 3]
                     # delete next event
                     events = np.delete(events, i + 1, axis=0)
-                    i = i - 1  # loop over this event again to check if it is now long enough
-                else: 
+                    i = (
+                        i - 1
+                    )  # loop over this event again to check if it is now long enough
+                else:
                     idealization[i_start:i_end] = events[i - 1, 0]
                     # add duration
                     events[i - 1, 1] += events[i, 1]
@@ -179,10 +183,10 @@ class Idealizer:
             event_list[0][3] = time[int(events[0])]
             for i, t in enumerate(events[:-1]):
                 event_list[i + 1][0] = idealization[int(t) + 1]
-                event_list[i + 1][2] = time[int(events[i])+1]
+                event_list[i + 1][2] = time[int(events[i]) + 1]
                 event_list[i + 1][3] = time[int(events[i + 1])]
             event_list[-1][0] = idealization[int(events[-1]) + 1]
-            event_list[-1][2] = time[(int(events[-1]))+1]
+            event_list[-1][2] = time[(int(events[-1])) + 1]
             event_list[-1][3] = time[-1]
         # get the duration column
         # because the start and end times of events are inclusive bounds

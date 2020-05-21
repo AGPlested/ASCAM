@@ -2,14 +2,23 @@ import logging
 
 from PySide2 import QtGui, QtCore
 from PySide2.QtWidgets import (
-        QTextEdit, QDialog, QVBoxLayout, QHBoxLayout, QCheckBox,
-        QLabel, QLineEdit, QPushButton, QComboBox)
+    QTextEdit,
+    QDialog,
+    QVBoxLayout,
+    QHBoxLayout,
+    QCheckBox,
+    QLabel,
+    QLineEdit,
+    QPushButton,
+    QComboBox,
+)
 import pyqtgraph as pg
 
 from ascam.constants import TIME_UNIT_FACTORS
 from ascam.utils import clear_qt_layout
 
 debug_logger = logging.getLogger("ascam.debug")
+
 
 class TextEdit(QTextEdit):
     def __init__(self, *args, **kwargs):
@@ -19,7 +28,7 @@ class TextEdit(QTextEdit):
     def updateMaxHeight(self, *args):
         # the +2 is a bit hacky, but it's there to avoid the appearance of
         # scrollbars when then widget is initialized
-        self.setMaximumHeight(self.document().size().height()+2)
+        self.setMaximumHeight(self.document().size().height() + 2)
 
     def resizeEvent(self, e):
         QTextEdit.resizeEvent(self, e)
@@ -27,14 +36,22 @@ class TextEdit(QTextEdit):
 
 
 class HistogramViewBox(pg.ViewBox):
-    def __init__(self, histogram=None, histogram_frame=None, n_bins=None, amp=None, time_unit='ms',
-                 log_times=True, root_counts=True):
+    def __init__(
+        self,
+        histogram=None,
+        histogram_frame=None,
+        n_bins=None,
+        amp=None,
+        time_unit="ms",
+        log_times=True,
+        root_counts=True,
+    ):
         # self.setRectMode() # Set mouse mode to rect for convenient zooming
         super().__init__()
         self.histogram = histogram
         self.histogram_frame = histogram_frame
-        self.menu = None # Override pyqtgraph ViewBoxMenu
-        self.menu = self.get_menu() # Create the menu
+        self.menu = None  # Override pyqtgraph ViewBoxMenu
+        self.menu = self.get_menu()  # Create the menu
 
     def raiseContextMenu(self, ev):
         if not self.menuEnabled():
@@ -42,8 +59,8 @@ class HistogramViewBox(pg.ViewBox):
         menu = self.get_menu()
         menu = self.scene().addParentContextMenus(self, menu, ev)
         menu.removeAction(menu.actions()[-2])  # remove the "Plot Options" menu item
-        
-        pos  = ev.screenPos()
+
+        pos = ev.screenPos()
         menu.popup(QtCore.QPoint(pos.x(), pos.y()))
 
     def open_hist_config(self):
@@ -76,6 +93,7 @@ class HistogramViewBox(pg.ViewBox):
 class NBinsDialog(QDialog):
     """Configuration dialog for the number of bins used in a histogram, this config is particular to
     the histogram that the right click event belongs to."""
+
     def __init__(self, histogram):
         super().__init__()
         self.histogram = histogram
@@ -112,6 +130,7 @@ class NBinsDialog(QDialog):
 class EventHistConfig(QDialog):
     """Configuration Dialog for the event histograms. The options in this dialog apply to all histogram.
     """
+
     def __init__(self, histogram_frame=None, histogram=None):
         super().__init__()
         self.histogram = histogram
@@ -123,7 +142,7 @@ class EventHistConfig(QDialog):
 
     def create_widgets(self):
         row = QHBoxLayout()
-        label = QLabel('Time Unit')
+        label = QLabel("Time Unit")
         row.addWidget(label)
         self.time_unit = QComboBox()
         self.time_unit.addItems(TIME_UNIT_FACTORS.keys())
@@ -132,7 +151,7 @@ class EventHistConfig(QDialog):
         self.layout.addLayout(row)
 
         row = QHBoxLayout()
-        label = QLabel('Square Root Counts')
+        label = QLabel("Square Root Counts")
         row.addWidget(label)
         self.root_counts = QCheckBox()
         self.root_counts.setChecked(self.histogram.root_counts)
@@ -140,7 +159,7 @@ class EventHistConfig(QDialog):
         self.layout.addLayout(row)
 
         row = QHBoxLayout()
-        label = QLabel('Log10 Dwell Times')
+        label = QLabel("Log10 Dwell Times")
         row.addWidget(label)
         self.log_times = QCheckBox()
         self.log_times.setChecked(self.histogram.log_times)
@@ -161,8 +180,9 @@ class EventHistConfig(QDialog):
 
         n_bins = {h.amp: h.n_bins for h in self.histogram_frame.histograms}
         self.histogram_frame.create_histograms(
-                    log_times=self.log_times.isChecked(),  
-                    root_counts=self.root_counts.isChecked(),
-                    time_unit=self.time_unit.currentText(),
-                    n_bins=n_bins)
-        self.close()                           
+            log_times=self.log_times.isChecked(),
+            root_counts=self.root_counts.isChecked(),
+            time_unit=self.time_unit.currentText(),
+            n_bins=n_bins,
+        )
+        self.close()

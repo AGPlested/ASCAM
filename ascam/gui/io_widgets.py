@@ -34,7 +34,7 @@ class OpenFileDialog(QDialog):
         self.setLayout(self.layout)
         self.setFixedWidth(300)
 
-        self.filename=filename
+        self.filename = filename
         self.create_widgets()
 
         self.exec_()
@@ -48,9 +48,9 @@ class OpenFileDialog(QDialog):
         self.layout.addLayout(row_one)
 
         row_two = QHBoxLayout()
-        sampling_label = QLabel('Smapling rate [Hz]')
+        sampling_label = QLabel("Smapling rate [Hz]")
         row_two.addWidget(sampling_label)
-        self.sampling_entry = QLineEdit('40000')
+        self.sampling_entry = QLineEdit("40000")
         row_two.addWidget(self.sampling_entry)
         self.layout.addLayout(row_two)
 
@@ -101,12 +101,13 @@ class OpenFileDialog(QDialog):
 
     def ok_clicked(self):
         self.main.data = Recording.from_file(
-                filename=self.main.filename,
-                sampling_rate=self.sampling_entry.text(),
-                time_input_unit=self.time_unit.currentText(),
-                trace_input_unit=self.trace_unit.currentText(),
-                piezo_input_unit=self.piezo_unit.currentText(),
-                command_input_unit=self.command_unit.currentText())
+            filename=self.main.filename,
+            sampling_rate=self.sampling_entry.text(),
+            time_input_unit=self.time_unit.currentText(),
+            trace_input_unit=self.trace_unit.currentText(),
+            piezo_input_unit=self.piezo_unit.currentText(),
+            command_input_unit=self.command_unit.currentText(),
+        )
         self.main.ep_frame.ep_list.populate()
         self.main.ep_frame.setFocus()
         self.main.plot_frame.plot_all()

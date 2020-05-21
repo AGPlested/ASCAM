@@ -6,5 +6,4 @@ TIME_UNIT_FACTORS = {"us": 1e6, "ms": 1e3, "s": 1}
 
 VERSION = 0.1
 
-TEST_FILE_NAME = 'GluA2_T1_SC-recording_40kHzSR.mat'
-
+TEST_FILE_NAME = "GluA2_T1_SC-recording_40kHzSR.mat"

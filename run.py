@@ -13,7 +13,7 @@ from ascam.gui.mainwindow import MainWindow
 from ascam.utils import initialize_logger
 
 
-debug_logger = logging.getLogger('ascam.debug')
+debug_logger = logging.getLogger("ascam.debug")
 
 
 def parse_options():
@@ -75,12 +75,12 @@ def display_help():
 
 def get_version():
     here = os.path.abspath(os.path.dirname(__file__))
-    stream = os.popen(f'pip freeze')
+    stream = os.popen(f"pip freeze")
     pip_freeze = stream.read()
 
-    stream = os.popen(f'cd {here}; git show')
+    stream = os.popen(f"cd {here}; git show")
     git_info = stream.read()
-    git_info = '\n'.join(git_info.split('\n')[:3])
+    git_info = "\n".join(git_info.split("\n")[:3])
 
     return pip_freeze, git_info
 

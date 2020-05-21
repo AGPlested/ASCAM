@@ -88,7 +88,9 @@ class IdealizationCache:
         event_array = np.zeros((0, 5)).astype(object)
         for episode in self.data.series:
             # create a column containing the episode number
-            ep_events = Idealizer.extract_events(self.idealization(episode.n_episode), self.time())
+            ep_events = Idealizer.extract_events(
+                self.idealization(episode.n_episode), self.time()
+            )
             episode_number = episode.n_episode * np.ones(len(ep_events[:, 0]))
             # glue that column to the event
             ep_events = np.concatenate(
@@ -122,21 +124,24 @@ class IdealizationCache:
             f"resolution = {self.resolution};"
             f"interpolation_factor = {self.interpolation_factor}",
         )
-    
-    def dwell_time_hist(self, amp, n_bins=None, time_unit='ms', 
-                        log_times=True, root_counts=True):
+
+    def dwell_time_hist(
+        self, amp, n_bins=None, time_unit="ms", log_times=True, root_counts=True
+    ):
         events = self.get_events(time_unit)
-        debug_logger.debug(f'getting events for amplitude {amp}')
+        debug_logger.debug(f"getting events for amplitude {amp}")
         # np.isclose works best on order of unity (with default tolerances
         # rather than figure out tolerances for e-12 multiply the
         # amp values by the expected units pA
-        factor = CURRENT_UNIT_FACTORS['pA']
-        mask = np.isclose(np.asarray(events[:, 1], dtype=np.float)*factor, amp*factor)
-        debug_logger.debug(f'multiplied amps by pA, amp={amp*factor}')
+        factor = CURRENT_UNIT_FACTORS["pA"]
+        mask = np.isclose(
+            np.asarray(events[:, 1], dtype=np.float) * factor, amp * factor
+        )
+        debug_logger.debug(f"multiplied amps by pA, amp={amp*factor}")
         data = events[:, 2][mask]
         if log_times:
             data = np.log10(data.astype(float))
-        debug_logger.debug(f'there are {len(data)} events')
+        debug_logger.debug(f"there are {len(data)} events")
         if n_bins is None:
             n_bins = int(self.get_n_bins(data))
         heights, bins = np.histogram(data, n_bins)
@@ -149,7 +154,7 @@ class IdealizationCache:
     def get_n_bins(data):
         n = len(data)
         std = np.std(data)
-        return round(3.49 * std * n**(1/3))
+        return round(3.49 * std * n ** (1 / 3))
 
     def export_events(self, filepath, time_unit="us", current_unit="pA"):
         """Export a table of events in the current (idealized) series and

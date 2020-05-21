@@ -44,8 +44,9 @@ class PlotFrame(QWidget):
         self.theta_lines = []
         self.theta_hist_lines = []
 
-        self.main.ep_frame.ep_list.currentItemChanged.connect(self.update_plots,
-                type=QtCore.Qt.QueuedConnection)
+        self.main.ep_frame.ep_list.currentItemChanged.connect(
+            self.update_plots, type=QtCore.Qt.QueuedConnection
+        )
 
     @property
     def show_command(self):
@@ -142,7 +143,7 @@ class PlotFrame(QWidget):
         heights, bins, = self.main.data.episode_hist()[:2]
         heights = np.asarray(heights, dtype=np.float)
         heights /= np.max(heights)
-        heights*=-1
+        heights *= -1
         self.episode_hist.setData(bins, heights)
 
     def draw_episode_hist(self):
@@ -151,7 +152,7 @@ class PlotFrame(QWidget):
         heights, bins, = self.main.data.episode_hist()[:2]
         heights = np.asarray(heights, dtype=np.float)
         heights /= np.max(heights)
-        heights*=-1
+        heights *= -1
         self.episode_hist = pg.PlotDataItem(bins, heights, stepMode=True, pen=pen)
         self.hist.addItem(self.episode_hist)  # ignoreBounds=True?
         self.episode_hist.rotate(90)
@@ -168,7 +169,7 @@ class PlotFrame(QWidget):
         heights, bins, = self.main.data.series_hist()[:2]
         heights = np.asarray(heights, dtype=np.float)
         heights /= np.max(heights)
-        heights*=-1  # this compensates the x-axis inversion created by rotating
+        heights *= -1  # this compensates the x-axis inversion created by rotating
         self.series_hist = pg.PlotDataItem(bins, heights, stepMode=True, pen=pen)
         self.hist.addItem(self.series_hist)
         self.series_hist.rotate(90)
@@ -184,12 +185,10 @@ class PlotFrame(QWidget):
         self.trace_line = self.trace_plot.plot(
             self.main.data.episode.time, self.main.data.episode.trace, pen=pen
         )
-        try:  # TODO replace this with 'if self.show_idealization' 
+        try:  # TODO replace this with 'if self.show_idealization'
             id_pen = pg.mkPen(color=ORANGE)
             self.trace_plot.plot(
-                self.main.tc_frame.time(),
-                self.main.tc_frame.idealization(),
-                pen=id_pen,
+                self.main.tc_frame.time(), self.main.tc_frame.idealization(), pen=id_pen
             )
         except AttributeError as e:
             debug_logger.debug("cannot plot idealization")
@@ -207,29 +206,37 @@ class PlotFrame(QWidget):
         time_max = np.max(self.main.data.episode.time)
         time_min = np.min(self.main.data.episode.time)
         time_range = time_max - time_min
-        time_max += 0.05*time_range
-        time_min -= 0.05*time_range
+        time_max += 0.05 * time_range
+        time_min -= 0.05 * time_range
         trace_max = np.max(self.main.data.episode.trace)
         trace_min = np.min(self.main.data.episode.trace)
         trace_range = trace_max - trace_min
-        trace_max += 0.05*trace_range
-        trace_min -= 0.05*trace_range
-        self.trace_viewbox.setLimits( xMin=time_min, yMin=trace_min, xMax=time_max, yMax=trace_max,)
+        trace_max += 0.05 * trace_range
+        trace_min -= 0.05 * trace_range
+        self.trace_viewbox.setLimits(
+            xMin=time_min, yMin=trace_min, xMax=time_max, yMax=trace_max
+        )
         if self.show_piezo:
             piezo_max = np.max(self.main.data.episode.piezo)
             piezo_min = np.min(self.main.data.episode.piezo)
             piezo_range = piezo_max - piezo_min
-            piezo_max += 0.05*piezo_range
-            piezo_min -= 0.05*piezo_range
-            self.piezo_viewbox.setLimits( xMin=time_min, yMin=piezo_min, xMax=time_max, yMax=piezo_max,)
+            piezo_max += 0.05 * piezo_range
+            piezo_min -= 0.05 * piezo_range
+            self.piezo_viewbox.setLimits(
+                xMin=time_min, yMin=piezo_min, xMax=time_max, yMax=piezo_max
+            )
         if self.show_command:
             command_max = np.max(self.main.data.episode.command)
             command_min = np.min(self.main.data.episode.command)
             command_range = command_max - command_min
-            command_max += 0.05*command_range
-            command_min -= 0.05*command_range
-            self.command_viewbox.setLimits( xMin=time_min, yMin=command_min, xMax=time_max, yMax=command_max,)
-        self.hist_viewbox.setLimits(xMin=-0.05, xMax=1.05, yMin=trace_min, yMax=trace_max)
+            command_max += 0.05 * command_range
+            command_min -= 0.05 * command_range
+            self.command_viewbox.setLimits(
+                xMin=time_min, yMin=command_min, xMax=time_max, yMax=command_max
+            )
+        self.hist_viewbox.setLimits(
+            xMin=-0.05, xMax=1.05, yMin=trace_min, yMax=trace_max
+        )
 
     def plot_fa_threshold(self, threshold):
         debug_logger.debug(f"plotting first activation threshold at {threshold}")
@@ -243,7 +250,9 @@ class PlotFrame(QWidget):
     def plot_fa_line(self):
         self.clear_fa()
         pen = pg.mkPen(color=GREEN, style=QtCore.Qt.DashLine, width=1)
-        self.fa_line = pg.InfiniteLine(pos=self.main.data.episode.first_activation, angle=90)
+        self.fa_line = pg.InfiniteLine(
+            pos=self.main.data.episode.first_activation, angle=90
+        )
         self.trace_plot.addItem(self.fa_line)
 
     def clear_fa_threshold(self):
@@ -373,7 +382,9 @@ class CustomViewBox(pg.ViewBox):
     def mouseDragEvent(self, ev, axis=1):
         if ev.button() == QtCore.Qt.LeftButton:
             self.setMouseEnabled(x=True, y=True)
-            if self.parent.tc_tracking:  # TODO remove the first part in favor of dragging infinite lines
+            if (
+                self.parent.tc_tracking
+            ):  # TODO remove the first part in favor of dragging infinite lines
                 pos = self.mapSceneToView(ev.pos()).y()
                 self.parent.main.tc_frame.track_cursor(pos)
             elif ev.modifiers() == QtCore.Qt.ControlModifier:

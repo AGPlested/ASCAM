@@ -7,12 +7,7 @@ from ascam.constants import (
     TIME_UNIT_FACTORS,
 )
 from .filtering import gaussian_filter, ChungKennedyFilter
-from .analysis import (
-    baseline_correction,
-    detect_first_activation,
-    # Idealizer,
-    # interpolate,
-)
+from .analysis import baseline_correction, detect_first_activation
 
 
 class Episode:
