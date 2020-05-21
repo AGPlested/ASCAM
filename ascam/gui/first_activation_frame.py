@@ -72,8 +72,10 @@ class FirstActivationFrame(QWidget):
         self.manual_marking_toggle.setCheckable(True)
         self.manual_marking_toggle.setText("Mark events manually")
         self.manual_marking_toggle.clicked.connect(self.toggle_manual_marking)
+        self.manual_marking_toggle.clicked.connect(self.toggle_jump_checkbox)
         row.addWidget(self.manual_marking_toggle)
         self.jump_checkbox = QCheckBox("Click jumps to next episode")
+        self.jump_checkbox.setEnabled(False)
         self.jump_checkbox.stateChanged.connect(self.toggle_click_auto_jump)
         row.addWidget(self.jump_checkbox)
         self.layout.addLayout(row)
@@ -94,6 +96,12 @@ class FirstActivationFrame(QWidget):
             self.main.plot_frame.fa_thresh_hist_line.setMovable(True)
             self.main.plot_frame.fa_thresh_line.sigDragged.connect(self.drag_fa_threshold)
             self.main.plot_frame.fa_thresh_line.setMovable(True)
+        if self.manual_marking_toggle.isChecked():
+            pen = pg.mkPen(color=GREEN, style=QtCore.Qt.DashLine, width=0.3)
+            self.marking_indicator = pg.InfiniteLine(pos=0, angle=90)
+            self.main.plot_frame.trace_plot.addItem(self.marking_indicator)
+            self.main.plot_frame.trace_plot.scene().sigMouseMoved.connect(self.drag_manual_indicator)
+            self.main.plot_frame.trace_plot.scene().sigMouseClicked.connect(self.mark_fa_manually)
         self.set_threshold()
 
     def drag_manual_indicator(self, pos):
@@ -133,6 +141,7 @@ class FirstActivationFrame(QWidget):
             self.main.plot_frame.trace_plot.scene().sigMouseMoved.connect(self.drag_manual_indicator)
             self.main.plot_frame.trace_plot.scene().sigMouseClicked.connect(self.mark_fa_manually)
             self.main.plot_frame.plots_are_draggable = False
+
         else:
             self.clean_up_marking()
             self.main.plot_frame.plots_are_draggable = True
@@ -177,8 +186,25 @@ class FirstActivationFrame(QWidget):
         self.threshold_entry.setText(str(self.main.plot_frame.fa_thresh_line.value()*CURRENT_UNIT_FACTORS[self.trace_unit.currentText()]))
         self.set_threshold()
 
-    def toggle_click_auto_jump(self):
-        raise NotImplementedError
+    def toggle_jump_checkbox(self):
+        if self.manual_marking_toggle.isChecked():
+            self.jump_checkbox.setEnabled(True)
+        else:
+            self.jump_checkbox.setEnabled(False)
+
+    def toggle_click_auto_jump(self, state):
+        if state:
+            self.main.plot_frame.trace_plot.scene().sigMouseClicked.connect(self.click_auto_jump)
+        else:
+            self.main.plot_frame.trace_plot.scene().sigMouseClicked.disconnect(self.click_auto_jump)
+
+    def click_auto_jump(self):
+        self.main.ep_frame.ep_list.setCurrentRow(self.main.data.current_ep_ind + 1)
+        pen = pg.mkPen(color=GREEN, style=QtCore.Qt.DashLine, width=0.3)
+        self.marking_indicator = pg.InfiniteLine(pos=0, angle=90)
+        self.main.plot_frame.trace_plot.addItem(self.marking_indicator)
+        self.main.plot_frame.trace_plot.scene().sigMouseMoved.connect(self.drag_manual_indicator)
+        self.main.plot_frame.trace_plot.scene().sigMouseClicked.connect(self.mark_fa_manually)
 
     def set_threshold(self):
         self.main.data.detect_fa(self.threshold)
