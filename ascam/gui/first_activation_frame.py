@@ -36,10 +36,17 @@ class FirstActivationFrame(QWidget):
         self.create_widgets()
         self.main.ep_frame.ep_list.currentItemChanged.connect(self.on_episode_click, type=QtCore.Qt.QueuedConnection)
 
+        self.threshold = 0
+        self.set_threshold()
+
     @property
     def threshold(self):
         thresh = float(self.threshold_entry.text()) 
         return thresh / CURRENT_UNIT_FACTORS[self.trace_unit.currentText()]
+
+    @threshold.setter
+    def threshold(self, val):
+        self.threshold_entry.setText(str( val * CURRENT_UNIT_FACTORS[self.trace_unit.currentText()]) )
 
     def create_widgets(self):
         row = QHBoxLayout()
