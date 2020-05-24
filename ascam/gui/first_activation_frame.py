@@ -123,10 +123,6 @@ class FirstActivationFrame(QWidget):
 
     def drag_manual_indicator(self, pos):
         mousePoint = self.main.plot_frame.trace_viewbox.mapSceneToView(pos)
-        # self.marking_label.setText(f"({mousePoint.x():.5g}, {mousePoint.y():.5g})")
-        # time = self.main.data.episode.time
-        # pos_percentage = mousePoint.x() / (time[-1] - time[0])
-        # self.curve_point.setPos(pos_percentage)
         self.marking_indicator.setPos(mousePoint.x())
 
     def toggle_dragging_threshold(self, *args):
@@ -184,11 +180,11 @@ class FirstActivationFrame(QWidget):
         self.main.plot_frame.fa_thresh_hist_line.setMovable(False)
         self.main.plot_frame.fa_thresh_line.setMovable(False)
         try:
-            self.main.plot_frame.fa_thresh_hist_line.sigDragged.disconnect(
+            self.main.plot_frame.fa_thresh_line.sigDragged.disconnect(
                 self.drag_fa_threshold
             )
-            self.main.ep_frame.ep_list.currentItemChanged.disconnect(
-                self.on_episode_click
+            self.main.plot_frame.fa_thresh_hist_line.sigDragged.disconnect(
+                self.drag_fa_threshold_hist
             )
         except RuntimeError as error:
             if "Failed to disconnect signal" in str(error):
@@ -203,27 +199,13 @@ class FirstActivationFrame(QWidget):
             self.main.data.episode.manual_first_activation = True
 
     def drag_fa_threshold_hist(self):
-        self.main.plot_frame.fa_thresh_line.setValue(
-            self.main.plot_frame.fa_thresh_hist_line.value()
-        )
-        self.threshold_entry.setText(
-            str(
-                self.main.plot_frame.fa_thresh_hist_line.value()
-                * CURRENT_UNIT_FACTORS[self.trace_unit.currentText()]
-            )
-        )
+        self.threshold = self.main.plot_frame.fa_thresh_hist_line.value()
+        self.main.plot_frame.fa_thresh_line.setValue( self.threshold )
         self.set_threshold()
 
     def drag_fa_threshold(self):
-        self.main.plot_frame.fa_thresh_hist_line.setValue(
-            self.main.plot_frame.fa_thresh_line.value()
-        )
-        self.threshold_entry.setText(
-            str(
-                self.main.plot_frame.fa_thresh_line.value()
-                * CURRENT_UNIT_FACTORS[self.trace_unit.currentText()]
-            )
-        )
+        self.threshold = self.main.plot_frame.fa_thresh_line.value()
+        self.main.plot_frame.fa_thresh_hist_line.setValue( self.threshold )
         self.set_threshold()
 
     def toggle_jump_checkbox(self):
