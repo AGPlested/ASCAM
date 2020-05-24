@@ -60,7 +60,7 @@ class FirstActivationFrame(QWidget):
     def create_widgets(self):
         row = QHBoxLayout()
         self.threshold_button = QPushButton("Set threshold")
-        self.threshold_button.clicked.connect(self.set_threshold)
+        self.threshold_button.clicked.connect(self.click_set_threshold)
         row.addWidget(self.threshold_button)
         self.drag_threshold_button = QToolButton()
         self.drag_threshold_button.setText("Draggable")
@@ -73,6 +73,7 @@ class FirstActivationFrame(QWidget):
         row.addWidget(self.trace_unit)
         self.threshold_entry = QLineEdit()
         self.threshold_entry.setText("0")
+        self.threshold_entry.returnPressed.connect(self.click_set_threshold)
         row.addWidget(self.threshold_entry)
         self.layout.addLayout(row)
 
