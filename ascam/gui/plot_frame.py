@@ -35,6 +35,7 @@ class PlotFrame(QWidget):
         self.fa_line = None
         self.fa_thresh_line = None
         self.fa_thresh_hist = None
+        self.marking_indicator = None
 
         self.amp_lines = []
         self.amp_hist_lines = []
@@ -246,11 +247,16 @@ class PlotFrame(QWidget):
 
     def plot_fa_line(self):
         self.clear_fa()
-        pen = pg.mkPen(color=GREEN, style=QtCore.Qt.DashLine, width=1)
+        pen = pg.mkPen(color=GREEN, style=QtCore.Qt.DashLine, width=2)
         self.fa_line = pg.InfiniteLine(
-            pos=self.main.data.episode.first_activation, angle=90
+            pos=self.main.data.episode.first_activation, angle=90, pen=pen
         )
         self.trace_plot.addItem(self.fa_line)
+
+    def draw_fa_marking_indicator(self):
+        pen = pg.mkPen(color=GREEN, style=QtCore.Qt.DashLine, width=1)
+        self.marking_indicator = pg.InfiniteLine(pos=0, angle=90, pen=pen)
+        self.main.plot_frame.trace_plot.addItem(self.marking_indicator)
 
     def clear_fa_threshold(self):
         if self.fa_thresh_line is not None:

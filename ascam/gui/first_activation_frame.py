@@ -39,6 +39,14 @@ class FirstActivationFrame(QWidget):
         self.set_threshold()
 
     @property
+    def marking_indicator(self):
+        return self.main.plot_frame.marking_indicator
+
+    @marking_indicator.setter
+    def marking_indicator(self, val):
+        self.main.plot_frame.marking_indicator = val
+
+    @property
     def threshold(self):
         thresh = float(self.threshold_entry.text())
         return thresh / CURRENT_UNIT_FACTORS[self.trace_unit.currentText()]
@@ -94,17 +102,16 @@ class FirstActivationFrame(QWidget):
         self.main.plot_frame.plot_fa_threshold(self.threshold)
         if self.drag_threshold_button.isChecked():
             self.main.plot_frame.fa_thresh_hist_line.sigDragged.connect(
-                self.drag_fa_threshold
+                self.drag_fa_threshold_hist
             )
             self.main.plot_frame.fa_thresh_hist_line.setMovable(True)
+
             self.main.plot_frame.fa_thresh_line.sigDragged.connect(
                 self.drag_fa_threshold
             )
             self.main.plot_frame.fa_thresh_line.setMovable(True)
         if self.manual_marking_toggle.isChecked():
-            pen = pg.mkPen(color=GREEN, style=QtCore.Qt.DashLine, width=0.3)
-            self.marking_indicator = pg.InfiniteLine(pos=0, angle=90)
-            self.main.plot_frame.trace_plot.addItem(self.marking_indicator)
+            self.main.plot_frame.draw_fa_marking_indicator()
             self.main.plot_frame.trace_plot.scene().sigMouseMoved.connect(
                 self.drag_manual_indicator
             )
@@ -140,17 +147,10 @@ class FirstActivationFrame(QWidget):
 
     def toggle_manual_marking(self):
         if self.manual_marking_toggle.isChecked():
-            # self.curve_point = pg.CurvePoint(self.main.plot_frame.trace_line)
-            # self.main.plot_frame.trace_plot.addItem(self.curve_point)
-            # self.marking_label = pg.TextItem("", anchor=(0.5, -1))
-            # self.marking_label.setParentItem(self.curve_point)
-
             self.drag_threshold_button.setChecked(False)
             self.clean_up_thresh_dragging()
 
-            pen = pg.mkPen(color=GREEN, style=QtCore.Qt.DashLine, width=0.3)
-            self.marking_indicator = pg.InfiniteLine(pos=0, angle=90)
-            self.main.plot_frame.trace_plot.addItem(self.marking_indicator)
+            self.main.plot_frame.draw_fa_marking_indicator()
             self.main.plot_frame.trace_plot.scene().sigMouseMoved.connect(
                 self.drag_manual_indicator
             )
@@ -243,9 +243,7 @@ class FirstActivationFrame(QWidget):
 
     def click_auto_jump(self):
         self.main.ep_frame.ep_list.setCurrentRow(self.main.data.current_ep_ind + 1)
-        pen = pg.mkPen(color=GREEN, style=QtCore.Qt.DashLine, width=0.3)
-        self.marking_indicator = pg.InfiniteLine(pos=0, angle=90)
-        self.main.plot_frame.trace_plot.addItem(self.marking_indicator)
+        self.main.plot_frame.draw_fa_marking_indicator()
         self.main.plot_frame.trace_plot.scene().sigMouseMoved.connect(
             self.drag_manual_indicator
         )
