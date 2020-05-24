@@ -118,10 +118,10 @@ class FirstActivationFrame(QWidget):
 
     def drag_manual_indicator(self, pos):
         mousePoint = self.main.plot_frame.trace_viewbox.mapSceneToView(pos)
-        self.marking_label.setText(f"({mousePoint.x():.5g}, {mousePoint.y():.5g})")
-        time = self.main.data.episode.time
-        pos_percentage = mousePoint.x() / (time[-1] - time[0])
-        self.curve_point.setPos(pos_percentage)
+        # self.marking_label.setText(f"({mousePoint.x():.5g}, {mousePoint.y():.5g})")
+        # time = self.main.data.episode.time
+        # pos_percentage = mousePoint.x() / (time[-1] - time[0])
+        # self.curve_point.setPos(pos_percentage)
         self.marking_indicator.setPos(mousePoint.x())
 
     def toggle_dragging_threshold(self, *args):
@@ -143,10 +143,10 @@ class FirstActivationFrame(QWidget):
 
     def toggle_manual_marking(self):
         if self.manual_marking_toggle.isChecked():
-            self.curve_point = pg.CurvePoint(self.main.plot_frame.trace_line)
-            self.main.plot_frame.trace_plot.addItem(self.curve_point)
-            self.marking_label = pg.TextItem("", anchor=(0.5, -1))
-            self.marking_label.setParentItem(self.curve_point)
+            # self.curve_point = pg.CurvePoint(self.main.plot_frame.trace_line)
+            # self.main.plot_frame.trace_plot.addItem(self.curve_point)
+            # self.marking_label = pg.TextItem("", anchor=(0.5, -1))
+            # self.marking_label.setParentItem(self.curve_point)
 
             self.drag_threshold_button.setChecked(False)
             self.clean_up_thresh_dragging()
