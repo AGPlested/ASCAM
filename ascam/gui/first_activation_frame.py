@@ -13,12 +13,9 @@ from PySide2.QtWidgets import (
     QPushButton,
 )
 
-from ascam.constants import CURRENT_UNIT_FACTORS
+from ascam.constants import CURRENT_UNIT_FACTORS, GREEN
 
 debug_logger = logging.getLogger("ascam.debug")
-
-
-GREEN = (100, 255, 150)
 
 
 class FirstActivationFrame(QWidget):
