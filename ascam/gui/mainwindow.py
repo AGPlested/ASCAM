@@ -13,6 +13,7 @@ from PySide2.QtWidgets import (
 )
 
 from ascam.gui import (
+    ExportFADialog,
     ExportFileDialog,
     OpenFileDialog,
     FilterFrame,
@@ -56,10 +57,8 @@ class MainWindow(QMainWindow):
         self.file_menu = self.menuBar().addMenu("File")
         self.file_menu.addAction("Open File", self.open_file)
         # self.file_menu.addAction("Save", self.save_to_file)
-        self.file_menu.addAction("Export Series", lambda: ExportFileDialog(self))
-        # self.file_menu.addAction(
-        #     "Export First Activation"
-        # )  # , lambda: ExportFADialog())
+        # self.file_menu.addAction("Export Series", lambda: ExportFileDialog(self))
+        self.file_menu.addAction( "Export First Activation", lambda: ExportFADialog(self))
         self.file_menu.addSeparator()
         self.file_menu.addAction("Quit", self.close)
 

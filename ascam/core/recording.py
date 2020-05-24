@@ -99,15 +99,13 @@ class Recording(dict):
         self.lists = dict()
         self.current_lists = ["all"]
 
-    @property
-    def selected_episodes(self):
+    def select_episodes(self, datakey, lists):
         indices = list()
-        for listname in self.current_lists:
+        for listname in lists:
             indices.extend(self.lists[listname][0])
-        # remove duplicate indices
         indices = np.array(list(set(indices)))
-        debug_logger.debug(f"Selected episodes: {indices}")
-        return np.array(self.series)[indices]
+        episodes = np.array(self[datakey])[indices]
+        return np.array(self[datakey])[indices]
 
     def episodes_in_lists(self, names):
         if isinstance(str, names):
@@ -431,11 +429,7 @@ class Recording(dict):
         data_list = [self.episode.time]
 
         # get the episodes we want to save
-        indices = list()
-        for listname in lists_to_save:
-            indices.extend(self.lists[listname][0])
-        indices = np.array(list(set(indices)))
-        episodes = np.array(self[datakey])[indices]
+        episodes = self.select_episodes(datakey, lists_to_save)
 
         for episode in episodes:
             data_list.append(np.array(episode.trace))
@@ -449,9 +443,13 @@ class Recording(dict):
         file = axographio.file_contents(column_names, data_list)
         file.write(filepath)
 
-    def export_first_activation(self, filepath, time_unit):
+    def export_first_activation(self, filepath, datakey=None, time_unit='ms', lists_to_save=None):
         """Export csv file of first activation times."""
-        debug_logger.debug(f"export_first_activation")
+        if lists_to_save is None:
+            lists_to_save = []
+        if datakey is None:
+            datakey = self.current_datakey
+        debug_logger.debug(f"export_first_activation for series {datakey}")
 
         if not filepath.endswith(".csv"):
             filepath += ".csv"
@@ -461,7 +459,7 @@ class Recording(dict):
                     episode.n_episode,
                     episode.first_activation * TIME_UNIT_FACTORS[time_unit],
                 )
-                for episode in self.selected_episodes
+                for episode in self.select_episodes(datakey, lists_to_save)
             ]
         )
         np.savetxt(filepath, export_array, delimiter=",")

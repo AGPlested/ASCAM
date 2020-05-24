@@ -21,9 +21,63 @@ from ascam.constants import (
 )
 
 
-# class ExportFADialog(QDialog):
-#     def __init__(self):
-#         pass
+class ExportFADialog(QDialog):
+    def __init__(self, main):
+        super().__init__()
+        self.main = main
+        self.layout = QVBoxLayout()
+        self.setLayout(self.layout)
+
+        self.create_widgets()
+
+        self.exec_()
+
+    def create_widgets(self):
+        self.series_selection = QComboBox()
+        self.series_selection.addItems(list(self.main.data.keys()))
+        self.series_selection.setCurrentText(self.main.data.current_datakey)
+        self.layout.addWidget(self.series_selection)
+
+        self.list_selection = QListWidget()
+        self.list_selection.addItems(list(self.main.data.lists.keys()))
+        self.list_selection.setSelectionMode(QtGui.QAbstractItemView.MultiSelection)
+        self.list_selection.setCurrentRow(0)
+        self.layout.addWidget(self.list_selection)
+
+        row = QHBoxLayout()
+        label = QLabel("Time Unit:")
+        row.addWidget(label)
+        self.time_unit = QComboBox()
+        self.time_unit.addItems(list(TIME_UNIT_FACTORS.keys()))
+        self.time_unit.setCurrentIndex(2)
+        row.addWidget(self.time_unit)
+        self.layout.addLayout(row)
+
+        row = QHBoxLayout()
+        save_button = QPushButton("Save")
+        save_button.clicked.connect(self.save_click)
+        row.addWidget(save_button)
+        cancel_button = QPushButton("Cancel")
+        cancel_button.clicked.connect(self.close)
+        row.addWidget(cancel_button)
+        self.layout.addLayout(row)
+
+    def save_click(self):
+        filename, filetye = QFileDialog.getSaveFileName(
+            self,
+            dir=self.main.filename[:-4]+"first_activation",
+            filter="Comma Separated Valued (*.csv)",
+        )
+        if filename:
+            self.main.data.export_first_activation(
+                filepath=filename,
+                datakey=self.series_selection.currentText(),
+                lists_to_save=[
+                    item.text() for item in self.list_selection.selectedItems()
+                ],
+                time_unit=self.time_unit.currentText(),
+            )
+        self.close()
 
 
 class OpenFileDialog(QDialog):
