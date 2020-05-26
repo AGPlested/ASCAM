@@ -4,6 +4,7 @@ from .tools import (
     piezo_selection,
     update_number_in_string,
     interval_selection,
+    round_off_tables,
     parse_filename,
     array_to_string,
     string_to_array,

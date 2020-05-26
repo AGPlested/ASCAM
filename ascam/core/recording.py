@@ -9,7 +9,7 @@ from ascam.constants import (
     VOLTAGE_UNIT_FACTORS,
     TIME_UNIT_FACTORS,
 )
-from ascam.utils import parse_filename, piezo_selection, interval_selection
+from ascam.utils import parse_filename, piezo_selection, interval_selection, round_off_tables
 from .readdata import load_matlab, load_axo
 from .episode import Episode
 
@@ -462,7 +462,16 @@ class Recording(dict):
                 for episode in self.select_episodes(datakey, lists_to_save)
             ]
         )
-        np.savetxt(filepath, export_array, delimiter=",")
+        import pandas as pd
+        header = [ "Episode Number", f"First Activatime Time [{time_unit}]",
+                    f"Current [{trace_unit}]"]
+        export_array = pd.DataFrame(export_array, columns=header)
+
+        # truncate floats for duration and timestamps to 1 micro second
+        export_array = round_off_tables(export_array, 
+                ['int', time_unit, trace_unit])
+
+        export_array.to_csv(filepath)
 
     @staticmethod
     def _load_from_axo(

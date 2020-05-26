@@ -3,6 +3,7 @@ import numpy as np
 
 from .analysis import Idealizer
 from ascam.constants import CURRENT_UNIT_FACTORS, TIME_UNIT_FACTORS
+from ascam.utils import round_off_tables
 
 
 debug_logger = logging.getLogger("ascam.debug")
@@ -180,16 +181,9 @@ class IdealizationCache:
         )
         export_array = self.get_events(time_unit, current_unit)
         export_array = pd.DataFrame(export_array, columns=header)
-        # truncate floats for duration and timestamps to 3 decimals (standard 1 micro s)
-        if time_unit == "us":
-            for i in header:
-                export_array[i] = export_array[i].map(lambda x: f"{x:.0f}")
-        if time_unit == "ms":
-            for i in header:
-                export_array[i] = export_array[i].map(lambda x: f"{x:.3f}")
-        if time_unit == "s":
-            for i in header:
-                export_array[i] = export_array[i].map(lambda x: f"{x:.6f}")
+        # truncate floats for duration and timestamps to 1 micro second
+        export_array = round_off_tables(export_array, 
+                ['int', current_unit, time_unit, time_unit, time_unit])
         with open(filepath, "w") as f:
             f.write(params)
         export_array.to_csv(filepath, mode="a")

@@ -2,6 +2,7 @@ import os
 
 import numpy as np
 
+from ascam.constants import PRECISIONS
 
 def parse_filename(filename):
     """
@@ -151,3 +152,8 @@ def clear_qt_layout(layout):
                 child.widget().deleteLater()
             elif child.layout() is not None:
                 clear_qt_layout(child.layout())
+
+def round_off_tables(dataframe, column_units):
+    for i, unit in enumerate(column_units):
+        dataframe.iloc[:, i] = dataframe.iloc[:, i].map(lambda x: f"{x:.{PRECISIONS[unit]}f}")
+    return dataframe    
