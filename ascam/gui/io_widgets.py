@@ -74,7 +74,7 @@ class ExportFADialog(QDialog):
     def save_click(self):
         filename, filetye = QFileDialog.getSaveFileName(
             self,
-            dir=self.main.filename[:-4]+"first_activation",
+            dir=self.main.filename[:-4]+"_first_activation",
             filter="Comma Separated Valued (*.csv)",
         )
         if filename:

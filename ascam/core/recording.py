@@ -467,11 +467,9 @@ class Recording(dict):
         header = [ "Episode Number", f"First Activatime Time [{time_unit}]",
                     f"Current [{trace_unit}]"]
         export_array = pd.DataFrame(export_array, columns=header)
-
         # truncate floats for duration and timestamps to 1 micro second
         export_array = round_off_tables(export_array, 
                 ['int', time_unit, trace_unit])
-
         export_array.to_csv(filepath)
 
     @staticmethod

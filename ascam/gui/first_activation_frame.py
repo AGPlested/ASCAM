@@ -82,7 +82,7 @@ class FirstActivationFrame(QWidget):
         self.manual_marking_toggle.setCheckable(True)
         self.manual_marking_toggle.setText("Mark events manually")
         self.manual_marking_toggle.clicked.connect(self.toggle_manual_marking)
-        self.manual_marking_toggle.clicked.connect(self.toggle_jump_checkbox)
+        self.manual_marking_toggle.toggled.connect(self.toggle_jump_checkbox)
         row.addWidget(self.manual_marking_toggle)
         self.jump_checkbox = QCheckBox("Click jumps to next episode")
         self.jump_checkbox.setEnabled(False)
@@ -113,12 +113,6 @@ class FirstActivationFrame(QWidget):
             self.main.plot_frame.fa_thresh_line.setMovable(True)
         if self.manual_marking_toggle.isChecked():
             self.main.plot_frame.draw_fa_marking_indicator()
-            self.main.plot_frame.trace_plot.scene().sigMouseMoved.connect(
-                self.drag_manual_indicator
-            )
-            self.main.plot_frame.trace_plot.scene().sigMouseClicked.connect(
-                self.mark_fa_manually
-            )
         self.set_threshold()
 
     def drag_manual_indicator(self, pos):
@@ -155,7 +149,6 @@ class FirstActivationFrame(QWidget):
                 self.mark_fa_manually
             )
             self.main.plot_frame.plots_are_draggable = False
-
         else:
             self.clean_up_marking()
             self.main.plot_frame.plots_are_draggable = True
@@ -193,6 +186,8 @@ class FirstActivationFrame(QWidget):
                 raise RuntimeError(error)
 
     def mark_fa_manually(self, evt):
+        debug_logger.debug(f"manually marked episode {self.main.data.episode.n_episode}"
+                           f"at t={self.marking_indicator.value()}")
         if evt.button() == QtCore.Qt.MouseButton.LeftButton:
             self.main.data.episode.first_activation = self.marking_indicator.value()
             self.main.plot_frame.plot_fa_line()
@@ -212,6 +207,7 @@ class FirstActivationFrame(QWidget):
         if self.manual_marking_toggle.isChecked():
             self.jump_checkbox.setEnabled(True)
         else:
+            self.jump_checkbox.setChecked(False)
             self.jump_checkbox.setEnabled(False)
 
     def toggle_click_auto_jump(self, state):
@@ -225,14 +221,9 @@ class FirstActivationFrame(QWidget):
             )
 
     def click_auto_jump(self):
+        debug_logger.debug("auto jumping to next episode")
         self.main.ep_frame.ep_list.setCurrentRow(self.main.data.current_ep_ind + 1)
         self.main.plot_frame.draw_fa_marking_indicator()
-        self.main.plot_frame.trace_plot.scene().sigMouseMoved.connect(
-            self.drag_manual_indicator
-        )
-        self.main.plot_frame.trace_plot.scene().sigMouseClicked.connect(
-            self.mark_fa_manually
-        )
 
     def set_threshold(self):
         self.main.data.detect_fa(self.threshold)
