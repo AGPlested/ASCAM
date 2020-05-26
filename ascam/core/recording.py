@@ -443,7 +443,7 @@ class Recording(dict):
         file = axographio.file_contents(column_names, data_list)
         file.write(filepath)
 
-    def export_first_activation(self, filepath, datakey=None, time_unit='ms', lists_to_save=None):
+    def export_first_activation(self, filepath, datakey=None, time_unit='ms', lists_to_save=None, trace_unit='pA'):
         """Export csv file of first activation times."""
         if lists_to_save is None:
             lists_to_save = []
@@ -458,6 +458,7 @@ class Recording(dict):
                 (
                     episode.n_episode,
                     episode.first_activation * TIME_UNIT_FACTORS[time_unit],
+                    episode.first_activation_amplitude * CURRENT_UNIT_FACTORS[trace_unit],
                 )
                 for episode in self.select_episodes(datakey, lists_to_save)
             ]

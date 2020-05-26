@@ -60,6 +60,12 @@ class Episode:
         self.n_episode = int(n_episode)
 
     @property
+    def first_activation_amplitude(self):
+        if self.first_activation is None:
+            return None
+        return self.trace[ np.where(self.time == self.first_activation) ][0]
+
+    @property
     def id_time(self):
         return self.time if self._id_time is None else self._id_time
 

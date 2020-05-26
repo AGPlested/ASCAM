@@ -54,6 +54,15 @@ class ExportFADialog(QDialog):
         self.layout.addLayout(row)
 
         row = QHBoxLayout()
+        label = QLabel("Current Unit:")
+        row.addWidget(label)
+        self.trace_unit = QComboBox()
+        self.trace_unit.addItems(list(CURRENT_UNIT_FACTORS.keys()))
+        self.trace_unit.setCurrentIndex(5)
+        row.addWidget(self.trace_unit)
+        self.layout.addLayout(row)
+
+        row = QHBoxLayout()
         save_button = QPushButton("Save")
         save_button.clicked.connect(self.save_click)
         row.addWidget(save_button)
@@ -76,6 +85,7 @@ class ExportFADialog(QDialog):
                     item.text() for item in self.list_selection.selectedItems()
                 ],
                 time_unit=self.time_unit.currentText(),
+                trace_unit=self.trace_unit.currentText(),
             )
         self.close()
 
