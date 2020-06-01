@@ -87,8 +87,6 @@ class MainWindow(QMainWindow):
         self.central_layout.addWidget(self.ep_frame, 1, 3)
 
         self.plot_frame = PlotFrame(self)
-        self.show_piezo.triggered.connect(self.plot_frame.toggle_piezo)
-        self.show_command.triggered.connect(self.plot_frame.toggle_command)
         self.central_layout.addWidget(self.plot_frame, 1, 2)
 
     def open_file(self):

@@ -22,6 +22,9 @@ class PlotFrame(QWidget):
         self.setLayout(self.layout)
 
         # plot variables
+        self.main.show_piezo.triggered.connect(self.toggle_piezo)
+        self.main.show_command.triggered.connect(self.toggle_command)
+
         self.plots_are_draggable = True
         self.show_grid = True
         self.hist_x_range = None
@@ -52,7 +55,7 @@ class PlotFrame(QWidget):
 
     @show_command.setter
     def show_command(self, val):
-        self._show_command = val
+        self.main.show_command.setChecked(val)
 
     @property
     def show_piezo(self):
@@ -60,7 +63,7 @@ class PlotFrame(QWidget):
 
     @show_piezo.setter
     def show_piezo(self, val):
-        self._show_piezo = val
+        self.main.show_piezo.setChecked(val)
 
     def init_plots(self):
         self.trace_viewbox = CustomHorizontalViewBox(self)
@@ -89,7 +92,7 @@ class PlotFrame(QWidget):
 
         if self.show_command:
             self.command_viewbox = CustomHorizontalViewBox(self)
-            self.command_plot = pg.PlotWidget(viewBox=self.trace_viewbox, name=f"trace")
+            self.command_plot = pg.PlotWidget(viewBox=self.command_viewbox, name=f"trace")
             self.command_plot.setBackground("w")
             self.command_plot.setLabel("left", "Command", units="V")
             self.command_plot.setXLink(self.trace_plot)
