@@ -3,6 +3,7 @@ import logging
 import pyqtgraph as pg
 from PySide2 import QtCore
 from PySide2.QtWidgets import (
+    QLabel,
     QComboBox,
     QWidget,
     QVBoxLayout,
@@ -13,6 +14,7 @@ from PySide2.QtWidgets import (
     QPushButton,
 )
 
+from ascam.gui import ExportFADialog
 from ascam.constants import CURRENT_UNIT_FACTORS, GREEN
 
 debug_logger = logging.getLogger("ascam.debug")
@@ -25,6 +27,7 @@ class FirstActivationFrame(QWidget):
 
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
+        self.setFixedWidth(250)
 
         self.main.plot_frame.plot_fa_threshold(0)
 
@@ -54,19 +57,16 @@ class FirstActivationFrame(QWidget):
     @threshold.setter
     def threshold(self, val):
         self.threshold_entry.setText(
-            str(val * CURRENT_UNIT_FACTORS[self.trace_unit.currentText()])
-        )
+                f"{val * CURRENT_UNIT_FACTORS[self.trace_unit.currentText()]:.3f}"
+                )
 
     def create_widgets(self):
         row = QHBoxLayout()
-        self.threshold_button = QPushButton("Set threshold")
-        self.threshold_button.clicked.connect(self.click_set_threshold)
-        row.addWidget(self.threshold_button)
-        self.drag_threshold_button = QToolButton()
-        self.drag_threshold_button.setText("Draggable")
-        self.drag_threshold_button.setCheckable(True)
-        self.drag_threshold_button.clicked.connect(self.toggle_dragging_threshold)
+        self.drag_threshold_button = QLabel("First Activation Threshold:")
         row.addWidget(self.drag_threshold_button)
+        self.layout.addLayout(row)
+        
+        row = QHBoxLayout()
         self.trace_unit = QComboBox()
         self.trace_unit.addItems(list(CURRENT_UNIT_FACTORS.keys()))
         self.trace_unit.setCurrentIndex(1)
@@ -77,6 +77,18 @@ class FirstActivationFrame(QWidget):
         row.addWidget(self.threshold_entry)
         self.layout.addLayout(row)
 
+        self.drag_threshold_button = QToolButton()
+        self.drag_threshold_button.setText("Draggable")
+        self.drag_threshold_button.setCheckable(True)
+        self.drag_threshold_button.clicked.connect(self.toggle_dragging_threshold)
+        row.addWidget(self.drag_threshold_button)
+        self.layout.addLayout(row)
+        
+        row = QHBoxLayout()
+        self.threshold_button = QPushButton("Set threshold")
+        self.threshold_button.clicked.connect(self.click_set_threshold)
+        row.addWidget(self.threshold_button)
+
         row = QHBoxLayout()
         self.manual_marking_toggle = QToolButton()
         self.manual_marking_toggle.setCheckable(True)
@@ -84,6 +96,9 @@ class FirstActivationFrame(QWidget):
         self.manual_marking_toggle.clicked.connect(self.toggle_manual_marking)
         self.manual_marking_toggle.toggled.connect(self.toggle_jump_checkbox)
         row.addWidget(self.manual_marking_toggle)
+        self.layout.addLayout(row)
+
+        row = QHBoxLayout()
         self.jump_checkbox = QCheckBox("Click jumps to next episode")
         self.jump_checkbox.setEnabled(False)
         self.jump_checkbox.stateChanged.connect(self.toggle_click_auto_jump)
@@ -91,13 +106,27 @@ class FirstActivationFrame(QWidget):
         self.layout.addLayout(row)
 
         row = QHBoxLayout()
-        finish_button = QPushButton("Finish")
-        finish_button.clicked.connect(self.clean_up_and_close)
+        show_table_button = QPushButton("Show First Activation Table")
+        show_table_button.clicked.connect(self.show_first_activation_table)
+        row.addWidget(show_table_button)
+        self.layout.addLayout(row)
+
+        row = QHBoxLayout()
+        export_button = QPushButton("Export First Activation Table")
+        export_button.clicked.connect(lambda: ExportFADialog(self.main))
+        row.addWidget(export_button)
+        self.layout.addLayout(row)
+
+        row = QHBoxLayout()
         cancel_button = QPushButton("Cancel")
         cancel_button.clicked.connect(self.click_cancel)
-        row.addWidget(finish_button)
         row.addWidget(cancel_button)
         self.layout.addLayout(row)
+
+        self.layout.addSpacing(400)
+
+    def show_first_activation_table(self):
+        raise NotImplementedError
 
     def on_episode_click(self, item, *args):
         self.main.plot_frame.plot_fa_threshold(self.threshold)

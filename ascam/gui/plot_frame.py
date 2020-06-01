@@ -390,7 +390,7 @@ class CustomViewBox(pg.ViewBox):
             self.setMouseEnabled(x=True, y=True)
             if (
                 self.parent.tc_tracking
-            ):  # TODO remove the first part in favor of dragging infinite lines
+            ):
                 pos = self.mapSceneToView(ev.pos()).y()
                 self.parent.main.tc_frame.track_cursor(pos)
             elif ev.modifiers() == QtCore.Qt.ControlModifier:

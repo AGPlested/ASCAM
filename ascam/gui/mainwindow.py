@@ -114,7 +114,7 @@ class MainWindow(QMainWindow):
     def launch_fa_analysis(self):
         self.fa_frame = FirstActivationFrame(self)
         self.fa_frame.show()
-        self.central_layout.addWidget(self.fa_frame, 2, 2)
+        self.central_layout.addWidget(self.fa_frame, 1, 1)
 
     def test_mode(self):
         path = os.path.split(
