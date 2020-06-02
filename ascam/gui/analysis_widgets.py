@@ -2,7 +2,6 @@ import logging
 
 import numpy as np
 import pyqtgraph as pg
-from PySide2.QtCore import QAbstractTableModel, Qt
 from PySide2.QtWidgets import (
     QSizePolicy,
     QComboBox,
@@ -25,7 +24,8 @@ from PySide2.QtWidgets import (
 from ascam.utils import string_to_array, array_to_string, update_number_in_string
 from ascam.constants import TIME_UNIT_FACTORS, CURRENT_UNIT_FACTORS
 from ascam.core import IdealizationCache
-from ascam.utils.widgets import TextEdit, HistogramViewBox
+from ascam.utils.widgets import (TextEdit, HistogramViewBox, EntryWidget,
+        TableFrame)
 
 debug_logger = logging.getLogger("ascam.debug")
 
@@ -107,8 +107,8 @@ class IdealizationFrame(QWidget):
         )[0]
         self.current_tab.idealization_cache.export_events(
             filename,
-            self.current_tab.time_unit.currentText(),
-            self.current_tab.trace_unit.currentText(),
+            self.current_tab.time_unit,
+            self.current_tab.trace_unit,
         )
 
     def export_idealization(self):
@@ -119,8 +119,8 @@ class IdealizationFrame(QWidget):
         )[0]
         self.current_tab.idealization_cache.export_idealization(
             filename,
-            self.current_tab.time_unit.currentText(),
-            self.current_tab.trace_unit.currentText(),
+            self.current_tab.time_unit,
+            self.current_tab.trace_unit,
         )
 
     def get_params(self):
@@ -158,7 +158,7 @@ class IdealizationFrame(QWidget):
         else:
             amp_diff = np.inf
 
-        y_pos *= CURRENT_UNIT_FACTORS[self.current_tab.trace_unit.currentText()]
+        y_pos *= CURRENT_UNIT_FACTORS[self.current_tab.trace_unit]
         if self.current_tab.neg_check.isChecked():
             y_pos *= -1
         if tc_diff < amp_diff and self.current_tab.show_threshold_check.isChecked():
@@ -206,14 +206,14 @@ class IdealizationTabFrame(QTabWidget):
         self.parent.idealize_episode()
 
 
-class IdealizationTab(QWidget):
+class IdealizationTab(EntryWidget):
     def __init__(self, parent):
-        super().__init__()
-        self.parent = parent
+        super().__init__(parent)
+        # self.parent = parent
 
-        self.layout = QVBoxLayout()
-        self.setLayout(self.layout)
-        self.create_widgets()
+        # self.layout = QVBoxLayout()
+        # self.setLayout(self.layout)
+        # self.create_widgets()
 
     def create_widgets(self):
         row = QHBoxLayout()
@@ -224,14 +224,11 @@ class IdealizationTab(QWidget):
         row.addWidget(self.show_amp_check)
         self.layout.addLayout(row)
 
-        row = QHBoxLayout()
         self.neg_check = QCheckBox("Treat as negative")
-        row.addWidget(self.neg_check)
-        self.trace_unit = QComboBox()
-        self.trace_unit.addItems(list(CURRENT_UNIT_FACTORS.keys()))
-        self.trace_unit.setCurrentIndex(1)
-        row.addWidget(self.trace_unit)
-        self.layout.addLayout(row)
+        self.trace_unit_entry = QComboBox()
+        self.trace_unit_entry.addItems(list(CURRENT_UNIT_FACTORS.keys()))
+        self.trace_unit_entry.setCurrentIndex(1)
+        self.add_row(self.neg_check, self.trace_unit_entry)
 
         row = QHBoxLayout()
         self.drag_amp_toggle = QToolButton()
@@ -242,10 +239,8 @@ class IdealizationTab(QWidget):
         row.addWidget(self.drag_amp_toggle)
         self.layout.addLayout(row)
 
-        row = QHBoxLayout()
         self.amp_entry = TextEdit()
-        row.addWidget(self.amp_entry)
-        self.layout.addLayout(row)
+        self.add_row(self.amp_entry)
 
         row = QHBoxLayout()
         threshold_label = QLabel("Thresholds")
@@ -274,10 +269,10 @@ class IdealizationTab(QWidget):
         self.res_entry = QLineEdit()
         row.addWidget(self.res_entry)
 
-        self.time_unit = QComboBox()
-        self.time_unit.addItems(list(TIME_UNIT_FACTORS.keys()))
-        self.time_unit.setCurrentIndex(1)
-        row.addWidget(self.time_unit)
+        self.time_unit_entry = QComboBox()
+        self.time_unit_entry.addItems(list(TIME_UNIT_FACTORS.keys()))
+        self.time_unit_entry.setCurrentIndex(1)
+        row.addWidget(self.time_unit_entry)
         self.layout.addLayout(row)
 
         row = QHBoxLayout()
@@ -332,10 +327,10 @@ class IdealizationTab(QWidget):
             amps *= -1
             thresholds *= -1
 
-        trace_factor = CURRENT_UNIT_FACTORS[self.trace_unit.currentText()]
+        trace_factor = CURRENT_UNIT_FACTORS[self.trace_unit]
         amps /= trace_factor
         thresholds /= trace_factor
-        time_factor = TIME_UNIT_FACTORS[self.time_unit.currentText()]
+        time_factor = TIME_UNIT_FACTORS[self.time_unit]
 
         if res_string.strip() and self.use_res.isChecked():
             resolution = float(res_string)
@@ -400,23 +395,24 @@ class IdealizationTab(QWidget):
         )
 
     def create_event_frame(self):
-        self.event_table = self.create_table()
-        self.event_table_frame = EventTableFrame(self, self.event_table)
         params = self.get_params()
-        self.event_table_frame.setWindowTitle(
-            f"Amp={params[0]}; Thresh={params[1]}; "
-            f"Res={params[2]}; Intrp={params[3]}"
+        self.event_table_frame = TableFrame(self, 
+                data=self.idealization_cache.get_events(
+                    trace_unit=self.trace_unit,
+                    time_unit=self.time_unit,
+                ),                
+                header = [
+                    "Episode #",
+                    f"Amplitude [{self.trace_unit}]",
+                    f"Duration [{self.time_unit}]",
+                    f"t_start [{self.time_unit}]",
+                    f"t_stop [{self.time_unit}]",
+                ],
+                title=f"Amp={params[0]}; Thresh={params[1]}; Res={params[2]}; Intrp={params[3]}",
+                trace_unit=self.trace_unit,
+                time_unit=self.time_unit
         )
 
-    def create_table(self):
-        self.get_params()
-        events = self.idealization_cache.get_events(
-            current_unit=self.trace_unit.currentText(),
-            time_unit=self.time_unit.currentText(),
-        )
-        return EventTableModel(
-            events, self.trace_unit.currentText(), self.time_unit.currentText()
-        )
 
 
 class HistogramFrame(QDialog):
@@ -576,52 +572,3 @@ class Histogram:
         )
         self.histogram_frame.layout.addWidget(self.widget, self.row, self.col)
 
-
-class EventTableFrame(QDialog):
-    def __init__(self, parent, table_view):
-        super().__init__()
-        self.parent = parent
-        self.layout = QVBoxLayout()
-        self.setLayout(self.layout)
-
-        height = 800
-        width = 500
-        self.setGeometry(parent.x() + width / 4, parent.y() + height / 3, width, height)
-
-        self.event_table = QTableView()
-        self.event_table.setModel(table_view)
-
-        self.layout.addWidget(self.event_table)
-        self.setModal(False)
-        self.show()
-
-
-class EventTableModel(QAbstractTableModel):
-    def __init__(self, data, current_unit, time_unit):
-        super().__init__()
-        self._data = data
-        self._data[:, 0]
-        self._data[:, 1:]
-
-        self._header = [
-            "Episode #",
-            f"Amplitude [{current_unit}]",
-            f"Duration [{time_unit}]",
-            f"t_start [{time_unit}]",
-            f"t_stop [{time_unit}]",
-        ]
-
-    def data(self, index, role):
-        if role == Qt.DisplayRole:
-            # See below for the nested-list data structure.
-            # .row() indexes into the outer list,
-            # .column() indexes into the sub-list
-            if index.row() == 0:
-                return self._header[index.column()]
-            return self._data[index.row() - 1][index.column()]
-
-    def rowCount(self, index):
-        return len(self._data)
-
-    def columnCount(self, index):
-        return len(self._data[0])

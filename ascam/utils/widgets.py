@@ -2,7 +2,10 @@ import logging
 
 from PySide2 import QtGui, QtCore
 from PySide2.QtWidgets import (
+        QLayout,
+    QWidget,
     QTextEdit,
+    QTableView,
     QDialog,
     QVBoxLayout,
     QHBoxLayout,
@@ -186,3 +189,103 @@ class EventHistConfig(QDialog):
             n_bins=n_bins,
         )
         self.close()
+
+
+class TableFrame(QDialog):
+    def __init__(self, parent, data, header, trace_unit=None, 
+                 time_unit=None, title=None, height=800, width=500):
+        super().__init__()
+        self.parent = parent
+        self.layout = QVBoxLayout()
+        self.setLayout(self.layout)
+
+        self.setGeometry(parent.x() + width / 4, parent.y() + height / 3, width, height)
+
+        
+        table = TableModel(data, header, trace_unit, time_unit)
+        table_view = QTableView()
+        table_view.setModel(table)
+
+        self.layout.addWidget(table_view)
+        self.setModal(False)
+        if title is None:
+            title = header
+        self.setWindowTitle(title)
+        self.show()
+
+
+class TableModel(QtCore.QAbstractTableModel):
+    def __init__(self, data, header, trace_unit=None, time_unit=None):
+        super().__init__()
+        self._data = data
+        self._header = header
+
+    def data(self, index, role):
+        if role == QtCore.Qt.DisplayRole:
+            # See below for the nested-list data structure.
+            # .row() indexes into the outer list,
+            # .column() indexes into the sub-list
+            if index.row() == 0:
+                return self._header[index.column()]
+            return self._data[index.row() - 1][index.column()]
+
+    def rowCount(self, index):
+        return len(self._data)
+
+    def columnCount(self, index):
+        return len(self._data[0])
+
+
+class VerticalContainerWidget(QWidget):
+    def __init__(self, parent):
+        super().__init__()
+        self.parent = parent
+
+        self.layout = QVBoxLayout()
+        self.setLayout(self.layout)
+
+        self.create_widgets()
+
+    def create_widets(self):
+        raise NotImplementedError
+
+    def add_row(self, *items):
+        row = QHBoxLayout()
+        for item in items:
+            if isinstance(item, QWidget):
+                row.addWidget(item)
+            elif isinstance(item, QLayout):
+                row.addLayout(item)
+            else:
+                raise TypeError(f"Cannot add {item} to a row layout.")
+        self.layout.addLayout(row)
+
+        
+
+class EntryWidget(VerticalContainerWidget):
+    def __init__(self, parent):
+
+        super().__init__(parent)
+
+    @property
+    def trace_unit(self):
+        if hasattr(self, 'trace_unit_entry'):
+            return self.trace_unit_entry.currentText()
+        return None
+
+    @trace_unit.setter
+    def trace_unit(self, val):
+        if hasattr(self, 'trace_unit_entry'):
+            self.trace_unit_entry.setCurrentText(val)
+
+    @property
+    def time_unit(self):
+        if hasattr(self, 'time_unit_entry'):
+            return self.time_unit_entry.currentText()
+        return None
+
+    @time_unit.setter
+    def time_unit(self, val):
+        if hasattr(self, 'time_unit_entry'):
+            self.time_unit_entry.setCurrentText(val)
+

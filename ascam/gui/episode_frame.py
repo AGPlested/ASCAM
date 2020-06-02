@@ -105,6 +105,9 @@ class ListFrame(QWidget):
         self.lists.append(check_box)
         self.layout.insertWidget(0, check_box)
         self.parent.main.data.lists[name] = ([], key)
+        debug_logger.debug(f"added list '{name}' with key '{key}'\n"
+                "lists are now:\n"
+                f"{self.parent.main.data.lists}")
 
     def add_to_list(self, name, key, index):
         if index not in self.parent.main.data.lists[name][0]:

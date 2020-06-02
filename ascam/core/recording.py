@@ -3,6 +3,7 @@ import logging
 import pickle
 
 import numpy as np
+import pandas as pd
 
 from ascam.constants import (
     CURRENT_UNIT_FACTORS,
@@ -75,7 +76,7 @@ class Recording(dict):
         else:
             raise ValueError(f"Cannot load from filetype {filetype}.")
 
-        recording.lists = {"all": (list(range(len(recording["raw_"]))), None)}
+        recording.lists = {"All": (list(range(len(recording["raw_"]))), None)}
 
         return recording
 
@@ -97,14 +98,14 @@ class Recording(dict):
         # `lists` stores the indices of the episodes in the list in the first
         # element and the associated key as the second
         self.lists = dict()
-        self.current_lists = ["all"]
 
-    def select_episodes(self, datakey, lists):
+    def select_episodes(self, datakey, lists=None):
+        if lists is None:
+            lists = ["All"]
         indices = list()
         for listname in lists:
             indices.extend(self.lists[listname][0])
         indices = np.array(list(set(indices)))
-        episodes = np.array(self[datakey])[indices]
         return np.array(self[datakey])[indices]
 
     def episodes_in_lists(self, names):
@@ -443,16 +444,11 @@ class Recording(dict):
         file = axographio.file_contents(column_names, data_list)
         file.write(filepath)
 
-    def export_first_activation(self, filepath, datakey=None, time_unit='ms', lists_to_save=None, trace_unit='pA'):
-        """Export csv file of first activation times."""
-        if lists_to_save is None:
-            lists_to_save = []
+    def create_first_activation_table(self, datakey=None, time_unit='ms', lists_to_save=None, trace_unit='pA'):
         if datakey is None:
             datakey = self.current_datakey
         debug_logger.debug(f"export_first_activation for series {datakey}")
 
-        if not filepath.endswith(".csv"):
-            filepath += ".csv"
         export_array = np.array(
             [
                 (
@@ -463,13 +459,19 @@ class Recording(dict):
                 for episode in self.select_episodes(datakey, lists_to_save)
             ]
         )
-        import pandas as pd
+        return export_array
+
+    def export_first_activation(self, filepath, datakey=None, time_unit='ms', lists_to_save=None, trace_unit='pA'):
+        """Export csv file of first activation times."""
+        export_array = self.create_first_activation_table(datakey, time_unit, lists_to_save, trace_unit)
         header = [ "Episode Number", f"First Activatime Time [{time_unit}]",
                     f"Current [{trace_unit}]"]
         export_array = pd.DataFrame(export_array, columns=header)
         # truncate floats for duration and timestamps to 1 micro second
         export_array = round_off_tables(export_array, 
                 ['int', time_unit, trace_unit])
+        if not filepath.endswith(".csv"):
+            filepath += ".csv"
         export_array.to_csv(filepath)
 
     @staticmethod
