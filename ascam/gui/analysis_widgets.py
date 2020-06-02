@@ -487,7 +487,7 @@ class Histogram:
         time_unit="ms",
         log_times=True,
         root_counts=True,
-        current_unit="pA",
+        trace_unit="pA",
     ):
         self.histogram_frame = histogram_frame
         self.idealization_cache = idealization_cache
@@ -496,7 +496,7 @@ class Histogram:
         self.time_unit = time_unit
         self.log_times = log_times
         self.root_counts = root_counts
-        self.current_unit = current_unit
+        self.trace_unit = trace_unit
 
         self.widget = self.create_widget()
         self.row = None

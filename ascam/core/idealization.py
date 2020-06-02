@@ -83,7 +83,7 @@ class IdealizationCache:
         for i in to_idealize:
             self.idealize_episode(i)
 
-    def get_events(self, time_unit="s", current_unit="A"):
+    def get_events(self, time_unit="s", trace_unit="A"):
         if self.all_ep_inds != self.ind_idealized:
             self.idealize_series()
         event_array = np.zeros((0, 5)).astype(object)
@@ -98,7 +98,7 @@ class IdealizationCache:
                 (episode_number[:, np.newaxis], ep_events), axis=1
             )
             event_array = np.concatenate((event_array, ep_events), axis=0)
-        event_array[:, 1] *= CURRENT_UNIT_FACTORS[current_unit]
+        event_array[:, 1] *= CURRENT_UNIT_FACTORS[trace_unit]
         event_array[:, 2:] *= TIME_UNIT_FACTORS[time_unit]
         return event_array
 
@@ -157,7 +157,7 @@ class IdealizationCache:
         std = np.std(data)
         return round(3.49 * std * n ** (1 / 3))
 
-    def export_events(self, filepath, time_unit="us", current_unit="pA"):
+    def export_events(self, filepath, time_unit="us", trace_unit="pA"):
         """Export a table of events in the current (idealized) series and
         duration to a csv file."""
         debug_logger.debug(f"export_events")
@@ -168,7 +168,7 @@ class IdealizationCache:
             filepath += ".csv"
         header = [
             "Episode Number",
-            f"Amplitude [{current_unit}]",
+            f"Amplitude [{trace_unit}]",
             f"Duration [{time_unit}]",
             f"t_start [{time_unit}]",
             f"t_stop [{time_unit}]",
@@ -179,11 +179,11 @@ class IdealizationCache:
             + f"resolution = {self.resolution} [s];"
             + f"interpolation_factor = {self.interpolation_factor}\n"
         )
-        export_array = self.get_events(time_unit, current_unit)
+        export_array = self.get_events(time_unit, trace_unit)
         export_array = pd.DataFrame(export_array, columns=header)
         # truncate floats for duration and timestamps to 1 micro second
         export_array = round_off_tables(export_array, 
-                ['int', current_unit, time_unit, time_unit, time_unit])
+                ['int', trace_unit, time_unit, time_unit, time_unit])
         with open(filepath, "w") as f:
             f.write(params)
         export_array.to_csv(filepath, mode="a")
