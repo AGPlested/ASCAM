@@ -57,8 +57,6 @@ class MainWindow(QMainWindow):
         self.file_menu = self.menuBar().addMenu("File")
         self.file_menu.addAction("Open File", self.open_file)
         # self.file_menu.addAction("Save", self.save_to_file)
-        # self.file_menu.addAction("Export Series", lambda: ExportFileDialog(self))
-        self.file_menu.addAction( "Export First Activation", lambda: ExportFADialog(self))
         self.file_menu.addSeparator()
         self.file_menu.addAction("Quit", self.close)
 
@@ -103,17 +101,10 @@ class MainWindow(QMainWindow):
 
     def launch_idealization(self):
         self.tc_frame = IdealizationFrame(self)
-        # self.tc_frame.show()
-        # dock_widget = QDockWidget(self)
-        # dock_widget.setAllowedAreas(Qt.LeftDockWidgetArea)
-        # dock_widget.setWidget(self.tc_frame)
-        # self.addDockWidget(Qt.LeftDockWidgetArea, dock_widget)
         self.central_layout.addWidget(self.tc_frame, 1, 1)
-        self.central_widget.adjustSize()
 
     def launch_fa_analysis(self):
         self.fa_frame = FirstActivationFrame(self)
-        self.fa_frame.show()
         self.central_layout.addWidget(self.fa_frame, 1, 1)
 
     def test_mode(self):
@@ -138,5 +129,3 @@ class MainWindow(QMainWindow):
         self.data.gauss_filter_series(1000)
         self.ep_frame.update_combo_box()
         self.plot_frame.plot_all()
-        # self.launch_fa_analysis()
-        # self.fa_frame.threshold_entry.setText("-0.4")

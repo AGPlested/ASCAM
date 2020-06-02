@@ -15,25 +15,22 @@ from PySide2.QtWidgets import (
 )
 
 from ascam.gui import ExportFADialog
+from ascam.utils import round_off_tables
+from ascam.utils.widgets import EntryWidget, TableModel, TableFrame
 from ascam.constants import CURRENT_UNIT_FACTORS, GREEN
 
 debug_logger = logging.getLogger("ascam.debug")
 
 
-class FirstActivationFrame(QWidget):
+class FirstActivationFrame(EntryWidget):
     def __init__(self, main):
-        super().__init__()
-        self.main = main
-
-        self.layout = QVBoxLayout()
-        self.setLayout(self.layout)
+        super().__init__(main)
         self.setFixedWidth(250)
 
         self.main.plot_frame.plot_fa_threshold(0)
 
         self.marking_indicator = None
 
-        self.create_widgets()
         self.main.ep_frame.ep_list.currentItemChanged.connect(
             self.on_episode_click, type=QtCore.Qt.QueuedConnection
         )
@@ -52,37 +49,29 @@ class FirstActivationFrame(QWidget):
     @property
     def threshold(self):
         thresh = float(self.threshold_entry.text())
-        return thresh / CURRENT_UNIT_FACTORS[self.trace_unit.currentText()]
+        return thresh / CURRENT_UNIT_FACTORS[self.trace_unit]
 
     @threshold.setter
     def threshold(self, val):
         self.threshold_entry.setText(
-                f"{val * CURRENT_UNIT_FACTORS[self.trace_unit.currentText()]:.3f}"
+                f"{val * CURRENT_UNIT_FACTORS[self.trace_unit]:.3f}"
                 )
 
     def create_widgets(self):
-        row = QHBoxLayout()
         self.drag_threshold_button = QLabel("First Activation Threshold:")
-        row.addWidget(self.drag_threshold_button)
-        self.layout.addLayout(row)
+        self.add_row(self.drag_threshold_button)
         
-        row = QHBoxLayout()
-        self.trace_unit = QComboBox()
-        self.trace_unit.addItems(list(CURRENT_UNIT_FACTORS.keys()))
-        self.trace_unit.setCurrentIndex(1)
-        row.addWidget(self.trace_unit)
+        self.trace_unit_entry = QComboBox()
+        self.trace_unit_entry.addItems(list(CURRENT_UNIT_FACTORS.keys()))
+        self.trace_unit_entry.setCurrentIndex(1)
         self.threshold_entry = QLineEdit()
         self.threshold_entry.setText("0")
         self.threshold_entry.returnPressed.connect(self.click_set_threshold)
-        row.addWidget(self.threshold_entry)
-        self.layout.addLayout(row)
-
         self.drag_threshold_button = QToolButton()
         self.drag_threshold_button.setText("Draggable")
         self.drag_threshold_button.setCheckable(True)
         self.drag_threshold_button.clicked.connect(self.toggle_dragging_threshold)
-        row.addWidget(self.drag_threshold_button)
-        self.layout.addLayout(row)
+        self.add_row(self.trace_unit_entry, self.threshold_entry, self.drag_threshold_button)
         
         row = QHBoxLayout()
         self.threshold_button = QPushButton("Set threshold")
@@ -113,7 +102,7 @@ class FirstActivationFrame(QWidget):
 
         row = QHBoxLayout()
         export_button = QPushButton("Export First Activation Table")
-        export_button.clicked.connect(lambda: ExportFADialog(self.main))
+        export_button.clicked.connect(self.export_first_activation)
         row.addWidget(export_button)
         self.layout.addLayout(row)
 
@@ -125,8 +114,34 @@ class FirstActivationFrame(QWidget):
 
         self.layout.addSpacing(400)
 
+    def export_first_activation(self):
+        self.main.data.detect_fa(self.threshold)
+        ExportFADialog(self.main)
+
     def show_first_activation_table(self):
-        raise NotImplementedError
+        self.main.data.detect_fa(self.threshold)
+        first_activations = self.main.data.create_first_activation_table(
+                trace_unit=self.trace_unit
+                )
+
+        header = [ "Episode Number", f"First Activatime Time [s]",
+                    f"Current [{self.trace_unit}]"]
+
+        table = TableModel(
+            first_activations,
+            header=header,
+            trace_unit=self.trace_unit, 
+            time_unit=self.time_unit
+        )
+
+        table_frame = TableFrame(self, table)
+        table_frame.show()
+        table_frame.setWindowTitle("lol")
+        # params = self.get_params()
+        # self.event_table_frame.setWindowTitle(
+        #     f"Amp={params[0]}; Thresh={params[1]}; "
+        #     f"Res={params[2]}; Intrp={params[3]}"
+        # )
 
     def on_episode_click(self, item, *args):
         self.main.plot_frame.plot_fa_threshold(self.threshold)
