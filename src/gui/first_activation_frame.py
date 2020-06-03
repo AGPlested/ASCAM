@@ -14,10 +14,10 @@ from PySide2.QtWidgets import (
     QPushButton,
 )
 
-from ascam.gui import ExportFADialog
-from ascam.utils import round_off_tables
-from ascam.utils.widgets import EntryWidget, TableModel, TableFrame
-from ascam.constants import CURRENT_UNIT_FACTORS, GREEN
+from ..gui import ExportFADialog
+from ..utils import round_off_tables
+from ..utils.widgets import EntryWidget, TableModel, TableFrame
+from ..constants import CURRENT_UNIT_FACTORS, GREEN
 
 debug_logger = logging.getLogger("ascam.debug")
 

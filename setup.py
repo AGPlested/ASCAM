@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 from os import path
 
-from ascam.constants import VERSION
+VERSION = 0.1
 
 here = path.abspath(path.dirname(__file__))
 
@@ -28,5 +28,5 @@ setup(
         "axographio>=0.3.1",
         "nptyping>=0.3.1",
     ],
-    entry_points={"console_scripts": ["ascam=run:main"]},
+    entry_points={"console_scripts": ["ascam=src.ascam:main"]},
 )

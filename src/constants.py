@@ -9,8 +9,6 @@ PRECISIONS = {'us': 0, 'ms': 3, 's': 6,
         'uV': 3, 'mV': 6, 'V': 9,
         'int': 0}
 
-VERSION = 0.1
-
 TEST_FILE_NAME = "GluA2_T1_SC-recording_40kHzSR.mat"
 
 GREEN = (70, 250, 150)

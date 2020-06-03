@@ -8,7 +8,7 @@ from scipy.io import loadmat as scipy_loadmat
 from scipy.io.matlab.mio5 import varmats_from_mat
 
 
-from ascam.utils.tools import parse_filename
+from ..utils.tools import parse_filename
 
 
 def load(filename, filetype=False, dtype=None, headerlength=None, fs=None):

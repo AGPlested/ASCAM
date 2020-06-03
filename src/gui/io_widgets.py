@@ -13,8 +13,8 @@ from PySide2.QtWidgets import (
 )
 
 
-from ascam.core import Recording
-from ascam.constants import (
+from ..core import Recording
+from ..constants import (
     TIME_UNIT_FACTORS,
     CURRENT_UNIT_FACTORS,
     VOLTAGE_UNIT_FACTORS,

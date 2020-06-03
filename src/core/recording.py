@@ -5,12 +5,12 @@ import pickle
 import numpy as np
 import pandas as pd
 
-from ascam.constants import (
+from ..constants import (
     CURRENT_UNIT_FACTORS,
     VOLTAGE_UNIT_FACTORS,
     TIME_UNIT_FACTORS,
 )
-from ascam.utils import parse_filename, piezo_selection, interval_selection, round_off_tables
+from ..utils import parse_filename, piezo_selection, interval_selection, round_off_tables
 from .readdata import load_matlab, load_axo
 from .episode import Episode
 

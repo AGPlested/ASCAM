@@ -5,8 +5,8 @@ from PySide2.QtWidgets import QWidget, QGridLayout
 import numpy as np
 import pyqtgraph as pg
 
-from ascam.utils import clear_qt_layout
-from ascam.constants import ORANGE, GREEN
+from ..utils import clear_qt_layout
+from ..constants import ORANGE, GREEN
 
 
 debug_logger = logging.getLogger("ascam.debug")

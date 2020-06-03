@@ -7,7 +7,7 @@ from scipy.interpolate import CubicSpline as spCubicSpline
 from typing import Optional, List, Tuple
 from nptyping import Array
 
-from ascam.utils.tools import interval_selection, piezo_selection
+from ..utils.tools import interval_selection, piezo_selection
 
 
 ana_logger = logging.getLogger("ascam.analysis")

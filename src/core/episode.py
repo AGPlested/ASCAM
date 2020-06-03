@@ -1,7 +1,7 @@
 import numpy as np
 
-from ascam.utils import piezo_selection
-from ascam.constants import (
+from ..utils import piezo_selection
+from ..constants import (
     CURRENT_UNIT_FACTORS,
     VOLTAGE_UNIT_FACTORS,
     TIME_UNIT_FACTORS,

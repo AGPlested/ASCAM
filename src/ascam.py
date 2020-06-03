@@ -9,8 +9,8 @@ import logging
 import getopt
 
 from PySide2.QtWidgets import QApplication
-from ascam.gui.mainwindow import MainWindow
-from ascam.utils import initialize_logger
+from .gui.mainwindow import MainWindow
+from .utils import initialize_logger
 
 
 debug_logger = logging.getLogger("ascam.debug")

@@ -13,7 +13,7 @@ from PySide2.QtWidgets import (
     QFormLayout,
 )
 
-from ascam.utils import clear_qt_layout, string_to_list
+from ..utils import clear_qt_layout, string_to_list
 
 
 debug_logger = logging.getLogger("ascam.debug")

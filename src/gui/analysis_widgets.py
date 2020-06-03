@@ -21,10 +21,10 @@ from PySide2.QtWidgets import (
     QLabel,
 )
 
-from ascam.utils import string_to_array, array_to_string, update_number_in_string
-from ascam.constants import TIME_UNIT_FACTORS, CURRENT_UNIT_FACTORS
-from ascam.core import IdealizationCache
-from ascam.utils.widgets import (TextEdit, HistogramViewBox, EntryWidget,
+from ..utils import string_to_array, array_to_string, update_number_in_string
+from ..constants import TIME_UNIT_FACTORS, CURRENT_UNIT_FACTORS
+from ..core import IdealizationCache
+from ..utils.widgets import (TextEdit, HistogramViewBox, EntryWidget,
         TableFrame)
 
 debug_logger = logging.getLogger("ascam.debug")

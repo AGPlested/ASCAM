@@ -2,7 +2,7 @@ from scipy import io
 import os
 import json
 import pickle
-from ascam.utils.tools import parse_filename
+from ..utils.tools import parse_filename
 
 
 def save_metadata(data, filename):

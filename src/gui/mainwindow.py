@@ -12,7 +12,7 @@ from PySide2.QtWidgets import (
     QSizePolicy,
 )
 
-from ascam.gui import (
+from ..gui import (
     ExportFADialog,
     ExportFileDialog,
     OpenFileDialog,
@@ -23,9 +23,9 @@ from ascam.gui import (
     IdealizationFrame,
     FirstActivationFrame,
 )
-from ascam.utils import parse_filename
-from ascam.core import Recording
-from ascam.constants import TEST_FILE_NAME
+from ..utils import parse_filename
+from ..core import Recording
+from ..constants import TEST_FILE_NAME
 
 
 ana_logger = logging.getLogger("ascam.analysis")

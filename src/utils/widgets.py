@@ -17,8 +17,8 @@ from PySide2.QtWidgets import (
 )
 import pyqtgraph as pg
 
-from ascam.constants import TIME_UNIT_FACTORS
-from ascam.utils import clear_qt_layout
+from ..constants import TIME_UNIT_FACTORS
+from ..utils import clear_qt_layout
 
 debug_logger = logging.getLogger("ascam.debug")
 

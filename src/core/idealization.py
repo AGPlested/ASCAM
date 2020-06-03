@@ -2,8 +2,8 @@ import logging
 import numpy as np
 
 from .analysis import Idealizer
-from ascam.constants import CURRENT_UNIT_FACTORS, TIME_UNIT_FACTORS
-from ascam.utils import round_off_tables
+from ..constants import CURRENT_UNIT_FACTORS, TIME_UNIT_FACTORS
+from ..utils import round_off_tables
 
 
 debug_logger = logging.getLogger("ascam.debug")

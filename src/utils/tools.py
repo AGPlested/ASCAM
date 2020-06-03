@@ -2,7 +2,7 @@ import os
 
 import numpy as np
 
-from ascam.constants import PRECISIONS
+from ..constants import PRECISIONS
 
 def parse_filename(filename):
     """
