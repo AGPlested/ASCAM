@@ -16,7 +16,7 @@ from PySide2.QtWidgets import (
 
 from ..gui import ExportFADialog
 from ..utils import round_off_tables
-from ..utils.widgets import EntryWidget, TableModel, TableFrame
+from ..utils.widgets import EntryWidget, TableFrame
 from ..constants import CURRENT_UNIT_FACTORS, GREEN
 
 debug_logger = logging.getLogger("ascam.debug")
@@ -25,6 +25,7 @@ debug_logger = logging.getLogger("ascam.debug")
 class FirstActivationFrame(EntryWidget):
     def __init__(self, main):
         super().__init__(main)
+        self.main = main
         self.setFixedWidth(250)
 
         self.main.plot_frame.plot_fa_threshold(0)
@@ -119,6 +120,7 @@ class FirstActivationFrame(EntryWidget):
         ExportFADialog(self.main)
 
     def show_first_activation_table(self):
+        debug_logger.debug("creating fist activation table")
         self.main.data.detect_fa(self.threshold)
         first_activations = self.main.data.create_first_activation_table(
                 trace_unit=self.trace_unit
@@ -127,21 +129,10 @@ class FirstActivationFrame(EntryWidget):
         header = [ "Episode Number", f"First Activatime Time [s]",
                     f"Current [{self.trace_unit}]"]
 
-        table = TableModel(
-            first_activations,
-            header=header,
-            trace_unit=self.trace_unit, 
-            time_unit=self.time_unit
-        )
-
-        table_frame = TableFrame(self, table)
-        table_frame.show()
-        table_frame.setWindowTitle("lol")
-        # params = self.get_params()
-        # self.event_table_frame.setWindowTitle(
-        #     f"Amp={params[0]}; Thresh={params[1]}; "
-        #     f"Res={params[2]}; Intrp={params[3]}"
-        # )
+        self.table_frame = TableFrame(self, data=first_activations,
+                header=header,
+                trace_unit=self.trace_unit,
+                title=f"First activations in {self.main.data.current_datakey}")
 
     def on_episode_click(self, item, *args):
         self.main.plot_frame.plot_fa_threshold(self.threshold)

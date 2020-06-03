@@ -192,8 +192,8 @@ class EventHistConfig(QDialog):
 
 
 class TableFrame(QDialog):
-    def __init__(self, parent, data, header, trace_unit=None, 
-                 time_unit=None, title=None, height=800, width=500):
+    def __init__(self, parent, data, header, trace_unit='A', 
+                 time_unit='A', title=None, height=800, width=500):
         super().__init__()
         self.parent = parent
         self.layout = QVBoxLayout()
@@ -201,21 +201,20 @@ class TableFrame(QDialog):
 
         self.setGeometry(parent.x() + width / 4, parent.y() + height / 3, width, height)
 
-        
-        table = TableModel(data, header, trace_unit, time_unit)
+        table = TableModel(data, header)
         table_view = QTableView()
         table_view.setModel(table)
 
         self.layout.addWidget(table_view)
         self.setModal(False)
         if title is None:
-            title = header
+            title = ' ,'.join(header)
         self.setWindowTitle(title)
         self.show()
 
 
 class TableModel(QtCore.QAbstractTableModel):
-    def __init__(self, data, header, trace_unit=None, time_unit=None):
+    def __init__(self, data, header):
         super().__init__()
         self._data = data
         self._header = header
@@ -261,7 +260,6 @@ class VerticalContainerWidget(QWidget):
         self.layout.addLayout(row)
 
         
-
 class EntryWidget(VerticalContainerWidget):
     def __init__(self, parent):
 
@@ -288,4 +286,3 @@ class EntryWidget(VerticalContainerWidget):
     def time_unit(self, val):
         if hasattr(self, 'time_unit_entry'):
             self.time_unit_entry.setCurrentText(val)
-

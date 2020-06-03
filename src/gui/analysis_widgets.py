@@ -414,7 +414,6 @@ class IdealizationTab(EntryWidget):
         )
 
 
-
 class HistogramFrame(QDialog):
     def __init__(self, parent, amps):
         super().__init__()
@@ -571,4 +570,3 @@ class Histogram:
             brush=(0, 0, 255, 150),
         )
         self.histogram_frame.layout.addWidget(self.widget, self.row, self.col)
-
