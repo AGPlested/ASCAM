@@ -85,13 +85,16 @@ class IdealizationFrame(QWidget):
         if self.tab_frame.count() > 2:
             self.tab_frame.removeTab(self.tab_frame.currentIndex())
         else:
-            self.main.ep_frame.ep_list.currentItemChanged.disconnect(
-                self.on_episode_click
-            )
-            self.main.plot_frame.tc_tracking = False
-            del self.main.tc_frame
-            self.main.plot_frame.update_plots()
-            self.close()
+            self.close_frame(self)
+
+    def close_frame(self):
+        self.main.ep_frame.ep_list.currentItemChanged.disconnect(
+            self.on_episode_click
+        )
+        self.main.plot_frame.tc_tracking = False
+        self.main.tc_frame=None
+        self.main.plot_frame.update_plots()
+        self.close()
 
     def create_histogram_frame(self):
         self.current_tab.create_histogram_frame()
@@ -209,11 +212,6 @@ class IdealizationTabFrame(QTabWidget):
 class IdealizationTab(EntryWidget):
     def __init__(self, parent):
         super().__init__(parent)
-        # self.parent = parent
-
-        # self.layout = QVBoxLayout()
-        # self.setLayout(self.layout)
-        # self.create_widgets()
 
     def create_widgets(self):
         row = QHBoxLayout()

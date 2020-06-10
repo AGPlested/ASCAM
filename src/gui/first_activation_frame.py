@@ -282,4 +282,5 @@ class FirstActivationFrame(EntryWidget):
         self.main.plot_frame.clear_fa_threshold()
         self.main.plot_frame.plots_are_draggable = True
         self.main.ep_frame.ep_list.currentItemChanged.disconnect(self.on_episode_click)
+        self.main.fa_frame=None
         self.close()

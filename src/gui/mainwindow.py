@@ -100,10 +100,24 @@ class MainWindow(QMainWindow):
         self.data.save_to_pickle(filename)
 
     def launch_idealization(self):
+        try:
+            self.fa_frame.clean_up_and_close()
+        except AttributeError as e:
+            if "'MainWindow' object has no attribute 'fa_frame'" in str(e):
+                pass
+            else:
+                raise AttributeError(e)
         self.tc_frame = IdealizationFrame(self)
         self.central_layout.addWidget(self.tc_frame, 1, 1)
 
     def launch_fa_analysis(self):
+        try:
+            self.tc_frame.close_frame()
+        except AttributeError as e:
+            if "'MainWindow' object has no attribute 'tc_frame'" in str(e):
+                pass
+            else:
+                raise AttributeError(e)
         self.fa_frame = FirstActivationFrame(self)
         self.central_layout.addWidget(self.fa_frame, 1, 1)
 
