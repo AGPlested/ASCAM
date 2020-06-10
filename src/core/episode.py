@@ -63,7 +63,9 @@ class Episode:
     def first_activation_amplitude(self):
         if self.first_activation is None:
             return None
-        return self.trace[ np.where(self.time == self.first_activation) ][0]
+        # return the trace value at the time point closest to the mark,
+        # because manual marking can choose points that are not in the time array
+        return self.trace[ np.argmin(np.abs(self.time - self.first_activation)) ]
 
     @property
     def id_time(self):

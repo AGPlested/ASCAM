@@ -459,7 +459,7 @@ class Recording(dict):
                 for episode in self.select_episodes(datakey, lists_to_save)
             ]
         )
-        return export_array
+        return export_array.astype(object)
 
     def export_first_activation(self, filepath, datakey=None, time_unit='ms', lists_to_save=None, trace_unit='pA'):
         """Export csv file of first activation times."""

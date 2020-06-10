@@ -269,7 +269,7 @@ class EntryWidget(VerticalContainerWidget):
     def trace_unit(self):
         if hasattr(self, 'trace_unit_entry'):
             return self.trace_unit_entry.currentText()
-        return None
+        return 'A'
 
     @trace_unit.setter
     def trace_unit(self, val):
@@ -280,7 +280,7 @@ class EntryWidget(VerticalContainerWidget):
     def time_unit(self):
         if hasattr(self, 'time_unit_entry'):
             return self.time_unit_entry.currentText()
-        return None
+        return 's'
 
     @time_unit.setter
     def time_unit(self, val):

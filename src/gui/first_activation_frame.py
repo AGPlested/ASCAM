@@ -122,17 +122,18 @@ class FirstActivationFrame(EntryWidget):
     def show_first_activation_table(self):
         debug_logger.debug("creating fist activation table")
         self.main.data.detect_fa(self.threshold)
-        first_activations = self.main.data.create_first_activation_table(
+
+        self.table_frame = TableFrame(self, 
+                data=self.main.data.create_first_activation_table(
                 trace_unit=self.trace_unit
-                )
-
-        header = [ "Episode Number", f"First Activatime Time [s]",
-                    f"Current [{self.trace_unit}]"]
-
-        self.table_frame = TableFrame(self, data=first_activations,
-                header=header,
+                ),
+                header=["Episode Number", f"First Activatime Time [self.time_unit]",
+                    f"Current [{self.trace_unit}]"],
                 trace_unit=self.trace_unit,
-                title=f"First activations in {self.main.data.current_datakey}")
+                time_unit=self.time_unit,
+                title=f"First activations in {self.main.data.current_datakey}",
+                width=400
+            )
 
     def on_episode_click(self, item, *args):
         self.main.plot_frame.plot_fa_threshold(self.threshold)
