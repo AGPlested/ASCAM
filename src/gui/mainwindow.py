@@ -56,7 +56,7 @@ class MainWindow(QMainWindow):
         debug_logger.debug("MainWindow creating menus")
         self.file_menu = self.menuBar().addMenu("File")
         self.file_menu.addAction("Open File", self.open_file)
-        # self.file_menu.addAction("Save", self.save_to_file)
+        self.file_menu.addAction("Save", self.save_to_file)
         self.file_menu.addSeparator()
         self.file_menu.addAction("Quit", self.close)
 

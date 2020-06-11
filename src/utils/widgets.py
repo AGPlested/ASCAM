@@ -263,8 +263,8 @@ class VerticalContainerWidget(QWidget):
 class EntryWidget(VerticalContainerWidget):
     def __init__(self, parent):
 
-        super().__init__(parent)
         self.create_unit_entry_widgets()
+        super().__init__(parent)
 
     def create_unit_entry_widgets(self):
         self.trace_unit_entry = QComboBox()

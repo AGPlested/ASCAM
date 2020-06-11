@@ -354,6 +354,24 @@ class Recording(dict):
         with open(filepath, "wb") as save_file:
             pickle.dump(self, save_file)
 
+    @staticmethod
+    def _load_from_pickle(recording):
+        """Load a recording from a '.pkl' file.
+
+        Recordings edited in ASCAM can be saved as pickles, this method
+        reconstructs such saved recordings.
+        Args:
+            recording - recording object to be filled with data
+        Returns:
+            recording the instance of the recording that was stored in the
+            pickle."""
+        with open(recording.filename, "rb") as file:
+            data = pickle.load(file)
+            recording.__dict__ = data.__dict__
+            for key, value in data.items():
+                recording[key] = value
+        return recording
+
     def export_matlab(
         self,
         filepath,
@@ -514,24 +532,6 @@ class Recording(dict):
             )
             for i in range(n_episodes)
         ]
-        return recording
-
-    @staticmethod
-    def _load_from_pickle(recording):
-        """Load a recording from a '.pkl' file.
-
-        Recordings edited in ASCAM can be saved as pickles, this method
-        reconstructs such saved recordings.
-        Args:
-            recording - recording object to be filled with data
-        Returns:
-            recording the instance of the recording that was stored in the
-            pickle."""
-        with open(recording.filename, "rb") as file:
-            data = pickle.load(file).__dict__
-            recording.__dict__ = data.__dict__
-            for key, value in data.items():
-                recording[key] = value
         return recording
 
     @staticmethod
