@@ -1,24 +1,62 @@
 import pytest
 import numpy as np
 
-from ascam.core.idealization import Idealizer
+from src.core.idealization import Idealizer
 
 
 test_traces = [
     (
         np.array([1, 1, 1, 2, 2, 3]),
-        np.array([[1, 3, 0, 2], [2, 2, 3, 4], [3, 1, 5, 5]]),
+        np.array([[1, 3, 0, 2], 
+                  [2, 2, 3, 4], 
+                  [3, 1, 5, 5]]),
     ),
     (
         np.array([2, 1, 1, 2, 2, 3]),
-        np.array([[2, 1, 0, 0], [1, 2, 1, 2], [2, 2, 3, 4], [3, 1, 5, 5]]),
+        np.array([[2, 1, 0, 0], 
+                  [1, 2, 1, 2], 
+                  [2, 2, 3, 4], 
+                  [3, 1, 5, 5]]),
     ),
     (
         np.array([2, 1, 1, 2, 2, 3, 3]),
-        np.array([[2, 1, 0, 0], [1, 2, 1, 2], [2, 2, 3, 4], [3, 2, 5, 6]]),
+        np.array([[2, 1, 0, 0], 
+                  [1, 2, 1, 2], 
+                  [2, 2, 3, 4], 
+                  [3, 2, 5, 6]]),
     ),
 ]
 
+resolution_test_event_series = [
+    (
+        2,
+        np.array([1, 1, 1, 2, 2, 3]),
+    ),
+    (
+        2,
+        np.array([2, 1, 1, 2, 2, 3]),
+    ),
+    (
+        4,
+        np.array([2,2,2,2,1,2,3,3,3,4,6,6,6,6,6,6,1,1,1,1 , 1, 2, 2, 3, 2,2,2,2,5,5,5,5,5,5,3]),
+    ),
+    (
+        4,
+        np.array([2, 1, 1, 2, 2, 3, 3,3,3,3,3,3,3, 5,5,5,5,5, 2,2,2,2,2,2,2, 1,1,1,1,1,1,1]),
+    ),
+    (
+        4,
+        np.array([2, 1, 1, 2, 2, 3, 3]),
+    ),
+]
+
+
+@pytest.mark.parametrize("resolution, trace", resolution_test_event_series)
+def test_extract_events_with_resolution(resolution, trace):
+    events = Idealizer.extract_events(trace, list(range(len(trace))))
+    idealization = Idealizer.apply_resolution(events, trace, np.arange(len(trace)), resolution)
+    out = Idealizer.extract_events(idealization, list(range(len(idealization))))
+    assert np.all(out[:, 1] >= resolution)
 
 @pytest.mark.parametrize("trace, events", test_traces)
 def test_extract_events(trace, events):
