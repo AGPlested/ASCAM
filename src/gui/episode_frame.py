@@ -123,7 +123,7 @@ class ListFrame(QWidget):
             for k in assigned_keys:
                 if k is not None:
                     s += f"[{k}]"
-            n += s.rjust(40 - len(n), " ")
+            n += s.rjust(20 - len(n), " ")
             self.parent.ep_list.item(index).setText(n)
             ana_logger.debug(f"added episode {index} to list {name}")
         else:
@@ -140,7 +140,7 @@ class ListFrame(QWidget):
             for k in assigned_keys:
                 if k is not None:
                     s += f"[{k}]"
-            n += s.rjust(40 - len(n), " ")
+            n += s.rjust(20 - len(n), " ")
             self.parent.ep_list.item(index).setText(n)
             ana_logger.debug(f"removed episode {index} from list {name}")
 
