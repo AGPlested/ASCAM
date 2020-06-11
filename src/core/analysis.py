@@ -132,9 +132,7 @@ class Idealizer:
                     events[i, 3] = events[i + 1, 3]
                     # delete next event
                     events = np.delete(events, i + 1, axis=0)
-                    i = (
-                        i - 1
-                    )  # loop over this event again to check if it is now long enough
+                    i -= 1  # loop over this event again to check if it is now long enough
                 else:
                     idealization[i_start:i_end] = events[i - 1, 0]
                     # add duration
@@ -143,7 +141,6 @@ class Idealizer:
                     events[i - 1, 3] = events[i, 3]
                     # delete current event
                     events = np.delete(events, i, axis=0)
-                    i -= 1
                 # now one less event to iterate over
                 end_ind -= 1
             i += 1
