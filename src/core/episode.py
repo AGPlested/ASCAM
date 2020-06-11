@@ -115,7 +115,7 @@ class Episode:
         self.trace = baseline_correction(
             time=self.time,
             signal=self.trace,
-            fs=sampling_rate,
+            sampling_rate=sampling_rate,
             intervals=intervals,
             degree=degree,
             method=method,

@@ -208,7 +208,7 @@ def detect_first_activation(
 def baseline_correction(
     time: Array[float, 1, ...],
     signal: Array[float, 1, ...],
-    fs: float,
+    sampling_rate: float,
     intervals: Optional[List] = None,
     degree: Optional[int] = 1,
     method: Optional[str] = "Polynomial",
@@ -225,7 +225,7 @@ def baseline_correction(
         signal - time series of measurements
         intervals - interval or list of intervals from which to
                    estimate the baseline (in ms)
-        fs - sampling frequency (in Hz)
+        sampling_rate - sampling frequency (in Hz)
         time_unit - units of the time vector, 'ms' or 's'
         method - `baseline` can subtract a fitted polynomial of
                  desired degree OR subtract the mean
@@ -234,7 +234,7 @@ def baseline_correction(
         original signal less the fitted baseline"""
 
     if selection.lower() == "intervals":
-        t, s = interval_selection(time, signal, intervals, fs)
+        t, s = interval_selection(time, signal, intervals, sampling_rate)
     elif selection.lower() == "piezo":
         t, s = piezo_selection(time, piezo, signal, active, deviation)
     else:
