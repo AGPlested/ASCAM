@@ -267,11 +267,10 @@ class Recording(dict):
         piezos = [episode.piezo for episode in self.series]
         traces = [episode.trace for episode in self.series]
         trace_list = []
-        if self.episode.piezo is None:
-            if select_piezo:
-                debug_logger.debug(
-                    (f"Tried piezo selection even though there is no piezo data!")
-                )
+        if select_piezo and not self.has_piezo:
+            debug_logger.debug(
+                (f"Tried piezo selection even though there is no piezo data!")
+            )
             select_piezo = False
         # select the time points that are used for the histogram
         if select_piezo:
