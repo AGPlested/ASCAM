@@ -85,7 +85,7 @@ class IdealizationFrame(QWidget):
         if self.tab_frame.count() > 2:
             self.tab_frame.removeTab(self.tab_frame.currentIndex())
         else:
-            self.close_frame(self)
+            self.close_frame()
 
     def close_frame(self):
         self.main.ep_frame.ep_list.currentItemChanged.disconnect(
