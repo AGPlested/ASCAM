@@ -3,12 +3,12 @@ import os
 import datetime
 
 
-def initialize_logger(output_dir=".", verbose=False, debug=False):
+def initialize_logger(output_dir=".", silent=False, debug=False):
     """Start the root logger and the handlers.
 
     Args:
         output_dir - the directory in which the logs should be stored
-        verbose (bool) - if true print analysis log contents to console
+        silent (bool) - if true do not print analysis log contents to console
         debug (bool) - if true print debug log contents to console
     """
 
@@ -24,11 +24,11 @@ def initialize_logger(output_dir=".", verbose=False, debug=False):
     debug_logger.setLevel(logging.DEBUG)
     root_logger.setLevel(logging.INFO)
 
-    if verbose and debug:
+    if (not silent) and debug:
         setup_cl_handlers(root_logger)
         setup_cl_handlers(debug_logger)
         setup_cl_handlers(analysis_logger)
-    elif verbose:
+    elif not silent:
         setup_cl_handlers(root_logger)
         setup_cl_handlers(analysis_logger)
     elif debug:

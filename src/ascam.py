@@ -22,17 +22,17 @@ def parse_options():
 
     Returns:
         debug (bool) - if true print contents of debug log to console
-        verbose (bool) - if true print contents of analysis log to console
+        silent (bool) - if true do not print contents of analysis log to console
         logdir (string) - the directory in which the log should be saved
         test (bool) - if true load example data
     """
     debug = False
-    verbose = False
-    logdir = "./logfiles"
+    silent = False
+    logdir = "./ASCAM_logfiles"
     test = False
     try:
         options, args = getopt.getopt(
-            sys.argv[1:], "dvl:th", ["loglevel=", "logdir=", "help", "test"]
+            sys.argv[1:], "dsl:th", ["loglevel=", "logdir=", "help", "test"]
         )
     except getopt.GetoptError as err:
         # print help information and exit:
@@ -43,8 +43,8 @@ def parse_options():
     for opt, arg in options:
         if opt in ("-d", "--debug"):
             debug = True
-        elif opt in ("-v", "--verbose"):
-            verbose = True
+        elif opt in ("-s", "--silent"):
+            silent = True
         elif opt in ("-l", "--logdir"):
             logdir = arg
         elif opt in ("-t", "test"):
@@ -55,7 +55,7 @@ def parse_options():
         else:
             assert False, "unhandled option"
 
-    return verbose, logdir, test, debug
+    return silent, logdir, test, debug
 
 
 def display_help():
@@ -63,10 +63,10 @@ def display_help():
     Print a manual for calling ASCAM to the commandline.
     """
     print(
-        """Usage: ./run --debug --verbose --test --logdir=./logfiles
+        """Usage: ./run --debug --silent --test --logdir=./logfiles
 
             -d --debug : print debug messages to console
-            -v --verbose : print content of analysis log to console
+            -s --silent : do not print content of analysis log to console
             -l --logdir : directory in which the log file should be saved
             -t --test : load example data
             -h --help : display this message"""
@@ -86,9 +86,9 @@ def get_version():
 
 
 def main():
-    verbose, logdir, test, debug = parse_options()
+    silent, logdir, test, debug = parse_options()
 
-    initialize_logger(logdir, verbose, debug)
+    initialize_logger(logdir, silent, debug)
     logging.info("-" * 20 + "Start of new ASCAM session" + "-" * 20)
 
     pip_freeze, git_info = get_version()
