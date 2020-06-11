@@ -150,6 +150,17 @@ class Recording(dict):
     ):
         """Apply a baseline correction to the current series."""
 
+        if self.current_datakey == "raw_":
+            # if its the first operation drop the 'raw_'
+            new_datakey = "BC_"
+        else:
+            # if operations have been done before combine the names
+            new_datakey = self.current_datakey + "BC_"
+        logging.info(f"new datakey is {new_datakey}")
+        self[new_datakey] = copy.deepcopy(self.series)
+        if selection.lower() == "piezo" and not self.has_piezo:
+            debug_logger.debug("selection method was set to 'piezo' but the recording has no piezo data.")
+            selection = "None"
         ana_logger.info(
             f"baseline_correction on series '{self.current_datakey}',"
             f"using method '{method}' with degree {degree}\n"
@@ -159,14 +170,6 @@ class Recording(dict):
             f"deviation from piezo baseline is {deviation}"
             f"sampling rate of this recording is {self.sampling_rate}"
         )
-        if self.current_datakey == "raw_":
-            # if its the first operation drop the 'raw_'
-            new_datakey = "BC_"
-        else:
-            # if operations have been done before combine the names
-            new_datakey = self.current_datakey + "BC_"
-        logging.info(f"new datakey is {new_datakey}")
-        self[new_datakey] = copy.deepcopy(self.series)
         for episode in self[new_datakey]:
             episode.baseline_correct_episode(
                 degree=degree,
