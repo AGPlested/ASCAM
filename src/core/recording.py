@@ -314,8 +314,7 @@ class Recording(dict):
     ):
         """Create a histogram of the current in the presently selected episode.
         """
-        # failsafe for piezo selection
-        if self.episode.piezo is None:
+        if not self.has_piezo:
             # TODO add log or warning here!
             select_piezo = False
         # select time points to include in histogram
