@@ -17,7 +17,7 @@ from PySide2.QtWidgets import (
 )
 import pyqtgraph as pg
 
-from ..constants import TIME_UNIT_FACTORS
+from ..constants import TIME_UNIT_FACTORS, VOLTAGE_UNIT_FACTORS, CURRENT_UNIT_FACTORS
 from ..utils import clear_qt_layout
 
 debug_logger = logging.getLogger("ascam.debug")
@@ -264,6 +264,24 @@ class EntryWidget(VerticalContainerWidget):
     def __init__(self, parent):
 
         super().__init__(parent)
+        self.create_unit_entry_widgets()
+
+    def create_unit_entry_widgets(self):
+        self.trace_unit_entry = QComboBox()
+        self.trace_unit_entry.addItems(list(CURRENT_UNIT_FACTORS.keys()))
+        self.trace_unit_entry.setCurrentIndex(1)
+
+        self.piezo_unit_entry = QComboBox()
+        self.piezo_unit_entry.addItems(list(VOLTAGE_UNIT_FACTORS.keys()))
+        self.piezo_unit_entry.setCurrentIndex(1)
+
+        self.command_unit_entry = QComboBox()
+        self.command_unit_entry.addItems(list(VOLTAGE_UNIT_FACTORS.keys()))
+        self.command_unit_entry.setCurrentIndex(1)
+
+        self.time_unit_entry = QComboBox()
+        self.time_unit_entry.addItems(list(TIME_UNIT_FACTORS.keys()))
+        self.time_unit_entry.setCurrentIndex(1)
 
     @property
     def trace_unit(self):
@@ -286,3 +304,25 @@ class EntryWidget(VerticalContainerWidget):
     def time_unit(self, val):
         if hasattr(self, 'time_unit_entry'):
             self.time_unit_entry.setCurrentText(val)
+
+    @property
+    def piezo_unit(self):
+        if hasattr(self, 'piezo_unit_entry'):
+            return self.piezo_unit_entry.currentText()
+        return 'V'
+
+    @piezo_unit.setter
+    def piezo_unit(self, val):
+        if hasattr(self, 'piezo_unit_entry'):
+            self.piezo_unit_entry.setCurrentText(val)
+
+    @property
+    def command_unit(self):
+        if hasattr(self, 'command_unit_entry'):
+            return self.command_unit_entry.currentText()
+        return 'V'
+
+    @command_unit.setter
+    def command_unit(self, val):
+        if hasattr(self, 'command_unit_entry'):
+            self.command_unit_entry.setCurrentText(val)

@@ -223,9 +223,6 @@ class IdealizationTab(EntryWidget):
         self.layout.addLayout(row)
 
         self.neg_check = QCheckBox("Treat as negative")
-        self.trace_unit_entry = QComboBox()
-        self.trace_unit_entry.addItems(list(CURRENT_UNIT_FACTORS.keys()))
-        self.trace_unit_entry.setCurrentIndex(1)
         self.add_row(self.neg_check, self.trace_unit_entry)
 
         row = QHBoxLayout()
@@ -267,9 +264,6 @@ class IdealizationTab(EntryWidget):
         self.res_entry = QLineEdit()
         row.addWidget(self.res_entry)
 
-        self.time_unit_entry = QComboBox()
-        self.time_unit_entry.addItems(list(TIME_UNIT_FACTORS.keys()))
-        self.time_unit_entry.setCurrentIndex(1)
         row.addWidget(self.time_unit_entry)
         self.layout.addLayout(row)
 
