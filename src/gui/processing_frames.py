@@ -14,6 +14,7 @@ from PySide2.QtWidgets import (
 )
 
 from ..utils import clear_qt_layout, string_to_list
+from ..utils.widgets import VerticalContainerWidget
 
 
 debug_logger = logging.getLogger("ascam.debug")
@@ -101,70 +102,58 @@ class FilterFrame(QDialog):
 class BaselineFrame(QDialog):
     def __init__(self, main):
         super().__init__()
-        self.main = main
         self.setWindowTitle("Baseline Correction")
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
+        self.layout.addWidget(BaselineWidget(main, self))
 
+        self.exec_()
+
+
+class BaselineWidget(VerticalContainerWidget):
+    def __init__(self, main, dialog):
         self.method_options = ["Polynomial", "Offset"]
         self.selection_options = ["Piezo", "Intervals"]
 
-        self.create_widgets()
-        self.exec_()
+        super().__init__(main)
+
+        self.main = main
+        self.dialog = dialog
 
     def create_widgets(self):
-        row_one = QHBoxLayout()
         method_label = QLabel("Method")
         self.method_box = QComboBox()
         self.method_box.addItems(self.method_options)
         self.method_box.currentIndexChanged.connect(self.choose_correction_method)
-        row_one.addWidget(method_label)
-        row_one.addWidget(self.method_box)
+        self.add_row(method_label, self.method_box)
+        self.choose_correction_method(0)
 
-        row_tow = QHBoxLayout()
         selection_label = QLabel("Selection")
         self.selection_box = QComboBox()
         self.selection_box.addItems(self.selection_options)
         self.selection_box.currentIndexChanged.connect(self.choose_selection_method)
-        row_tow.addWidget(selection_label)
-        row_tow.addWidget(self.selection_box)
+        self.add_row(selection_label, self.selection_box)
+        self.choose_selection_method(0)
 
-        row_three = QHBoxLayout()
         ok_button = QPushButton("OK")
         ok_button.clicked.connect(self.ok_clicked)
         cancel_button = QPushButton("Cancel")
-        cancel_button.clicked.connect(self.close)
-        row_three.addWidget(ok_button)
-        row_three.addWidget(cancel_button)
+        cancel_button.clicked.connect(self.cancel_clicked)
+        self.add_row(ok_button, cancel_button)
 
-        self.layout.addLayout(row_one)
-        self.choose_correction_method(0)
-        self.layout.addLayout(row_tow)
-        self.choose_selection_method(0)
-        self.layout.addLayout(row_three)
-
-        self.method_layout = None
-        self.selection_layout = None
 
     def choose_correction_method(self, index):
         if self.method_options[index] == "Polynomial":
-            self.selection_layout = QHBoxLayout()
+            self.selection_layout = QFormLayout()
             debug_logger.debug("Creating polynomial input widgets")
-            self.degree_label = QLabel("Degree")
-            self.selection_layout.addWidget(self.degree_label)
             self.degree_entry = QLineEdit("1")
-            self.selection_layout.addWidget(self.degree_entry)
+            self.selection_layout.addRow("Degree", self.degree_entry)
             self.layout.insertLayout(1, self.selection_layout)
         else:
             debug_logger.debug("Destroying polynomial input widgets")
-            try:
-                clear_qt_layout(self.selection_layout)
-            except AttributeError:
-                pass
+            clear_qt_layout(self.selection_layout)
 
     def choose_selection_method(self, index):
-        # TODO: switching back and forth causes double row
-        # (widgets not being cleared)
         try:
             debug_logger.debug("deleting selection widgets")
             clear_qt_layout(self.method_layout)
@@ -186,7 +175,10 @@ class BaselineFrame(QDialog):
             self.method_layout.addWidget(self.interval_label)
             self.interval_entry = QLineEdit("")
             self.method_layout.addWidget(self.interval_entry)
-        self.layout.insertLayout(3, self.method_layout)
+        # insert the newly created layout in the 3rd or 4th row
+        # depending on whether there is an entry field for the correction method
+        pos = 3 + int(self.method_box.currentText() == "Polynomial") 
+        self.layout.insertLayout(pos, self.method_layout)
 
     def ok_clicked(self):
         method = self.method_options[self.method_box.currentIndex()]
@@ -211,4 +203,9 @@ class BaselineFrame(QDialog):
         )
         self.main.ep_frame.update_combo_box()
         self.main.plot_frame.plot_all()
+        self.dialog.close()
+        self.close()
+
+    def cancel_clicked(self):
+        self.dialog.close()
         self.close()
