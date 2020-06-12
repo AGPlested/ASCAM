@@ -53,21 +53,18 @@ class FilterFrame(QDialog):
         self.choose_filter_method(0)
         self.layout.addLayout(row_two)
 
-        self.selection_layout = None
-
     def choose_filter_method(self, index):
         try:
             debug_logger.debug("deleting selection widgets")
             clear_qt_layout(self.selection_layout)
         except AttributeError:
             pass
+        self.resize(self.sizeHint())
         if self.filter_options[index] == "Gaussian":
-            self.selection_layout = QHBoxLayout()
             debug_logger.debug("Creating gaussian input widgets")
-            self.freq_label = QLabel("Frequency [Hz]")
-            self.selection_layout.addWidget(self.freq_label)
+            self.selection_layout = QFormLayout()
             self.freq_entry = QLineEdit("1000")
-            self.selection_layout.addWidget(self.freq_entry)
+            self.selection_layout.addRow("Frequency [Hz]", self.freq_entry)
         else:
             debug_logger.debug("creating CK-filter input widgets")
             self.selection_layout = QFormLayout()
@@ -82,8 +79,7 @@ class FilterFrame(QDialog):
             self.backward_entry = QLineEdit()
             self.selection_layout.addRow("Backward Pi", self.backward_entry)
         self.layout.insertLayout(1, self.selection_layout)
-        # TODO sizing after switching back and forth
-        # self.resize(self.sizeHint())
+        self.resize(self.sizeHint())  # both resizes are necessary
 
     def ok_clicked(self):
         filter_method = self.filter_options[self.method_box.currentIndex()]
