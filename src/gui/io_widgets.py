@@ -106,7 +106,10 @@ class OpenFileEntryWidget(EntryWidget):
         self.main = main
         self.filename=filename
         self.dialog= dialog
-        super().__init__(main)
+        super().__init__(main, default_time_unit='s',
+                default_trace_unit='A',
+                default_piezo_unit='V',
+                default_command_unit='V')
 
     def create_widgets(self):
         file_button = QLabel("File:")

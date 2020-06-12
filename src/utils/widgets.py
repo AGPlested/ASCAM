@@ -18,7 +18,7 @@ from PySide2.QtWidgets import (
 import pyqtgraph as pg
 
 from ..constants import TIME_UNIT_FACTORS, VOLTAGE_UNIT_FACTORS, CURRENT_UNIT_FACTORS
-from ..utils import clear_qt_layout
+from ..utils import clear_qt_layout, get_dict_key_index
 
 debug_logger = logging.getLogger("ascam.debug")
 
@@ -261,27 +261,36 @@ class VerticalContainerWidget(QWidget):
 
         
 class EntryWidget(VerticalContainerWidget):
-    def __init__(self, parent):
-
+    def __init__(self, parent, default_time_unit='ms', default_trace_unit='pA',
+                 default_piezo_unit='mV', default_command_unit='uV'):
+        
+        self.default_time_unit=default_time_unit
+        self.default_trace_unit=default_trace_unit
+        self.default_piezo_unit=default_piezo_unit
+        self.default_command_unit=default_command_unit
         self.create_unit_entry_widgets()
         super().__init__(parent)
 
     def create_unit_entry_widgets(self):
         self.trace_unit_entry = QComboBox()
         self.trace_unit_entry.addItems(list(CURRENT_UNIT_FACTORS.keys()))
-        self.trace_unit_entry.setCurrentIndex(1)
+        self.trace_unit_entry.setCurrentIndex(
+                get_dict_key_index(CURRENT_UNIT_FACTORS, self.default_trace_unit))
 
         self.piezo_unit_entry = QComboBox()
         self.piezo_unit_entry.addItems(list(VOLTAGE_UNIT_FACTORS.keys()))
-        self.piezo_unit_entry.setCurrentIndex(1)
+        self.piezo_unit_entry.setCurrentIndex(
+            get_dict_key_index(TIME_UNIT_FACTORS, self.default_time_unit))
 
         self.command_unit_entry = QComboBox()
         self.command_unit_entry.addItems(list(VOLTAGE_UNIT_FACTORS.keys()))
-        self.command_unit_entry.setCurrentIndex(1)
+        self.command_unit_entry.setCurrentIndex(
+            get_dict_key_index(VOLTAGE_UNIT_FACTORS, self.default_command_unit))
 
         self.time_unit_entry = QComboBox()
         self.time_unit_entry.addItems(list(TIME_UNIT_FACTORS.keys()))
-        self.time_unit_entry.setCurrentIndex(1)
+        self.time_unit_entry.setCurrentIndex(
+            get_dict_key_index(VOLTAGE_UNIT_FACTORS, self.default_piezo_unit))
 
     @property
     def trace_unit(self):

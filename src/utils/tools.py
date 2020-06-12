@@ -157,3 +157,6 @@ def round_off_tables(dataframe, column_units):
     for i, unit in enumerate(column_units):
         dataframe.iloc[:, i] = dataframe.iloc[:, i].map(lambda x: f"{x:.{PRECISIONS[unit]}f}")
     return dataframe    
+
+def get_dict_key_index(dictionary, target_key):
+    return [index for index, key in enumerate(dictionary.keys()) if key == target_key][0]
