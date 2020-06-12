@@ -89,17 +89,33 @@ class MainWindow(QMainWindow):
 
     def open_file(self):
         self.filename = QFileDialog.getOpenFileName(self)[0]
-        debug_logger.debug(f"filename is {self.filename}")
-        _, _, _, filename_short = parse_filename(self.filename)
-        OpenFileDialog(self, filename_short)
+        if self.filename:
+            self.close_tc_frame()
+            self.close_fa_frame()
+            debug_logger.debug(f"filename is {self.filename}")
+            _, _, _, filename_short = parse_filename(self.filename)
+            OpenFileDialog(self, filename_short)
 
     def save_to_file(self):
         filename = QFileDialog.getSaveFileName(
             self, dir=self.filename[:-3] + "pkl", filter="*.pkl"
         )[0]
-        self.data.save_to_pickle(filename)
+        if filename:
+            self.data.save_to_pickle(filename)
+        else:
+            debug_logger.debug("Not saving to pickle - no filename given.")
 
     def launch_idealization(self):
+        self.close_fa_frame()
+        self.tc_frame = IdealizationFrame(self)
+        self.central_layout.addWidget(self.tc_frame, 1, 1)
+
+    def launch_fa_analysis(self):
+        self.close_tc_frame()
+        self.fa_frame = FirstActivationFrame(self)
+        self.central_layout.addWidget(self.fa_frame, 1, 1)
+
+    def close_fa_frame(self):
         try:
             self.fa_frame.clean_up_and_close()
         except AttributeError as e:
@@ -107,10 +123,8 @@ class MainWindow(QMainWindow):
                 pass
             else:
                 raise AttributeError(e)
-        self.tc_frame = IdealizationFrame(self)
-        self.central_layout.addWidget(self.tc_frame, 1, 1)
 
-    def launch_fa_analysis(self):
+    def close_tc_frame(self):
         try:
             self.tc_frame.close_frame()
         except AttributeError as e:
@@ -118,8 +132,6 @@ class MainWindow(QMainWindow):
                 pass
             else:
                 raise AttributeError(e)
-        self.fa_frame = FirstActivationFrame(self)
-        self.central_layout.addWidget(self.fa_frame, 1, 1)
 
     def test_mode(self):
         path = os.path.split(
