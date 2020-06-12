@@ -76,6 +76,7 @@ class PlotFrame(QWidget):
         self.layout.setColumnStretch(0, 2)
         self.layout.setColumnStretch(1, 1)
 
+        ind += 1
         if self.show_piezo:
             self.piezo_viewbox = CustomHorizontalViewBox(self)
             self.piezo_plot = pg.PlotWidget(viewBox=self.piezo_viewbox, name=f"piezo")
@@ -83,12 +84,12 @@ class PlotFrame(QWidget):
             self.piezo_plot.setBackground("w")
             self.piezo_plot.setLabel("bottom", "time", units="s")
             self.piezo_plot.setXLink(self.trace_plot)
-            ind = 1 + int(self.show_command)
             self.layout.addWidget(self.piezo_plot, ind, 0)
             self.layout.setRowStretch(ind, 1)
         else:
             self.piezo_plot = None
             self.trace_plot.setLabel("bottom", "time", units="s")
+            self.layout.setRowStretch(ind, 0)
 
         if self.show_command:
             self.command_viewbox = CustomHorizontalViewBox(self)
