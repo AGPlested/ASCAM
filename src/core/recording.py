@@ -150,6 +150,17 @@ class Recording(dict):
     ):
         """Apply a baseline correction to the current series."""
 
+        if self.current_datakey == "raw_":
+            # if its the first operation drop the 'raw_'
+            new_datakey = "BC_"
+        else:
+            # if operations have been done before combine the names
+            new_datakey = self.current_datakey + "BC_"
+        logging.info(f"new datakey is {new_datakey}")
+        self[new_datakey] = copy.deepcopy(self.series)
+        if selection.lower() == "piezo" and not self.has_piezo:
+            debug_logger.debug("selection method was set to 'piezo' but the recording has no piezo data.")
+            selection = "None"
         ana_logger.info(
             f"baseline_correction on series '{self.current_datakey}',"
             f"using method '{method}' with degree {degree}\n"
@@ -159,14 +170,6 @@ class Recording(dict):
             f"deviation from piezo baseline is {deviation}"
             f"sampling rate of this recording is {self.sampling_rate}"
         )
-        if self.current_datakey == "raw_":
-            # if its the first operation drop the 'raw_'
-            new_datakey = "BC_"
-        else:
-            # if operations have been done before combine the names
-            new_datakey = self.current_datakey + "BC_"
-        logging.info(f"new datakey is {new_datakey}")
-        self[new_datakey] = copy.deepcopy(self.series)
         for episode in self[new_datakey]:
             episode.baseline_correct_episode(
                 degree=degree,
@@ -264,11 +267,10 @@ class Recording(dict):
         piezos = [episode.piezo for episode in self.series]
         traces = [episode.trace for episode in self.series]
         trace_list = []
-        if self.episode.piezo is None:
-            if select_piezo:
-                debug_logger.debug(
-                    (f"Tried piezo selection even though there is no piezo data!")
-                )
+        if select_piezo and not self.has_piezo:
+            debug_logger.debug(
+                (f"Tried piezo selection even though there is no piezo data!")
+            )
             select_piezo = False
         # select the time points that are used for the histogram
         if select_piezo:
@@ -311,8 +313,7 @@ class Recording(dict):
     ):
         """Create a histogram of the current in the presently selected episode.
         """
-        # failsafe for piezo selection
-        if self.episode.piezo is None:
+        if not self.has_piezo:
             # TODO add log or warning here!
             select_piezo = False
         # select time points to include in histogram
