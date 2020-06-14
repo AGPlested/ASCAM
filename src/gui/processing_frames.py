@@ -31,6 +31,7 @@ class FilterFrame(QDialog):
         self.filter_options = ["Gaussian", "Chung-Kennedy"]
 
         self.create_widgets()
+        self.freq_entry.setFocus()
         self.exec_()
 
     def create_widgets(self):
