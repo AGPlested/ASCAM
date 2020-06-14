@@ -214,69 +214,54 @@ class IdealizationTab(EntryWidget):
         super().__init__(parent)
 
     def create_widgets(self):
-        row = QHBoxLayout()
         amp_label = QLabel("Amplitudes")
-        row.addWidget(amp_label)
         self.show_amp_check = QCheckBox("Show")
         self.show_amp_check.setChecked(True)
-        row.addWidget(self.show_amp_check)
-        self.layout.addLayout(row)
+        self.add_row(amp_label, self.show_amp_check)
 
         self.neg_check = QCheckBox("Treat as negative")
         self.add_row(self.neg_check, self.trace_unit_entry)
 
-        row = QHBoxLayout()
         self.drag_amp_toggle = QToolButton()
         self.drag_amp_toggle.setCheckable(True)
         self.drag_amp_toggle.setText("Drag lines to change parameters")
         self.drag_amp_toggle.setChecked(self.parent.parent.main.plot_frame.tc_tracking)
         self.drag_amp_toggle.clicked.connect(self.toggle_drag_params)
-        row.addWidget(self.drag_amp_toggle)
-        self.layout.addLayout(row)
+        self.add_row(self.drag_amp_toggle)
 
         self.amp_entry = TextEdit()
         self.add_row(self.amp_entry)
 
-        row = QHBoxLayout()
         threshold_label = QLabel("Thresholds")
-        row.addWidget(threshold_label)
         self.show_threshold_check = QCheckBox("Show")
-        row.addWidget(self.show_threshold_check)
-        self.layout.addLayout(row)
+        self.add_row(threshold_label, self.show_threshold_check)
 
         self.auto_thresholds = QCheckBox("Auto-Generate")
         self.auto_thresholds.stateChanged.connect(self.toggle_auto_theta)
-        self.layout.addWidget(self.auto_thresholds)
+        self.add_row(self.auto_thresholds)
 
         self.threshold_entry = TextEdit()
-        self.layout.addWidget(self.threshold_entry)
+        self.add_row(self.threshold_entry)
 
-        row = QHBoxLayout()
         res_label = QLabel("Resolution")
-        row.addWidget(res_label)
+        self.add_row(res_label)
 
         self.use_res = QCheckBox("Apply")
         self.use_res.stateChanged.connect(self.toggle_resolution)
-        row.addWidget(self.use_res)
-        self.layout.addLayout(row)
+        self.add_row(self.use_res)
 
-        row = QHBoxLayout()
         self.res_entry = QLineEdit()
-        row.addWidget(self.res_entry)
+        self.add_row(self.res_entry)
 
-        row.addWidget(self.time_unit_entry)
-        self.layout.addLayout(row)
+        self.add_row(self.time_unit_entry)
 
-        row = QHBoxLayout()
         intrp_label = QLabel("Interpolation")
-        row.addWidget(intrp_label)
         self.interpolate = QCheckBox("Apply")
         self.interpolate.stateChanged.connect(self.toggle_interpolation)
-        row.addWidget(self.interpolate)
-        self.layout.addLayout(row)
+        self.add_row(intrp_label, self.interpolate)
 
         self.intrp_entry = QLineEdit()
-        self.layout.addWidget(self.intrp_entry)
+        self.add_row(self.intrp_entry)
 
     def toggle_drag_params(self, checked):
         self.parent.parent.main.plot_frame.tc_tracking = checked
