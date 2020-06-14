@@ -67,7 +67,7 @@ class FirstActivationFrame(EntryWidget):
         self.trace_unit_entry.setCurrentIndex(1)
         self.threshold_entry = QLineEdit()
         self.threshold_entry.setText("0")
-        self.threshold_entry.returnPressed.connect(self.click_set_threshold)
+        self.threshold_entry.returnPressed.connect(self.set_threshold)
         self.drag_threshold_button = QToolButton()
         self.drag_threshold_button.setText("Draggable")
         self.drag_threshold_button.setCheckable(True)
@@ -76,7 +76,7 @@ class FirstActivationFrame(EntryWidget):
         
         row = QHBoxLayout()
         self.threshold_button = QPushButton("Set threshold")
-        self.threshold_button.clicked.connect(self.click_set_threshold)
+        self.threshold_button.clicked.connect(self.set_threshold)
         row.addWidget(self.threshold_button)
 
         row = QHBoxLayout()
@@ -156,21 +156,12 @@ class FirstActivationFrame(EntryWidget):
         self.marking_indicator.setPos(mousePoint.x())
 
     def toggle_dragging_threshold(self, *args):
+        debug_logger.debug(f"toggling dragging treshold to {self.drag_threshold_button.isChecked()}")
         if self.drag_threshold_button.isChecked():
-            self.clean_up_marking()
-            self.manual_marking_toggle.setChecked(False)
-            self.main.plot_frame.fa_thresh_hist_line.sigDragged.connect(
-                self.drag_fa_threshold_hist
-            )
-            self.main.plot_frame.fa_thresh_hist_line.setMovable(True)
-            self.main.plot_frame.fa_thresh_line.sigDragged.connect(
-                self.drag_fa_threshold
-            )
-            self.main.plot_frame.fa_thresh_line.setMovable(True)
-            self.main.plot_frame.plots_are_draggable = False
+            self.main.plot_frame.fa_tracking = True
         else:
             self.clean_up_thresh_dragging()
-            self.main.plot_frame.plots_are_draggable = True
+            self.main.plot_frame.fa_tracking = False
 
     def toggle_manual_marking(self):
         if self.manual_marking_toggle.isChecked():
@@ -205,22 +196,6 @@ class FirstActivationFrame(EntryWidget):
             else:
                 raise RuntimeError(error)
 
-    def clean_up_thresh_dragging(self):
-        self.main.plot_frame.fa_thresh_hist_line.setMovable(False)
-        self.main.plot_frame.fa_thresh_line.setMovable(False)
-        try:
-            self.main.plot_frame.fa_thresh_line.sigDragged.disconnect(
-                self.drag_fa_threshold
-            )
-            self.main.plot_frame.fa_thresh_hist_line.sigDragged.disconnect(
-                self.drag_fa_threshold_hist
-            )
-        except RuntimeError as error:
-            if "Failed to disconnect signal" in str(error):
-                pass
-            else:
-                raise RuntimeError(error)
-
     def mark_fa_manually(self, evt):
         debug_logger.debug(f"manually marked episode {self.main.data.episode.n_episode}"
                            f"at t={self.marking_indicator.value()}")
@@ -229,14 +204,12 @@ class FirstActivationFrame(EntryWidget):
             self.main.plot_frame.plot_fa_line()
             self.main.data.episode.manual_first_activation = True
 
-    def drag_fa_threshold_hist(self):
-        self.threshold = self.main.plot_frame.fa_thresh_hist_line.value()
-        self.main.plot_frame.fa_thresh_line.setValue( self.threshold )
+    def drag_fa_threshold_hist(self, pos):
+        self.threshold = pos  
         self.set_threshold()
 
-    def drag_fa_threshold(self):
-        self.threshold = self.main.plot_frame.fa_thresh_line.value()
-        self.main.plot_frame.fa_thresh_hist_line.setValue( self.threshold )
+    def drag_fa_threshold(self, pos):
+        self.threshold = pos  
         self.set_threshold()
 
     def toggle_jump_checkbox(self):
@@ -264,12 +237,7 @@ class FirstActivationFrame(EntryWidget):
     def set_threshold(self):
         self.main.data.detect_fa(self.threshold)
         self.main.plot_frame.plot_fa_line()
-
-    def click_set_threshold(self):
-        debug_logger.debug(f"setting first activation threshold at {self.threshold}")
-        self.set_threshold()
-        self.main.plot_frame.fa_thresh_line.setValue(self.threshold)
-        self.main.plot_frame.fa_thresh_hist_line.setValue(self.threshold)
+        self.main.plot_frame.plot_fa_threshold(self.threshold)
 
     def click_cancel(self):
         for episode in self.main.data.series:

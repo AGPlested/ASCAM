@@ -31,6 +31,7 @@ class PlotFrame(QWidget):
         self.hist_y_range = None
 
         self.tc_tracking = False
+        self.fa_tracking = False
 
         self.init_plots()
         self.init_hist()
@@ -242,12 +243,18 @@ class PlotFrame(QWidget):
 
     def plot_fa_threshold(self, threshold):
         debug_logger.debug(f"plotting first activation threshold at {threshold}")
-        pen = pg.mkPen(color=ORANGE, style=QtCore.Qt.DashLine, width=0.4)
+        pen = pg.mkPen(color=ORANGE, style=QtCore.Qt.DashLine, width=0.9)
         self.clear_fa_threshold()
-        self.fa_thresh_hist_line = pg.InfiniteLine(pos=threshold, angle=0, pen=pen)
-        self.hist.addItem(self.fa_thresh_hist_line)
-        self.fa_thresh_line = pg.InfiniteLine(pos=threshold, angle=0, pen=pen)
+
+        time = self.main.data.episode.time
+        hist_x = np.arange(
+            np.min([*self.hist_y_range]), np.max([*self.hist_y_range]), 0.1
+        )
+
+        self.fa_thresh_line  = self.trace_plot.plot(time, np.ones(len(time)) * threshold, pen=pen)
         self.trace_plot.addItem(self.fa_thresh_line)
+        self.fa_thresh_hist_line  =self.hist.plot(hist_x, np.ones(len(hist_x)) * threshold, pen=pen)
+        self.hist.addItem(self.fa_thresh_hist_line)
 
     def plot_fa_line(self):
         self.clear_fa()
@@ -394,6 +401,9 @@ class CustomViewBox(pg.ViewBox):
             ):
                 pos = self.mapSceneToView(ev.pos()).y()
                 self.parent.main.tc_frame.track_cursor(pos)
+            elif self.parent.fa_tracking:
+                pos = self.mapSceneToView(ev.pos()).y()
+                self.parent.main.fa_frame.drag_fa_threshold(pos)
             elif ev.modifiers() == QtCore.Qt.ControlModifier:
                 self.setMouseMode(self.RectMode)
                 pg.ViewBox.mouseDragEvent(self, ev)
