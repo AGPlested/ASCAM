@@ -338,6 +338,13 @@ class IdealizationTab(EntryWidget):
                 f"resolution = {res_string}\n"
                 f"interpolation = {intrp_string}"
             )
+            try:
+                self.idealization_cache.clear_idealization()
+            except AttributeError as e:
+                if "'IdealizationTab' object has no attribute 'idealization_cache'" in str(e):
+                    pass
+                else:
+                    raise AttributeError(e)
             self.idealization_cache = IdealizationCache(
                 self.parent.parent.main.data, amps, thresholds, resolution, intrp_factor
             )

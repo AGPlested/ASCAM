@@ -26,26 +26,29 @@ class IdealizationCache:
         self.resolution = resolution
         self.interpolation_factor = interpolation_factor
 
-        self.episodes = []
-
     @property
     def ind_idealized(self):
-        return {i.n_episode for i in self.episodes}
+        """Return the set of numbers of the episodes in the currently selected series
+        that have been idealized with the current parameters."""
+        return {episode.n_episode for episode in self.data.series if episode.idealization is not None}
 
     def idealization(self, n_episode=None):
+        """Return the idealization of a given episode or idealize the episode and then return it."""
         if n_episode is None:
             n_episode = self.data.current_ep_ind
-        out = [i.idealization for i in self.episodes if i.n_episode == n_episode]
-        if out:
+        out = [episode.idealization for episode in self.data.series if episode.n_episode == n_episode]
+        if out:  # if an idealization exists return it
             return out[0]
-        else:
+        else:  # else idealize the episode and then return
             self.idealize_episode(n_episode)
             self.idealization(n_episode)
 
     def time(self, n_episode=None):
+        """Return the time vector corresponding to the idealization of the given episode,
+        if it is not idealized, idealize it first and then return the time."""
         if n_episode is None:
             n_episode = self.data.current_ep_ind
-        out = [i.time for i in self.episodes if i.n_episode == n_episode]
+        out = [episode.id_time for episode in self.data.series if episode.n_episode == n_episode]
         if out:
             return out[0]
         else:
@@ -56,6 +59,12 @@ class IdealizationCache:
     def all_ep_inds(self):
         return {e.n_episode for e in self.data.series}
 
+    def clear_idealization(self):
+        for series in self.data.values():
+            for episode in [episode for episode in series if episode.idealization is not None]:
+                episode.idealization = None
+                episode.id_time = None
+
     def idealize_episode(self, n_episode=None):
         if n_episode is None:
             n_episode = self.data.current_ep_ind
@@ -64,18 +73,15 @@ class IdealizationCache:
                 f"idealizing episode {n_episode} of "
                 f"series {self.data.current_datakey}"
             )
-            idealization, trace, time = Idealizer.idealize_episode(
-                self.data.series[n_episode].trace,
-                self.data.episode.time,
+            self.data.series[n_episode].idealize(
                 self.amplitudes,
                 self.thresholds,
                 self.resolution,
                 self.interpolation_factor,
             )
-            self.episodes.append(Idealization(idealization, time, n_episode))
-            self.ind_idealized.add(n_episode)
+
         else:
-            debug_logger.debug("episode already idealized")
+            debug_logger.debug(f"episode number {n_episode} already idealized")
 
     def idealize_series(self):
         debug_logger.debug(f"idealizing series {self.data.current_datakey}")
@@ -108,10 +114,10 @@ class IdealizationCache:
         if not filepath.endswith(".csv"):
             filepath += ".csv"
         export_array = np.zeros(
-            shape=(len(self.episodes) + 1, self.idealization().size)
+            shape=(len(self.data.series) + 1, self.idealization().size)
         )
         export_array[0] = self.time() * TIME_UNIT_FACTORS[time_unit]
-        for k, episode in enumerate(self.episodes):
+        for k, episode in enumerate(self.data.series):
             export_array[k + 1] = (
                 episode.idealization * CURRENT_UNIT_FACTORS[trace_unit]
             )
@@ -188,9 +194,3 @@ class IdealizationCache:
             f.write(params)
         export_array.to_csv(filepath, mode="a")
 
-
-class Idealization:
-    def __init__(self, idealization, time, n_episode):
-        self.idealization = idealization
-        self.time = time
-        self.n_episode = n_episode

@@ -188,7 +188,7 @@ class PlotFrame(QWidget):
         self.trace_line = self.trace_plot.plot(
             self.main.data.episode.time, self.main.data.episode.trace, pen=pen
         )
-        try:  # TODO replace this with 'if self.show_idealization'
+        try:  # TODO replace this with `if idealization is not None`
             id_pen = pg.mkPen(color=ORANGE)
             self.trace_plot.plot(
                 self.main.tc_frame.time(), self.main.tc_frame.idealization(), pen=id_pen

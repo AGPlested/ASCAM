@@ -1,5 +1,6 @@
 import numpy as np
 
+
 from ..utils import piezo_selection
 from ..constants import (
     CURRENT_UNIT_FACTORS,
@@ -7,7 +8,7 @@ from ..constants import (
     TIME_UNIT_FACTORS,
 )
 from .filtering import gaussian_filter, ChungKennedyFilter
-from .analysis import baseline_correction, detect_first_activation
+from .analysis import baseline_correction, detect_first_activation, Idealizer
 
 
 class Episode:
@@ -56,6 +57,8 @@ class Episode:
         # results of analyses
         self.first_activation = None
         self.manual_first_activation = False
+        self.idealization = None
+        self.id_time = None
         # metadata about the episode
         self.n_episode = int(n_episode)
 
@@ -67,9 +70,15 @@ class Episode:
         # because manual marking can choose points that are not in the time array
         return self.trace[ np.argmin(np.abs(self.time - self.first_activation)) ]
 
-    @property
-    def id_time(self):
-        return self.time if self._id_time is None else self._id_time
+    def idealize(self, amplitudes, thresholds=None, resolution=None, interpolation_factor=1):
+        self.idealization, self.id_time = Idealizer.idealize_episode(
+            self.trace,
+            self.time,
+            amplitudes,
+            thresholds,
+            resolution,
+            interpolation_factor,
+        )
 
     def gauss_filter_episode(self, filter_frequency=1e3, sampling_rate=4e4):
         """Replace the current trace of the episode by the gauss filtered

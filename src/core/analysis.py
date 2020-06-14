@@ -52,7 +52,7 @@ class Idealizer:
         if resolution is not None:
             events = cls.extract_events(idealization, time)
             idealization = cls.apply_resolution(events, idealization, time, resolution)
-        return idealization, signal, time
+        return idealization, time
 
     @staticmethod
     def threshold_crossing(
