@@ -50,6 +50,14 @@ class EpisodeFrame(QWidget):
     def switch_series(self, index):
         debug_logger.debug(f"switching series to index {index}")
         self.main.data.current_datakey = index
+        try:
+            self.main.tc_frame.get_params()
+            self.main.tc_frame.idealize_episode()
+        except AttributeError as e:
+            if "'MainWindow' object has no attribute 'tc_frame'" in str(e):
+                pass
+            else:
+                raise AttributeError(e)
         self.main.plot_frame.plot_all()
 
     def update_combo_box(self):
