@@ -24,18 +24,25 @@ debug_logger = logging.getLogger("ascam.debug")
 
 
 class TextEdit(QTextEdit):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, parent=None, *args, **kwargs):
+        self.parent = parent  #this is the containing widget
         QTextEdit.__init__(self, *args, **kwargs)
         self.document().modificationChanged.connect(self.updateMaxHeight)
 
     def updateMaxHeight(self, *args):
-        # the +2 is a bit hacky, but it's there to avoid the appearance of
+        # the +2 is a bit ugly, but it's there to avoid the appearance of
         # scrollbars when then widget is initialized
         self.setMaximumHeight(self.document().size().height() + 2)
 
     def resizeEvent(self, e):
         QTextEdit.resizeEvent(self, e)
         self.updateMaxHeight()
+
+    def keyPressEvent(self, event):
+        if event.key() in (QtCore.Qt.Key_Return, QtCore.Qt.Key_Enter):
+            event.ignore()
+        else:
+            super().keyPressEvent(event)
 
 
 class HistogramViewBox(pg.ViewBox):
@@ -259,7 +266,7 @@ class VerticalContainerWidget(QWidget):
                 raise TypeError(f"Cannot add {item} to a row layout.")
         self.layout.addLayout(row)
 
-        
+
 class EntryWidget(VerticalContainerWidget):
     def __init__(self, parent, default_time_unit='ms', default_trace_unit='pA',
                  default_piezo_unit='mV', default_command_unit='uV'):
@@ -335,3 +342,6 @@ class EntryWidget(VerticalContainerWidget):
     def command_unit(self, val):
         if hasattr(self, 'command_unit_entry'):
             self.command_unit_entry.setCurrentText(val)
+
+
+

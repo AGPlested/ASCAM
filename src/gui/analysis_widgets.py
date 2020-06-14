@@ -2,7 +2,9 @@ import logging
 
 import numpy as np
 import pyqtgraph as pg
+from PySide2 import QtCore
 from PySide2.QtWidgets import (
+        QApplication,
     QSizePolicy,
     QComboBox,
     QFileDialog,
@@ -213,6 +215,18 @@ class IdealizationTab(EntryWidget):
     def __init__(self, parent):
         super().__init__(parent)
 
+    def keyPressEvent(self, event):
+        if event.key() in (QtCore.Qt.Key_Return, QtCore.Qt.Key_Enter):
+            if QApplication.focusWidget() == self.res_entry:
+                self.use_res.setChecked(True)
+            elif QApplication.focusWidget() == self.threshold_entry:
+                self.show_threshold_check.setChecked(True)
+            elif QApplication.focusWidget() == self.intrp_entry:
+                self.interpolate.setChecked(True)
+            self.parent.parent.calculate_click() 
+        else:
+            super().keyPressEvent(event)
+
     def create_widgets(self):
         amp_label = QLabel("Amplitudes")
         self.show_amp_check = QCheckBox("Show")
@@ -229,7 +243,7 @@ class IdealizationTab(EntryWidget):
         self.drag_amp_toggle.clicked.connect(self.toggle_drag_params)
         self.add_row(self.drag_amp_toggle)
 
-        self.amp_entry = TextEdit()
+        self.amp_entry = TextEdit(self)
         self.add_row(self.amp_entry)
 
         threshold_label = QLabel("Thresholds")
@@ -240,27 +254,23 @@ class IdealizationTab(EntryWidget):
         self.auto_thresholds.stateChanged.connect(self.toggle_auto_theta)
         self.add_row(self.auto_thresholds)
 
-        self.threshold_entry = TextEdit()
+        self.threshold_entry = TextEdit(self)
         self.add_row(self.threshold_entry)
 
         res_label = QLabel("Resolution")
-        self.add_row(res_label)
-
         self.use_res = QCheckBox("Apply")
         self.use_res.stateChanged.connect(self.toggle_resolution)
-        self.add_row(self.use_res)
+        self.add_row(res_label, self.use_res)
 
-        self.res_entry = QLineEdit()
-        self.add_row(self.res_entry)
-
-        self.add_row(self.time_unit_entry)
+        self.res_entry = QLineEdit(self)
+        self.add_row(self.res_entry, self.time_unit_entry)
 
         intrp_label = QLabel("Interpolation")
         self.interpolate = QCheckBox("Apply")
         self.interpolate.stateChanged.connect(self.toggle_interpolation)
         self.add_row(intrp_label, self.interpolate)
 
-        self.intrp_entry = QLineEdit()
+        self.intrp_entry = QLineEdit(self)
         self.add_row(self.intrp_entry)
 
     def toggle_drag_params(self, checked):
