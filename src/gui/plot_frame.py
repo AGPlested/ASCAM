@@ -188,13 +188,16 @@ class PlotFrame(QWidget):
         self.trace_line = self.trace_plot.plot(
             self.main.data.episode.time, self.main.data.episode.trace, pen=pen
         )
-        try:  # TODO replace this with `if idealization is not None`
+        try:  
             id_pen = pg.mkPen(color=ORANGE)
             self.trace_plot.plot(
                 self.main.tc_frame.time(), self.main.tc_frame.idealization(), pen=id_pen
             )
         except AttributeError as e:
-            debug_logger.debug("cannot plot idealization")
+            if "'MainWindow' object has no attribute 'tc_frame'" in str(e):
+                pass
+            else: 
+                raise e
         if self.show_command:
             self.command_plot.plot(
                 self.main.data.episode.time, self.main.data.episode.command, pen=pen

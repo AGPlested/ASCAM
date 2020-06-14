@@ -57,7 +57,7 @@ class EpisodeFrame(QWidget):
             if "'MainWindow' object has no attribute 'tc_frame'" in str(e):
                 pass
             else:
-                raise AttributeError(e)
+                raise e
         self.main.plot_frame.plot_all()
 
     def update_combo_box(self):
