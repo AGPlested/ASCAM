@@ -148,3 +148,5 @@ class MainWindow(QMainWindow):
         self.data.gauss_filter_series(1000)
         self.ep_frame.update_combo_box()
         self.plot_frame.plot_all()
+        self.launch_idealization()
+        self.tc_frame.current_tab.amp_entry.setPlainText("0 -.7 -1.2 -1.8 -2.2")

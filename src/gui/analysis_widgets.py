@@ -236,15 +236,15 @@ class IdealizationTab(EntryWidget):
         self.neg_check = QCheckBox("Treat as negative")
         self.add_row(self.neg_check, self.trace_unit_entry)
 
+        self.amp_entry = TextEdit(self)
+        self.add_row(self.amp_entry)
+
         self.drag_amp_toggle = QToolButton()
         self.drag_amp_toggle.setCheckable(True)
         self.drag_amp_toggle.setText("Drag lines to change parameters")
         self.drag_amp_toggle.setChecked(self.parent.parent.main.plot_frame.tc_tracking)
         self.drag_amp_toggle.clicked.connect(self.toggle_drag_params)
         self.add_row(self.drag_amp_toggle)
-
-        self.amp_entry = TextEdit(self)
-        self.add_row(self.amp_entry)
 
         threshold_label = QLabel("Thresholds")
         self.show_threshold_check = QCheckBox("Show")

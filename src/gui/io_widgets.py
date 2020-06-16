@@ -116,7 +116,7 @@ class OpenFileEntryWidget(EntryWidget):
         self.file_name_label = QLabel(self.filename)
         self.add_row(file_button, self.file_name_label)
 
-        sampling_label = QLabel('Smapling rate [Hz]')
+        sampling_label = QLabel('Sampling rate [Hz]')
         self.sampling_entry = QLineEdit('40000')
         self.add_row(sampling_label, self.sampling_entry)
 

@@ -38,7 +38,7 @@ class Idealizer:
         thresholds: Optional[Array[float, 1, ...]] = None,
         resolution: Optional[int] = None,
         interpolation_factor: int = 1,
-    ) -> Array[float, 1, ...]:
+    ):
         """Get idealization for single episode."""
 
         if thresholds is None or thresholds.size != amplitudes.size - 1:
@@ -50,8 +50,7 @@ class Idealizer:
         idealization = cls.threshold_crossing(signal, amplitudes, thresholds)
 
         if resolution is not None:
-            events = cls.extract_events(idealization, time)
-            idealization = cls.apply_resolution(events, idealization, time, resolution)
+            idealization = cls.apply_resolution(idealization, time, resolution)
         return idealization, time
 
     @staticmethod
@@ -101,7 +100,6 @@ class Idealizer:
 
     @staticmethod
     def apply_resolution(
-        events: Array[float, ..., 4],
         idealization: Array[float, 1, ...],
         time: Array[float, 1, ...],
         resolution: int,
@@ -113,6 +111,8 @@ class Idealizer:
             time - the corresponding time array
             resolution - the minimum duration for an event"""
         logging.debug(f"Apply resolution={resolution}.")
+
+        events = Idealizer.extract_events(idealization, time)
 
         i = 0
         end_ind = len(events[:, 1])
@@ -132,7 +132,6 @@ class Idealizer:
                     events[i, 3] = events[i + 1, 3]
                     # delete next event
                     events = np.delete(events, i + 1, axis=0)
-                    i -= 1  # loop over this event again to check if it is now long enough
                 else:
                     idealization[i_start:i_end] = events[i - 1, 0]
                     # add duration
@@ -143,7 +142,8 @@ class Idealizer:
                     events = np.delete(events, i, axis=0)
                 # now one less event to iterate over
                 end_ind -= 1
-            i += 1
+            else:
+                i += 1
         return idealization
 
     @staticmethod

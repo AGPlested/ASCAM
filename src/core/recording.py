@@ -483,7 +483,7 @@ class Recording(dict):
     def export_first_activation(self, filepath, datakey=None, time_unit='ms', lists_to_save=None, trace_unit='pA'):
         """Export csv file of first activation times."""
         export_array = self.create_first_activation_table(datakey, time_unit, lists_to_save, trace_unit)
-        header = [ "Episode Number", f"First Activatime Time [{time_unit}]",
+        header = [ "Episode Number", f"First Activation Time [{time_unit}]",
                     f"Current [{trace_unit}]"]
         export_array = pd.DataFrame(export_array, columns=header)
         # truncate floats for duration and timestamps to 1 micro second
