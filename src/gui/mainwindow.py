@@ -103,7 +103,7 @@ class MainWindow(QMainWindow):
         filename = QFileDialog.getSaveFileName(
             self, dir=self.filename[:-3] + "pkl", filter="*.pkl"
         )[0]
-        if filename:
+        if filename.strip():  # strip to avoid whitespace filenames
             self.data.save_to_pickle(filename)
         else:
             debug_logger.debug("Not saving to pickle - no filename given.")
