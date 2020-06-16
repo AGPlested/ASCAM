@@ -46,6 +46,9 @@ class MainWindow(QMainWindow):
         self.central_widget.setLayout(self.central_layout)
         self.setCentralWidget(self.central_widget)
 
+        self.fa_frame = None
+        self.tc_frame = None
+
         self.data = Recording()
 
         self.create_menu()
@@ -116,22 +119,12 @@ class MainWindow(QMainWindow):
         self.central_layout.addWidget(self.fa_frame, 1, 1)
 
     def close_fa_frame(self):
-        try:
+        if self.fa_frame is not None:
             self.fa_frame.clean_up_and_close()
-        except AttributeError as e:
-            if "'MainWindow' object has no attribute 'fa_frame'" in str(e):
-                pass
-            else:
-                raise AttributeError(e)
 
     def close_tc_frame(self):
-        try:
+        if self.tc_frame is not None:
             self.tc_frame.close_frame()
-        except AttributeError as e:
-            if "'MainWindow' object has no attribute 'tc_frame'" in str(e):
-                pass
-            else:
-                raise AttributeError(e)
 
     def test_mode(self):
         path = os.path.split(
