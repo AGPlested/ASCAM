@@ -110,7 +110,7 @@ class Idealizer:
             idealization - an idealized current trace
             time - the corresponding time array
             resolution - the minimum duration for an event"""
-        logging.debug(f"Apply resolution={resolution}.")
+        ana_logger.debug(f"Apply resolution={resolution}.")
 
         events = Idealizer.extract_events(idealization, time)
 
@@ -132,7 +132,7 @@ class Idealizer:
                     events[i, 3] = events[i + 1, 3]
                     # delete next event
                     events = np.delete(events, i + 1, axis=0)
-                else:
+                else:  # add to the previous event
                     idealization[i_start:i_end] = events[i - 1, 0]
                     # add duration
                     events[i - 1, 1] += events[i, 1]
@@ -178,10 +178,11 @@ class Idealizer:
             event_list[0][0] = idealization[0]
             event_list[0][2] = time[0]
             event_list[0][3] = time[int(events[0])]
-            for i, t in enumerate(events[:-1]):
-                event_list[i + 1][0] = idealization[int(t) + 1]
-                event_list[i + 1][2] = time[int(events[i]) + 1]
-                event_list[i + 1][3] = time[int(events[i + 1])]
+
+            event_list[1:, 0] = idealization[events]
+            event_list[1:, 2] = time[events+1]
+            event_list[1:-1, 3] = time[events[1:]]
+
             event_list[-1][0] = idealization[int(events[-1]) + 1]
             event_list[-1][2] = time[(int(events[-1])) + 1]
             event_list[-1][3] = time[-1]
