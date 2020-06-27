@@ -9,7 +9,8 @@ PRECISIONS = {'us': 0, 'ms': 3, 's': 6,
         'uV': 3, 'mV': 6, 'V': 9,
         'int': 0}
 
-TEST_FILE_NAME = "GluA2_T1_SC-recording_40kHzSR.mat"
+TEST_FILE_NAME = "181010007_max_bursts_conc.axgx"
+# TEST_FILE_NAME = "GluA2_T1_SC-recording_40kHzSR.mat"
 
 GREEN = (70, 250, 150)
 ORANGE = (255, 153, 0)
