@@ -14,7 +14,7 @@ from PySide2.QtWidgets import (
 
 from ..gui import (
     ExportFADialog,
-    ExportFileDialog,
+    ExportDialog,
     OpenFileDialog,
     FilterFrame,
     BaselineFrame,
@@ -59,7 +59,8 @@ class MainWindow(QMainWindow):
         debug_logger.debug("MainWindow creating menus")
         self.file_menu = self.menuBar().addMenu("File")
         self.file_menu.addAction("Open File", self.open_file)
-        self.file_menu.addAction("Save", self.save_to_file)
+        self.file_menu.addAction("Save Session", self.save_to_file)
+        self.file_menu.addAction("Export Data", lambda: ExportDialog(self))
         self.file_menu.addSeparator()
         self.file_menu.addAction("Quit", self.close)
 
@@ -97,7 +98,7 @@ class MainWindow(QMainWindow):
             self.close_fa_frame()
             debug_logger.debug(f"filename is {self.filename}")
             _, _, _, filename_short = parse_filename(self.filename)
-            OpenFileDialog(self, filename_short)
+            OpenFileDialog(self, filename=filename_short)
 
     def save_to_file(self):
         filename = QFileDialog.getSaveFileName(

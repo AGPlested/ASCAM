@@ -101,6 +101,7 @@ class OpenFileDialog(QDialog):
 
         self.exec_()
 
+
 class OpenFileEntryWidget(EntryWidget):
     def __init__(self, main, filename, dialog):
         self.main = main
@@ -155,75 +156,66 @@ class OpenFileEntryWidget(EntryWidget):
         self.close()
 
 
-class ExportFileDialog(QDialog):
-    def __init__(self, main):
-        super().__init__()
+class BaseExportWidget(EntryWidget):
+    def __init__(self, main, dialog=None, default_time_unit='s',
+            default_trace_unit='A', default_piezo_unit='V', default_command_unit='V'):
         self.main = main
-        self.layout = QVBoxLayout()
-        self.setLayout(self.layout)
+        self.dialog= dialog
+        self.create_selection_widgets()
+        super().__init__(main, default_time_unit=default_time_unit,
+                default_trace_unit=default_trace_unit,
+                default_piezo_unit=default_piezo_unit,
+                default_command_unit=default_command_unit)
 
-        self.create_widgets()
-
-        self.exec_()
-
-    def create_widgets(self):
+    def create_selection_widgets(self):
         self.series_selection = QComboBox()
         self.series_selection.addItems(list(self.main.data.keys()))
-        self.layout.addWidget(self.series_selection)
-
-        row_two = QHBoxLayout()
-        self.save_piezo = QCheckBox()
-        row_two.addWidget(self.save_piezo)
-        self.save_command = QCheckBox()
-        row_two.addWidget(self.save_command)
-        self.layout.addLayout(row_two)
+        self.series_selection.setCurrentText(self.main.data.current_datakey)
 
         self.list_selection = QListWidget()
         self.list_selection.addItems(list(self.main.data.lists.keys()))
         self.list_selection.setSelectionMode(QtGui.QAbstractItemView.MultiSelection)
         self.list_selection.setCurrentRow(0)
-        self.layout.addWidget(self.list_selection)
 
-        row_four = QHBoxLayout()
-        label = QLabel("Time Unit:")
-        row_four.addWidget(label)
-        self.time_unit_selection = QComboBox()
-        self.time_unit_selection.addItems(list(TIME_UNIT_FACTORS.keys()))
-        self.time_unit_selection.setCurrentIndex(2)
-        self.layout.addLayout(row_four)
 
-        row_five = QHBoxLayout()
-        label = QLabel("Current Unit:")
-        row_five.addWidget(label)
-        self.trace_unit_selection = QComboBox()
-        self.trace_unit_selection.addItems(list(CURRENT_UNIT_FACTORS.keys()))
-        self.trace_unit_selection.setCurrentIndex(4)
-        self.layout.addLayout(row_five)
+class ExportDialog(QDialog):
+    def __init__(self, main):
+        super().__init__()
+        self.layout = QVBoxLayout()
+        self.setLayout(self.layout)
+        self.layout.addWidget(ExportWidget(main, self))
+        self.setFixedWidth(300)
 
-        row_six = QHBoxLayout()
-        label = QLabel("Piezo Unit:")
-        row_six.addWidget(label)
-        self.piezo_unit_selection = QComboBox()
-        self.piezo_unit_selection.addItems(list(VOLTAGE_UNIT_FACTORS.keys()))
-        self.piezo_unit_selection.setCurrentIndex(2)
-        self.layout.addLayout(row_six)
+        self.exec_()
 
-        row_seven = QHBoxLayout()
-        label = QLabel("Command Unit:")
-        row_seven.addWidget(label)
-        self.command_unit_selection = QComboBox()
-        self.command_unit_selection.addItems(list(VOLTAGE_UNIT_FACTORS.keys()))
-        self.command_unit_selection.setCurrentIndex(2)
-        self.layout.addLayout(row_seven)
 
-        row_eight = QHBoxLayout()
+class ExportWidget(BaseExportWidget):
+    def __init__(self, main, dialog):
+        self.main = main
+        super().__init__(main, dialog)
+
+    def create_widgets(self):
+        self.add_row(self.series_selection)
+
+        self.save_piezo = QCheckBox("Export Piezo Data")
+        self.save_command = QCheckBox("Export Command Voltage")
+        self.add_row(self.save_piezo, self.save_command)
+
+        self.add_row(self.list_selection)
+
+        self.add_row(QLabel("Time Unit:"), self.time_unit_entry)
+
+        self.add_row(QLabel("Current Unit:"), self.trace_unit_entry)
+
+        self.add_row(QLabel("Piezo Unit:"), self.piezo_unit_entry)
+
+        self.add_row(QLabel("Command Unit:"), self.command_unit_entry)
+
         save_button = QPushButton("Save")
         save_button.clicked.connect(self.save_click)
-        row_eight.addWidget(save_button)
         cancel_button = QPushButton("Cancel")
-        cancel_button.clicked.connect(self.close)
-        row_eight.addWidget(cancel_button)
-        self.layout.addLayout(row_eight)
+        cancel_button.clicked.connect(self.dialog.close)
+        self.add_row(save_button, cancel_button)
 
     def save_click(self):
         filename, filetye = QFileDialog.getSaveFileName(
@@ -256,3 +248,4 @@ class ExportFileDialog(QDialog):
                     save_piezo=self.save_piezo.isChecked(),
                     save_command=self.save_command.isChecked(),
                 )
+        self.dialog.close()

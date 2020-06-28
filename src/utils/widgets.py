@@ -343,5 +343,3 @@ class EntryWidget(VerticalContainerWidget):
         if hasattr(self, 'command_unit_entry'):
             self.command_unit_entry.setCurrentText(val)
 
-
-
