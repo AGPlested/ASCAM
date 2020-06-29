@@ -474,6 +474,9 @@ class Recording(dict):
 
         import axographio
 
+        if not filepath.endswith(".axgd"):
+            filepath += ".axgd"
+
         column_names = [f"time (s)"]
 
         # to write to axgd we need a list as the second argument of the 'write'
@@ -486,12 +489,12 @@ class Recording(dict):
 
         for episode in episodes:
             data_list.append(np.array(episode.trace))
-            column_names.append(f"Ipatch (A) ep#{episode.n_episode}")
+            column_names.append(f"Ipatch (A) ep# {episode.n_episode}")
             if save_piezo:
-                column_names.append(f"piezo voltage (V) ep#{episode.n_episode}")
+                column_names.append(f"piezo voltage (V) ep# {episode.n_episode}")
                 data_list.append(np.array(episode.piezo))
             if save_command:
-                column_names.append(f"command voltage (V) ep#{episode.n_episode}")
+                column_names.append(f"command voltage (V) ep# {episode.n_episode}")
                 data_list.append(np.array(episode.command))
         file = axographio.file_contents(column_names, data_list)
         file.write(filepath)
@@ -545,17 +548,20 @@ class Recording(dict):
             file."""
         debug_logger.debug(f"from_axo")
 
-        names, time, current, piezo, command = load_axo(recording.filename)
+        names, time, current, piezo, command, ep_numbers = load_axo(recording.filename)
         n_episodes = len(current)
         if not piezo:
             piezo = [None] * n_episodes
         if not command:
             command = [None] * n_episodes
+        if not ep_numbers:
+            ep_numbers = range(n_episodes)
+        initial_index = ep_numbers[0]
         recording["raw_"] = [
             Episode(
                 time,
                 current[i],
-                n_episode=i,
+                n_episode=int(ep_numbers[i]),
                 piezo=piezo[i],
                 command=command[i],
                 sampling_rate=recording.sampling_rate,
@@ -566,6 +572,7 @@ class Recording(dict):
             )
             for i in range(n_episodes)
         ]
+        recording.current_ep_ind = int(initial_index)
         return recording
 
     @staticmethod

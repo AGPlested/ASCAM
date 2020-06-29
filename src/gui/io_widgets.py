@@ -136,7 +136,7 @@ class OpenFileEntryWidget(EntryWidget):
         ok_button = QPushButton("OK")
         ok_button.clicked.connect(self.ok_clicked)
         cancel_button = QPushButton("Cancel")
-        cancel_button.clicked.connect(self.close)
+        cancel_button.clicked.connect(self.dialog.close)
         self.add_row(ok_button, cancel_button)
 
     def ok_clicked(self):
@@ -220,13 +220,13 @@ class ExportWidget(BaseExportWidget):
         self.add_row(save_button, cancel_button)
 
     def save_click(self):
-        filename, filetye = QFileDialog.getSaveFileName(
+        filename, filetype = QFileDialog.getSaveFileName(
             self,
             dir=self.main.filename[:-4],
             filter="Axograph (*.axgd);; Matlab (*.mat)",
         )
         if filename:
-            if "Matlab" in filetye:
+            if "Matlab" in filetype:
                 self.main.data.export_matlab(
                     filepath=filename,
                     datakey=self.series_selection.currentText(),
@@ -240,8 +240,8 @@ class ExportWidget(BaseExportWidget):
                     piezo_unit=self.piezo_unit,
                     command_unit=self.command_unit,
                 )
-            elif "Axograph" in filetye:
-                self.main.data.export_matlab(
+            elif "Axograph" in filetype:
+                self.main.data.export_axo(
                     filepath=filename,
                     datakey=self.series_selection.currentText(),
                     lists_to_save=[

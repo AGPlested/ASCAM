@@ -45,64 +45,6 @@ def load_pickle(filename):
     return data
 
 
-def load_tdt(filename):
-    """
-    Load data from a tab-delimited text file
-    the file must have the data stored in columns with the first line
-    containing the names of each column
-    Input:
-        filename [string] - name (including location) of the file to be loaded
-    Output:
-        names [list of strings] - names of the different variables
-        time [1D numpy array] - times of measurement
-        current [list of 1D numpy arrays] - the current recorded from the patch
-        piezo [list of 1D numpy arrays] - voltage of the piezo pipette
-        command_voltage [list of 1D numpy arrays] - command voltage applied to
-                                                    the patch
-    """
-    current = []
-    command_voltage = []
-    piezo = []
-
-    with open(filename) as datafile:
-        datafile = open(filename)
-        reader = csv.reader(datafile, delimiter="\t")
-        names = next(reader)
-        n_lists = len(names)
-
-        # create a 'list-array' to hold the data, we need to create a list for
-        # each timeseries we get before populating them
-        # and they need to be lists because the length is unknown
-        listlist = list()
-        for i in range(n_lists):
-            listlist.append(list())
-
-        # sort the data from the csv reader into the seperate lists
-        for line in reader:
-            for i in range(n_lists):
-                listlist[i].append(line[i])
-
-        # assign the lists with data
-        for i in range(n_lists):
-            if "Ipatch" in names[i] or "trace" in names[i]:
-                current.append(np.array(listlist[i], dtype=np.float))
-            elif "10Vm" in names[i] or "command" in names[i]:
-                command_voltage.append(np.array(listlist[i], dtype=np.float))
-            elif "Piezo" in names[i] or "piezo" in names[i]:
-                piezo.append(np.array(listlist[i], dtype=np.float))
-            elif "Time" in names[i] or "time" in names[i]:
-                time = np.array(listlist[i], dtype=np.float)
-
-    names = ["Time [ms]"]
-    if current:
-        names.append("Current [A]")
-    if piezo:
-        names.append("Piezo [V]")
-    if command_voltage:
-        names.append("Command Voltage [V]")
-    return names, time, current, piezo, command_voltage
-
-
 def load_matlab(filename):
     """
     Uses `scipy.io.loadmat` to load data from a `.mat` file.
@@ -137,11 +79,15 @@ def load_matlab(filename):
         # comes from the ASCAM data structure
         if "Ipatch" in variable[0] or "Column" in variable[0]:
             current.append(value.flatten())
+            try:
+                ep_numbers.append(int(variable[0].split()[-1]))
+            except (IndexError, ValueError):
+                pass
         if "trace" in variable[0]:
             current.append(value.flatten())
             try:
-                ep_numbers.append(variable[0].split()[1])
-            except IndexError:
+                ep_numbers.append(int(variable[0].split()[-1]))
+            except (IndexError, ValueError):
                 pass
         elif "10Vm" in variable[0] or "command" in variable[0]:
             command_voltage.append(value.flatten())
@@ -159,7 +105,6 @@ def load_matlab(filename):
 
 
 def load_binary(filename, dtype, headerlength, fs):
-
     """
     Loads data from binary file using the numpy function fromfile,
     it assumes that the words in the header are of the
@@ -201,9 +146,21 @@ def load_axo(filename):
     current = []
     command_voltage = []
     piezo = []
+    ep_numbers = []
+
     for name, data in zip(file.names, file.data):
-        if "Ipatch" in name or "trace" in name:
+        if "Ipatch" in name :
             current.append(np.array(data))
+            try:
+                ep_numbers.append(int(name.split()[-1]))
+            except (IndexError, ValueError):
+                pass
+        elif "trace" in name:
+            current.append(np.array(data))
+            try:
+                ep_numbers.append(int(name.split()[-1]))
+            except (IndexError, ValueError):
+                pass
         elif "10Vm" in name or "command" in name:
             command_voltage.append(np.array(data))
         elif "Piezo" in name or "piezo" in name:
@@ -211,4 +168,64 @@ def load_axo(filename):
         elif "Time" in name or "time" in name:
             time = np.array(data)
 
-    return file.names, time, current, piezo, command_voltage
+    return file.names, time, current, piezo, command_voltage, ep_numbers
+
+
+# unused method to read tab delimited text
+# def load_tdt(filename):
+#     """
+#     Load data from a tab-delimited text file
+#     the file must have the data stored in columns with the first line
+#     containing the names of each column
+#     Input:
+#         filename [string] - name (including location) of the file to be loaded
+#     Output:
+#         names [list of strings] - names of the different variables
+#         time [1D numpy array] - times of measurement
+#         current [list of 1D numpy arrays] - the current recorded from the patch
+#         piezo [list of 1D numpy arrays] - voltage of the piezo pipette
+#         command_voltage [list of 1D numpy arrays] - command voltage applied to
+#                                                     the patch
+#     """
+#     current = []
+#     command_voltage = []
+#     piezo = []
+
+#     with open(filename) as datafile:
+#         datafile = open(filename)
+#         reader = csv.reader(datafile, delimiter="\t")
+#         names = next(reader)
+#         n_lists = len(names)
+
+#         # create a 'list-array' to hold the data, we need to create a list for
+#         # each timeseries we get before populating them
+#         # and they need to be lists because the length is unknown
+#         listlist = list()
+#         for i in range(n_lists):
+#             listlist.append(list())
+
+#         # sort the data from the csv reader into the seperate lists
+#         for line in reader:
+#             for i in range(n_lists):
+#                 listlist[i].append(line[i])
+
+#         # assign the lists with data
+#         for i in range(n_lists):
+#             if "Ipatch" in names[i] or "trace" in names[i]:
+#                 current.append(np.array(listlist[i], dtype=np.float))
+#             elif "10Vm" in names[i] or "command" in names[i]:
+#                 command_voltage.append(np.array(listlist[i], dtype=np.float))
+#             elif "Piezo" in names[i] or "piezo" in names[i]:
+#                 piezo.append(np.array(listlist[i], dtype=np.float))
+#             elif "Time" in names[i] or "time" in names[i]:
+#                 time = np.array(listlist[i], dtype=np.float)
+
+#     names = ["Time [ms]"]
+#     if current:
+#         names.append("Current [A]")
+#     if piezo:
+#         names.append("Piezo [V]")
+#     if command_voltage:
+#         names.append("Command Voltage [V]")
+#     return names, time, current, piezo, command_voltage
+

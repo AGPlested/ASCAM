@@ -36,6 +36,8 @@ def parse_filename(filename):
     elif filetype in ("txt", "axgt"):
         filetype = "tdt"
         filetype_long = "tab-delimited-text"
+    else:
+        raise Exception("Uknown filetype, can only read '.mat', '.axg*', '.csv', '.pkl'")
     filename = filename[slash + 1 :]
     return filetype, path, filetype_long, filename
 
