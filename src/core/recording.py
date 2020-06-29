@@ -99,7 +99,9 @@ class Recording(dict):
         # element and the associated key as the second
         self.lists = dict()
 
-    def select_episodes(self, datakey, lists=None):
+    def select_episodes(self, datakey=None, lists=None):
+        if datakey is None:
+            datakey = self.current_datakey
         if lists is None:
             lists = ["All"]
         indices = list()
@@ -279,17 +281,14 @@ class Recording(dict):
                     self.episode.time, piezo, trace, active, deviation
                 )
                 trace_list.extend(trace_points)
-            # self.hist_times = np.array(time)
         elif intervals:
             for trace in traces:
                 time, trace_points = interval_selection(
                     self.episode.time, trace, intervals, self.sampling_rate
                 )
                 trace_list.extend(trace_points)
-            # self.hist_times = np.array(time)
         else:
             trace_list = traces
-            # self.hist_times = np.array(self.episode.time)
         # turn the collected traces into a 1D numpy array for the histogram
         # function
         trace_list = np.asarray(trace_list)
@@ -314,7 +313,9 @@ class Recording(dict):
         """Create a histogram of the current in the presently selected episode.
         """
         if not self.has_piezo:
-            # TODO add log or warning here!
+            debug_logger.debug(
+                (f"Tried piezo selection even though there is no piezo data!")
+            )
             select_piezo = False
         # select time points to include in histogram
         if select_piezo:
@@ -325,7 +326,6 @@ class Recording(dict):
                 active,
                 deviation,
             )
-            # self.hist_times = np.array(time)
         elif intervals:
             time, trace_points = interval_selection(
                 self.episode.time,
@@ -333,16 +333,13 @@ class Recording(dict):
                 intervals,
                 self.episode.sampling_rate,
             )
-            # self.hist_times = np.array(time)
         else:
             trace_points = self.episode.trace
-            # self.hist_times = np.array(self.episode.time)
         heights, bins = np.histogram(trace_points, n_bins, density=density)
         # get centers of all the bins
         centers = (bins[:-1] + bins[1:]) / 2
         # get the width of a(ll) bin(s)
         width = bins[1] - bins[0]
-        # self.histogram = heights, bins, centers, width
         return heights, bins, centers, width
 
     # exporting and saving methods
@@ -373,6 +370,34 @@ class Recording(dict):
                 recording[key] = value
         return recording
 
+    def export_idealization(self, filepath, lists_to_save, time_unit, trace_unit, 
+            amplitudes, thresholds, resolution, interpolation_factor):
+        debug_logger.debug(f"export_idealization")
+
+        if not filepath.endswith(".csv"):
+            filepath += ".csv"
+
+        episodes = self.select_episodes(lists=lists_to_save)
+
+        export_array = np.zeros(
+            shape=(len(episodes) + 1, episodes[0].idealization.size)
+        )
+        export_array[0] = self.episode.id_time * TIME_UNIT_FACTORS[time_unit]
+        for k, episode in enumerate(episodes):
+            export_array[k + 1] = (
+                episode.idealization * CURRENT_UNIT_FACTORS[trace_unit]
+            )
+        # note that we transpose the export array to export the matrix
+        np.savetxt(
+            filepath,
+            export_array.T,
+            delimiter=",",
+            header=f"amplitudes = {amplitudes};"
+            f"thresholds = {thresholds};"
+            f"resolution = {resolution};"
+            f"interpolation_factor = {interpolation_factor}",
+        )
+
     def export_matlab(
         self,
         filepath,
@@ -402,12 +427,13 @@ class Recording(dict):
         export_dict["time"] = self["raw_"][0].time * TIME_UNIT_FACTORS[time_unit]
         no_episodes = len(self[datakey])
         fill_length = len(str(no_episodes))
-        # get the episodes we want to save
-        indices = list()
-        for listname in lists_to_save:
-            indices.extend(self.lists[listname][0])
-        indices = np.array(list(set(indices)))
-        episodes = np.array(self[datakey])[indices]
+        episodes = self.select_episodes(datakey, lists_to_save)
+        # # get the episodes we want to save
+        # indices = list()
+        # for listname in lists_to_save:
+        #     indices.extend(self.lists[listname][0])
+        # indices = np.array(list(set(indices)))
+        # episodes = np.array(self[datakey])[indices]
         for episode in episodes:
             n = str(episode.n_episode).zfill(fill_length)
             export_dict["trace" + n] = episode.trace * CURRENT_UNIT_FACTORS[trace_unit]

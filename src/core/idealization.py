@@ -108,30 +108,6 @@ class IdealizationCache:
         event_array[:, 2:] *= TIME_UNIT_FACTORS[time_unit]
         return event_array
 
-    def export_idealization(self, filepath, time_unit, trace_unit):
-        debug_logger.debug(f"export_idealization")
-
-        if not filepath.endswith(".csv"):
-            filepath += ".csv"
-        export_array = np.zeros(
-            shape=(len(self.data.series) + 1, self.idealization().size)
-        )
-        export_array[0] = self.time() * TIME_UNIT_FACTORS[time_unit]
-        for k, episode in enumerate(self.data.series):
-            export_array[k + 1] = (
-                episode.idealization * CURRENT_UNIT_FACTORS[trace_unit]
-            )
-        # note that we transpose the export array to export the matrix
-        np.savetxt(
-            filepath,
-            export_array.T,
-            delimiter=",",
-            header=f"amplitudes = {self.amplitudes};"
-            f"thresholds = {self.thresholds};"
-            f"resolution = {self.resolution};"
-            f"interpolation_factor = {self.interpolation_factor}",
-        )
-
     def dwell_time_hist(
         self, amp, n_bins=None, time_unit="ms", log_times=True, root_counts=True
     ):

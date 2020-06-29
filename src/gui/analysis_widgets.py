@@ -23,6 +23,7 @@ from PySide2.QtWidgets import (
     QLabel,
 )
 
+from .io_widgets import ExportIdealizationDialog
 from ..utils import string_to_array, array_to_string, update_number_in_string
 from ..constants import TIME_UNIT_FACTORS, CURRENT_UNIT_FACTORS
 from ..core import IdealizationCache
@@ -119,14 +120,15 @@ class IdealizationFrame(QWidget):
     def export_idealization(self):
         self.get_params()
         self.idealize_series()
-        filename = QFileDialog.getSaveFileName(
-            self, dir=self.main.filename[:-4] + "_idealization.csv", filter="*.csv"
-        )[0]
-        self.current_tab.idealization_cache.export_idealization(
-            filename,
-            self.current_tab.time_unit,
-            self.current_tab.trace_unit,
-        )
+        ExportIdealizationDialog(self.main, self.current_tab.idealization_cache)
+        # filename = QFileDialog.getSaveFileName(
+        #     self, dir=self.main.filename[:-4] + "_idealization.csv", filter="*.csv"
+        # )[0]
+        # self.current_tab.idealization_cache.export_idealization(
+        #     filename,
+        #     self.current_tab.time_unit,
+        #     self.current_tab.trace_unit,
+        # )
 
     def get_params(self):
         return self.current_tab.get_params()

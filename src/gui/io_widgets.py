@@ -176,6 +176,7 @@ class BaseExportWidget(EntryWidget):
         self.list_selection.addItems(list(self.main.data.lists.keys()))
         self.list_selection.setSelectionMode(QtGui.QAbstractItemView.MultiSelection)
         self.list_selection.setCurrentRow(0)
+        self.list_selection.setFixedHeight(18*len(list(self.main.data.lists.keys())))
 
 
 class ExportDialog(QDialog):
@@ -201,6 +202,7 @@ class ExportWidget(BaseExportWidget):
         self.save_command = QCheckBox("Export Command Voltage")
         self.add_row(self.save_piezo, self.save_command)
 
+        self.add_row(QLabel("Lists to export:"))
         self.add_row(self.list_selection)
 
         self.add_row(QLabel("Time Unit:"), self.time_unit_entry)
@@ -248,4 +250,67 @@ class ExportWidget(BaseExportWidget):
                     save_piezo=self.save_piezo.isChecked(),
                     save_command=self.save_command.isChecked(),
                 )
+        self.dialog.close()
+
+
+class ExportIdealizationDialog(QDialog):
+    def __init__(self, main, id_cache):
+        super().__init__()
+        self.layout = QVBoxLayout()
+        self.setLayout(self.layout)
+        self.layout.addWidget(ExportIdealizationWidget(main, self,id_cache))
+        self.setFixedWidth(300)
+
+        self.exec_()
+
+
+class ExportIdealizationWidget(BaseExportWidget):
+    def __init__(self, main, dialog, id_cache):
+        self.main = main
+        self.id_cache = id_cache
+        super().__init__(main, dialog)
+
+    def create_widgets(self):
+        # self.add_row(self.series_selection)
+
+        # self.save_piezo = QCheckBox("Export Piezo Data")
+        # self.save_command = QCheckBox("Export Command Voltage")
+        # self.add_row(self.save_piezo, self.save_command)
+
+        self.add_row(QLabel("Lists to export:"))
+        self.add_row(self.list_selection)
+
+        self.add_row(QLabel("Time Unit:"), self.time_unit_entry)
+
+        self.add_row(QLabel("Current Unit:"), self.trace_unit_entry)
+
+        self.add_row(QLabel("Piezo Unit:"), self.piezo_unit_entry)
+
+        self.add_row(QLabel("Command Unit:"), self.command_unit_entry)
+
+        save_button = QPushButton("Save")
+        save_button.clicked.connect(self.save_click)
+        cancel_button = QPushButton("Cancel")
+        cancel_button.clicked.connect(self.dialog.close)
+        self.add_row(save_button, cancel_button)
+
+    def save_click(self):
+        filename, filetye = QFileDialog.getSaveFileName(
+            self,
+            dir=self.main.filename[:-4],
+            filter="CSV (*.csv)",
+        )
+        self.main.data.export_idealization(
+            filename,
+            time_unit=self.time_unit,
+            trace_unit=self.trace_unit,
+            lists_to_save=[
+                        item.text() for item in self.list_selection.selectedItems()
+                    ],
+            amplitudes=self.id_cache.amplitudes,
+            thresholds=self.id_cache.thresholds,
+            resolution=self.id_cache.resolution,
+            interpolation_factor=self.id_cache.interpolation_factor,
+        )
+
         self.dialog.close()
