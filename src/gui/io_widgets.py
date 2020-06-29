@@ -271,22 +271,12 @@ class ExportIdealizationWidget(BaseExportWidget):
         super().__init__(main, dialog)
 
     def create_widgets(self):
-        # self.add_row(self.series_selection)
-
-        # self.save_piezo = QCheckBox("Export Piezo Data")
-        # self.save_command = QCheckBox("Export Command Voltage")
-        # self.add_row(self.save_piezo, self.save_command)
-
         self.add_row(QLabel("Lists to export:"))
         self.add_row(self.list_selection)
 
         self.add_row(QLabel("Time Unit:"), self.time_unit_entry)
 
         self.add_row(QLabel("Current Unit:"), self.trace_unit_entry)
-
-        self.add_row(QLabel("Piezo Unit:"), self.piezo_unit_entry)
-
-        self.add_row(QLabel("Command Unit:"), self.command_unit_entry)
 
         save_button = QPushButton("Save")
         save_button.clicked.connect(self.save_click)

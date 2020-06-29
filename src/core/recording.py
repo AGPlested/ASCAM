@@ -422,6 +422,9 @@ class Recording(dict):
         )
         from scipy import io
 
+        if not filepath.endswith(".mat"):
+            filepath += ".mat"
+
         # create dict to write matlab file and add the time vector
         export_dict = dict()
         export_dict["time"] = self["raw_"][0].time * TIME_UNIT_FACTORS[time_unit]
