@@ -123,6 +123,7 @@ def load_matlab(filename):
     command_voltage = []
     piezo = []
     names = ["Time [ms]"]
+    ep_numbers = []
 
     # we use varmats to split up the file into seperate mat files, one for
     # each variable this is necessary for files containing a lot of data
@@ -134,8 +135,11 @@ def load_matlab(filename):
         value = scipy_loadmat(variable[1])[variable[0]]
         # the first possibility is the name in files we get, the second
         # comes from the ASCAM data structure
-        if "Ipatch" in variable[0] or "trace" in variable[0] or "Column" in variable[0]:
+        if "Ipatch" in variable[0] or "Column" in variable[0]:
             current.append(value.flatten())
+        if "trace" in variable[0]:
+            current.append(value.flatten())
+            ep_numbers.append(variable[0].split()[1])
         elif "10Vm" in variable[0] or "command" in variable[0]:
             command_voltage.append(value.flatten())
         elif "Piezo" in variable[0] or "piezo" in variable[0]:
@@ -148,10 +152,11 @@ def load_matlab(filename):
         names.append("Piezo [V]")
     if command_voltage:
         names.append("Command Voltage [V]")
-    return names, time, current, piezo, command_voltage
+    return names, time, current, piezo, command_voltage, ep_numbers
 
 
 def load_binary(filename, dtype, headerlength, fs):
+
     """
     Loads data from binary file using the numpy function fromfile,
     it assumes that the words in the header are of the

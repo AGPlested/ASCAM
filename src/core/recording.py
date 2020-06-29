@@ -428,8 +428,7 @@ class Recording(dict):
         # create dict to write matlab file and add the time vector
         export_dict = dict()
         export_dict["time"] = self["raw_"][0].time * TIME_UNIT_FACTORS[time_unit]
-        no_episodes = len(self[datakey])
-        fill_length = len(str(no_episodes))
+        fill_length = len(str(len(self[datakey])))
         episodes = self.select_episodes(datakey, lists_to_save)
         # # get the episodes we want to save
         # indices = list()
@@ -581,17 +580,19 @@ class Recording(dict):
             recording - instance of the Recording class containing the data"""
         debug_logger.debug(f"from_matlab")
 
-        names, time, current, piezo, command = load_matlab(recording.filename)
+        names, time, current, piezo, command, ep_numbers = load_matlab(recording.filename)
         n_episodes = len(current)
         if not piezo:
             piezo = [None] * n_episodes
         if not command:
             command = [None] * n_episodes
+        if not ep_numbers:
+            ep_numbers = range(n_episodes)
         recording["raw_"] = [
             Episode(
                 time,
                 current[i],
-                n_episode=i,
+                n_episode=ep_numbers[i],
                 piezo=piezo[i],
                 command=command[i],
                 sampling_rate=recording.sampling_rate,
