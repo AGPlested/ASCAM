@@ -235,10 +235,10 @@ class ExportWidget(BaseExportWidget):
                     ],
                     save_piezo=self.save_piezo.isChecked(),
                     save_command=self.save_command.isChecked(),
-                    time_unit=self.time_unit.text(),
-                    trace_unit=self.trace_unit.text(),
-                    piezo_unit=self.piezo_unit.text(),
-                    command_unit=self.command_unit.text(),
+                    time_unit=self.time_unit,
+                    trace_unit=self.trace_unit,
+                    piezo_unit=self.piezo_unit,
+                    command_unit=self.command_unit,
                 )
             elif "Axograph" in filetye:
                 self.main.data.export_matlab(
