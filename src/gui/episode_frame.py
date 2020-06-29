@@ -204,15 +204,15 @@ class EpisodeList(QListWidget):
 
     def on_item_click(self, item, _):
         debug_logger.debug(f"clicked new episode")
-        self.parent.main.data.current_ep_ind = self.row(item)
+        ep_number = int(item.text().split()[1])
+        self.parent.main.data.current_ep_ind = ep_number
 
     def populate(self):
         self.currentItemChanged.disconnect(self.on_item_click)
         self.clear()
         if self.parent.main.data is not None:
-            n_eps = len(self.parent.main.data.series)
             debug_logger.debug("inserting data")
-            self.addItems([f"Episode {i+1}" for i in range(n_eps)])
+            self.addItems([f"Episode {e.n_episode}" for e in self.parent.main.data.series])
         self.setCurrentRow(0)
         self.currentItemChanged.connect(
             self.on_item_click, type=QtCore.Qt.DirectConnection
