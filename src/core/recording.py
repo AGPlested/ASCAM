@@ -127,7 +127,12 @@ class Recording(dict):
 
     @property
     def episode(self):
-        return self.series[self.current_ep_ind]
+        out  = [e for e in self.series if e.n_episode==self.current_ep_ind]
+        if out:
+            return out[0]
+        else:
+            debug_logger.warning(f"tried to get episode with index {self.current_ep_ind} but it "
+            "doesn't exist")
 
     @property
     def has_command(self):
@@ -438,13 +443,13 @@ class Recording(dict):
         # episodes = np.array(self[datakey])[indices]
         for episode in episodes:
             n = str(episode.n_episode).zfill(fill_length)
-            export_dict["trace" + n] = episode.trace * CURRENT_UNIT_FACTORS[trace_unit]
+            export_dict["trace " + n] = episode.trace * CURRENT_UNIT_FACTORS[trace_unit]
             if save_piezo:
-                export_dict["piezo" + n] = (
+                export_dict["piezo " + n] = (
                     episode.piezo * VOLTAGE_UNIT_FACTORS[piezo_unit]
                 )
             if save_command:
-                export_dict["command" + n] = (
+                export_dict["command " + n] = (
                     episode.command * VOLTAGE_UNIT_FACTORS[command_unit]
                 )
         io.savemat(filepath, export_dict)
@@ -588,11 +593,12 @@ class Recording(dict):
             command = [None] * n_episodes
         if not ep_numbers:
             ep_numbers = range(n_episodes)
+        initial_index = ep_numbers[0]
         recording["raw_"] = [
             Episode(
                 time,
                 current[i],
-                n_episode=ep_numbers[i],
+                n_episode=int(ep_numbers[i]),
                 piezo=piezo[i],
                 command=command[i],
                 sampling_rate=recording.sampling_rate,
@@ -603,4 +609,5 @@ class Recording(dict):
             )
             for i in range(n_episodes)
         ]
+        recording.current_ep_ind = int(initial_index)
         return recording

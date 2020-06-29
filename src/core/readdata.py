@@ -139,7 +139,10 @@ def load_matlab(filename):
             current.append(value.flatten())
         if "trace" in variable[0]:
             current.append(value.flatten())
-            ep_numbers.append(variable[0].split()[1])
+            try:
+                ep_numbers.append(variable[0].split()[1])
+            except IndexError:
+                pass
         elif "10Vm" in variable[0] or "command" in variable[0]:
             command_voltage.append(value.flatten())
         elif "Piezo" in variable[0] or "piezo" in variable[0]:
