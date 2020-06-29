@@ -134,7 +134,9 @@ class IdealizationFrame(QWidget):
         return self.current_tab.get_params()
 
     def idealization(self, n_episode=None):
-        return self.current_tab.idealization_cache.idealization(n_episode)
+        if self.current_tab.idealization_cache is not None:
+            return self.current_tab.idealization_cache.idealization(n_episode)
+        return None
 
     def time(self, n_episode=None):
         return self.current_tab.idealization_cache.time(n_episode)
@@ -216,6 +218,7 @@ class IdealizationTabFrame(QTabWidget):
 class IdealizationTab(EntryWidget):
     def __init__(self, parent):
         super().__init__(parent)
+        self.idealization_cache = None
 
     def keyPressEvent(self, event):
         if event.key() in (QtCore.Qt.Key_Return, QtCore.Qt.Key_Enter):
