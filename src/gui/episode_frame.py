@@ -54,7 +54,8 @@ class EpisodeFrame(QWidget):
             self.main.tc_frame.get_params()
             self.main.tc_frame.idealize_episode()
         except AttributeError as e:
-            if "'MainWindow' object has no attribute 'tc_frame'" in str(e):
+            if ("'MainWindow' object has no attribute 'tc_frame'" in str(e) or
+                    "object has no attribute 'get_params'" in str(e)):
                 pass
             else:
                 raise e
