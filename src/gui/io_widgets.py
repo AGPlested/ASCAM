@@ -136,7 +136,7 @@ class OpenFileEntryWidget(EntryWidget):
         ok_button = QPushButton("OK")
         ok_button.clicked.connect(self.ok_clicked)
         cancel_button = QPushButton("Cancel")
-        cancel_button.clicked.connect(self.close)
+        cancel_button.clicked.connect(self.dialog.close)
         self.add_row(ok_button, cancel_button)
 
     def ok_clicked(self):
