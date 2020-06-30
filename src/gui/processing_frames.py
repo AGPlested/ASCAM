@@ -163,7 +163,11 @@ class BaselineWidget(VerticalContainerWidget):
         self.method_layout = QHBoxLayout()
         if self.selection_options[index] == "Piezo":
             debug_logger.debug("creating piezo selection widgets")
-            self.active_checkbox = QCheckBox("Active/Inactive")
+            self.active_checkbox = QCheckBox("Active")
+            self.active_checkbox.setToolTip("If checked the baseline correction will be based"
+                    " on the times where the Piezo voltage is within a factor `deviation` of its"
+                    " maximum value. If unchecked it will be based on the times where the voltage"
+                    " is within a factor `deviation` of its minimum value.")
             self.active_checkbox.setChecked(False)
             self.method_layout.addWidget(self.active_checkbox)
             self.deviation_label = QLabel("Deviation")
@@ -175,6 +179,8 @@ class BaselineWidget(VerticalContainerWidget):
             self.interval_label = QLabel("Intervals")
             self.method_layout.addWidget(self.interval_label)
             self.interval_entry = QLineEdit("")
+            self.interval_entry.setToolTip("Enter milli-second intervals surround by square brackets"
+                    " and seperated by commans, eg: '[0, 10], [70, 100]'")
             self.method_layout.addWidget(self.interval_entry)
         # insert the newly created layout in the 3rd or 4th row
         # depending on whether there is an entry field for the correction method
@@ -190,7 +196,7 @@ class BaselineWidget(VerticalContainerWidget):
             deviation = float(self.deviation_entry.text())
             active = self.active_checkbox.isChecked()
         elif selection == "Intervals":
-            degree = None
+            active = None
             deviation = None
             intervals = string_to_list(self.interval_entry.text())
 
