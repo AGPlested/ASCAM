@@ -83,7 +83,7 @@ def interval_selection(time, signal, intervals, fs):
     """
     time_out = []
     signal_out = []
-    if isinstance(intervals[0], list):
+    if isinstance(intervals[0], (np.ndarray, list )):
         for ival in intervals:
             time_out.extend(time[int(ival[0] * fs) : int(ival[-1] * fs)])
             signal_out.extend(signal[int(ival[0] * fs) : int(ival[-1] * fs)])

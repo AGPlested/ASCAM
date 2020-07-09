@@ -13,8 +13,9 @@ from PySide2.QtWidgets import (
     QFormLayout,
 )
 
-from ..utils import clear_qt_layout, string_to_list
+from ..utils import clear_qt_layout, string_to_list,get_dict_key_index
 from ..utils.widgets import VerticalContainerWidget
+from ..constants import TIME_UNIT_FACTORS
 
 
 debug_logger = logging.getLogger("ascam.debug")
@@ -142,7 +143,6 @@ class BaselineWidget(VerticalContainerWidget):
         cancel_button.clicked.connect(self.cancel_clicked)
         self.add_row(ok_button, cancel_button)
 
-
     def choose_correction_method(self, index):
         if self.method_options[index] == "Polynomial":
             self.selection_layout = QFormLayout()
@@ -178,9 +178,13 @@ class BaselineWidget(VerticalContainerWidget):
             debug_logger.debug("creating interval widgets")
             self.interval_label = QLabel("Intervals")
             self.method_layout.addWidget(self.interval_label)
+            self.time_unit_entry = QComboBox()
+            self.time_unit_entry.addItems(list(TIME_UNIT_FACTORS.keys()))
+            self.time_unit_entry.setCurrentIndex( get_dict_key_index(TIME_UNIT_FACTORS, 's') )
+            self.method_layout.addWidget(self.time_unit_entry)
             self.interval_entry = QLineEdit("")
-            self.interval_entry.setToolTip("Enter second intervals surround by square brackets"
-                    " and seperated by commans, eg: '[0, 10], [70, 100]'")
+            self.interval_entry.setToolTip("Enter intervals surround by square brackets"
+                                    " and seperated by commans, eg: '[0, 10], [70, 100]'")
             self.method_layout.addWidget(self.interval_entry)
         # insert the newly created layout in the 3rd or 4th row
         # depending on whether there is an entry field for the correction method
@@ -195,10 +199,12 @@ class BaselineWidget(VerticalContainerWidget):
             intervals = None
             deviation = float(self.deviation_entry.text())
             active = self.active_checkbox.isChecked()
+            time_unit = None
         elif selection == "Intervals":
             active = None
             deviation = None
             intervals = string_to_list(self.interval_entry.text())
+            time_unit = self.time_unit_entry.currentText()
 
         self.main.data.baseline_correction(
             method=method,
@@ -207,7 +213,8 @@ class BaselineWidget(VerticalContainerWidget):
             selection=selection,
             deviation=deviation,
             active=active,
-        )
+            time_unit=time_unit
+            )
         self.main.ep_frame.update_combo_box()
         self.main.plot_frame.plot_all()
         self.dialog.close()

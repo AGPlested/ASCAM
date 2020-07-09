@@ -287,7 +287,7 @@ class EntryWidget(VerticalContainerWidget):
         self.piezo_unit_entry = QComboBox()
         self.piezo_unit_entry.addItems(list(VOLTAGE_UNIT_FACTORS.keys()))
         self.piezo_unit_entry.setCurrentIndex(
-            get_dict_key_index(TIME_UNIT_FACTORS, self.default_time_unit))
+            get_dict_key_index(VOLTAGE_UNIT_FACTORS, self.default_piezo_unit))
 
         self.command_unit_entry = QComboBox()
         self.command_unit_entry.addItems(list(VOLTAGE_UNIT_FACTORS.keys()))
@@ -297,7 +297,7 @@ class EntryWidget(VerticalContainerWidget):
         self.time_unit_entry = QComboBox()
         self.time_unit_entry.addItems(list(TIME_UNIT_FACTORS.keys()))
         self.time_unit_entry.setCurrentIndex(
-            get_dict_key_index(VOLTAGE_UNIT_FACTORS, self.default_piezo_unit))
+            get_dict_key_index(TIME_UNIT_FACTORS, self.default_time_unit))
 
     @property
     def trace_unit(self):
