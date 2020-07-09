@@ -114,9 +114,6 @@ class Idealizer:
 
         events = Idealizer.extract_events(idealization, time)
 
-        import copy
-        og = copy.copy(idealization)
-
         i = 0
         end_ind = len(events[:, 1])
         while i < end_ind:
