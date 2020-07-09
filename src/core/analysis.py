@@ -142,7 +142,6 @@ class Idealizer:
                     events[i - 1, 3] = events[i, 3]
                     # delete current event
                     events = np.delete(events, i, axis=0)
-
                 # now one less event to iterate over
                 end_ind -= 1
             else:

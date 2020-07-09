@@ -179,7 +179,7 @@ class BaselineWidget(VerticalContainerWidget):
             self.interval_label = QLabel("Intervals")
             self.method_layout.addWidget(self.interval_label)
             self.interval_entry = QLineEdit("")
-            self.interval_entry.setToolTip("Enter milli-second intervals surround by square brackets"
+            self.interval_entry.setToolTip("Enter second intervals surround by square brackets"
                     " and seperated by commans, eg: '[0, 10], [70, 100]'")
             self.method_layout.addWidget(self.interval_entry)
         # insert the newly created layout in the 3rd or 4th row
