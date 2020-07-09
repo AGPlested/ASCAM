@@ -114,15 +114,19 @@ class Idealizer:
 
         events = Idealizer.extract_events(idealization, time)
 
+        import copy
+        og = copy.copy(idealization)
+
         i = 0
         end_ind = len(events[:, 1])
         while i < end_ind:
             if events[i, 1] < resolution:
                 i_start = int(np.where(time == events[i, 2])[0])
-                i_end = int(np.where(time == events[i, 3])[0]) + 1
+                i_end = int(np.where(time == events[i, 3])[0]) +1
                 # add the first but not the last event to the next,
                 # otherwise, flip a coin
                 if (np.random.binomial(1, 0.5) or i == 0) and i != end_ind - 1:
+                    i_end = int(np.where(time == events[i+1, 3])[0]) + 1
                     idealization[i_start:i_end] = events[i + 1, 0]
                     # set amplitude
                     events[i, 0] = events[i + 1, 0]
@@ -133,6 +137,7 @@ class Idealizer:
                     # delete next event
                     events = np.delete(events, i + 1, axis=0)
                 else:  # add to the previous event
+                    i_start = int(np.where(time == events[i-1, 2])[0])
                     idealization[i_start:i_end] = events[i - 1, 0]
                     # add duration
                     events[i - 1, 1] += events[i, 1]
@@ -140,6 +145,7 @@ class Idealizer:
                     events[i - 1, 3] = events[i, 3]
                     # delete current event
                     events = np.delete(events, i, axis=0)
+
                 # now one less event to iterate over
                 end_ind -= 1
             else:
