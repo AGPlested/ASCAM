@@ -164,10 +164,14 @@ class BaselineWidget(VerticalContainerWidget):
         if self.selection_options[index] == "Piezo":
             debug_logger.debug("creating piezo selection widgets")
             self.active_checkbox = QCheckBox("Active")
-            self.active_checkbox.setToolTip("If checked the baseline correction will be based"
-                    " on the times where the Piezo voltage is within a factor `deviation` of its"
-                    " maximum value. If unchecked it will be based on the times where the voltage"
-                    " is within a factor `deviation` of its minimum value.")
+            self.active_checkbox.setToolTip("If checked the baseline correction \n"
+                                            "will be based on the times where \n"
+                                            "the Piezo voltage is within a factor\n"
+                                            "`deviation` of its" " maximum value.\n"
+                                            "If unchecked it will be based on \n"
+                                            "the times where the voltage is \n"
+                                            "within a factor `deviation` of its \n"
+                                            "minimum value.")
             self.active_checkbox.setChecked(False)
             self.method_layout.addWidget(self.active_checkbox)
             self.deviation_label = QLabel("Deviation")
@@ -183,8 +187,9 @@ class BaselineWidget(VerticalContainerWidget):
             self.time_unit_entry.setCurrentIndex( get_dict_key_index(TIME_UNIT_FACTORS, 's') )
             self.method_layout.addWidget(self.time_unit_entry)
             self.interval_entry = QLineEdit("")
-            self.interval_entry.setToolTip("Enter intervals surround by square brackets"
-                                    " and seperated by commans, eg: '[0, 10], [70, 100]'")
+            self.interval_entry.setToolTip("Enter intervals surround by "
+                                            "square brackets and seperated "
+                                            "by commans, eg: '[0, 10], [70, 100]'")
             self.method_layout.addWidget(self.interval_entry)
         # insert the newly created layout in the 3rd or 4th row
         # depending on whether there is an entry field for the correction method
@@ -193,7 +198,11 @@ class BaselineWidget(VerticalContainerWidget):
 
     def ok_clicked(self):
         method = self.method_options[self.method_box.currentIndex()]
-        degree = int(self.degree_entry.text())
+        print(method)
+        if method != "Offset":
+            degree = int(self.degree_entry.text())
+        else:
+            degree = None
         selection = self.selection_options[self.selection_box.currentIndex()]
         if selection == "Piezo":
             intervals = None
