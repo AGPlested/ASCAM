@@ -17,7 +17,7 @@ from PySide2.QtWidgets import (
 from ..gui import ExportFADialog
 from ..utils import round_off_tables
 from ..utils.widgets import EntryWidget, TableFrame
-from ..constants import CURRENT_UNIT_FACTORS, GREEN
+from ..constants import CURRENT_UNIT_FACTORS
 
 debug_logger = logging.getLogger("ascam.debug")
 
