@@ -210,7 +210,7 @@ class FirstActivationFrame(EntryWidget):
 
     def click_auto_jump(self):
         debug_logger.debug("auto jumping to next episode")
-        self.main.ep_frame.ep_list.setCurrentRow(self.main.data.current_ep_ind + 1)
+        self.main.ep_frame.ep_list.setCurrentRow(self.main.data.next_episode_ind())
         self.main.plot_frame.draw_fa_marking_indicator()
 
     def set_threshold(self):

@@ -136,6 +136,13 @@ class Recording(dict):
             debug_logger.warning(f"tried to get episode with index {self.current_ep_ind} but it "
             "doesn't exist")
 
+    def next_episode_ind(self):
+        inds = [e.n_episode for e in self.series]
+        current = np.where( np.array(inds) == self.current_ep_ind )[0]
+        if current + 1 == len(inds):
+            return 0
+        return int(current)+1
+
     @property
     def has_command(self):
         if self.series:
