@@ -23,7 +23,7 @@ from ..gui import (
     IdealizationFrame,
     FirstActivationFrame,
 )
-from ..utils import parse_filename
+from ..utils import parse_filename, clear_qt_layout
 from ..core import Recording
 from ..constants import TEST_FILE_NAME
 
@@ -94,6 +94,8 @@ class MainWindow(QMainWindow):
         self.central_layout.addWidget(self.plot_frame, 1, 2)
 
     def open_file(self):
+        clear_qt_layout(self.central_layout)
+        self.create_widgets()
         self.filename = QFileDialog.getOpenFileName(self)[0]
         if self.filename:
             self.close_tc_frame()
