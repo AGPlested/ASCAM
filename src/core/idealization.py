@@ -73,7 +73,7 @@ class IdealizationCache:
                 f"idealizing episode {n_episode} of "
                 f"series {self.data.current_datakey}"
             )
-            self.data.series[n_episode].idealize(
+            self.data.episode(n_episode).idealize(
                 self.amplitudes,
                 self.thresholds,
                 self.resolution,

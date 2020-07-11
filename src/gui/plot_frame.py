@@ -186,11 +186,11 @@ class PlotFrame(QWidget):
 
     def plot_episode(self):
         debug_logger.debug(
-            f"plotting episode {self.main.data.episode.n_episode} of series {self.main.data.current_datakey}"
+            f"plotting episode {self.main.data.episode().n_episode} of series {self.main.data.current_datakey}"
         )
         pen = pg.mkPen(color="b")
         self.trace_line = self.trace_plot.plot(
-            self.main.data.episode.time, self.main.data.episode.trace, pen=pen
+            self.main.data.episode().time, self.main.data.episode().trace, pen=pen
         )
         if self.main.tc_frame is not None and self.main.tc_frame.idealization() is not None:
             id_pen = pg.mkPen(color=ORANGE)
@@ -199,22 +199,22 @@ class PlotFrame(QWidget):
             )
         if self.show_command:
             self.command_plot.plot(
-                self.main.data.episode.time, self.main.data.episode.command, pen=pen
+                self.main.data.episode().time, self.main.data.episode().command, pen=pen
             )
         if self.show_piezo:
             self.piezo_plot.plot(
-                self.main.data.episode.time, self.main.data.episode.piezo, pen=pen
+                self.main.data.episode().time, self.main.data.episode().piezo, pen=pen
             )
         self.set_viewbox_limits()
 
     def set_viewbox_limits(self):
-        time_max = np.max(self.main.data.episode.time)
-        time_min = np.min(self.main.data.episode.time)
+        time_max = np.max(self.main.data.episode().time)
+        time_min = np.min(self.main.data.episode().time)
         time_range = time_max - time_min
         time_max += 0.05 * time_range
         time_min -= 0.05 * time_range
-        trace_max = np.max(self.main.data.episode.trace)
-        trace_min = np.min(self.main.data.episode.trace)
+        trace_max = np.max(self.main.data.episode().trace)
+        trace_min = np.min(self.main.data.episode().trace)
         trace_range = trace_max - trace_min
         trace_max += 0.05 * trace_range
         trace_min -= 0.05 * trace_range
@@ -222,8 +222,8 @@ class PlotFrame(QWidget):
             xMin=time_min, yMin=trace_min, xMax=time_max, yMax=trace_max
         )
         if self.show_piezo:
-            piezo_max = np.max(self.main.data.episode.piezo)
-            piezo_min = np.min(self.main.data.episode.piezo)
+            piezo_max = np.max(self.main.data.episode().piezo)
+            piezo_min = np.min(self.main.data.episode().piezo)
             piezo_range = piezo_max - piezo_min
             piezo_max += 0.05 * piezo_range
             piezo_min -= 0.05 * piezo_range
@@ -231,8 +231,8 @@ class PlotFrame(QWidget):
                 xMin=time_min, yMin=piezo_min, xMax=time_max, yMax=piezo_max
             )
         if self.show_command:
-            command_max = np.max(self.main.data.episode.command)
-            command_min = np.min(self.main.data.episode.command)
+            command_max = np.max(self.main.data.episode().command)
+            command_min = np.min(self.main.data.episode().command)
             command_range = command_max - command_min
             command_max += 0.05 * command_range
             command_min -= 0.05 * command_range
@@ -248,7 +248,7 @@ class PlotFrame(QWidget):
         pen = pg.mkPen(color=ORANGE, style=QtCore.Qt.DashLine, width=0.5*self.base_line_width)
         self.clear_fa_threshold()
 
-        time = self.main.data.episode.time
+        time = self.main.data.episode().time
         hist_x = np.arange(
             np.min([*self.hist_y_range]), np.max([*self.hist_y_range]), 0.1
         )
@@ -262,7 +262,7 @@ class PlotFrame(QWidget):
         self.clear_fa()
         pen = pg.mkPen(color=GREEN, style=QtCore.Qt.DashLine, width=self.base_line_width)
         self.fa_line = pg.InfiniteLine(
-            pos=self.main.data.episode.first_activation, angle=90, pen=pen
+            pos=self.main.data.episode().first_activation, angle=90, pen=pen
         )
         self.trace_plot.addItem(self.fa_line)
 
@@ -286,7 +286,7 @@ class PlotFrame(QWidget):
         self.clear_theta_lines()
         self.theta_lines = []
         self.theta_hist_lines = []
-        time = self.main.data.episode.time
+        time = self.main.data.episode().time
         hist_x = np.arange(
             np.min([*self.hist_y_range]), np.max([*self.hist_y_range]), 0.1
         )
@@ -304,7 +304,7 @@ class PlotFrame(QWidget):
         self.clear_amp_lines()
         self.amp_lines = []
         self.amp_hist_lines = []
-        time = self.main.data.episode.time
+        time = self.main.data.episode().time
         hist_x = np.arange(
             np.min([*self.hist_y_range]), np.max([*self.hist_y_range]), 0.1
         )

@@ -176,12 +176,12 @@ class FirstActivationFrame(EntryWidget):
                 raise RuntimeError(error)
 
     def mark_fa_manually(self, evt):
-        debug_logger.debug(f"manually marked episode {self.main.data.episode.n_episode}"
+        debug_logger.debug(f"manually marked episode {self.main.data.episode().n_episode}"
                            f"at t={self.marking_indicator.value()}")
         if evt.button() == QtCore.Qt.MouseButton.LeftButton:
-            self.main.data.episode.first_activation = self.marking_indicator.value()
+            self.main.data.episode().first_activation = self.marking_indicator.value()
             self.main.plot_frame.plot_fa_line()
-            self.main.data.episode.manual_first_activation = True
+            self.main.data.episode().manual_first_activation = True
 
     def drag_fa_threshold_hist(self, pos):
         self.threshold = pos  

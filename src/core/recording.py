@@ -126,9 +126,10 @@ class Recording(dict):
     def series(self):
         return self[self.current_datakey]
 
-    @property
-    def episode(self):
-        out  = [e for e in self.series if e.n_episode==self.current_ep_ind]
+    def episode(self, n_episode=None):
+        if n_episode is None:
+            n_episode = self.current_ep_ind
+        out  = [e for e in self.series if e.n_episode==n_episode]
         if out:
             return out[0]
         else:
@@ -138,13 +139,13 @@ class Recording(dict):
     @property
     def has_command(self):
         if self.series:
-            return True if self.episode.command is not None else False
+            return True if self.episode().command is not None else False
         return False
 
     @property
     def has_piezo(self):
         if self.series:
-            return True if self.episode.piezo is not None else False
+            return True if self.episode().piezo is not None else False
         return False
 
     def baseline_correction(
@@ -289,13 +290,13 @@ class Recording(dict):
         if select_piezo:
             for piezo, trace in zip(piezos, traces):
                 time, trace_points = piezo_selection(
-                    self.episode.time, piezo, trace, active, deviation
+                    self.episode().time, piezo, trace, active, deviation
                 )
                 trace_list.extend(trace_points)
         elif intervals:
             for trace in traces:
                 time, trace_points = interval_selection(
-                    self.episode.time, trace, intervals, self.sampling_rate
+                    self.episode().time, trace, intervals, self.sampling_rate
                 )
                 trace_list.extend(trace_points)
         else:
@@ -331,21 +332,21 @@ class Recording(dict):
         # select time points to include in histogram
         if select_piezo:
             time, trace_points = piezo_selection(
-                self.episode.time,
-                self.episode.piezo,
-                self.episode.trace,
+                self.episode().time,
+                self.episode().piezo,
+                self.episode().trace,
                 active,
                 deviation,
             )
         elif intervals:
             time, trace_points = interval_selection(
-                self.episode.time,
-                self.episode.trace,
+                self.episode().time,
+                self.episode().trace,
                 intervals,
-                self.episode.sampling_rate,
+                self.episode().sampling_rate,
             )
         else:
-            trace_points = self.episode.trace
+            trace_points = self.episode().trace
         heights, bins = np.histogram(trace_points, n_bins, density=density)
         # get centers of all the bins
         centers = (bins[:-1] + bins[1:]) / 2
@@ -393,7 +394,7 @@ class Recording(dict):
         export_array = np.zeros(
             shape=(len(episodes) + 1, episodes[0].idealization.size)
         )
-        export_array[0] = self.episode.id_time * TIME_UNIT_FACTORS[time_unit]
+        export_array[0] = self.episode().id_time * TIME_UNIT_FACTORS[time_unit]
         for k, episode in enumerate(episodes):
             export_array[k + 1] = (
                 episode.idealization * CURRENT_UNIT_FACTORS[trace_unit]
@@ -488,7 +489,7 @@ class Recording(dict):
         # to write to axgd we need a list as the second argument of the 'write'
         # method, this elements in the lists will be the columns in data table
         # the first column in this will be a list of episode numbers
-        data_list = [self.episode.time]
+        data_list = [self.episode().time]
 
         # get the episodes we want to save
         episodes = self.select_episodes(datakey, lists_to_save)
