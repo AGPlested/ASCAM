@@ -22,55 +22,59 @@ from ..constants import (
 from ..utils.widgets import EntryWidget
 
 
-class ExportFADialog(QDialog):
-    def __init__(self, main):
-        super().__init__()
+class BaseExportWidget(EntryWidget):
+    def __init__(self, main, dialog=None, default_time_unit='s',
+            default_trace_unit='A', default_piezo_unit='V', default_command_unit='V'):
         self.main = main
-        self.layout = QVBoxLayout()
-        self.setLayout(self.layout)
+        self.dialog= dialog
+        self.create_selection_widgets()
+        super().__init__(main, default_time_unit=default_time_unit,
+                default_trace_unit=default_trace_unit,
+                default_piezo_unit=default_piezo_unit,
+                default_command_unit=default_command_unit)
 
-        self.create_widgets()
-
-        self.exec_()
-
-    def create_widgets(self):
+    def create_selection_widgets(self):
         self.series_selection = QComboBox()
         self.series_selection.addItems(list(self.main.data.keys()))
         self.series_selection.setCurrentText(self.main.data.current_datakey)
-        self.layout.addWidget(self.series_selection)
 
         self.list_selection = QListWidget()
         self.list_selection.addItems(list(self.main.data.lists.keys()))
         self.list_selection.setSelectionMode(QtGui.QAbstractItemView.MultiSelection)
         self.list_selection.setCurrentRow(0)
-        self.layout.addWidget(self.list_selection)
+        self.list_selection.setFixedHeight(18*len(list(self.main.data.lists.keys())))
 
-        row = QHBoxLayout()
-        label = QLabel("Time Unit:")
-        row.addWidget(label)
-        self.time_unit = QComboBox()
-        self.time_unit.addItems(list(TIME_UNIT_FACTORS.keys()))
-        self.time_unit.setCurrentIndex(2)
-        row.addWidget(self.time_unit)
-        self.layout.addLayout(row)
 
-        row = QHBoxLayout()
-        label = QLabel("Current Unit:")
-        row.addWidget(label)
-        self.trace_unit = QComboBox()
-        self.trace_unit.addItems(list(CURRENT_UNIT_FACTORS.keys()))
-        self.trace_unit.setCurrentIndex(5)
-        row.addWidget(self.trace_unit)
-        self.layout.addLayout(row)
+class ExportFADialog(QDialog):
+    def __init__(self, main):
+        super().__init__()
+        self.layout = QVBoxLayout()
+        self.setLayout(self.layout)
+        self.layout.addWidget(ExportFAWidget(main, self))
 
-        row = QHBoxLayout()
+        self.exec_()
+
+
+class ExportFAWidget(BaseExportWidget):
+    def __init__(self, main, dialog):
+        self.main = main
+        super().__init__(main, dialog)
+
+    def create_widgets(self):
+        self.add_row(self.series_selection)
+
+        self.add_row(QLabel("Lists to export:"))
+        self.add_row(self.list_selection)
+
+        self.add_row(QLabel("Time Unit:"), self.time_unit_entry)
+
+        self.add_row(QLabel("Current Unit:"), self.trace_unit_entry)
+
         save_button = QPushButton("Save")
         save_button.clicked.connect(self.save_click)
-        row.addWidget(save_button)
         cancel_button = QPushButton("Cancel")
-        cancel_button.clicked.connect(self.close)
-        row.addWidget(cancel_button)
-        self.layout.addLayout(row)
+        cancel_button.clicked.connect(self.dialog.close)
+        self.add_row(save_button, cancel_button)
 
     def save_click(self):
         filename, filetye = QFileDialog.getSaveFileName(
@@ -162,30 +166,6 @@ class OpenFileEntryWidget(EntryWidget):
         self.main.setWindowTitle(f"cuteSCAM {self.main.filename}")
         self.dialog.close()
         self.close()
-
-
-class BaseExportWidget(EntryWidget):
-    def __init__(self, main, dialog=None, default_time_unit='s',
-            default_trace_unit='A', default_piezo_unit='V', default_command_unit='V'):
-        self.main = main
-        self.dialog= dialog
-        self.create_selection_widgets()
-        super().__init__(main, default_time_unit=default_time_unit,
-                default_trace_unit=default_trace_unit,
-                default_piezo_unit=default_piezo_unit,
-                default_command_unit=default_command_unit)
-
-    def create_selection_widgets(self):
-        self.series_selection = QComboBox()
-        self.series_selection.addItems(list(self.main.data.keys()))
-        self.series_selection.setCurrentText(self.main.data.current_datakey)
-
-        self.list_selection = QListWidget()
-        self.list_selection.addItems(list(self.main.data.lists.keys()))
-        self.list_selection.setSelectionMode(QtGui.QAbstractItemView.MultiSelection)
-        self.list_selection.setCurrentRow(0)
-        self.list_selection.setFixedHeight(18*len(list(self.main.data.lists.keys())))
-
 
 class ExportDialog(QDialog):
     def __init__(self, main):
