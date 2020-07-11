@@ -71,7 +71,7 @@ class FirstActivationFrame(EntryWidget):
         self.drag_threshold_button = QToolButton()
         self.drag_threshold_button.setText("Draggable")
         self.drag_threshold_button.setCheckable(True)
-        self.drag_threshold_button.clicked.connect(self.toggle_dragging_threshold)
+        self.drag_threshold_button.toggled.connect(self.toggle_dragging_threshold)
         self.add_row(self.trace_unit_entry, self.threshold_entry, self.drag_threshold_button)
         
         self.threshold_button = QPushButton("Set threshold")
@@ -81,7 +81,7 @@ class FirstActivationFrame(EntryWidget):
         self.manual_marking_toggle = QToolButton()
         self.manual_marking_toggle.setCheckable(True)
         self.manual_marking_toggle.setText("Mark events manually")
-        self.manual_marking_toggle.clicked.connect(self.toggle_manual_marking)
+        self.manual_marking_toggle.toggled.connect(self.toggle_manual_marking)
         self.manual_marking_toggle.toggled.connect(self.toggle_jump_checkbox)
         self.add_row(self.manual_marking_toggle)
 
@@ -148,13 +148,13 @@ class FirstActivationFrame(EntryWidget):
         debug_logger.debug(f"toggling dragging treshold to {self.drag_threshold_button.isChecked()}")
         if self.drag_threshold_button.isChecked():
             self.main.plot_frame.fa_tracking = True
+            self.manual_marking_toggle.setChecked(False)
         else:
             self.main.plot_frame.fa_tracking = False
 
     def toggle_manual_marking(self):
         if self.manual_marking_toggle.isChecked():
             self.drag_threshold_button.setChecked(False)
-            self.toggle_dragging_threshold()
 
             self.main.plot_frame.draw_fa_marking_indicator()
             self.main.plot_frame.trace_plot.scene().sigMouseMoved.connect(
@@ -169,6 +169,7 @@ class FirstActivationFrame(EntryWidget):
             self.main.plot_frame.plots_are_draggable = True
 
     def clean_up_marking(self):
+        debug_logger.debug("cleaning up FA marking")
         if self.marking_indicator is not None:
             self.main.plot_frame.trace_plot.removeItem(self.marking_indicator)
         try:
