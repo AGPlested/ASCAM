@@ -146,6 +146,8 @@ class Idealizer:
                 end_ind -= 1
             else:
                 i += 1
+        if np.any(Idealizer.extract_events(idealization, time)[:, 1] < resolution):
+            ana_logger.warning("Filter events below the resolution failed! Some events are still too short.")
         return idealization
 
     @staticmethod

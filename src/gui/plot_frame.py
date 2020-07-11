@@ -42,7 +42,7 @@ class PlotFrame(QWidget):
 
         self.fa_line = None
         self.fa_thresh_line = None
-        self.fa_thresh_hist = None
+        self.fa_thresh_hist_line = None
         self.marking_indicator = None
 
         self.amp_lines = []
@@ -255,7 +255,7 @@ class PlotFrame(QWidget):
 
         self.fa_thresh_line  = self.trace_plot.plot(time, np.ones(len(time)) * threshold, pen=pen)
         self.trace_plot.addItem(self.fa_thresh_line)
-        self.fa_thresh_hist_line  =self.hist.plot(hist_x, np.ones(len(hist_x)) * threshold, pen=pen)
+        self.fa_thresh_hist_line = self.hist.plot(hist_x, np.ones(len(hist_x)) * threshold, pen=pen)
         self.hist.addItem(self.fa_thresh_hist_line)
 
     def plot_fa_line(self):

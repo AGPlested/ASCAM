@@ -126,16 +126,6 @@ class FirstActivationFrame(EntryWidget):
 
     def on_episode_click(self, item, *args):
         self.main.plot_frame.plot_fa_threshold(self.threshold)
-        # if self.drag_threshold_button.isChecked():
-            # self.main.plot_frame.fa_thresh_hist_line.sigDragged.connect(
-            #     self.drag_fa_threshold_hist
-            # )
-            # self.main.plot_frame.fa_thresh_hist_line.setMovable(True)
-
-            # self.main.plot_frame.fa_thresh_line.sigDragged.connect(
-            #     self.drag_fa_threshold
-            # )
-            # self.main.plot_frame.fa_thresh_line.setMovable(True)
         if self.manual_marking_toggle.isChecked():
             self.main.plot_frame.draw_fa_marking_indicator()
         self.set_threshold()
