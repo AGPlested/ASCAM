@@ -154,6 +154,7 @@ class Recording(dict):
         selection="piezo",
         active=False,
         deviation=0.05,
+        time_unit='s'
     ):
         """Apply a baseline correction to the current series."""
 
@@ -166,17 +167,21 @@ class Recording(dict):
         logging.info(f"new datakey is {new_datakey}")
         self[new_datakey] = copy.deepcopy(self.series)
         if selection.lower() == "piezo" and not self.has_piezo:
-            debug_logger.debug("selection method was set to 'piezo' but the recording has no piezo data.")
+            debug_logger.debug("selection method was set to 'piezo' but"
+                               "the recording has no piezo data.")
             selection = "None"
         ana_logger.info(
             f"baseline_correction on series '{self.current_datakey}',"
             f"using method '{method}' with degree {degree}\n"
             f"selection is {selection}\n"
             f"the selected intervals are {intervals}\n"
+            f"with units {time_unit}"
             f"select where piezo is active is {active}; the "
             f"deviation from piezo baseline is {deviation}"
             f"sampling rate of this recording is {self.sampling_rate}"
         )
+        if intervals is not None:
+            intervals = np.array(intervals) / TIME_UNIT_FACTORS[time_unit]
         for episode in self[new_datakey]:
             episode.baseline_correct_episode(
                 degree=degree,

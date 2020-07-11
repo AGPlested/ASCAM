@@ -54,7 +54,8 @@ class EpisodeFrame(QWidget):
             self.main.tc_frame.get_params()
             self.main.tc_frame.idealize_episode()
         except AttributeError as e:
-            if "'MainWindow' object has no attribute 'tc_frame'" in str(e):
+            if ("'MainWindow' object has no attribute 'tc_frame'" in str(e) or
+                    "object has no attribute 'get_params'" in str(e)):
                 pass
             else:
                 raise e
@@ -103,7 +104,7 @@ class ListFrame(QWidget):
         self.new_list("All")
 
         self.new_button = QPushButton("New List")
-        self.new_button.clicked.connect(self.create_widgets)
+        self.new_button.clicked.connect(self.create_dialog)
         self.layout.addWidget(self.new_button)
 
     def new_list(self, name, key=None):
@@ -152,7 +153,7 @@ class ListFrame(QWidget):
             self.parent.ep_list.item(index).setText(n)
             ana_logger.debug(f"removed episode {index} from list {name}")
 
-    def create_widgets(self):
+    def create_dialog(self):
         self.dialog = QDialog()
         self.dialog.setWindowTitle("Add List")
         layout = QGridLayout()
@@ -171,7 +172,7 @@ class ListFrame(QWidget):
         layout.addWidget(ok_button, 2, 0)
 
         cancel_button = QPushButton("cancel")
-        cancel_button.clicked.connect(self.close)
+        cancel_button.clicked.connect(self.dialog.close)
         layout.addWidget(cancel_button, 2, 1)
         self.dialog.exec_()
 

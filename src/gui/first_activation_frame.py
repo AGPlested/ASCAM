@@ -17,7 +17,7 @@ from PySide2.QtWidgets import (
 from ..gui import ExportFADialog
 from ..utils import round_off_tables
 from ..utils.widgets import EntryWidget, TableFrame
-from ..constants import CURRENT_UNIT_FACTORS, GREEN
+from ..constants import CURRENT_UNIT_FACTORS
 
 debug_logger = logging.getLogger("ascam.debug")
 
@@ -71,7 +71,7 @@ class FirstActivationFrame(EntryWidget):
         self.drag_threshold_button = QToolButton()
         self.drag_threshold_button.setText("Draggable")
         self.drag_threshold_button.setCheckable(True)
-        self.drag_threshold_button.clicked.connect(self.toggle_dragging_threshold)
+        self.drag_threshold_button.toggled.connect(self.toggle_dragging_threshold)
         self.add_row(self.trace_unit_entry, self.threshold_entry, self.drag_threshold_button)
         
         self.threshold_button = QPushButton("Set threshold")
@@ -81,7 +81,7 @@ class FirstActivationFrame(EntryWidget):
         self.manual_marking_toggle = QToolButton()
         self.manual_marking_toggle.setCheckable(True)
         self.manual_marking_toggle.setText("Mark events manually")
-        self.manual_marking_toggle.clicked.connect(self.toggle_manual_marking)
+        self.manual_marking_toggle.toggled.connect(self.toggle_manual_marking)
         self.manual_marking_toggle.toggled.connect(self.toggle_jump_checkbox)
         self.add_row(self.manual_marking_toggle)
 
@@ -126,16 +126,6 @@ class FirstActivationFrame(EntryWidget):
 
     def on_episode_click(self, item, *args):
         self.main.plot_frame.plot_fa_threshold(self.threshold)
-        if self.drag_threshold_button.isChecked():
-            self.main.plot_frame.fa_thresh_hist_line.sigDragged.connect(
-                self.drag_fa_threshold_hist
-            )
-            self.main.plot_frame.fa_thresh_hist_line.setMovable(True)
-
-            self.main.plot_frame.fa_thresh_line.sigDragged.connect(
-                self.drag_fa_threshold
-            )
-            self.main.plot_frame.fa_thresh_line.setMovable(True)
         if self.manual_marking_toggle.isChecked():
             self.main.plot_frame.draw_fa_marking_indicator()
         self.set_threshold()
@@ -148,14 +138,13 @@ class FirstActivationFrame(EntryWidget):
         debug_logger.debug(f"toggling dragging treshold to {self.drag_threshold_button.isChecked()}")
         if self.drag_threshold_button.isChecked():
             self.main.plot_frame.fa_tracking = True
+            self.manual_marking_toggle.setChecked(False)
         else:
-            self.clean_up_thresh_dragging()
             self.main.plot_frame.fa_tracking = False
 
     def toggle_manual_marking(self):
         if self.manual_marking_toggle.isChecked():
             self.drag_threshold_button.setChecked(False)
-            self.clean_up_thresh_dragging()
 
             self.main.plot_frame.draw_fa_marking_indicator()
             self.main.plot_frame.trace_plot.scene().sigMouseMoved.connect(
@@ -170,6 +159,7 @@ class FirstActivationFrame(EntryWidget):
             self.main.plot_frame.plots_are_draggable = True
 
     def clean_up_marking(self):
+        debug_logger.debug("cleaning up FA marking")
         if self.marking_indicator is not None:
             self.main.plot_frame.trace_plot.removeItem(self.marking_indicator)
         try:

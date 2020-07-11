@@ -6,8 +6,10 @@ import numpy as np
 import pyqtgraph as pg
 
 from ..utils import clear_qt_layout
-from ..constants import ORANGE, GREEN
 
+GREEN = (70, 250, 150)
+ORANGE = (255, 153, 0)
+GREY = (170, 170, 170) 
 
 debug_logger = logging.getLogger("ascam.debug")
 
@@ -25,6 +27,8 @@ class PlotFrame(QWidget):
         self.main.show_piezo.triggered.connect(self.toggle_piezo)
         self.main.show_command.triggered.connect(self.toggle_command)
 
+        self.base_line_width = round(0.003 * self.main.screen_resolution[1] )
+
         self.plots_are_draggable = True
         self.show_grid = True
         self.hist_x_range = None
@@ -38,7 +42,7 @@ class PlotFrame(QWidget):
 
         self.fa_line = None
         self.fa_thresh_line = None
-        self.fa_thresh_hist = None
+        self.fa_thresh_hist_line = None
         self.marking_indicator = None
 
         self.amp_lines = []
@@ -241,7 +245,7 @@ class PlotFrame(QWidget):
 
     def plot_fa_threshold(self, threshold):
         debug_logger.debug(f"plotting first activation threshold at {threshold}")
-        pen = pg.mkPen(color=ORANGE, style=QtCore.Qt.DashLine, width=0.9)
+        pen = pg.mkPen(color=ORANGE, style=QtCore.Qt.DashLine, width=0.5*self.base_line_width)
         self.clear_fa_threshold()
 
         time = self.main.data.episode.time
@@ -251,19 +255,19 @@ class PlotFrame(QWidget):
 
         self.fa_thresh_line  = self.trace_plot.plot(time, np.ones(len(time)) * threshold, pen=pen)
         self.trace_plot.addItem(self.fa_thresh_line)
-        self.fa_thresh_hist_line  =self.hist.plot(hist_x, np.ones(len(hist_x)) * threshold, pen=pen)
+        self.fa_thresh_hist_line = self.hist.plot(hist_x, np.ones(len(hist_x)) * threshold, pen=pen)
         self.hist.addItem(self.fa_thresh_hist_line)
 
     def plot_fa_line(self):
         self.clear_fa()
-        pen = pg.mkPen(color=GREEN, style=QtCore.Qt.DashLine, width=2)
+        pen = pg.mkPen(color=GREEN, style=QtCore.Qt.DashLine, width=self.base_line_width)
         self.fa_line = pg.InfiniteLine(
             pos=self.main.data.episode.first_activation, angle=90, pen=pen
         )
         self.trace_plot.addItem(self.fa_line)
 
     def draw_fa_marking_indicator(self):
-        pen = pg.mkPen(color=GREEN, style=QtCore.Qt.DashLine, width=1)
+        pen = pg.mkPen(color=GREY, style=QtCore.Qt.DashLine, width=0.5*self.base_line_width)
         self.marking_indicator = pg.InfiniteLine(pos=0, angle=90, pen=pen)
         self.main.plot_frame.trace_plot.addItem(self.marking_indicator)
 
@@ -277,7 +281,7 @@ class PlotFrame(QWidget):
             self.trace_plot.removeItem(self.fa_line)
 
     def plot_theta_lines(self, thetas):
-        pen = pg.mkPen(color="r", style=QtCore.Qt.DashLine, width=0.4)
+        pen = pg.mkPen(color="r", style=QtCore.Qt.DashLine, width=0.3*self.base_line_width)
         thetas = np.asarray(thetas)
         self.clear_theta_lines()
         self.theta_lines = []
@@ -296,7 +300,7 @@ class PlotFrame(QWidget):
 
     def plot_amp_lines(self, amps):
         debug_logger.debug(f"plotting amps at {amps}")
-        pen = pg.mkPen(color=ORANGE, style=QtCore.Qt.DashLine, width=0.4)
+        pen = pg.mkPen(color=ORANGE, style=QtCore.Qt.DashLine, width=0.3*self.base_line_width)
         self.clear_amp_lines()
         self.amp_lines = []
         self.amp_hist_lines = []

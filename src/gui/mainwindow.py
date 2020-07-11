@@ -33,9 +33,11 @@ debug_logger = logging.getLogger("ascam.debug")
 
 
 class MainWindow(QMainWindow):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, screen_resolution, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
         debug_logger.debug("MainWindow initializing")
+
+        self.screen_resolution = screen_resolution
 
         self.setWindowTitle("cuteSCAM")
         # self.setGeometry(0,0,800,600)

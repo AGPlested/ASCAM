@@ -346,7 +346,8 @@ class IdealizationTab(EntryWidget):
             try:
                 self.idealization_cache.clear_idealization()
             except AttributeError as e:
-                if "'IdealizationTab' object has no attribute 'idealization_cache'" in str(e):
+                if ("'IdealizationTab' object has no attribute 'idealization_cache'" in str(e)
+                    or "object has no attribute " in str(e)):
                     pass
                 else:
                     raise AttributeError(e)

@@ -97,12 +97,12 @@ def main():
     logging.info(pip_freeze)
 
     app = QApplication([])
-    main_window = MainWindow()
+    for screen in app.screens():
+        if (0, 0) != screen.geometry().topLeft():
+            screen_resolution = screen.size().toTuple()
+    main_window = MainWindow(screen_resolution=screen_resolution)
     main_window.show()
     if test:
         main_window.test_mode()
     sys.exit(app.exec_())
 
-
-# if __name__ == "__main__":
-#     main()

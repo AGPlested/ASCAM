@@ -134,7 +134,7 @@ class ChungKennedyFilter:
 			forward_prediction [1D array] - forward prediciton of the data"""
 
         forward_prediction = np.zeros(len(data))
-        if self.mode is "increasing":
+        if self.mode == "increasing":
             # take first prediction equal to real value
             forward_prediction[0] = data[0]
             # add points with offsets -1,...,-window_width
@@ -144,7 +144,7 @@ class ChungKennedyFilter:
             for i in range(window_width):
                 forward_prediction[i] /= i + 1
             forward_prediction[window_width:] /= window_width
-        elif self.mode is "padded":
+        elif self.mode == "padded":
             data = np.hstack((np.zeros(window_width), data))
             for i in range(1, window_width + 1):
                 forward_prediction += data[window_width - i : -i]
@@ -172,7 +172,7 @@ class ChungKennedyFilter:
 
         len_data = len(data)
         backward_prediction = np.zeros(len_data)
-        if self.mode is "increasing":
+        if self.mode == "increasing":
             # since we cannot backward predict the last element we set it equal
             # to the original datapoint
             backward_prediction[-1] = data[-1]
@@ -184,7 +184,7 @@ class ChungKennedyFilter:
             for i in range(1, window_width):
                 backward_prediction[-i] /= i
             backward_prediction[: len_data - window_width + 1] /= window_width
-        elif self.mode is "padded":
+        elif self.mode == "padded":
             data = np.hstack((data, np.zeros(window_width)))
             for i in range(1, window_width + 1):
                 backward_prediction += data[i : len(data) - window_width + i]
