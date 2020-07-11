@@ -97,6 +97,7 @@ class Recording(dict):
         # variables for user created lists of episodes
         # `lists` stores the indices of the episodes in the list in the first
         # element and the associated key as the second
+        # lists[name] = ([inds], key)
         self.lists = dict()
 
     def select_episodes(self, datakey=None, lists=None):

@@ -126,7 +126,7 @@ class ListFrame(QWidget):
                 for x in self.parent.main.data.lists.values()
                 if index in x[0] and x[1] is not None
             ]
-            n = f"Episode {index+1} "
+            n = f"Episode {self.parent.main.data.series[index].n_episode} "
             assigned_keys.sort()
             s = ""
             for k in assigned_keys:
@@ -134,7 +134,7 @@ class ListFrame(QWidget):
                     s += f"[{k}]"
             n += s.rjust(20 - len(n), " ")
             self.parent.ep_list.item(index).setText(n)
-            ana_logger.debug(f"added episode {index} to list {name}")
+            ana_logger.debug(f"added episode {self.parent.main.data.series[index].n_episode} to list {name}")
         else:
             self.parent.main.data.lists[name][0].remove(index)
             n = self.parent.ep_list.item(index).text()
@@ -144,14 +144,14 @@ class ListFrame(QWidget):
                 if index in x[0] and x[1] is not None
             ]
             assigned_keys.sort()
-            n = f"Episode {index+1} "
+            n = f"Episode {self.parent.main.data.series[index].n_episode} "
             s = ""
             for k in assigned_keys:
                 if k is not None:
                     s += f"[{k}]"
             n += s.rjust(20 - len(n), " ")
             self.parent.ep_list.item(index).setText(n)
-            ana_logger.debug(f"removed episode {index} from list {name}")
+            ana_logger.debug(f"removed episode {self.parent.main.data.series[index].n_episode} from list {name}")
 
     def create_dialog(self):
         self.dialog = QDialog()
@@ -167,11 +167,11 @@ class ListFrame(QWidget):
         self.key_entry.setMaxLength(1)
         layout.addWidget(self.key_entry, 1, 1)
 
-        ok_button = QPushButton("Ok")
+        ok_button = QPushButton("OK")
         ok_button.clicked.connect(self.ok_clicked)
         layout.addWidget(ok_button, 2, 0)
 
-        cancel_button = QPushButton("cancel")
+        cancel_button = QPushButton("Cancel")
         cancel_button.clicked.connect(self.dialog.close)
         layout.addWidget(cancel_button, 2, 1)
         self.dialog.exec_()
