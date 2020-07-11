@@ -154,6 +154,7 @@ class FirstActivationFrame(EntryWidget):
     def toggle_manual_marking(self):
         if self.manual_marking_toggle.isChecked():
             self.drag_threshold_button.setChecked(False)
+            self.toggle_dragging_threshold()
 
             self.main.plot_frame.draw_fa_marking_indicator()
             self.main.plot_frame.trace_plot.scene().sigMouseMoved.connect(
