@@ -123,15 +123,23 @@ class OpenFileEntryWidget(EntryWidget):
 
         t_unit_label = QLabel("Time unit")
         self.add_row(t_unit_label,self.time_unit_entry) 
+        self.time_unit_entry.setToolTip("Select the units that are used in the file.")
+        t_unit_label.setToolTip("Select the units that are used in the file.")
 
         t_unit_label = QLabel("Current unit")
         self.add_row(t_unit_label, self.trace_unit_entry)
+        self.trace_unit_entry.setToolTip("Select the units that are used in the file.")
+        t_unit_label.setToolTip("Select the units that are used in the file.")
 
         t_unit_label = QLabel("Piezo unit")
         self.add_row(t_unit_label, self.piezo_unit_entry)
+        self.piezo_unit_entry.setToolTip("Select the units that are used in the file.")
+        t_unit_label.setToolTip("Select the units that are used in the file.")
 
         t_unit_label = QLabel("Command unit")
         self.add_row(t_unit_label, self.command_unit_entry)
+        self.command_unit_entry.setToolTip("Select the units that are used in the file.")
+        t_unit_label.setToolTip("Select the units that are used in the file.")
 
         ok_button = QPushButton("OK")
         ok_button.clicked.connect(self.ok_clicked)
