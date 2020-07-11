@@ -414,7 +414,8 @@ class Recording(dict):
             header=f"amplitudes = {amplitudes};"
             f"thresholds = {thresholds};"
             f"resolution = {resolution};"
-            f"interpolation_factor = {interpolation_factor}",
+            f"interpolation_factor = {interpolation_factor}"
+            "\n"+", ".join( [ "Episode number "+str(e.n_episode) for e in episodes ] )
         )
 
     def export_matlab(
