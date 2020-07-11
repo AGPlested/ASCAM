@@ -27,7 +27,7 @@ class PlotFrame(QWidget):
         self.main.show_piezo.triggered.connect(self.toggle_piezo)
         self.main.show_command.triggered.connect(self.toggle_command)
 
-        self.base_line_width = round(0.003 * self.main.screen_resolution[1] )
+        self.base_line_width = round(0.005 * self.main.screen_resolution[1] )
 
         self.plots_are_draggable = True
         self.show_grid = True
@@ -245,7 +245,7 @@ class PlotFrame(QWidget):
 
     def plot_fa_threshold(self, threshold):
         debug_logger.debug(f"plotting first activation threshold at {threshold}")
-        pen = pg.mkPen(color=ORANGE, style=QtCore.Qt.DashLine, width=0.5*self.base_line_width)
+        pen = pg.mkPen(color=ORANGE, style=QtCore.Qt.DashLine, width=0.7*self.base_line_width)
         self.clear_fa_threshold()
 
         time = self.main.data.episode().time
@@ -267,7 +267,7 @@ class PlotFrame(QWidget):
         self.trace_plot.addItem(self.fa_line)
 
     def draw_fa_marking_indicator(self):
-        pen = pg.mkPen(color=GREY, style=QtCore.Qt.DashLine, width=0.5*self.base_line_width)
+        pen = pg.mkPen(color=GREY, style=QtCore.Qt.DashLine, width=0.8*self.base_line_width)
         self.marking_indicator = pg.InfiniteLine(pos=0, angle=90, pen=pen)
         self.main.plot_frame.trace_plot.addItem(self.marking_indicator)
 
@@ -281,7 +281,7 @@ class PlotFrame(QWidget):
             self.trace_plot.removeItem(self.fa_line)
 
     def plot_theta_lines(self, thetas):
-        pen = pg.mkPen(color="r", style=QtCore.Qt.DashLine, width=0.3*self.base_line_width)
+        pen = pg.mkPen(color="r", style=QtCore.Qt.DashLine, width=0.6*self.base_line_width)
         thetas = np.asarray(thetas)
         self.clear_theta_lines()
         self.theta_lines = []
@@ -300,7 +300,7 @@ class PlotFrame(QWidget):
 
     def plot_amp_lines(self, amps):
         debug_logger.debug(f"plotting amps at {amps}")
-        pen = pg.mkPen(color=ORANGE, style=QtCore.Qt.DashLine, width=0.3*self.base_line_width)
+        pen = pg.mkPen(color=ORANGE, style=QtCore.Qt.DashLine, width=0.6*self.base_line_width)
         self.clear_amp_lines()
         self.amp_lines = []
         self.amp_hist_lines = []
