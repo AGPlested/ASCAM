@@ -199,9 +199,13 @@ class IdealizationTabFrame(QTabWidget):
         self.tabBar().setTabButton(1, QTabBar.RightSide, self.new_button)
 
         self.setTabsClosable(True)
-        self.tabBar().tabCloseRequested.connect(self.removeTab)
+        self.tabBar().tabCloseRequested.connect(self.remove_tab)
 
         self.currentChanged.connect(self.switch_tab)
+
+    def remove_tab(self, index):
+        if index != self.count() - 1:
+            self.removeTab(index)
 
     def add_tab(self):
         title = str(self.count())
