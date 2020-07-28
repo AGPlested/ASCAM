@@ -27,7 +27,7 @@ class PlotFrame(QWidget):
         self.main.show_piezo.triggered.connect(self.toggle_piezo)
         self.main.show_command.triggered.connect(self.toggle_command)
 
-        self.base_line_width = round(0.005 * self.main.screen_resolution[1])
+        self.base_line_width = round(0.003 * self.main.screen_resolution[1])
 
         self.plots_are_draggable = True
         self.show_grid = True
