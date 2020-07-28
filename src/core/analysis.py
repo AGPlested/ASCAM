@@ -165,6 +165,7 @@ class Idealizer:
                 end in its columns"""
 
         events = np.where(idealization[1:] != idealization[:-1])[0]
+        # events = events.astype(int)
         # events+1 marks the indices of the last time point of an event
         # starting from 0 to events[0] is the first event, from events[0]+1
         # to events[1] is the second...  and from events[-1]+1 to
@@ -183,7 +184,7 @@ class Idealizer:
             event_list[0][2] = time[0]
             event_list[0][3] = time[int(events[0])]
 
-            event_list[1:, 0] = idealization[events]
+            event_list[1:, 0] = idealization[events+1]
             event_list[1:, 2] = time[events+1]
             event_list[1:-1, 3] = time[events[1:]]
 
