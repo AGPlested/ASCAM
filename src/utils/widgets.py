@@ -2,7 +2,7 @@ import logging
 
 from PySide2 import QtGui, QtCore
 from PySide2.QtWidgets import (
-        QLayout,
+    QLayout,
     QWidget,
     QTextEdit,
     QTableView,
@@ -25,7 +25,7 @@ debug_logger = logging.getLogger("ascam.debug")
 
 class TextEdit(QTextEdit):
     def __init__(self, parent=None, *args, **kwargs):
-        self.parent = parent  #this is the containing widget
+        self.parent = parent  # this is the containing widget
         QTextEdit.__init__(self, *args, **kwargs)
         self.document().modificationChanged.connect(self.updateMaxHeight)
 
@@ -199,8 +199,17 @@ class EventHistConfig(QDialog):
 
 
 class TableFrame(QDialog):
-    def __init__(self, parent, data, header, trace_unit='A', 
-                 time_unit='A', title=None, height=800, width=500):
+    def __init__(
+        self,
+        parent,
+        data,
+        header,
+        trace_unit="A",
+        time_unit="A",
+        title=None,
+        height=800,
+        width=500,
+    ):
         super().__init__()
         self.parent = parent
         self.layout = QVBoxLayout()
@@ -215,7 +224,7 @@ class TableFrame(QDialog):
         self.layout.addWidget(table_view)
         self.setModal(False)
         if title is None:
-            title = ' ,'.join(header)
+            title = " ,".join(header)
         self.setWindowTitle(title)
         self.show()
 
@@ -268,13 +277,19 @@ class VerticalContainerWidget(QWidget):
 
 
 class EntryWidget(VerticalContainerWidget):
-    def __init__(self, parent, default_time_unit='ms', default_trace_unit='pA',
-                 default_piezo_unit='mV', default_command_unit='uV'):
-        
-        self.default_time_unit=default_time_unit
-        self.default_trace_unit=default_trace_unit
-        self.default_piezo_unit=default_piezo_unit
-        self.default_command_unit=default_command_unit
+    def __init__(
+        self,
+        parent,
+        default_time_unit="ms",
+        default_trace_unit="pA",
+        default_piezo_unit="mV",
+        default_command_unit="uV",
+    ):
+
+        self.default_time_unit = default_time_unit
+        self.default_trace_unit = default_trace_unit
+        self.default_piezo_unit = default_piezo_unit
+        self.default_command_unit = default_command_unit
         self.create_unit_entry_widgets()
         super().__init__(parent)
 
@@ -282,64 +297,67 @@ class EntryWidget(VerticalContainerWidget):
         self.trace_unit_entry = QComboBox()
         self.trace_unit_entry.addItems(list(CURRENT_UNIT_FACTORS.keys()))
         self.trace_unit_entry.setCurrentIndex(
-                get_dict_key_index(CURRENT_UNIT_FACTORS, self.default_trace_unit))
+            get_dict_key_index(CURRENT_UNIT_FACTORS, self.default_trace_unit)
+        )
 
         self.piezo_unit_entry = QComboBox()
         self.piezo_unit_entry.addItems(list(VOLTAGE_UNIT_FACTORS.keys()))
         self.piezo_unit_entry.setCurrentIndex(
-            get_dict_key_index(VOLTAGE_UNIT_FACTORS, self.default_piezo_unit))
+            get_dict_key_index(VOLTAGE_UNIT_FACTORS, self.default_piezo_unit)
+        )
 
         self.command_unit_entry = QComboBox()
         self.command_unit_entry.addItems(list(VOLTAGE_UNIT_FACTORS.keys()))
         self.command_unit_entry.setCurrentIndex(
-            get_dict_key_index(VOLTAGE_UNIT_FACTORS, self.default_command_unit))
+            get_dict_key_index(VOLTAGE_UNIT_FACTORS, self.default_command_unit)
+        )
 
         self.time_unit_entry = QComboBox()
         self.time_unit_entry.addItems(list(TIME_UNIT_FACTORS.keys()))
         self.time_unit_entry.setCurrentIndex(
-            get_dict_key_index(TIME_UNIT_FACTORS, self.default_time_unit))
+            get_dict_key_index(TIME_UNIT_FACTORS, self.default_time_unit)
+        )
 
     @property
     def trace_unit(self):
-        if hasattr(self, 'trace_unit_entry'):
+        if hasattr(self, "trace_unit_entry"):
             return self.trace_unit_entry.currentText()
-        return 'A'
+        return "A"
 
     @trace_unit.setter
     def trace_unit(self, val):
-        if hasattr(self, 'trace_unit_entry'):
+        if hasattr(self, "trace_unit_entry"):
             self.trace_unit_entry.setCurrentText(val)
 
     @property
     def time_unit(self):
-        if hasattr(self, 'time_unit_entry'):
+        if hasattr(self, "time_unit_entry"):
             return self.time_unit_entry.currentText()
-        return 's'
+        return "s"
 
     @time_unit.setter
     def time_unit(self, val):
-        if hasattr(self, 'time_unit_entry'):
+        if hasattr(self, "time_unit_entry"):
             self.time_unit_entry.setCurrentText(val)
 
     @property
     def piezo_unit(self):
-        if hasattr(self, 'piezo_unit_entry'):
+        if hasattr(self, "piezo_unit_entry"):
             return self.piezo_unit_entry.currentText()
-        return 'V'
+        return "V"
 
     @piezo_unit.setter
     def piezo_unit(self, val):
-        if hasattr(self, 'piezo_unit_entry'):
+        if hasattr(self, "piezo_unit_entry"):
             self.piezo_unit_entry.setCurrentText(val)
 
     @property
     def command_unit(self):
-        if hasattr(self, 'command_unit_entry'):
+        if hasattr(self, "command_unit_entry"):
             return self.command_unit_entry.currentText()
-        return 'V'
+        return "V"
 
     @command_unit.setter
     def command_unit(self, val):
-        if hasattr(self, 'command_unit_entry'):
+        if hasattr(self, "command_unit_entry"):
             self.command_unit_entry.setCurrentText(val)
-

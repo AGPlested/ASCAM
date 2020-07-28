@@ -4,6 +4,7 @@ import numpy as np
 
 from ..constants import PRECISIONS
 
+
 def parse_filename(filename):
     """
     detect the type of file from the extension
@@ -37,7 +38,9 @@ def parse_filename(filename):
         filetype = "tdt"
         filetype_long = "tab-delimited-text"
     else:
-        raise Exception("Uknown filetype, can only read '.mat', '.axg*', '.csv', '.pkl'")
+        raise Exception(
+            "Uknown filetype, can only read '.mat', '.axg*', '.csv', '.pkl'"
+        )
     filename = filename[slash + 1 :]
     return filetype, path, filetype_long, filename
 
@@ -85,7 +88,7 @@ def interval_selection(time, signal, intervals, fs):
     """
     time_out = []
     signal_out = []
-    if isinstance(intervals[0], (np.ndarray, list )):
+    if isinstance(intervals[0], (np.ndarray, list)):
         for ival in intervals:
             time_out.extend(time[int(ival[0] * fs) : int(ival[-1] * fs)])
             signal_out.extend(signal[int(ival[0] * fs) : int(ival[-1] * fs)])
@@ -155,10 +158,16 @@ def clear_qt_layout(layout):
             elif child.layout() is not None:
                 clear_qt_layout(child.layout())
 
+
 def round_off_tables(dataframe, column_units):
     for i, unit in enumerate(column_units):
-        dataframe.iloc[:, i] = dataframe.iloc[:, i].map(lambda x: f"{x:.{PRECISIONS[unit]}f}")
-    return dataframe    
+        dataframe.iloc[:, i] = dataframe.iloc[:, i].map(
+            lambda x: f"{x:.{PRECISIONS[unit]}f}"
+        )
+    return dataframe
+
 
 def get_dict_key_index(dictionary, target_key):
-    return [index for index, key in enumerate(dictionary.keys()) if key == target_key][0]
+    return [index for index, key in enumerate(dictionary.keys()) if key == target_key][
+        0
+    ]

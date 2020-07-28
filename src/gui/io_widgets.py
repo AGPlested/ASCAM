@@ -14,24 +14,30 @@ from PySide2.QtWidgets import (
 
 
 from ..core import Recording
-from ..constants import (
-    TIME_UNIT_FACTORS,
-    CURRENT_UNIT_FACTORS,
-    VOLTAGE_UNIT_FACTORS,
-)
+from ..constants import TIME_UNIT_FACTORS, CURRENT_UNIT_FACTORS, VOLTAGE_UNIT_FACTORS
 from ..utils.widgets import EntryWidget
 
 
 class BaseExportWidget(EntryWidget):
-    def __init__(self, main, dialog=None, default_time_unit='s',
-            default_trace_unit='A', default_piezo_unit='V', default_command_unit='V'):
+    def __init__(
+        self,
+        main,
+        dialog=None,
+        default_time_unit="s",
+        default_trace_unit="A",
+        default_piezo_unit="V",
+        default_command_unit="V",
+    ):
         self.main = main
-        self.dialog= dialog
+        self.dialog = dialog
         self.create_selection_widgets()
-        super().__init__(main, default_time_unit=default_time_unit,
-                default_trace_unit=default_trace_unit,
-                default_piezo_unit=default_piezo_unit,
-                default_command_unit=default_command_unit)
+        super().__init__(
+            main,
+            default_time_unit=default_time_unit,
+            default_trace_unit=default_trace_unit,
+            default_piezo_unit=default_piezo_unit,
+            default_command_unit=default_command_unit,
+        )
 
     def create_selection_widgets(self):
         self.series_selection = QComboBox()
@@ -42,7 +48,7 @@ class BaseExportWidget(EntryWidget):
         self.list_selection.addItems(list(self.main.data.lists.keys()))
         self.list_selection.setSelectionMode(QtGui.QAbstractItemView.MultiSelection)
         self.list_selection.setCurrentRow(0)
-        self.list_selection.setFixedHeight(18*len(list(self.main.data.lists.keys())))
+        self.list_selection.setFixedHeight(18 * len(list(self.main.data.lists.keys())))
 
 
 class ExportFADialog(QDialog):
@@ -79,7 +85,7 @@ class ExportFAWidget(BaseExportWidget):
     def save_click(self):
         filename, filetye = QFileDialog.getSaveFileName(
             self,
-            dir=self.main.filename[:-4]+"_first_activation",
+            dir=self.main.filename[:-4] + "_first_activation",
             filter="Comma Separated Valued (*.csv)",
         )
         if filename:
@@ -109,24 +115,27 @@ class OpenFileDialog(QDialog):
 class OpenFileEntryWidget(EntryWidget):
     def __init__(self, main, filename, dialog):
         self.main = main
-        self.filename=filename
-        self.dialog= dialog
-        super().__init__(main, default_time_unit='s',
-                default_trace_unit='A',
-                default_piezo_unit='V',
-                default_command_unit='V')
+        self.filename = filename
+        self.dialog = dialog
+        super().__init__(
+            main,
+            default_time_unit="s",
+            default_trace_unit="A",
+            default_piezo_unit="V",
+            default_command_unit="V",
+        )
 
     def create_widgets(self):
         file_button = QLabel("File:")
         self.file_name_label = QLabel(self.filename)
         self.add_row(file_button, self.file_name_label)
 
-        sampling_label = QLabel('Sampling rate [Hz]')
-        self.sampling_entry = QLineEdit('40000')
+        sampling_label = QLabel("Sampling rate [Hz]")
+        self.sampling_entry = QLineEdit("40000")
         self.add_row(sampling_label, self.sampling_entry)
 
         t_unit_label = QLabel("Time unit")
-        self.add_row(t_unit_label,self.time_unit_entry) 
+        self.add_row(t_unit_label, self.time_unit_entry)
         self.time_unit_entry.setToolTip("Select the units that are used in the file.")
         t_unit_label.setToolTip("Select the units that are used in the file.")
 
@@ -142,7 +151,9 @@ class OpenFileEntryWidget(EntryWidget):
 
         t_unit_label = QLabel("Command unit")
         self.add_row(t_unit_label, self.command_unit_entry)
-        self.command_unit_entry.setToolTip("Select the units that are used in the file.")
+        self.command_unit_entry.setToolTip(
+            "Select the units that are used in the file."
+        )
         t_unit_label.setToolTip("Select the units that are used in the file.")
 
         ok_button = QPushButton("OK")
@@ -153,12 +164,13 @@ class OpenFileEntryWidget(EntryWidget):
 
     def ok_clicked(self):
         self.main.data = Recording.from_file(
-                filename=self.main.filename,
-                sampling_rate=self.sampling_entry.text(),
-                time_input_unit=self.time_unit,
-                trace_input_unit=self.trace_unit,
-                piezo_input_unit=self.piezo_unit,
-                command_input_unit=self.command_unit)
+            filename=self.main.filename,
+            sampling_rate=self.sampling_entry.text(),
+            time_input_unit=self.time_unit,
+            trace_input_unit=self.trace_unit,
+            piezo_input_unit=self.piezo_unit,
+            command_input_unit=self.command_unit,
+        )
         self.main.ep_frame.ep_list.populate()
         self.main.ep_frame.update_combo_box()
         self.main.ep_frame.setFocus()
@@ -166,6 +178,7 @@ class OpenFileEntryWidget(EntryWidget):
         self.main.setWindowTitle(f"cuteSCAM {self.main.filename}")
         self.dialog.close()
         self.close()
+
 
 class ExportDialog(QDialog):
     def __init__(self, main):
@@ -246,7 +259,7 @@ class ExportIdealizationDialog(QDialog):
         super().__init__()
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
-        self.layout.addWidget(ExportIdealizationWidget(main, self,id_cache))
+        self.layout.addWidget(ExportIdealizationWidget(main, self, id_cache))
         self.setFixedWidth(300)
 
         self.exec_()
@@ -274,17 +287,13 @@ class ExportIdealizationWidget(BaseExportWidget):
 
     def save_click(self):
         filename, filetye = QFileDialog.getSaveFileName(
-            self,
-            dir=self.main.filename[:-4],
-            filter="CSV (*.csv)",
+            self, dir=self.main.filename[:-4], filter="CSV (*.csv)"
         )
         self.main.data.export_idealization(
             filename,
             time_unit=self.time_unit,
             trace_unit=self.trace_unit,
-            lists_to_save=[
-                        item.text() for item in self.list_selection.selectedItems()
-                    ],
+            lists_to_save=[item.text() for item in self.list_selection.selectedItems()],
             amplitudes=self.id_cache.amplitudes,
             thresholds=self.id_cache.thresholds,
             resolution=self.id_cache.resolution,

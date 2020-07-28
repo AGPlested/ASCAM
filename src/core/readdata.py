@@ -149,7 +149,7 @@ def load_axo(filename):
     ep_numbers = []
 
     for name, data in zip(file.names, file.data):
-        if "Ipatch" in name :
+        if "Ipatch" in name:
             current.append(np.array(data))
             try:
                 ep_numbers.append(int(name.split()[-1]))
@@ -228,4 +228,3 @@ def load_axo(filename):
 #     if command_voltage:
 #         names.append("Command Voltage [V]")
 #     return names, time, current, piezo, command_voltage
-

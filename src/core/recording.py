@@ -5,12 +5,13 @@ import pickle
 import numpy as np
 import pandas as pd
 
-from ..constants import (
-    CURRENT_UNIT_FACTORS,
-    VOLTAGE_UNIT_FACTORS,
-    TIME_UNIT_FACTORS,
+from ..constants import CURRENT_UNIT_FACTORS, VOLTAGE_UNIT_FACTORS, TIME_UNIT_FACTORS
+from ..utils import (
+    parse_filename,
+    piezo_selection,
+    interval_selection,
+    round_off_tables,
 )
-from ..utils import parse_filename, piezo_selection, interval_selection, round_off_tables
 from .readdata import load_matlab, load_axo
 from .episode import Episode
 
@@ -129,19 +130,21 @@ class Recording(dict):
     def episode(self, n_episode=None):
         if n_episode is None:
             n_episode = self.current_ep_ind
-        out  = [e for e in self.series if e.n_episode==n_episode]
+        out = [e for e in self.series if e.n_episode == n_episode]
         if out:
             return out[0]
         else:
-            debug_logger.warning(f"tried to get episode with index {self.current_ep_ind} but it "
-            "doesn't exist")
+            debug_logger.warning(
+                f"tried to get episode with index {self.current_ep_ind} but it "
+                "doesn't exist"
+            )
 
     def next_episode_ind(self):
         inds = [e.n_episode for e in self.series]
-        current = np.where( np.array(inds) == self.current_ep_ind )[0]
+        current = np.where(np.array(inds) == self.current_ep_ind)[0]
         if current + 1 == len(inds):
             return 0
-        return int(current)+1
+        return int(current) + 1
 
     @property
     def has_command(self):
@@ -163,7 +166,7 @@ class Recording(dict):
         selection="piezo",
         active=False,
         deviation=0.05,
-        time_unit='s'
+        time_unit="s",
     ):
         """Apply a baseline correction to the current series."""
 
@@ -176,8 +179,10 @@ class Recording(dict):
         logging.info(f"new datakey is {new_datakey}")
         self[new_datakey] = copy.deepcopy(self.series)
         if selection.lower() == "piezo" and not self.has_piezo:
-            debug_logger.debug("selection method was set to 'piezo' but"
-                               "the recording has no piezo data.")
+            debug_logger.debug(
+                "selection method was set to 'piezo' but"
+                "the recording has no piezo data."
+            )
             selection = "None"
         ana_logger.info(
             f"baseline_correction on series '{self.current_datakey}',"
@@ -389,8 +394,17 @@ class Recording(dict):
                 recording[key] = value
         return recording
 
-    def export_idealization(self, filepath, lists_to_save, time_unit, trace_unit, 
-            amplitudes, thresholds, resolution, interpolation_factor):
+    def export_idealization(
+        self,
+        filepath,
+        lists_to_save,
+        time_unit,
+        trace_unit,
+        amplitudes,
+        thresholds,
+        resolution,
+        interpolation_factor,
+    ):
         debug_logger.debug(f"export_idealization")
 
         if not filepath.endswith(".csv"):
@@ -415,7 +429,8 @@ class Recording(dict):
             f"thresholds = {thresholds};"
             f"resolution = {resolution};"
             f"interpolation_factor = {interpolation_factor}"
-            "\n Time, "+", ".join( [ "Episode number "+str(e.n_episode) for e in episodes ] )
+            "\n Time, "
+            + ", ".join(["Episode number " + str(e.n_episode) for e in episodes]),
         )
 
     def export_matlab(
@@ -514,7 +529,9 @@ class Recording(dict):
         file = axographio.file_contents(column_names, data_list)
         file.write(filepath)
 
-    def create_first_activation_table(self, datakey=None, time_unit='ms', lists_to_save=None, trace_unit='pA'):
+    def create_first_activation_table(
+        self, datakey=None, time_unit="ms", lists_to_save=None, trace_unit="pA"
+    ):
         if datakey is None:
             datakey = self.current_datakey
         debug_logger.debug(f"export_first_activation for series {datakey}")
@@ -524,22 +541,34 @@ class Recording(dict):
                 (
                     episode.n_episode,
                     episode.first_activation * TIME_UNIT_FACTORS[time_unit],
-                    episode.first_activation_amplitude * CURRENT_UNIT_FACTORS[trace_unit],
+                    episode.first_activation_amplitude
+                    * CURRENT_UNIT_FACTORS[trace_unit],
                 )
                 for episode in self.select_episodes(datakey, lists_to_save)
             ]
         )
         return export_array.astype(object)
 
-    def export_first_activation(self, filepath, datakey=None, time_unit='ms', lists_to_save=None, trace_unit='pA'):
+    def export_first_activation(
+        self,
+        filepath,
+        datakey=None,
+        time_unit="ms",
+        lists_to_save=None,
+        trace_unit="pA",
+    ):
         """Export csv file of first activation times."""
-        export_array = self.create_first_activation_table(datakey, time_unit, lists_to_save, trace_unit)
-        header = [ "Episode Number", f"First Activation Time [{time_unit}]",
-                    f"Current [{trace_unit}]"]
+        export_array = self.create_first_activation_table(
+            datakey, time_unit, lists_to_save, trace_unit
+        )
+        header = [
+            "Episode Number",
+            f"First Activation Time [{time_unit}]",
+            f"Current [{trace_unit}]",
+        ]
         export_array = pd.DataFrame(export_array, columns=header)
         # truncate floats for duration and timestamps to 1 micro second
-        export_array = round_off_tables(export_array, 
-                ['int', time_unit, trace_unit])
+        export_array = round_off_tables(export_array, ["int", time_unit, trace_unit])
         if not filepath.endswith(".csv"):
             filepath += ".csv"
         export_array.to_csv(filepath)
@@ -607,7 +636,9 @@ class Recording(dict):
             recording - instance of the Recording class containing the data"""
         debug_logger.debug(f"from_matlab")
 
-        names, time, current, piezo, command, ep_numbers = load_matlab(recording.filename)
+        names, time, current, piezo, command, ep_numbers = load_matlab(
+            recording.filename
+        )
         n_episodes = len(current)
         if not piezo:
             piezo = [None] * n_episodes

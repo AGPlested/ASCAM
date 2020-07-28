@@ -4,7 +4,7 @@ import numpy as np
 import pyqtgraph as pg
 from PySide2 import QtCore
 from PySide2.QtWidgets import (
-        QApplication,
+    QApplication,
     QSizePolicy,
     QComboBox,
     QFileDialog,
@@ -27,8 +27,7 @@ from .io_widgets import ExportIdealizationDialog
 from ..utils import string_to_array, array_to_string, update_number_in_string
 from ..constants import TIME_UNIT_FACTORS, CURRENT_UNIT_FACTORS
 from ..core import IdealizationCache
-from ..utils.widgets import (TextEdit, HistogramViewBox, EntryWidget,
-        TableFrame)
+from ..utils.widgets import TextEdit, HistogramViewBox, EntryWidget, TableFrame
 
 debug_logger = logging.getLogger("ascam.debug")
 
@@ -91,11 +90,9 @@ class IdealizationFrame(QWidget):
             self.close_frame()
 
     def close_frame(self):
-        self.main.ep_frame.ep_list.currentItemChanged.disconnect(
-            self.on_episode_click
-        )
+        self.main.ep_frame.ep_list.currentItemChanged.disconnect(self.on_episode_click)
         self.main.plot_frame.tc_tracking = False
-        self.main.tc_frame=None
+        self.main.tc_frame = None
         self.main.plot_frame.update_plots()
         self.close()
 
@@ -112,9 +109,7 @@ class IdealizationFrame(QWidget):
             self, dir=self.main.filename[:-4] + "_events.csv", filter="*.csv"
         )[0]
         self.current_tab.idealization_cache.export_events(
-            filename,
-            self.current_tab.time_unit,
-            self.current_tab.trace_unit,
+            filename, self.current_tab.time_unit, self.current_tab.trace_unit
         )
 
     def export_idealization(self):
@@ -232,7 +227,7 @@ class IdealizationTab(EntryWidget):
                 self.show_threshold_check.setChecked(True)
             elif QApplication.focusWidget() == self.intrp_entry:
                 self.interpolate.setChecked(True)
-            self.parent.parent.calculate_click() 
+            self.parent.parent.calculate_click()
         else:
             super().keyPressEvent(event)
 
@@ -350,8 +345,11 @@ class IdealizationTab(EntryWidget):
             try:
                 self.idealization_cache.clear_idealization()
             except AttributeError as e:
-                if ("'IdealizationTab' object has no attribute 'idealization_cache'" in str(e)
-                    or "object has no attribute " in str(e)):
+                if "'IdealizationTab' object has no attribute 'idealization_cache'" in str(
+                    e
+                ) or "object has no attribute " in str(
+                    e
+                ):
                     pass
                 else:
                     raise AttributeError(e)
@@ -400,21 +398,21 @@ class IdealizationTab(EntryWidget):
 
     def create_event_frame(self):
         params = self.get_params()
-        self.event_table_frame = TableFrame(self, 
-                data=self.idealization_cache.get_events(
-                    trace_unit=self.trace_unit,
-                    time_unit=self.time_unit,
-                ),                
-                header = [
-                    "Episode #",
-                    f"Amplitude [{self.trace_unit}]",
-                    f"Duration [{self.time_unit}]",
-                    f"t_start [{self.time_unit}]",
-                    f"t_stop [{self.time_unit}]",
-                ],
-                title=f"Amp={params[0]}; Thresh={params[1]}; Res={params[2]}; Intrp={params[3]}",
-                trace_unit=self.trace_unit,
-                time_unit=self.time_unit
+        self.event_table_frame = TableFrame(
+            self,
+            data=self.idealization_cache.get_events(
+                trace_unit=self.trace_unit, time_unit=self.time_unit
+            ),
+            header=[
+                "Episode #",
+                f"Amplitude [{self.trace_unit}]",
+                f"Duration [{self.time_unit}]",
+                f"t_start [{self.time_unit}]",
+                f"t_stop [{self.time_unit}]",
+            ],
+            title=f"Amp={params[0]}; Thresh={params[1]}; Res={params[2]}; Intrp={params[3]}",
+            trace_unit=self.trace_unit,
+            time_unit=self.time_unit,
         )
 
 

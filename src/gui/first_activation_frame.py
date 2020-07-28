@@ -55,13 +55,13 @@ class FirstActivationFrame(EntryWidget):
     @threshold.setter
     def threshold(self, val):
         self.threshold_entry.setText(
-                f"{val * CURRENT_UNIT_FACTORS[self.trace_unit]:.3f}"
-                )
+            f"{val * CURRENT_UNIT_FACTORS[self.trace_unit]:.3f}"
+        )
 
     def create_widgets(self):
         self.drag_threshold_button = QLabel("First Activation Threshold:")
         self.add_row(self.drag_threshold_button)
-        
+
         self.trace_unit_entry = QComboBox()
         self.trace_unit_entry.addItems(list(CURRENT_UNIT_FACTORS.keys()))
         self.trace_unit_entry.setCurrentIndex(1)
@@ -72,8 +72,10 @@ class FirstActivationFrame(EntryWidget):
         self.drag_threshold_button.setText("Draggable")
         self.drag_threshold_button.setCheckable(True)
         self.drag_threshold_button.toggled.connect(self.toggle_dragging_threshold)
-        self.add_row(self.trace_unit_entry, self.threshold_entry, self.drag_threshold_button)
-        
+        self.add_row(
+            self.trace_unit_entry, self.threshold_entry, self.drag_threshold_button
+        )
+
         self.threshold_button = QPushButton("Set threshold")
         self.threshold_button.clicked.connect(self.set_threshold)
         self.add_row(self.threshold_button)
@@ -112,17 +114,21 @@ class FirstActivationFrame(EntryWidget):
         debug_logger.debug("creating fist activation table")
         self.main.data.detect_fa(self.threshold)
 
-        self.table_frame = TableFrame(self, 
-                data=self.main.data.create_first_activation_table(
+        self.table_frame = TableFrame(
+            self,
+            data=self.main.data.create_first_activation_table(
                 trace_unit=self.trace_unit
-                ),
-                header=["Episode Number", f"First Activatime Time [self.time_unit]",
-                    f"Current [{self.trace_unit}]"],
-                trace_unit=self.trace_unit,
-                time_unit=self.time_unit,
-                title=f"First activations in {self.main.data.current_datakey}",
-                width=400
-            )
+            ),
+            header=[
+                "Episode Number",
+                f"First Activatime Time [self.time_unit]",
+                f"Current [{self.trace_unit}]",
+            ],
+            trace_unit=self.trace_unit,
+            time_unit=self.time_unit,
+            title=f"First activations in {self.main.data.current_datakey}",
+            width=400,
+        )
 
     def on_episode_click(self, item, *args):
         self.main.plot_frame.plot_fa_threshold(self.threshold)
@@ -135,7 +141,9 @@ class FirstActivationFrame(EntryWidget):
         self.marking_indicator.setPos(mousePoint.x())
 
     def toggle_dragging_threshold(self, *args):
-        debug_logger.debug(f"toggling dragging treshold to {self.drag_threshold_button.isChecked()}")
+        debug_logger.debug(
+            f"toggling dragging treshold to {self.drag_threshold_button.isChecked()}"
+        )
         if self.drag_threshold_button.isChecked():
             self.main.plot_frame.fa_tracking = True
             self.manual_marking_toggle.setChecked(False)
@@ -176,19 +184,21 @@ class FirstActivationFrame(EntryWidget):
                 raise RuntimeError(error)
 
     def mark_fa_manually(self, evt):
-        debug_logger.debug(f"manually marked episode {self.main.data.episode().n_episode}"
-                           f"at t={self.marking_indicator.value()}")
+        debug_logger.debug(
+            f"manually marked episode {self.main.data.episode().n_episode}"
+            f"at t={self.marking_indicator.value()}"
+        )
         if evt.button() == QtCore.Qt.MouseButton.LeftButton:
             self.main.data.episode().first_activation = self.marking_indicator.value()
             self.main.plot_frame.plot_fa_line()
             self.main.data.episode().manual_first_activation = True
 
     def drag_fa_threshold_hist(self, pos):
-        self.threshold = pos  
+        self.threshold = pos
         self.set_threshold()
 
     def drag_fa_threshold(self, pos):
-        self.threshold = pos  
+        self.threshold = pos
         self.set_threshold()
 
     def toggle_jump_checkbox(self):
@@ -229,5 +239,5 @@ class FirstActivationFrame(EntryWidget):
         self.main.plot_frame.clear_fa_threshold()
         self.main.plot_frame.plots_are_draggable = True
         self.main.ep_frame.ep_list.currentItemChanged.disconnect(self.on_episode_click)
-        self.main.fa_frame=None
+        self.main.fa_frame = None
         self.close()

@@ -30,13 +30,21 @@ class IdealizationCache:
     def ind_idealized(self):
         """Return the set of numbers of the episodes in the currently selected series
         that have been idealized with the current parameters."""
-        return {episode.n_episode for episode in self.data.series if episode.idealization is not None}
+        return {
+            episode.n_episode
+            for episode in self.data.series
+            if episode.idealization is not None
+        }
 
     def idealization(self, n_episode=None):
         """Return the idealization of a given episode or idealize the episode and then return it."""
         if n_episode is None:
             n_episode = self.data.current_ep_ind
-        out = [episode.idealization for episode in self.data.series if episode.n_episode == n_episode]
+        out = [
+            episode.idealization
+            for episode in self.data.series
+            if episode.n_episode == n_episode
+        ]
         if out:  # if an idealization exists return it
             return out[0]
         else:  # else idealize the episode and then return
@@ -48,7 +56,11 @@ class IdealizationCache:
         if it is not idealized, idealize it first and then return the time."""
         if n_episode is None:
             n_episode = self.data.current_ep_ind
-        out = [episode.id_time for episode in self.data.series if episode.n_episode == n_episode]
+        out = [
+            episode.id_time
+            for episode in self.data.series
+            if episode.n_episode == n_episode
+        ]
         if out:
             return out[0]
         else:
@@ -61,7 +73,9 @@ class IdealizationCache:
 
     def clear_idealization(self):
         for series in self.data.values():
-            for episode in [episode for episode in series if episode.idealization is not None]:
+            for episode in [
+                episode for episode in series if episode.idealization is not None
+            ]:
                 episode.idealization = None
                 episode.id_time = None
 
@@ -164,9 +178,9 @@ class IdealizationCache:
         export_array = self.get_events(time_unit, trace_unit)
         export_array = pd.DataFrame(export_array, columns=header)
         # truncate floats for duration and timestamps to 1 micro second
-        export_array = round_off_tables(export_array, 
-                ['int', trace_unit, time_unit, time_unit, time_unit])
+        export_array = round_off_tables(
+            export_array, ["int", trace_unit, time_unit, time_unit, time_unit]
+        )
         with open(filepath, "w") as f:
             f.write(params)
         export_array.to_csv(filepath, mode="a")
-

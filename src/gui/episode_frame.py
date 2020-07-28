@@ -54,8 +54,9 @@ class EpisodeFrame(QWidget):
             self.main.tc_frame.get_params()
             self.main.tc_frame.idealize_episode()
         except AttributeError as e:
-            if ("'MainWindow' object has no attribute 'tc_frame'" in str(e) or
-                    "object has no attribute 'get_params'" in str(e)):
+            if "'MainWindow' object has no attribute 'tc_frame'" in str(
+                e
+            ) or "object has no attribute 'get_params'" in str(e):
                 pass
             else:
                 raise e
@@ -114,9 +115,11 @@ class ListFrame(QWidget):
         self.lists.append(check_box)
         self.layout.insertWidget(0, check_box)
         self.parent.main.data.lists[name] = ([], key)
-        debug_logger.debug(f"added list '{name}' with key '{key}'\n"
-                "lists are now:\n"
-                f"{self.parent.main.data.lists}")
+        debug_logger.debug(
+            f"added list '{name}' with key '{key}'\n"
+            "lists are now:\n"
+            f"{self.parent.main.data.lists}"
+        )
 
     def add_to_list(self, name, key, index):
         if index not in self.parent.main.data.lists[name][0]:
@@ -134,7 +137,9 @@ class ListFrame(QWidget):
                     s += f"[{k}]"
             n += s.rjust(20 - len(n), " ")
             self.parent.ep_list.item(index).setText(n)
-            ana_logger.debug(f"added episode {self.parent.main.data.series[index].n_episode} to list {name}")
+            ana_logger.debug(
+                f"added episode {self.parent.main.data.series[index].n_episode} to list {name}"
+            )
         else:
             self.parent.main.data.lists[name][0].remove(index)
             n = self.parent.ep_list.item(index).text()
@@ -151,7 +156,9 @@ class ListFrame(QWidget):
                     s += f"[{k}]"
             n += s.rjust(20 - len(n), " ")
             self.parent.ep_list.item(index).setText(n)
-            ana_logger.debug(f"removed episode {self.parent.main.data.series[index].n_episode} from list {name}")
+            ana_logger.debug(
+                f"removed episode {self.parent.main.data.series[index].n_episode} from list {name}"
+            )
 
     def create_dialog(self):
         self.dialog = QDialog()
@@ -213,7 +220,9 @@ class EpisodeList(QListWidget):
         self.clear()
         if self.parent.main.data is not None:
             debug_logger.debug("inserting data")
-            self.addItems([f"Episode {e.n_episode}" for e in self.parent.main.data.series])
+            self.addItems(
+                [f"Episode {e.n_episode}" for e in self.parent.main.data.series]
+            )
         self.setCurrentRow(0)
         self.currentItemChanged.connect(
             self.on_item_click, type=QtCore.Qt.DirectConnection

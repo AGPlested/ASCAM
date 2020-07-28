@@ -9,7 +9,7 @@ from ..utils import clear_qt_layout
 
 GREEN = (70, 250, 150)
 ORANGE = (255, 153, 0)
-GREY = (170, 170, 170) 
+GREY = (170, 170, 170)
 
 debug_logger = logging.getLogger("ascam.debug")
 
@@ -27,7 +27,7 @@ class PlotFrame(QWidget):
         self.main.show_piezo.triggered.connect(self.toggle_piezo)
         self.main.show_command.triggered.connect(self.toggle_command)
 
-        self.base_line_width = round(0.005 * self.main.screen_resolution[1] )
+        self.base_line_width = round(0.005 * self.main.screen_resolution[1])
 
         self.plots_are_draggable = True
         self.show_grid = True
@@ -98,7 +98,9 @@ class PlotFrame(QWidget):
 
         if self.show_command:
             self.command_viewbox = CustomHorizontalViewBox(self)
-            self.command_plot = pg.PlotWidget(viewBox=self.command_viewbox, name=f"trace")
+            self.command_plot = pg.PlotWidget(
+                viewBox=self.command_viewbox, name=f"trace"
+            )
             self.command_plot.setBackground("w")
             self.command_plot.setLabel("left", "Command", units="V")
             self.command_plot.setXLink(self.trace_plot)
@@ -192,7 +194,10 @@ class PlotFrame(QWidget):
         self.trace_line = self.trace_plot.plot(
             self.main.data.episode().time, self.main.data.episode().trace, pen=pen
         )
-        if self.main.tc_frame is not None and self.main.tc_frame.idealization() is not None:
+        if (
+            self.main.tc_frame is not None
+            and self.main.tc_frame.idealization() is not None
+        ):
             id_pen = pg.mkPen(color=ORANGE)
             self.trace_plot.plot(
                 self.main.tc_frame.time(), self.main.tc_frame.idealization(), pen=id_pen
@@ -245,7 +250,9 @@ class PlotFrame(QWidget):
 
     def plot_fa_threshold(self, threshold):
         debug_logger.debug(f"plotting first activation threshold at {threshold}")
-        pen = pg.mkPen(color=ORANGE, style=QtCore.Qt.DashLine, width=0.7*self.base_line_width)
+        pen = pg.mkPen(
+            color=ORANGE, style=QtCore.Qt.DashLine, width=0.7 * self.base_line_width
+        )
         self.clear_fa_threshold()
 
         time = self.main.data.episode().time
@@ -253,21 +260,29 @@ class PlotFrame(QWidget):
             np.min([*self.hist_y_range]), np.max([*self.hist_y_range]), 0.1
         )
 
-        self.fa_thresh_line  = self.trace_plot.plot(time, np.ones(len(time)) * threshold, pen=pen)
+        self.fa_thresh_line = self.trace_plot.plot(
+            time, np.ones(len(time)) * threshold, pen=pen
+        )
         self.trace_plot.addItem(self.fa_thresh_line)
-        self.fa_thresh_hist_line = self.hist.plot(hist_x, np.ones(len(hist_x)) * threshold, pen=pen)
+        self.fa_thresh_hist_line = self.hist.plot(
+            hist_x, np.ones(len(hist_x)) * threshold, pen=pen
+        )
         self.hist.addItem(self.fa_thresh_hist_line)
 
     def plot_fa_line(self):
         self.clear_fa()
-        pen = pg.mkPen(color=GREEN, style=QtCore.Qt.DashLine, width=self.base_line_width)
+        pen = pg.mkPen(
+            color=GREEN, style=QtCore.Qt.DashLine, width=self.base_line_width
+        )
         self.fa_line = pg.InfiniteLine(
             pos=self.main.data.episode().first_activation, angle=90, pen=pen
         )
         self.trace_plot.addItem(self.fa_line)
 
     def draw_fa_marking_indicator(self):
-        pen = pg.mkPen(color=GREY, style=QtCore.Qt.DashLine, width=0.8*self.base_line_width)
+        pen = pg.mkPen(
+            color=GREY, style=QtCore.Qt.DashLine, width=0.8 * self.base_line_width
+        )
         self.marking_indicator = pg.InfiniteLine(pos=0, angle=90, pen=pen)
         self.main.plot_frame.trace_plot.addItem(self.marking_indicator)
 
@@ -281,7 +296,9 @@ class PlotFrame(QWidget):
             self.trace_plot.removeItem(self.fa_line)
 
     def plot_theta_lines(self, thetas):
-        pen = pg.mkPen(color="r", style=QtCore.Qt.DashLine, width=0.6*self.base_line_width)
+        pen = pg.mkPen(
+            color="r", style=QtCore.Qt.DashLine, width=0.6 * self.base_line_width
+        )
         thetas = np.asarray(thetas)
         self.clear_theta_lines()
         self.theta_lines = []
@@ -300,7 +317,9 @@ class PlotFrame(QWidget):
 
     def plot_amp_lines(self, amps):
         debug_logger.debug(f"plotting amps at {amps}")
-        pen = pg.mkPen(color=ORANGE, style=QtCore.Qt.DashLine, width=0.6*self.base_line_width)
+        pen = pg.mkPen(
+            color=ORANGE, style=QtCore.Qt.DashLine, width=0.6 * self.base_line_width
+        )
         self.clear_amp_lines()
         self.amp_lines = []
         self.amp_hist_lines = []
@@ -398,9 +417,7 @@ class CustomViewBox(pg.ViewBox):
     def mouseDragEvent(self, ev, axis=1):
         if ev.button() == QtCore.Qt.LeftButton:
             self.setMouseEnabled(x=True, y=True)
-            if (
-                self.parent.tc_tracking
-            ):
+            if self.parent.tc_tracking:
                 pos = self.mapSceneToView(ev.pos()).y()
                 self.parent.main.tc_frame.track_cursor(pos)
             elif self.parent.fa_tracking:

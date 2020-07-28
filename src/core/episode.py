@@ -2,11 +2,7 @@ import numpy as np
 
 
 from ..utils import piezo_selection
-from ..constants import (
-    CURRENT_UNIT_FACTORS,
-    VOLTAGE_UNIT_FACTORS,
-    TIME_UNIT_FACTORS,
-)
+from ..constants import CURRENT_UNIT_FACTORS, VOLTAGE_UNIT_FACTORS, TIME_UNIT_FACTORS
 from .filtering import gaussian_filter, ChungKennedyFilter
 from .analysis import baseline_correction, detect_first_activation, Idealizer
 
@@ -68,9 +64,11 @@ class Episode:
             return None
         # return the trace value at the time point closest to the mark,
         # because manual marking can choose points that are not in the time array
-        return self.trace[ np.argmin(np.abs(self.time - self.first_activation)) ]
+        return self.trace[np.argmin(np.abs(self.time - self.first_activation))]
 
-    def idealize(self, amplitudes, thresholds=None, resolution=None, interpolation_factor=1):
+    def idealize(
+        self, amplitudes, thresholds=None, resolution=None, interpolation_factor=1
+    ):
         self.idealization, self.id_time = Idealizer.idealize_episode(
             self.trace,
             self.time,

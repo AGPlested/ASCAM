@@ -105,4 +105,3 @@ def main():
     if test:
         main_window.test_mode()
     sys.exit(app.exec_())
-

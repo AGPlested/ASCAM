@@ -100,9 +100,7 @@ class Idealizer:
 
     @staticmethod
     def apply_resolution(
-        idealization: Array[float, 1, ...],
-        time: Array[float, 1, ...],
-        resolution: int,
+        idealization: Array[float, 1, ...], time: Array[float, 1, ...], resolution: int
     ) -> Array[float, 1, ...]:
         """Remove from the idealization any events that are too short.
 
@@ -119,11 +117,11 @@ class Idealizer:
         while i < end_ind:
             if events[i, 1] < resolution:
                 i_start = int(np.where(time == events[i, 2])[0])
-                i_end = int(np.where(time == events[i, 3])[0]) +1
+                i_end = int(np.where(time == events[i, 3])[0]) + 1
                 # add the first but not the last event to the next,
                 # otherwise, flip a coin
                 if (np.random.binomial(1, 0.5) or i == 0) and i != end_ind - 1:
-                    i_end = int(np.where(time == events[i+1, 3])[0]) + 1
+                    i_end = int(np.where(time == events[i + 1, 3])[0]) + 1
                     idealization[i_start:i_end] = events[i + 1, 0]
                     # set amplitude
                     events[i, 0] = events[i + 1, 0]
@@ -134,7 +132,7 @@ class Idealizer:
                     # delete next event
                     events = np.delete(events, i + 1, axis=0)
                 else:  # add to the previous event
-                    i_start = int(np.where(time == events[i-1, 2])[0])
+                    i_start = int(np.where(time == events[i - 1, 2])[0])
                     idealization[i_start:i_end] = events[i - 1, 0]
                     # add duration
                     events[i - 1, 1] += events[i, 1]
@@ -147,7 +145,9 @@ class Idealizer:
             else:
                 i += 1
         if np.any(Idealizer.extract_events(idealization, time)[:, 1] < resolution):
-            ana_logger.warning("Filter events below the resolution failed! Some events are still too short.")
+            ana_logger.warning(
+                "Filter events below the resolution failed! Some events are still too short."
+            )
         return idealization
 
     @staticmethod
@@ -184,8 +184,8 @@ class Idealizer:
             event_list[0][2] = time[0]
             event_list[0][3] = time[int(events[0])]
 
-            event_list[1:, 0] = idealization[events+1]
-            event_list[1:, 2] = time[events+1]
+            event_list[1:, 0] = idealization[events + 1]
+            event_list[1:, 2] = time[events + 1]
             event_list[1:-1, 3] = time[events[1:]]
 
             event_list[-1][0] = idealization[int(events[-1]) + 1]
