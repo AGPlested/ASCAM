@@ -1,5 +1,6 @@
 ASCAM can be used to browse, organize and analyze episodic recordings of single ion channel currents.
 
+## Installation
 Requires python>=3.6 and Numpy>=1.16 
 Further required packages can be found in 'requirements.txt' and installed with 
 `pip install -r requirements.txt`.
@@ -14,7 +15,10 @@ After successful installation of Anaconda, if you have Git installed, you can cl
 
 If you don't have Git, you can just copy ASCAM directory and then navigate to it manually.
 
+## Use
 Start ASCAM from within its own directory by executing the file `run`. (Enter `./run` in the terminal)
+
+Note: Tables in axograph and matlab have named columns ASCAM uses these names to determine what data is dealing with. Therefore the column containing the recorded current should contain either "current", "trace" or "Ipatch", the name of the column holding the recorded piezo voltage should contain the string "piezo" and the name of the command voltage column should contain "command".
 
 There is an example raw data file of an AMPA receptor single channel patch in the ASCAM/data folder. This recording was sampled at 40 kHz.
 
