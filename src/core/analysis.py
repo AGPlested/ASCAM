@@ -4,8 +4,6 @@ import logging
 
 import numpy as np
 from scipy.interpolate import CubicSpline as spCubicSpline
-from typing import Optional, List, Tuple
-from nptyping import Array
 
 from ..utils.tools import interval_selection, piezo_selection
 
@@ -15,8 +13,8 @@ debug_logger = logging.getLogger("ascam.debug")
 
 
 def interpolate(
-    signal: Array[float, 1, ...], time: Array[float, 1, ...], interpolation_factor: int
-) -> Tuple[Array[float, 1, ...], Array[float, 1, ...]]:
+    signal, time, interpolation_factor
+):
     """Interpolate the signal with a cubic spline."""
 
     spline = spCubicSpline(time, signal)
@@ -32,12 +30,12 @@ class Idealizer:
     @classmethod
     def idealize_episode(
         cls,
-        signal: Array[float, 1, ...],
-        time: Array[float, 1, ...],
-        amplitudes: Array[float, 1, ...],
-        thresholds: Optional[Array[float, 1, ...]] = None,
-        resolution: Optional[int] = None,
-        interpolation_factor: int = 1,
+        signal,
+        time,
+        amplitudes,
+        thresholds = None,
+        resolution = None,
+        interpolation_factor = 1,
     ):
         """Get idealization for single episode."""
 
@@ -55,10 +53,10 @@ class Idealizer:
 
     @staticmethod
     def threshold_crossing(
-        signal: Array[float, 1, ...],
-        amplitudes: Array[float, 1, ...],
-        thresholds: Optional[Array[float, 1, ...]] = None,
-    ) -> Array[float, 1, ...]:
+        signal,
+        amplitudes,
+        thresholds = None,
+    ):
         """Perform a threshold-crossing idealization on the signal.
 
         Arguments:
@@ -100,8 +98,8 @@ class Idealizer:
 
     @staticmethod
     def apply_resolution(
-        idealization: Array[float, 1, ...], time: Array[float, 1, ...], resolution: int
-    ) -> Array[float, 1, ...]:
+        idealization, time, resolution
+    ):
         """Remove from the idealization any events that are too short.
 
         Args:
@@ -152,8 +150,8 @@ class Idealizer:
 
     @staticmethod
     def extract_events(
-        idealization: Array[float, 1, ...], time: Array[float, 1, ...]
-    ) -> Array[float, ..., 4]:
+        idealization, time
+    ):
         """Summarize an idealized trace as a list of events.
 
         Args:
@@ -201,25 +199,25 @@ class Idealizer:
 
 
 def detect_first_activation(
-    time: Array[float, 1, ...], signal: Array[float, 1, ...], threshold: float
-) -> float:
+    time, signal, threshold
+):
     """Return the time where a signal first crosses below a threshold."""
 
     return time[np.argmax(signal < threshold)]
 
 
 def baseline_correction(
-    time: Array[float, 1, ...],
-    signal: Array[float, 1, ...],
-    sampling_rate: float,
-    intervals: Optional[List] = None,
-    degree: Optional[int] = 1,
-    method: Optional[str] = "Polynomial",
-    piezo: Optional[Array[float]] = None,
-    selection: Optional[str] = "piezo",
-    active: Optional[bool] = False,
-    deviation: Optional[float] = 0.05,
-) -> Array[float, 1, ...]:
+    time,
+    signal,
+    sampling_rate,
+    intervals = None,
+    degree = 1,
+    method = "Polynomial",
+    piezo = None,
+    selection = "piezo",
+    active = False,
+    deviation = 0.05,
+):
     """Perform polynomial/offset baseline correction on the given signal.
 
     Parameters:
