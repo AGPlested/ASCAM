@@ -77,21 +77,20 @@ def load_matlab(filename):
         value = scipy_loadmat(variable[1])[variable[0]]
         # the first possibility is the name in files we get, the second
         # comes from the ASCAM data structure
-        if "Ipatch" in variable[0] or "Column" in variable[0]:
+        if ("Ipatch" in variable[0] 
+                or "Column" in variable[0] 
+                or "trace" in variable[0].lower()
+                or "current" in variable[0].lower()
+            ):
             current.append(value.flatten())
             try:
                 ep_numbers.append(int(variable[0].split()[-1]))
             except (IndexError, ValueError):
                 pass
-        if "trace" in variable[0]:
-            current.append(value.flatten())
-            try:
-                ep_numbers.append(int(variable[0].split()[-1]))
-            except (IndexError, ValueError):
-                pass
-        elif "10Vm" in variable[0] or "command" in variable[0]:
+        
+        elif "Vm" in variable[0] or "command" in variable[0].lower():
             command_voltage.append(value.flatten())
-        elif "Piezo" in variable[0] or "piezo" in variable[0]:
+        elif "piezo" in variable[0].lower():
             piezo.append(value.flatten())
         elif "Time" in variable[0] or "time" in variable[0]:
             time = value.flatten()
@@ -149,13 +148,7 @@ def load_axo(filename):
     ep_numbers = []
 
     for name, data in zip(file.names, file.data):
-        if "Ipatch" in name:
-            current.append(np.array(data))
-            try:
-                ep_numbers.append(int(name.split()[-1]))
-            except (IndexError, ValueError):
-                pass
-        elif "trace" in name:
+        if "Ipatch" in name or "current" in name.lower() or "trace" in name.lower():
             current.append(np.array(data))
             try:
                 ep_numbers.append(int(name.split()[-1]))
