@@ -3,6 +3,8 @@ ASCAM can be used to browse, organize and analyze episodic recordings of single 
 Requires python>=3.6 and Numpy>=1.16 
 Further required packages can be found in 'requirements.txt' and installed with 
 `pip install -r requirements.txt`.
+Note: Unfortunately both ASCAM and one of its dependencies require Numpy, this
+means that numpy needs to be installed separately before ASCAM can be installed.
 
 A straightforward installation can be achieved by first installing Anaconda to get the necessary libraries. At the time of writing, a working version for Mac is https://repo.anaconda.com/archive/Anaconda3-5.3.0-MacOSX-x86_64.pkg 
 
