@@ -26,7 +26,6 @@ setup(
         "pandas>=0.24.0",
         "scipy>=1.2.0",
         "axographio>=0.3.1",
-        "nptyping>=0.3.1",
     ],
     entry_points={"console_scripts": ["ascam=src.ascam:main"]},
 )
