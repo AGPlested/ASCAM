@@ -4,4 +4,3 @@ numpy>=1.18
 pandas>=0.24.0
 scipy>=1.2.0
 axographio>=0.3.1
-nptyping>=0.3.1
