@@ -9,9 +9,17 @@ import logging
 import getopt
 
 from PySide2.QtWidgets import QApplication
-from .gui.mainwindow import MainWindow
-from .utils import initialize_logger
-
+try :
+    from .gui.mainwindow import MainWindow
+    
+except:
+    from src.gui.mainwindow import MainWindow
+    
+try :
+    from .utils import initialize_logger
+except :
+    from src.utils import initialize_logger
+    
 
 debug_logger = logging.getLogger("ascam.debug")
 
@@ -105,3 +113,21 @@ def main():
     if test:
         main_window.test_mode()
     sys.exit(app.exec_())
+    
+if __name__ == "__main__":
+    # Change menubar name from 'python' to 'SAFT' on macOS
+    # from https://stackoverflow.com/questions/5047734/
+    if sys.platform.startswith('darwin'):
+    # Python 3: pyobjc-framework-Cocoa is needed
+        try:
+            from Foundation import NSBundle
+            bundle = NSBundle.mainBundle()
+            if bundle:
+                app_name = os.path.splitext(os.path.basename(sys.argv[0]))[0]
+                app_info = bundle.localizedInfoDictionary() or bundle.infoDictionary()
+                if app_info:
+                    app_info['CFBundleName'] = app_name.upper() # ensure text is in upper case.
+        except ImportError:
+            print ("Failed to import NSBundle, couldn't change menubar name." )
+        
+    main()
