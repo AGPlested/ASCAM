@@ -5,7 +5,7 @@ ASCAM can be used to browse, organize and analyze episodic recordings of single 
 ## Installing 
 Clone (with git, see below) or download the zip from this page.
 
-Particularly on macOS (because of problems with ancient native Python) we recommend to use a clean environment. This can be achieved by installing miniconda and creating an environment called e.g. ASCAM.
+Particularly on macOS (because of problems with ancient native Python) we recommend to use a clean environment. This can be achieved by installing miniconda and creating an environment called e.g. ASCAM. Note, with Big Sur, some adjustments are needed.
 `conda create --name ASCAM` 
 
 Switch to this environment:
@@ -37,6 +37,7 @@ A straightforward installation can be achieved by first installing Anaconda or m
 After successful installation of Anaconda, if you have Git installed, you can clone the ASCAM directory from Github onto your machine with the following command in the Terminal: *git clone https://github.com/AGPlested/ASCAM*. But if you had Git installed, you almost certainly knew that already. 
 
 20-03-01: Note, with the migration to Qt, some problems may be encountered on the Mac if you already have installations of Qt4+. A fresh environment (e.g. can help. 
+21-05-25: Update to Big Sur - Pyqtgraph and PyQt need Python 3.8, PySide2 5.15 and the command export QT_MAC_WANTS_LAYER=1 must be issued in the Terminal. 
 
 ## Running ASCAM
 
