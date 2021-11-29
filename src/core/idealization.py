@@ -104,20 +104,23 @@ class IdealizationCache:
             self.idealize_episode(i)
 
     def get_events(self, time_unit="s", trace_unit="A"):
-        if self.all_ep_inds != self.ind_idealized:
-            self.idealize_series()
+        # idealizing every trace, every time is killing us
+        # now we only get events from traces that were idealized
+        ##if self.all_ep_inds != self.ind_idealized:
+          ##  self.idealize_series()
         event_array = np.zeros((0, 5)).astype(object)
         for episode in self.data.series:
-            # create a column containing the episode number
-            ep_events = Idealizer.extract_events(
-                self.idealization(episode.n_episode), self.time()
-            )
-            episode_number = episode.n_episode * np.ones(len(ep_events[:, 0]))
-            # glue that column to the event
-            ep_events = np.concatenate(
-                (episode_number[:, np.newaxis], ep_events), axis=1
-            )
-            event_array = np.concatenate((event_array, ep_events), axis=0)
+            if self.idealization(episode.n_episode) is not None:
+                # create a column containing the episode number
+                ep_events = Idealizer.extract_events(
+                    self.idealization(episode.n_episode), self.time()
+                )
+                episode_number = episode.n_episode * np.ones(len(ep_events[:, 0]))
+                # glue that column to the event
+                ep_events = np.concatenate(
+                    (episode_number[:, np.newaxis], ep_events), axis=1
+                )
+                event_array = np.concatenate((event_array, ep_events), axis=0)
         event_array[:, 1] *= CURRENT_UNIT_FACTORS[trace_unit]
         event_array[:, 2:] *= TIME_UNIT_FACTORS[time_unit]
         return event_array

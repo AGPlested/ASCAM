@@ -77,7 +77,7 @@ class Recording(dict):
         else:
             raise ValueError(f"Cannot load from filetype {filetype}.")
 
-        recording.lists = {"All": (list(range(len(recording["raw_"]))), None)}
+        recording.subsets = {"All": (list(range(len(recording["raw_"]))), None)}
 
         return recording
 
@@ -93,36 +93,41 @@ class Recording(dict):
         # attributes for storing and managing the data
         self["raw_"] = []
         self.current_datakey = "raw_"
+        self.current_subsets = ["All"]
         self.current_ep_ind = 0
 
-        # variables for user created lists of episodes
-        # `lists` stores the indices of the episodes in the list in the first
-        # element and the associated key as the second
-        # lists[name] = ([inds], key)
-        self.lists = dict()
+        # variables for user-created subsets of episodes
+        # `subsets` stores the indices of the episodes in the subset in the first
+        # element and the associated keyboard key as the second:
+        # subsets[name] = ([indices], key)
+        self.subsets = dict()
 
-    def select_episodes(self, datakey=None, lists=None):
+    def select_episodes(self, datakey=None, subsets=None):
         if datakey is None:
             datakey = self.current_datakey
-        if lists is None:
-            lists = ["All"]
+        if subsets is None:
+             subsets = self.current_subsets
         indices = list()
-        for listname in lists:
-            indices.extend(self.lists[listname][0])
+        for subsetname in subsets:
+            indices.extend(self.subsets[subsetname][0])
         indices = np.array(list(set(indices)))
         return np.array(self[datakey])[indices]
 
-    def episodes_in_lists(self, names):
-        if isinstance(str, names):
-            names = [names]
+    def episodes_in_subsets(self, subset_names):
+        if isinstance(subset_names, str):               #AP corrected here 291121
+            subset_names = [subset_names]
         indices = list()
-        for listname in names:
-            indices.extend(self.lists[listname][0])
+        for subsetname in subset_names:
+            indices.extend(self.subsets[subsetname][0])
         # remove duplicate indices
         indices = np.array(list(set(indices)))
+        print (indices)
         debug_logger.debug(f"Selected episodes: {indices}")
-        return np.array(self.series)[indices]
-
+        if  indices != []:
+            return np.array(self.series)[indices]
+        else:
+            return None
+        
     @property
     def series(self):
         return self[self.current_datakey]
@@ -289,7 +294,7 @@ class Recording(dict):
         """Create a histogram of all episodes in the presently selected series
         """
         debug_logger.debug(f"series_hist")
-        # put all piezo traces and all current traces in lists
+        # put all piezo traces and all current traces in subsets
         piezos = [episode.piezo for episode in self.series]
         traces = [episode.trace for episode in self.series]
         trace_list = []
@@ -397,7 +402,7 @@ class Recording(dict):
     def export_idealization(
         self,
         filepath,
-        lists_to_save,
+        subsets_to_save,
         time_unit,
         trace_unit,
         amplitudes,
@@ -410,7 +415,7 @@ class Recording(dict):
         if not filepath.endswith(".csv"):
             filepath += ".csv"
 
-        episodes = self.select_episodes(lists=lists_to_save)
+        episodes = self.select_episodes(subsets=subsets_to_save)
 
         export_array = np.zeros(
             shape=(len(episodes) + 1, episodes[0].idealization.size)
@@ -437,7 +442,7 @@ class Recording(dict):
         self,
         filepath,
         datakey,
-        lists_to_save,
+        subsets_to_save,
         save_piezo,
         save_command,
         time_unit="s",
@@ -445,11 +450,11 @@ class Recording(dict):
         piezo_unit="V",
         command_unit="V",
     ):
-        """Export all the episodes in the givens list(s) from the given series
+        """Export all the episodes in the givens subset(s) from the given series
         (only one) to a matlab file."""
         debug_logger.debug(
             f"export_matlab:\n"
-            f"saving the lists: {lists_to_save}\n"
+            f"saving the subsets: {subsets_to_save}\n"
             f"of series {datakey}\n"
             f"save piezo: {save_piezo}; "
             "save command: {save_command}\n"
@@ -464,7 +469,7 @@ class Recording(dict):
         export_dict = dict()
         export_dict["time"] = self["raw_"][0].time * TIME_UNIT_FACTORS[time_unit]
         fill_length = len(str(len(self[datakey])))
-        episodes = self.select_episodes(datakey, lists_to_save)
+        episodes = self.select_episodes(datakey, subsets_to_save)
         # # get the episodes we want to save
         # indices = list()
         # for listname in lists_to_save:
@@ -484,19 +489,19 @@ class Recording(dict):
                 )
         io.savemat(filepath, export_dict)
 
-    def export_axo(self, filepath, datakey, lists_to_save, save_piezo, save_command):
+    def export_axo(self, filepath, datakey, subsets_to_save, save_piezo, save_command):
         """Export data to an axograph file.
 
         Argument:
             filepath - location where the file is to be stored
             datakey - series that should be exported
-            lists_to_save - the user-created lists of episodes that should be
+            subsets_to_save - the user-created subsets of episodes that should be
                 includes
             save_piezo - if true piezo data will be exported
             save_command - if true command voltage data will be exported"""
         debug_logger.debug(
             f"export_axo:\n"
-            f"saving the lists: {lists_to_save}\n"
+            f"saving the subsets: {subsets_to_save}\n"
             f"of series {datakey}\n"
             f"save piezo: {save_piezo}; save command: {save_command}\n"
             f"saving to destination: {filepath}"
@@ -515,7 +520,7 @@ class Recording(dict):
         data_list = [self.episode().time]
 
         # get the episodes we want to save
-        episodes = self.select_episodes(datakey, lists_to_save)
+        episodes = self.select_episodes(datakey, subsets_to_save)
 
         for episode in episodes:
             data_list.append(np.array(episode.trace))
@@ -530,7 +535,7 @@ class Recording(dict):
         file.write(filepath)
 
     def create_first_activation_table(
-        self, datakey=None, time_unit="ms", lists_to_save=None, trace_unit="pA"
+        self, datakey=None, time_unit="ms", subsets_to_save=None, trace_unit="pA"
     ):
         if datakey is None:
             datakey = self.current_datakey
@@ -544,7 +549,7 @@ class Recording(dict):
                     episode.first_activation_amplitude
                     * CURRENT_UNIT_FACTORS[trace_unit],
                 )
-                for episode in self.select_episodes(datakey, lists_to_save)
+                for episode in self.select_episodes(datakey, subsets_to_save)
             ]
         )
         return export_array.astype(object)
@@ -554,12 +559,12 @@ class Recording(dict):
         filepath,
         datakey=None,
         time_unit="ms",
-        lists_to_save=None,
+        subsets_to_save=None,
         trace_unit="pA",
     ):
         """Export csv file of first activation times."""
         export_array = self.create_first_activation_table(
-            datakey, time_unit, lists_to_save, trace_unit
+            datakey, time_unit, subsets_to_save, trace_unit
         )
         header = [
             "Episode Number",
