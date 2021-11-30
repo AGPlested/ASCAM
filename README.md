@@ -38,7 +38,7 @@ After successful installation of Anaconda, if you have Git installed, you can cl
 
 20-03-01: With the migration to Qt, some problems may be encountered on the Mac if you already have installations of Qt4+. A fresh environment can help.
 
-21-05-25: Update to Big Sur - Pyqtgraph and PyQt need Python 3.8, PySide2 5.15 and the command export QT_MAC_WANTS_LAYER=1 must be issued in the Terminal. 
+21-05-25: Running under macOS Big Sur - Pyqtgraph and PyQt need Python 3.8, PySide2 5.15 and the command `export QT_MAC_WANTS_LAYER=1` must be issued in the Terminal. 
 
 ## Running ASCAM
 
