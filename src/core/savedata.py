@@ -1,8 +1,6 @@
 from scipy import io
 import os
 import json
-import pickle
-from ..utils.tools import parse_filename
 
 
 def save_metadata(data, filename):
