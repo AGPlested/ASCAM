@@ -26,8 +26,8 @@ def load(filename, filetype=False, dtype=None, headerlength=None, fs=None):
         output = load_matlab(filename)
     elif filetype == "bin":
         output = load_binary(filename, dtype, headerlength, fs)
-    elif filetype == "tdt":
-        output = load_tdt(filename)
+    # elif filetype == "tdt":
+    #     output = load_tdt(filename)
     else:
         print("Filetype not supported.")
         output = False
