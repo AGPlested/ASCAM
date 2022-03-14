@@ -5,16 +5,12 @@ import pyqtgraph as pg
 from PySide2 import QtCore
 from PySide2.QtWidgets import (
     QApplication,
-    QSizePolicy,
-    QComboBox,
     QFileDialog,
     QDialog,
-    QTableView,
     QGridLayout,
     QTabWidget,
     QWidget,
     QVBoxLayout,
-    QHBoxLayout,
     QCheckBox,
     QLineEdit,
     QToolButton,

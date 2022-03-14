@@ -1,9 +1,7 @@
 import logging
 import os
 
-from PySide2.QtCore import Qt
 from PySide2.QtWidgets import (
-    QDockWidget,
     QGridLayout,
     QWidget,
     QMainWindow,
@@ -13,7 +11,6 @@ from PySide2.QtWidgets import (
 )
 
 from ..gui import (
-    ExportFADialog,
     ExportDialog,
     OpenFileDialog,
     FilterFrame,
