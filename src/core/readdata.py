@@ -1,3 +1,7 @@
+<<<<<<< HEAD
+=======
+import csv
+>>>>>>> subsets
 import pickle
 import logging
 
@@ -26,8 +30,13 @@ def load(filename, filetype=False, dtype=None, headerlength=None, fs=None):
         output = load_matlab(filename)
     elif filetype == "bin":
         output = load_binary(filename, dtype, headerlength, fs)
+<<<<<<< HEAD
     # elif filetype == "tdt":
     #     output = load_tdt(filename)
+=======
+    elif filetype == "tdt":
+        output = load_tdt(filename)
+>>>>>>> subsets
     else:
         print("Filetype not supported.")
         output = False

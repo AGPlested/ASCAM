@@ -1,3 +1,8 @@
+<<<<<<< HEAD
+=======
+import logging
+
+>>>>>>> subsets
 import numpy as np
 
 
@@ -149,7 +154,11 @@ class ChungKennedyFilter:
             forward_prediction /= window_width
         else:
             raise ValueError(
+<<<<<<< HEAD
                 f"Mode {self.mode} is an unknown method for dealing\
+=======
+                f"Mode {mode} is an unknown method for dealing\
+>>>>>>> subsets
 								with edges"
             )
         return forward_prediction
@@ -189,7 +198,11 @@ class ChungKennedyFilter:
             backward_prediction /= window_width
         else:
             raise ValueError(
+<<<<<<< HEAD
                 f"Mode {self.mode} is an unknown method for dealing\
+=======
+                f"Mode {mode} is an unknown method for dealing\
+>>>>>>> subsets
 								with edges"
             )
         return backward_prediction

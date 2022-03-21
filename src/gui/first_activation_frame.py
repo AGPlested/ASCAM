@@ -1,9 +1,19 @@
 import logging
 
+<<<<<<< HEAD
+=======
+import pyqtgraph as pg
+>>>>>>> subsets
 from PySide2 import QtCore
 from PySide2.QtWidgets import (
     QLabel,
     QComboBox,
+<<<<<<< HEAD
+=======
+    QWidget,
+    QVBoxLayout,
+    QHBoxLayout,
+>>>>>>> subsets
     QCheckBox,
     QLineEdit,
     QToolButton,
@@ -11,6 +21,10 @@ from PySide2.QtWidgets import (
 )
 
 from ..gui import ExportFADialog
+<<<<<<< HEAD
+=======
+from ..utils import round_off_tables
+>>>>>>> subsets
 from ..utils.widgets import EntryWidget, TableFrame
 from ..constants import CURRENT_UNIT_FACTORS
 

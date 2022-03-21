@@ -1,3 +1,8 @@
+<<<<<<< HEAD
+=======
+import os
+
+>>>>>>> subsets
 import numpy as np
 
 from ..constants import PRECISIONS
