@@ -20,7 +20,7 @@ try :
 except :
     from src.utils import initialize_logger
     
-
+os.environ['QT_MAC_WANTS_LAYER'] = '1'
 debug_logger = logging.getLogger("ascam.debug")
 
 
