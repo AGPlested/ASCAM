@@ -1,5 +1,6 @@
 import pickle
 import logging
+import csv
 
 import numpy as np
 import axographio
@@ -44,6 +45,66 @@ def load_pickle(filename):
     return data
 
 
+def load_delimited_text(filename, delimiter):
+    '''
+    Read recording data from a text file.
+
+    Args:
+      filename: Path to the file.
+    Returns:
+      names [list of strings] - names of the different variables
+      time [1D numpy array] - times of measurement
+      current [list of 1D numpy arrays] - the current recorded from the patch
+      piezo [list of 1D numpy arrays] - voltage of the piezo pipette
+      command_voltage [list of 1D numpy arrays] - command voltage applied to
+                                                  the patch
+    '''
+    timelist = []
+    currentlist = []
+    piezolist = []
+    command_voltagelist = []
+    with open(filename) as datafile:
+        reader = csv.reader(datafile, delimiter=delimiter)
+        names = next(reader)
+
+        # Find out the order of the columns
+        order = [-1 for i in range(len(names))]
+        for colidx, colname in enumerate(names):
+            # Putting the order in a list with the order in which we return
+            colname = colname.strip().lower()
+            if 'time' in colname:
+                outputorder = 0
+            elif colname in ('ipatch', 'current', 'trace'):
+                outputorder = 1
+            elif 'piezo' in colname:
+                outputorder = 2
+            elif colname in ('command', '10vm'):
+                outputorder = 3
+            else:
+                raise ValueError(f'The column {colname!r} wasn\'t recognized.')
+            order[outputorder] = colidx
+
+        for row in reader:
+            ordered_row = [row[i] if i >= 0 else None for i in order]
+            time_i, current_i, piezo_i, command_i = ordered_row
+            # The recording has to have time and current
+            timelist.append(time_i)
+            currentlist.append(current_i)
+            piezolist.append(piezo_i)
+            command_voltagelist.append(command_i)
+
+        if any(timelist):
+            time = np.array(timelist)
+        if any(currentlist):
+            current = np.array(currentlist)
+        if any(piezolist):
+            piezo = np.array(piezolist)
+        if any(command_voltagelist):
+            command_voltage = np.array(command_voltagelist)
+
+    return names, time, current, piezo, command_voltage#, ep_numbers
+
+
 def load_matlab(filename):
     """
     Uses `scipy.io.loadmat` to load data from a `.mat` file.
@@ -82,11 +143,12 @@ def load_matlab(filename):
                 or "current" in variable[0].lower()
             ):
             current.append(value.flatten())
+            print(variable[0])
             try:
                 ep_numbers.append(int(variable[0].split()[-1]))
             except (IndexError, ValueError):
                 pass
-        
+
         elif "Vm" in variable[0] or "command" in variable[0].lower():
             command_voltage.append(value.flatten())
         elif "piezo" in variable[0].lower():
@@ -163,7 +225,6 @@ def load_axo(filename):
     return file.names, time, current, piezo, command_voltage, ep_numbers
 
 
-# unused method to read tab delimited text
 # def load_tdt(filename):
 #     """
 #     Load data from a tab-delimited text file
