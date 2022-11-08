@@ -1,5 +1,3 @@
-import logging
-
 import numpy as np
 
 
@@ -151,7 +149,7 @@ class ChungKennedyFilter:
             forward_prediction /= window_width
         else:
             raise ValueError(
-                f"Mode {mode} is an unknown method for dealing\
+                f"Mode {self.mode} is an unknown method for dealing\
 								with edges"
             )
         return forward_prediction
@@ -191,7 +189,7 @@ class ChungKennedyFilter:
             backward_prediction /= window_width
         else:
             raise ValueError(
-                f"Mode {mode} is an unknown method for dealing\
+                f"Mode {self.mode} is an unknown method for dealing\
 								with edges"
             )
         return backward_prediction

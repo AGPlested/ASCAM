@@ -8,13 +8,10 @@ from PySide2.QtWidgets import (
     QLabel,
     QFileDialog,
     QVBoxLayout,
-    QHBoxLayout,
-    QAbstractItemView,
 )
 
 
 from ..core import Recording
-from ..constants import TIME_UNIT_FACTORS, CURRENT_UNIT_FACTORS, VOLTAGE_UNIT_FACTORS
 from ..utils.widgets import EntryWidget
 
 
