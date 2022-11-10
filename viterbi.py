@@ -1,19 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-n_samples = 10
-n_states = 3
-states = np.random.randint(low=0, high=n_states, size=n_samples)
-noise = np.sqrt(0.2)*np.random.randn(n_samples)
-obs = states + noise
-
-# only works in n_states==3
-# We should use something generic for testing.
-initial_dist = np.array([0.2, 0.3, 0.5])
-# But realistically we know in which state the system beings (i.e. the
-# closed state).
-# initial_dist = np.array([1, 0, 0])
-
 # Assuming the states are 1-dimensional. This will be true in practice.
 def normal_pdf(x, mu=0, sigma=1):
     return np.exp(-0.5 * ((x-mu)/sigma)**2) / (np.sqrt(2*np.pi) * sigma)
@@ -38,12 +25,6 @@ def compute_emission_matrix(observations, components):
     # Return the normalized matrix
     return emission_matrix/np.sum(emission_matrix, axis=1, keepdims=True)
 
-components = np.array([[0.4, 0, 0.1],
-                       [0.3, 1, 0.1],
-                       [0.3, 2, 0.1]])
-
-EM = compute_emission_matrix(obs, components)
-
 def empirical_transition_matrix(trajectory, n_states):
     """
     Compute the transition matrix of a Markov chain based on a
@@ -64,4 +45,39 @@ def empirical_transition_matrix(trajectory, n_states):
     return transition_matrix/np.sum(transition_matrix, axis=1,
                                     keepdims=True)
 
-transition_matrix = empirical_transition_matrix(states, n_states)
+def viterbi_path(observations, initial_dist, transition_matrix,
+                 emissions_matrix):
+    (K,N) = np.shape(emissions_matrix)
+    # probability of data point belonging to each state
+    state_prob = np.zeros((K,N))
+    # State assignment of each data point per state
+    predecessor = np.zeros((K,N), dtype=int)
+    # scale = np.zeros(1,N)  # 1 / total probabilities of all states
+    # the `scale` matrix can be used to calculate the log likelihood of
+    # the viterbi path
+    # Initalization: Determine the most likely state of data point 0
+    state_prob[:,0] = initial_dist * emissions_matrix[:,0]
+    # scale[0] = 0/sum(state_prob[:,0]);
+    # normalize values to sum to 0
+    state_prob[:,0] = state_prob[:,0] / np.sum(state_prob[:,0])
+    # Set predecessor of initial state to arbitrary value, since there is
+    # no predecessor to n=0
+    predecessor[:,0] = 0
+    # Forward Loop for data point 2 to end:
+    for n in range(1,N):
+        for k in range(K):
+            A = state_prob[:, n-1] * transition_matrix[:,k]
+            predecessor[k, n] = np.argmax(A)
+            state_prob[k, n] = A[predecessor[k, n]]
+            state_prob[k, n] = state_prob[k ,n] * emissions_matrix[k, n]
+        # scale[n] = 1/sum(state_prob[:,n]);
+        # normalize
+        state_prob[:, n] = state_prob[:,n] / np.sum(state_prob[:,n])
+    # Find Most probable state path
+    path = np.zeros(N, dtype=int)
+    # loop backwards from data points N-1 to end
+    path[-1] = np.argmax(state_prob[:,-1])  # Last data point
+    for n in range(N-2,-1,-1):
+        path[n] = predecessor[path[n+1],n+1];
+    # log_likelihood = -sum(log(scale));
+    return path
