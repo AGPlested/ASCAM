@@ -45,9 +45,49 @@ def empirical_transition_matrix(trajectory, n_states):
     return transition_matrix/np.sum(transition_matrix, axis=1,
                                     keepdims=True)
 
-def viterbi_path(observations, initial_dist, transition_matrix,
-                 emissions_matrix):
-    (K,N) = np.shape(emissions_matrix)
+# Old, less vectorized implementation of Viterbi algorithm.
+# Left here for now because it's more readable and might be helpful with
+# debugging.
+# def viterbi_path(initial_dist, transition_matrix,
+#                  emission_matrix):
+#     (K,N) = np.shape(emission_matrix)
+#     # probability of data point belonging to each state
+#     state_prob = np.zeros((K,N))
+#     # State assignment of each data point per state
+#     predecessor = np.zeros((K,N), dtype=int)
+#     # scale = np.zeros(1,N)  # 1 / total probabilities of all states
+#     # the `scale` matrix can be used to calculate the log likelihood of
+#     # the viterbi path
+#     # Initalization: Determine the most likely state of data point 0
+#     state_prob[:,0] = initial_dist * emission_matrix[:,0]
+#     # scale[0] = 0/sum(state_prob[:,0]);
+#     # normalize values to sum to 1
+#     state_prob[:,0] = state_prob[:,0] / np.sum(state_prob[:,0])
+#     # Set predecessor of initial state to arbitrary value, since there is
+#     # no predecessor to n=0
+#     predecessor[:,0] = 0
+#     # Forward Loop for data point 2 to end:
+#     for n in range(1,N):
+#         for k in range(K):
+#             A = state_prob[:, n-1] * transition_matrix[:,k]
+#             predecessor[k, n] = np.argmax(A)
+#             state_prob[k, n] = A[predecessor[k, n]]
+#             state_prob[k, n] = state_prob[k ,n] * emission_matrix[k, n]
+#         # scale[n] = 1/sum(state_prob[:,n]);
+#         # normalize
+#         state_prob[:, n] = state_prob[:,n] / np.sum(state_prob[:,n])
+#     # Find Most probable state path
+#     path = np.zeros(N, dtype=int)
+#     # loop backwards from data points N-1 to end
+#     path[-1] = np.argmax(state_prob[:,-1])  # Last data point
+#     for n in range(N-2,-1,-1):
+#         path[n] = predecessor[path[n+1],n+1];
+#     # log_likelihood = -sum(log(scale));
+#     return path
+
+def viterbi_path(initial_dist, transition_matrix,
+                 emission_matrix):
+    (K,N) = np.shape(emission_matrix)
     # probability of data point belonging to each state
     state_prob = np.zeros((K,N))
     # State assignment of each data point per state
@@ -56,20 +96,17 @@ def viterbi_path(observations, initial_dist, transition_matrix,
     # the `scale` matrix can be used to calculate the log likelihood of
     # the viterbi path
     # Initalization: Determine the most likely state of data point 0
-    state_prob[:,0] = initial_dist * emissions_matrix[:,0]
+    state_prob[:,0] = initial_dist * emission_matrix[:,0]
     # scale[0] = 0/sum(state_prob[:,0]);
-    # normalize values to sum to 0
+    # normalize values to sum to 1
     state_prob[:,0] = state_prob[:,0] / np.sum(state_prob[:,0])
     # Set predecessor of initial state to arbitrary value, since there is
     # no predecessor to n=0
     predecessor[:,0] = 0
-    # Forward Loop for data point 2 to end:
-    for n in range(1,N):
-        for k in range(K):
-            A = state_prob[:, n-1] * transition_matrix[:,k]
-            predecessor[k, n] = np.argmax(A)
-            state_prob[k, n] = A[predecessor[k, n]]
-            state_prob[k, n] = state_prob[k ,n] * emissions_matrix[k, n]
+    for n in range(1, N):
+        M = state_prob[:, n-1] * transition_matrix.T
+        predecessor[:, n] = np.argmax(M, axis=1)
+        state_prob[:, n] = M[range(K),predecessor[:, n]] * emission_matrix[:, n]
         # scale[n] = 1/sum(state_prob[:,n]);
         # normalize
         state_prob[:, n] = state_prob[:,n] / np.sum(state_prob[:,n])
