@@ -2,17 +2,12 @@
 
 ASCAM can be used to browse, organize and analyze episodic recordings of single ion channel currents.
 
-<<<<<<< HEAD
-## Installing 
-Clone (with git, see below) or download the zip from this page.
-=======
 ## Installation
 Requires python>=3.6 and Numpy>=1.16 
 Further required packages can be found in 'requirements.txt' and installed with 
 `pip install -r requirements.txt`.
 Note: Unfortunately both ASCAM and one of its dependencies require Numpy, this
 means that numpy needs to be installed separately before ASCAM can be installed.
->>>>>>> 8caf6bd (update readme with information about column names)
 
 Particularly on macOS (because of problems with ancient native Python) we recommend to use a clean environment. This can be achieved by installing miniconda and creating an environment called e.g. ASCAM. Note, with Big Sur, some adjustments are needed.
 `conda create --name ASCAM` 
@@ -48,14 +43,8 @@ After successful installation of Anaconda, if you have Git installed, you can cl
 20-03-01: Note, with the migration to Qt, some problems may be encountered on the Mac if you already have installations of Qt4+. A fresh environment (e.g. can help. 
 21-05-25: Update to Big Sur - Pyqtgraph and PyQt need Python 3.8, PySide2 5.15 and the command export QT_MAC_WANTS_LAYER=1 must be issued in the Terminal. 
 
-<<<<<<< HEAD
-## Running ASCAM
-=======
-If you don't have Git, you can just copy ASCAM directory and then navigate to it manually.
-
 ## Use
 Start ASCAM from within its own directory by executing the file `run`. (Enter `./run` in the terminal)
->>>>>>> 8caf6bd (update readme with information about column names)
 
 Note: Tables in axograph and matlab have named columns ASCAM uses these names to determine what data is dealing with. Therefore the column containing the recorded current should contain either "current", "trace" or "Ipatch", the name of the column holding the recorded piezo voltage should contain the string "piezo" and the name of the command voltage column should contain "command".
 
