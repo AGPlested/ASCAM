@@ -2,7 +2,7 @@ import numpy as np
 
 # It looks like the t-test could be computed in a vectorized manner
 # for all point in parallel.
-def tTestCP(data, noise_std):
+def t_test_changepoint_detection(data, noise_std):
     """
         Input :
             data = 1×N array of data in which to look for a change point
