@@ -1,5 +1,6 @@
 import numpy as np
 import scipy as sp
+from scipy.cluster.vq import kmeans
 
 # It looks like the t-test could be computed in a vectorized manner
 # for all point in parallel.
