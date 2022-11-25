@@ -60,3 +60,16 @@ def idealize_bisect(data, critical_value, noise_std, min_seg_length=3):
 #     # Shuang et al., J. Phys Chem Letters, 2014, DOI: 10.1021/jz501435p.
 #     sorted_wavelet = np.sort(abs(np.diff(data) / 1.4))
 #     noise_std = sorted_wavelet[round(0.682 * (N-1))]
+def BIC(data, data_fit):
+    """
+    Computes the Bayesion Information Criterion (BIC) of the model that
+    produced the fit in `data_fit`.
+    Note: I believe there are some important factors missing from the
+      computation below, however this is how it is implmented in the
+      original version of DISC, so we will use this for now.
+    """
+    n_states = len(set(data_fit))
+    N = len(data)
+    n_cps = len(np.where(np.diff(data_fit)!=0)[0])
+    BIC = N*np.log( np.sum((data-data_fit)**2/N) ) + (n_cps+n_states)*np.log(N)
+    return BIC
