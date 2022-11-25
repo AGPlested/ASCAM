@@ -26,15 +26,21 @@ def t_test_changepoint_detection(data, noise_std):
             CP = n     # Location of best T value
     return T, CP
 
-def detect_changpoints(data, critical_value, noise_std):
+def detect_changpoints(data, critical_value, noise_std, min_seg_length=3):
+    id_bisect = idealize_bisect(data, critical_value, noise_std,
+                           min_seg_length)
+    cps = np.where(np.diff(id_bisect)!=0)
+    return id_bisect, cps
+
+def idealize_bisect(data, critical_value, noise_std, min_seg_length=3):
     # Find bisecting changepoint using t-test.
     t, cp = t_test_changepoint_detection(data, noise_std)
     # If t-statistic is significant bisect data at changepoint and
     # recursively look for changepoints in the resulting segments.
-    if t >= critical_value:
-        first_segment = detect_changpoints(data[:cp+1], critical_value,
+    if cp is not None and t >= critical_value and len(data) >= min_seg_length:
+        first_segment = idealize_bisect(data[:cp+1], critical_value,
                                            noise_std)
-        second_segment = detect_changpoints(data[cp+1:], critical_value,
+        second_segment = idealize_bisect(data[cp+1:], critical_value,
                                            noise_std)
         out = np.concatenate((first_segment, second_segment))
     else:  # If t is not significant return data idealized to mean value.
