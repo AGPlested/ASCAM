@@ -47,19 +47,24 @@ def idealize_bisect(data, critical_value, noise_std, min_seg_length=3):
         out = np.mean(data) * np.ones(len(data))
     return out
 
-# def changepoint_detection(data, confidence_level):
-#     """
-#         Input :
-#             data = 1×N array of data in which to look for a change point
-#             confidence_level = float ∈(0,1), confidence value for t-test
-#     """
-#     N = len(data)
-#     crit_val = sp.stats.t.ppf(q=1-confidence_level/2, df=N-1)
-#     # Estimate standard deviation of noise in data.
-#     # Based on the DISC code, they reference:
-#     # Shuang et al., J. Phys Chem Letters, 2014, DOI: 10.1021/jz501435p.
-#     sorted_wavelet = np.sort(abs(np.diff(data) / 1.4))
-#     noise_std = sorted_wavelet[round(0.682 * (N-1))]
+def changepoint_detection(data, confidence_level, min_seg_length=3):
+    """
+        Input :
+            data = 1×N array of data in which to look for a change point
+            confidence_level = float ∈(0,1), confidence value for t-test
+    """
+    N = len(data)
+    crit_val = sp.stats.t.ppf(q=1-confidence_level/2, df=N-1)
+    # Estimate standard deviation of noise in data.
+    # Based on the DISC code, they reference:
+    # Shuang et al., J. Phys Chem Letters, 2014, DOI: 10.1021/jz501435p.
+    sorted_wavelet = np.sort(abs(np.diff(data) / 1.4))
+    noise_std = sorted_wavelet[round(0.682 * (N-1))]
+    id_bisect, cps = detect_changpoints(data, critical_value=crit_val,
+                                        noise_std=noise_std,
+                                        min_seg_length=min_seg_length)
+    return id_bisect, cps
+
 def BIC(data, data_fit):
     """
     Computes the Bayesion Information Criterion (BIC) of the model that
