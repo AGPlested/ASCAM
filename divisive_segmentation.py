@@ -115,3 +115,23 @@ def compare_IC(data, fit_1, fit_2, IC="BIC"):
     else:
         return 2
 
+def kmeans_assign(data, center_guesses, *args, **kwargs):
+    """
+    Perform k-means clutering using the scipy kmeans function on the
+    input data and return the centers and an array with each index
+    assigned to the closest center. Also return an array with the numbers
+    of elements assigned to each center.
+    """
+    centers, _ = kmeans(data, center_guesses, *args, **kwargs)
+    # get distances between data points and centers in N×#centers array
+    dists = np.abs(data[:, np.newaxis] - centers[np.newaxis, :])
+    # find the center closts to each data point
+    inds = np.argmin(dists, axis=1)
+    counts = np.zeros(len(centers))
+    # assign value of closest center to each data point
+    assigned = np.zeros(len(data))
+    for (k, c) in enumerate(centers):
+        assigned[inds==k] = c
+        counts[k] = np.sum(inds==k)
+    return centers, assigned, counts
+
