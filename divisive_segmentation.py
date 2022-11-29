@@ -50,9 +50,15 @@ def idealize_bisect(data, critical_value, noise_std, min_seg_length=3):
 
 def changepoint_detection(data, confidence_level, min_seg_length=3):
     """
-        Input :
+        Input:
             data = 1×N array of data in which to look for a change point
             confidence_level = float ∈(0,1), confidence value for t-test
+        Output:
+            id_bisect = 1×N array containing the idealization of the data
+                        achieved by recursive changepoint detection and
+                        setting the discovered segments equal to their mean
+            cps = 1×C array containing the indices of the changepoints,
+                  where C is the number of changepoints
     """
     N = len(data)
     crit_val = sp.stats.t.ppf(q=1-confidence_level/2, df=N-1)
