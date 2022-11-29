@@ -135,3 +135,82 @@ def kmeans_assign(data, center_guesses, *args, **kwargs):
         counts[k] = np.sum(inds==k)
     return centers, assigned, counts
 
+def divisive_segmentation(data, confidence_level = 0.02,
+                          min_seg_length = 3,
+                          min_cluster_size = 3,
+                          information_criterion = "BIC"):
+    # The most common error in divSegment is that the first split (1
+    # cluster to 2 clusters) is not accepted. Therefore we force the
+    # split on that iteration to give the algorithm another try. If new
+    # clusters can still not be identifed, the alogorithm will terminate
+    # and return a fit of 1 cluster.his often
+    force_split = True
+    N = len(data)  # number of observations
+    # Create Centers and data_fit variables
+    # center 1 is the mean of the data
+    centers = np.array([np.mean(data)])
+    # create first cluster with mean assignment
+    data_fit = centers*np.ones(N)
+    k = 0  # center loop index
+    # Main loop terminates when all clusters have been checked for
+    # splitting.
+    while k < len(centers):
+        # find the data points that belong to the current cluster, where
+        # clusters are described the mean values (centers)
+        k_index = np.where(data_fit == centers[k])
+        # identify the change points in the current cluster
+        change_point_data_fit, _ = changepoint_detection(
+                data[k_index],
+                confidence_level=confidence_level,
+                min_seg_length=min_seg_length
+                )
+        # report unique amplitudes (segments) discovered
+        segments = np.unique(change_point_data_fit)
+        # was at least one change-point (two-segments) returned?
+        if len(segments) > 1:
+            # Make guesses for k-means of what two states might be by
+            # taking  the 33 and 66 quantiles of the segment values. This
+            # prevents outlier detection by k-means alone.
+            center_guesses = np.quantile(segments,[0.33,0.66])
+            # Cluster the segments by amplitude (i.e intensity levels)
+            # into 2 clusters using K-means.
+            # split_centers = mean values of each cluser [2,1]
+            # split_data_fit = assignment of data points to closest center
+            split_centers, split_data_fit, counts = kmeans_assign(
+                    change_point_data_fit,
+                    center_guesses)
+            # Were two clusters returned and both are larger than
+            # min_cluster_size?
+            if (
+                len(split_centers) == 2
+                and np.all(counts >= min_cluster_size)
+               ):
+                best_fit = compare_IC(data[k_index], data_fit[k_index],
+                                      split_data_fit,information_criterion)
+                # Does the fit improve by splitting?
+                if best_fit == 2:
+                    # Accept new clusters
+                    data_fit[k_index] = split_data_fit  # update data_fit
+                    centers = np.unique(data_fit)  # update centers
+                # force the first split?
+                elif best_fit == 1 and k == 0 and force_split: # iter 1
+                    force_split = False
+                    data_fit[k_index] = split_data_fit  # update data_fit
+                    centers = np.unique(data_fit)          # update centers
+                else:
+                    # Iterate: best_fit == 1
+                    k = k + 1
+            else:
+                # Iterate: clusters are too small or only one cluster
+                # returned
+                k = k + 1
+        else:
+            # Iterate: no change-points found in the segment
+            k = k + 1
+    # If only two states are found it's due to the first split being forced
+    # which means one state is the best fit.
+    n_states = len(np.unique(data_fit))
+    if not force_split and n_states == 2:
+        data_fit[:] = np.mean(data)
+        n_states = 1
+    return data_fit, n_states
