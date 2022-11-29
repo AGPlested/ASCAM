@@ -83,5 +83,7 @@ def BIC(data, data_fit):
     n_states = len(set(data_fit))
     N = len(data)
     n_cps = len(np.where(np.diff(data_fit)!=0)[0])
-    BIC = N*np.log( np.sum((data-data_fit)**2/N) ) + (n_cps+n_states)*np.log(N)
+    BIC = (n_cps+n_states)*np.log(N)
+    if np.any(data!=data_fit):
+        BIC += N*np.log( np.sum((data-data_fit)**2/N) )
     return BIC
