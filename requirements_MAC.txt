@@ -4,3 +4,4 @@ numpy>=1.18
 pandas>=0.24.0
 scipy>=1.2.0
 axographio>=0.3.1
+pyobjc-framework-Cocoa>=6.2.2
