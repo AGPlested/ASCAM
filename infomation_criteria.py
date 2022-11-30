@@ -16,7 +16,7 @@ def BIC(data, data_fit):
         BIC += N*np.log( np.sum((data-data_fit)**2/N) )
     return BIC
 
-def compare_IC(data, fit_1, fit_2, IC="BIC"):
+def compare_IC(data, fits, IC="BIC"):
     """
     Determine whether `fit_1` or `fit_2` is a better fit for the data
     contained in `data` based on an Information Criterion (IC).
@@ -25,20 +25,17 @@ def compare_IC(data, fit_1, fit_2, IC="BIC"):
        implementation of other ICs in the future.
     Input:
         data - N×1 array containing the original observations
-        fit_1 - N×1 array containing a fit
-        fit_2 - N×1 array containing a fit
+        fits - N×k array containing k fits to the data
         IC - String specifying the IC to be used
               - "BIC" for Bayesion Information Criterion
     Output:
         integer - 1 if `fit_1` is better or both are equal, 2 if `fit_2`
                   is better
     """
-    if IC == "BIC":
-        IC_1 = BIC(data, fit_1)
-        IC_2 = BIC(data, fit_2)
-    else:
-        raise Exception(f"Unknown information criterion specified: {IC}")
-    if IC_1 <= IC_2:
-        return 1
-    else:
-        return 2
+    IC_vals = np.zeros(np.shape(fits)[1])
+    for (i,f) in enumerate(fits.T):
+        if IC == "BIC":
+            IC_vals[i] = BIC(data, f)
+        else:
+            raise Exception(f"Unknown information criterion: {IC}")
+    return np.argmin(IC_vals)

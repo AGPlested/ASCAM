@@ -142,15 +142,16 @@ def divisive_segmentation(data, confidence_level = 0.02,
                 len(split_centers) == 2
                 and np.all(counts >= min_cluster_size)
                ):
-                best_fit = compare_IC(data[k_index], data_fit[k_index],
-                                      split_data_fit,information_criterion)
+                best_fit = compare_IC(data[k_index], [data_fit[k_index],
+                                                      split_data_fit],
+                                      information_criterion)
                 # Does the fit improve by splitting?
-                if best_fit == 2:
+                if best_fit == 1:
                     # Accept new clusters
                     data_fit[k_index] = split_data_fit  # update data_fit
                     centers = np.unique(data_fit)  # update centers
                 # force the first split?
-                elif best_fit == 1 and k == 0 and force_split: # iter 1
+                elif best_fit == 0 and k == 0 and force_split: # iter 1
                     force_split = False
                     data_fit[k_index] = split_data_fit  # update data_fit
                     centers = np.unique(data_fit)          # update centers
