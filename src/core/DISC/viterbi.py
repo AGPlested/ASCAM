@@ -16,25 +16,33 @@ def compute_emission_matrix(observations, components):
     K = Number of states
     """
     n_obs = len(observations)
-    n_states = np.shape(components)[0]
+    n_states = np.shape(components)[1]
     emission_matrix = np.zeros((n_states, n_obs))
     for i in range(n_states):
-        mu = components[i,1]
-        sigma = components[i,2]
+        mu = components[1,i]
+        sigma = components[2,i]
         emission_matrix[i,:] = normal_pdf(observations, mu=mu, sigma=sigma)
     # Return the normalized matrix
     return emission_matrix/np.sum(emission_matrix, axis=1, keepdims=True)
 
-def empirical_transition_matrix(trajectory, n_states):
+def empirical_transition_matrix(data_fit):
     """
     Compute the transition matrix of a Markov chain based on a
     realization thereof.
     Input:
-     trajectory = N×1 array with states assigned integer values in [0, K)
+     data_fit = fit sorting the data into a small number of states
     N = Length of sample
     K = Number of states
     """
+    states = np.unique(data_fit)
+    n_states = len(states)
+    # Convert data_fit into a trajectory in which the states are
+    # represented by integers.
+    trajectory = copy(data_fit)
+    for (i,s) in enumerate(states):
+        trajectory[data_fit==s] = i
     transition_matrix = np.zeros((n_states, n_states))
+    trajectory = trajectory.astype(int)
     for i in range(len(trajectory)-1):
         transition_matrix[trajectory[i], trajectory[i+1]] += 1
     # If any states are never exited add small noise to the matrix to avoid
