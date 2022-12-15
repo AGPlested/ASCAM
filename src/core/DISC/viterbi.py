@@ -1,3 +1,4 @@
+from copy import copy
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -94,7 +95,7 @@ def empirical_transition_matrix(data_fit):
 #     return path
 
 def viterbi_path(initial_dist, transition_matrix,
-                 emission_matrix):
+                 emission_matrix, state_vals=None):
     (K,N) = np.shape(emission_matrix)
     # probability of data point belonging to each state
     state_prob = np.zeros((K,N))
@@ -123,6 +124,11 @@ def viterbi_path(initial_dist, transition_matrix,
     # loop backwards from data points N-1 to end
     path[-1] = np.argmax(state_prob[:,-1])  # Last data point
     for n in range(N-2,-1,-1):
-        path[n] = predecessor[path[n+1],n+1];
+        path[n] = predecessor[path[n+1],n+1]
     # log_likelihood = -sum(log(scale));
+    # Assign values to states (if state values are given).
+    if state_vals is not None:
+        path = path.astype(float)
+        for (i, s) in enumerate(state_vals):
+            path[path==i] = s
     return path
