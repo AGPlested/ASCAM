@@ -144,8 +144,9 @@ def divisive_segmentation(data, confidence_level = 0.02,
                 len(split_centers) == 2
                 and np.all(counts >= min_cluster_size)
                ):
-                best_fit = compare_IC(data[k_index], [data_fit[k_index],
-                                                      split_data_fit],
+                best_fit = compare_IC(data[k_index],
+                                      np.array([data_fit[k_index],
+                                                  split_data_fit]).T,
                                       information_criterion)
                 # Does the fit improve by splitting?
                 if best_fit == 1:
