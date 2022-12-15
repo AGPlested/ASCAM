@@ -40,7 +40,8 @@ def merge_by_ward_distance(data_fit):
         new_data_fit = copy(data_fit)
         # find indices of clusters to be merged
         new_c_ind = np.concatenate([np.where(data_fit==centers[i]),
-                                    np.where(data_fit==centers[j])], axis=1
+                                    np.where(data_fit==centers[j])],
+                                   axis=1
                                    ).flatten()
         new_data_fit[new_c_ind] = new_center
         fit_index -= 1
