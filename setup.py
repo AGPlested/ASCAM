@@ -26,7 +26,7 @@ setup(
         "pandas>=0.24.0",
         "scipy>=1.2.0",
         "axographio>=0.3.1",
-	"pyobjc-framework-Cocoa>=6.2.2",
+        "pyobjc-framework-Cocoa>=6.2.2;sys_platform=='Darwin'",
     ],
     entry_points={"console_scripts": ["ascam=src.ascam:main"]},
 )
