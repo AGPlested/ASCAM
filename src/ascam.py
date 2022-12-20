@@ -4,6 +4,7 @@ ASCAM for processing and analysis of data from single ion channels.
 """
 import os
 import sys
+import platform
 import logging
 
 import getopt
@@ -20,7 +21,9 @@ try :
 except :
     from src.utils import initialize_logger
     
-os.environ['QT_MAC_WANTS_LAYER'] = '1'
+if platform.system() == 'Darwin':
+    os.environ['QT_MAC_WANTS_LAYER'] = '1'
+
 debug_logger = logging.getLogger("ascam.debug")
 
 
