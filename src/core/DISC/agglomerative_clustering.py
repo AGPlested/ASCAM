@@ -2,6 +2,8 @@ from copy import copy
 
 import numpy as np
 
+from .infomation_criteria import compare_IC
+
 def Ward_distances(data):
     """
     Computes the Ward distance between all the states found in `data`.
