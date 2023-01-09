@@ -84,7 +84,7 @@ def kmeans_assign(data, center_guesses, *args, **kwargs):
     centers, _ = kmeans(data, center_guesses, *args, **kwargs)
     # get distances between data points and centers in N×#centers array
     dists = np.abs(data[:, np.newaxis] - centers[np.newaxis, :])
-    # find the center closts to each data point
+    # find the center closest to each data point
     inds = np.argmin(dists, axis=1)
     counts = np.zeros(len(centers))
     # assign value of closest center to each data point
@@ -133,7 +133,7 @@ def divisive_segmentation(data, confidence_level = 0.02,
             center_guesses = np.quantile(segments,[0.33,0.66])
             # Cluster the segments by amplitude (i.e intensity levels)
             # into 2 clusters using K-means.
-            # split_centers = mean values of each cluser [2,1]
+            # split_centers = mean values of each cluster [2,1]
             # split_data_fit = assignment of data points to closest center
             split_centers, split_data_fit, counts = kmeans_assign(
                     change_point_data_fit,
@@ -160,14 +160,14 @@ def divisive_segmentation(data, confidence_level = 0.02,
                     centers = np.unique(data_fit)          # update centers
                 else:
                     # Iterate: best_fit == 1
-                    k = k + 1
+                    k+=1
             else:
                 # Iterate: clusters are too small or only one cluster
                 # returned
-                k = k + 1
+                k+=1
         else:
             # Iterate: no change-points found in the segment
-            k = k + 1
+            k+=1
     # If only two states are found it's due to the first split being forced
     # which means one state is the best fit.
     n_states = len(np.unique(data_fit))
