@@ -11,7 +11,7 @@ def compute_emission_matrix(observations, components):
     state.
     Input:
      observations = N×1 array
-     components = K×3 array
+     components = 3×K array
     N = Length of observations
     K = Number of states
     """
