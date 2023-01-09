@@ -33,9 +33,9 @@ def compare_IC(data, fits, IC="BIC"):
                   is better
     """
     IC_vals = np.zeros(np.shape(fits)[1])
-    for (i,f) in enumerate(fits.T):
-        if IC == "BIC":
+    if IC == "BIC":
+        for (i,f) in enumerate(fits.T):
             IC_vals[i] = BIC(data, f)
-        else:
-            raise Exception(f"Unknown information criterion: {IC}")
+    else:
+        raise Exception(f"Unknown information criterion: {IC}")
     return np.argmin(IC_vals)
