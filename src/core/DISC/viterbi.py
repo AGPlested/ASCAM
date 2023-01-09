@@ -1,5 +1,4 @@
 from copy import copy
-import matplotlib.pyplot as plt
 import numpy as np
 
 # Assuming the states are 1-dimensional. This will be true in practice.
