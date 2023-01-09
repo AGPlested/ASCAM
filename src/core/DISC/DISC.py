@@ -2,7 +2,8 @@ import numpy as np
 from scipy.stats import norm
 
 from .divisive_segmentation import divisive_segmentation
-from .agglomerative_clustering import merge_by_ward_distance
+from .agglomerative_clustering import (merge_by_ward_distance,
+                                       agglomorative_clustering_fit)
 from .infomation_criteria import compare_IC
 from .viterbi import (viterbi_path,
                       compute_emission_matrix,
@@ -36,7 +37,7 @@ def run_DISC(data, confidence_level=0.05, min_seg_length=3,
     # consecutively merging those clusters with the smallest Ward distance
     # between them. Then select the fit with the optimal number of clusters
     # as measured by the given Information Criterion (IC)
-    # data_fit = agglomorative_clustering_fit(data, data_fit, IC=IC_HAC)
+    data_fit = agglomorative_clustering_fit(data, data_fit, IC=IC_HAC)
     all_data_fits = merge_by_ward_distance(data_fit)
     best_fit_ind = compare_IC(data, all_data_fits, IC=IC_HAC)
     data_fit = all_data_fits[:, best_fit_ind]
