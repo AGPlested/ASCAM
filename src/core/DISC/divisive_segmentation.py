@@ -99,7 +99,7 @@ def kmeans_assign(data, center_guesses, *args, **kwargs):
         counts[k] = np.sum(inds==k)
     return centers, assigned, counts
 
-def divisive_segmentation(data, confidence_level = 0.02,
+def divisive_segmentation(data, confidence_level = 0.001,
                           min_seg_length = 3,
                           min_cluster_size = 3,
                           information_criterion = "BIC"):
