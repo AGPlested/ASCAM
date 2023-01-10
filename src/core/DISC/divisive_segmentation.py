@@ -1,3 +1,5 @@
+import sys
+
 import numpy as np
 import scipy as sp
 from scipy.cluster.vq import kmeans
@@ -30,6 +32,9 @@ def t_test_changepoint_detection(data, noise_std):
     return T, CP
 
 def detect_changpoints(data, critical_value, noise_std, min_seg_length=3):
+    # Set a generous recursion limit to avoid hitting it when working with
+    # very long traces with lots of changepoints.
+    sys.setrecursionlimit(round(len(data)/min_seg_length))
     id_bisect = idealize_bisect(data, critical_value, noise_std,
                            min_seg_length)
     cps = np.where(np.diff(id_bisect)!=0)[0]
