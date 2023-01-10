@@ -38,11 +38,10 @@ def empirical_transition_matrix(data_fit):
     n_states = len(states)
     # Convert data_fit into a trajectory in which the states are
     # represented by integers.
-    trajectory = copy(data_fit)
+    trajectory = np.zeros(np.shape(data_fit), int)
     for (i,s) in enumerate(states):
         trajectory[data_fit==s] = i
     transition_matrix = np.zeros((n_states, n_states))
-    trajectory = trajectory.astype(int)
     for i in range(len(trajectory)-1):
         transition_matrix[trajectory[i], trajectory[i+1]] += 1
     # If any states are never exited add small noise to the matrix to avoid
