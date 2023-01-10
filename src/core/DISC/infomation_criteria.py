@@ -4,6 +4,7 @@
 # matlab implementation at commit af19eae on https://github.com/ChandaLab/DISC/
 
 import numpy as np
+from scipy.stats import norm
 
 def BIC(data, data_fit):
     """
@@ -18,7 +19,21 @@ def BIC(data, data_fit):
     n_cps = len(np.where(np.diff(data_fit)!=0)[0])
     BIC = (n_cps+n_states)*np.log(N)
     if np.any(data!=data_fit):
-        BIC += N*np.log( np.sum((data-data_fit)**2/N) )
+        means = np.unique(data_fit)
+        K = len(means)
+        stds = np.zeros(K)
+        pis = np.zeros(K)  # mixture coefficients
+        for (i,m) in enumerate(means):
+            stds[i] = norm.fit(data[data_fit==m])[1]
+            pis[i] = 1/np.sum(data_fit==m)
+        for x in data:
+            L = 0
+            for (j,m) in enumerate(means):
+                L += pis[j]*norm.pdf(x,m,stds[j])
+            BIC -= 2*np.log(L)
+
+        # The BIC computation from the matlab code
+        # BIC += N*np.log( np.sum((data-data_fit)**2/N) )
     return BIC
 
 def compare_IC(data, fits, IC="BIC"):
