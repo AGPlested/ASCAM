@@ -1,3 +1,8 @@
+# All credit for the DISC algortihm belongs to the authors of
+# White, D.S., Goldschen-Ohm, M.P., Goldsmith, R.H., Chanda, B. Top-down machine learning approach for high-throughput single-molecule analysis. Elife 2020, 9
+# The code in this module is based on their paper and partly on their
+# matlab implementation at commit af19eae on https://github.com/ChandaLab/DISC/
+
 import numpy as np
 
 def BIC(data, data_fit):
