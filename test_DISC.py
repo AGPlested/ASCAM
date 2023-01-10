@@ -2,11 +2,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scipy as sp
 
+from src.core.DISC.divisive_segmentation import idealize_bisect
 from src.core.DISC import (
         divisive_segmentation, merge_by_ward_distance,
         compare_IC, compute_emission_matrix,
         empirical_transition_matrix, viterbi_path,
-        t_test_changepoint_detection, run_DISC
+        t_test_changepoint_detection, run_DISC,
         )
 
 # Test detection of a single changepoint by means of student's t-test.
@@ -21,6 +22,11 @@ noise = noise_sigma*np.random.randn(n_samples)
 data = states + noise
 T, CP = t_test_changepoint_detection(states, noise_sigma)
 print(f"Found changepoint at {CP}.")
+
+# Test idealize_bisect function.
+confidence_level = 0.001
+crit_val = sp.stats.t.ppf(q=1-confidence_level/2, df=n_samples-1)
+out = idealize_bisect(data, crit_val, noise_sigma)
 
 
 def generate_data(N = 10000,
