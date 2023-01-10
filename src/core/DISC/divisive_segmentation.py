@@ -50,7 +50,6 @@ def idealize_bisect(data, critical_value, noise_std, min_seg_length=3):
     t, cp = t_test_changepoint_detection(data, noise_std)
     # If t-statistic is significant bisect data at changepoint and
     # recursively look for changepoints in the resulting segments.
-    print(cp)
     if (cp is not None and t >= critical_value
         and cp >= min_seg_length and len(data)-cp >= min_seg_length):
         # cp is the index of the last element of `data` belonging to the
