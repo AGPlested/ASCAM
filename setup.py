@@ -20,7 +20,7 @@ setup(
     packages=find_packages(where=here),
     python_requires=">=3.7",
     install_requires=[
-        "pyqtgraph>=0.11.0rc0",
+        "pyqtgraph==0.11.0",
         "PySide2>=5.14.0",
         "numpy>=1.18",
         "pandas>=0.24.0",
