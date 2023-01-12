@@ -21,12 +21,12 @@ setup(
     python_requires="==3.10",
     install_requires=[
         "pyqtgraph>=0.11.0,<=0.12.4",
-        "PySide2>=5.14.0",
+        "PySide2==5.15",
         "numpy==1.24",
-        "pandas>=0.24.0",
-        "scipy>=1.2.0",
-        "axographio>=0.3.1",
-        "pyobjc-framework-Cocoa>=6.2.2;sys_platform=='Darwin'",
+        "pandas==1.5",
+        "scipy==1.10",
+        "axographio==0.3.2",
+        "pyobjc-framework-Cocoa==6.2.2;sys_platform=='Darwin'",
     ],
     entry_points={"console_scripts": ["ascam=src.ascam:main"]},
 )
