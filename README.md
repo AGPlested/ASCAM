@@ -3,22 +3,15 @@
 ASCAM can be used to browse, organize and analyze episodic recordings of single ion channel currents.
 
 ## Installation
-Requires python>=3.6 and Numpy>=1.16
-Further required packages can be found in 'requirements.txt' and installed with
-`pip install -r requirements.txt`.
-Note: Unfortunately both ASCAM and one of its dependencies require Numpy, this
-means that numpy needs to be installed separately before ASCAM can be installed.
+A straightforward installation can be achieved by first installing Anaconda or miniconda. At the time of writing, a working version for Mac is https://repo.anaconda.com/archive/Anaconda3-5.3.0-MacOSX-x86_64.pkg
 
-Particularly on macOS (because of problems with ancient native Python) we recommend to use a clean environment. This can be achieved by installing miniconda and creating an environment called e.g. ASCAM. Note, with Big Sur, some adjustments are needed.
-`conda create --name ASCAM`
+After successful installation of Anaconda, if you have Git installed, you can clone the ASCAM directory from Github onto your machine with the following command in the Terminal:
+`git clone https://github.com/AGPlested/ASCAM`
 
-Switch to this environment:
-`conda activate ASCAM`
+We recommend to use a clean environment. This can be achieved by installing miniconda and creating an environment called e.g. ASCAM. Note, with Big Sur, some adjustments are needed.
+`conda create --name ASCAM python=3.10 && conda activate ASCAM`
 
-Install Python 3.7:
-`conda install python==3.7`
-
-By default conda does not install its own version of `pip`. You can check which version is being used with `pip --version`.
+By default conda does not install its own version of `pip`. (You can check which version is being used with `pip --version`.)
 If it is not the correct one install it in your conda environment using:
 `conda install pip`
 
@@ -35,20 +28,9 @@ For launch options:
 If you also issue `conda install python.app` in your new environment then you can have a well-behaved Mac GUI with the following command from the parent directory of ASCAM:
 `pythonw /ASCAM/src/ascam.py`
 
-required packages can be found in 'requirements.txt' and installed with
-`pip install -r requirements.txt`.
-
-Note: Under python 3.9, axographio needs Numpy for setup, you can get around this by issuing the command `pip install numpy` before the general install command.
-
-A straightforward installation can be achieved by first installing Anaconda or miniconda. At the time of writing, a working version for Mac is https://repo.anaconda.com/archive/Anaconda3-5.3.0-MacOSX-x86_64.pkg
-
-After successful installation of Anaconda, if you have Git installed, you can clone the ASCAM directory from Github onto your machine with the following command in the Terminal: *git clone https://github.com/AGPlested/ASCAM*. But if you had Git installed, you almost certainly knew that already.
-
 20-03-01: Note, with the migration to Qt, some problems may be encountered on the Mac if you already have installations of Qt4+. A fresh environment (e.g. can help.
 21-05-25: Update to Big Sur - Pyqtgraph and PyQt need Python 3.8, PySide2 5.15 and the command export QT_MAC_WANTS_LAYER=1 must be issued in the Terminal.
 
-## Use
-Start ASCAM from within its own directory by executing the file `run`. (Enter `./run` in the terminal)
 
 Note: Tables in axograph and matlab have named columns ASCAM uses these names to determine what data is dealing with. Therefore the column containing the recorded current should contain either "current", "trace" or "Ipatch", the name of the column holding the recorded piezo voltage should contain the string "piezo" and the name of the command voltage column should contain "command".
 
