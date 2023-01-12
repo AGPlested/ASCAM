@@ -132,7 +132,7 @@ class IdealizationCache:
         # amp values by the expected units pA
         factor = CURRENT_UNIT_FACTORS["pA"]
         mask = np.isclose(
-            np.asarray(events[:, 1], dtype=np.float) * factor, amp * factor
+            np.asarray(events[:, 1], dtype=float) * factor, amp * factor
         )
         debug_logger.debug(f"multiplied amps by pA, amp={amp*factor}")
         data = events[:, 2][mask]
@@ -142,7 +142,7 @@ class IdealizationCache:
         if n_bins is None:
             n_bins = int(self.get_n_bins(data))
         heights, bins = np.histogram(data, n_bins)
-        heights = np.asarray(heights, dtype=np.float)
+        heights = np.asarray(heights, dtype=float)
         if root_counts:
             heights = np.sqrt(heights)
         return heights, bins
