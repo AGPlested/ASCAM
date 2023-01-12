@@ -18,7 +18,7 @@ setup(
     author="Nikolai Zaki",
     author_email="kol@posteo.de",
     packages=find_packages(where=here),
-    python_requires=">=3.7",
+    python_requires="==3.10",
     install_requires=[
         "pyqtgraph>=0.11.0,<=0.12.4",
         "PySide2>=5.14.0",
