@@ -137,9 +137,9 @@ def string_to_list(list_as_string):
 
 def string_to_array(string):
     if "," in string:
-        array = np.array(string.split(","), dtype=np.float)
+        array = np.array(string.split(","), dtype=float)
     else:
-        array = np.array(string.split(), dtype=np.float)
+        array = np.array(string.split(), dtype=float)
     return array
 
 
