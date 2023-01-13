@@ -8,6 +8,7 @@ from PySide2.QtWidgets import (
     QLabel,
     QFileDialog,
     QVBoxLayout,
+    QAbstractItemView,
 )
 
 
