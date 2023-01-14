@@ -118,8 +118,8 @@ def divisive_segmentation(data, confidence_level = 0.001,
     # The most common error in divSegment is that the first split (1
     # cluster to 2 clusters) is not accepted. Therefore we force the
     # split on that iteration to give the algorithm another try. If new
-    # clusters can still not be identifed, the alogorithm will terminate
-    # and return a fit of 1 cluster.his often
+    # clusters can still not be identifed, the algorithm will terminate
+    # and return a fit of 1 cluster.
     force_split = True
     N = len(data)  # number of observations
     # Create Centers and data_fit variables
