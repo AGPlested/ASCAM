@@ -2,7 +2,8 @@ import pytest
 import numpy as np
 import scipy as sp
 
-from src.core.DISC.divisive_segmentation import detect_changepoints
+from src.core.DISC.divisive_segmentation import (kmeans_assign,
+                                                 detect_changepoints)
 from src.core.DISC import (
         divisive_segmentation, merge_by_ward_distance,
         compare_IC, compute_emission_matrix,
@@ -66,3 +67,11 @@ def test_detect_changepoints_no_noise_multiple_CPs(true_CPs, data):
     assert np.all(cps==true_CPs)
     assert np.all(out==data)
 
+@pytest.mark.parametrize("true_CPs, data", get_test_data(multiple_CPs))
+def test_kmeans_assign(true_CPs, data):
+    centers = [0,1]
+    true_counts = [np.sum(data==0), np.sum(data==1)]
+    c, out, counts = kmeans_assign(data, centers)
+    assert np.all(c==centers)
+    assert np.all(out==data)
+    assert np.all(counts==true_counts)
