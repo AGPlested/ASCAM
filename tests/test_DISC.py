@@ -27,20 +27,23 @@ multiple_CPs = [(8, 26, 68),
                      (26, 54, 62),
                      ]
 too_short_CPs = [0, 1, 98, 99]
+multiple_CPs_too_short = [(65, 67)]
 
 def get_states(true_CP):
     return np.concatenate((np.ones(true_CP+1), np.zeros(n_samples-true_CP-1)))
 
 def get_test_data(CPs):
     if type(CPs[0]) == int:
-        return [(cp, get_states(cp)) for cp in CPs]
-    elif len(CPs[0]) == 3:
-        return [(cps, np.concatenate((np.ones(cps[0]+1),
-                                      np.zeros(cps[1]-cps[0]),
-                                      np.ones(cps[2]-cps[1]),
-                                      np.zeros(n_samples-cps[2]))
-                                     ))
-                for cps in CPs ]
+        out = [(cp, get_states(cp)) for cp in CPs]
+    else:
+        out = []
+        for cps in CPs:
+            data = np.ones(n_samples)
+            for cp in cps:
+                data[cp+1:-1] = (data[cp]+1)%2
+            data[-1] = data[-2]
+            out.append((cps, data))
+    return out
 
 @pytest.mark.parametrize("true_CP, data", get_test_data(CPs_with_edge_cases))
 def test_t_test_changepoint_detection_no_noise(true_CP, data):
@@ -66,6 +69,12 @@ def test_detect_changepoints_no_noise_multiple_CPs(true_CPs, data):
     out, cps = detect_changepoints(data, crit_val, noise_sigma)
     assert np.all(cps==true_CPs)
     assert np.all(out==data)
+
+@pytest.mark.parametrize("true_CPs, data", get_test_data(multiple_CPs_too_short))
+def test_detect_changepoints_no_noise_multiple_CPs_too_short(true_CPs, data):
+    out, cps = detect_changepoints(data, crit_val, noise_sigma)
+    assert np.all(out==np.mean(data)*np.ones(n_samples))
+    assert cps.size == 0  # I.e. no changepoints found.
 
 @pytest.mark.parametrize("true_CPs, data", get_test_data(multiple_CPs))
 def test_kmeans_assign(true_CPs, data):
