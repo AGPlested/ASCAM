@@ -10,9 +10,12 @@ def BIC(data, data_fit):
     """
     Computes the Bayesion Information Criterion (BIC) of the model that
     produced the fit in `data_fit`.
-    Note: I believe there are some important factors missing from the
-      computation below, however this is how it is implmented in the
-      original version of DISC, so we will use this for now.
+    Input:
+        data - N×1 array containing the original observations
+        data_fit - N×1 array containing the an idealization fit of the data
+    Output:
+        float - value of the Bayesion Information Criterion for the model
+                that produced data_fit
     """
     n_states = len(set(data_fit))
     N = len(data)
@@ -48,10 +51,9 @@ def compare_IC(data, fits, IC="BIC"):
         data - N×1 array containing the original observations
         fits - N×k array containing k fits to the data
         IC - String specifying the IC to be used
-              - "BIC" for Bayesion Information Criterion
+             - "BIC" for Bayesion Information Criterion
     Output:
-        integer - 1 if `fit_1` is better or both are equal, 2 if `fit_2`
-                  is better
+        integer - index of the fit with the lowest IC value
     """
     IC_vals = np.zeros(np.shape(fits)[1])
     if IC == "BIC":
