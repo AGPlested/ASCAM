@@ -1,3 +1,5 @@
+from copy import copy
+
 import pytest
 import numpy as np
 import scipy as sp
@@ -9,6 +11,7 @@ from src.core.DISC import (
         compare_IC, compute_emission_matrix,
         empirical_transition_matrix, viterbi_path,
         t_test_changepoint_detection, run_DISC,
+        BIC
         )
 
 n_samples = 100
@@ -84,3 +87,14 @@ def test_kmeans_assign(true_CPs, data):
     assert np.all(c==centers)
     assert np.all(out==data)
     assert np.all(counts==true_counts)
+
+@pytest.mark.parametrize("true_CPs, data", get_test_data(multiple_CPs))
+def test_compare_BIC(true_CPs, data):
+    data_fit, _ = detect_changepoints(data, crit_val, noise_sigma)
+    data += np.random.randn(np.size(data_fit))
+    data_fit_bad1 = copy(data_fit)
+    data_fit_bad1[5] = (data_fit_bad1[5]+1)%2
+    data_fit_bad2 = copy(data_fit)
+    data_fit_bad2[10] = (data_fit_bad2[10]+1)%2
+    ind = compare_IC(data, np.vstack([data_fit, data_fit_bad1, data_fit_bad2]).T, IC="BIC")
+    assert ind==0
