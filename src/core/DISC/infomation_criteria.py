@@ -16,19 +16,19 @@ def BIC(data, data_fit):
     Output:
         float - value of the Bayesion Information Criterion for the model
                 that produced data_fit
+          OR negative infinity if `data` and `data_fit` are identical
     """
-    n_states = len(set(data_fit))
-    N = len(data)
-    n_cps = len(np.where(np.diff(data_fit)!=0)[0])
-    BIC = (n_cps+n_states)*np.log(N)
     if np.any(data!=data_fit):
+        n_states = len(set(data_fit))
+        N = len(data)
+        n_cps = len(np.where(np.diff(data_fit)!=0)[0])
+        BIC = (n_cps+n_states)*np.log(N)
         means = np.unique(data_fit)
         K = len(means)
         stds = np.zeros(K)
         pis = np.zeros(K)  # mixture coefficients
         for (i,m) in enumerate(means):
             stds[i] = norm.fit(data[data_fit==m])[1]
-            pis[i] = 1/np.sum(data_fit==m)
             pis[i] = np.sum(data_fit==m)
         pis /= N
         for x in data:
@@ -40,6 +40,8 @@ def BIC(data, data_fit):
         # used by the authors of DISC, the matlab code translated to
         # python would be:
         # BIC += N*np.log( np.sum((data-data_fit)**2/N) )
+    else:
+        BIC = -1*np.infty
     return BIC
 
 def compare_IC(data, fits, IC="BIC"):
