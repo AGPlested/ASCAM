@@ -31,8 +31,9 @@ def BIC(data, data_fit):
             for (j,m) in enumerate(means):
                 L += pis[j]*norm.pdf(x,m,stds[j])
             BIC -= 2*np.log(L)
-
-        # The BIC computation from the matlab code
+        # This part of the BIC computation differs from the implementation
+        # used by the authors of DISC, the matlab code translated to
+        # python would be:
         # BIC += N*np.log( np.sum((data-data_fit)**2/N) )
     return BIC
 
