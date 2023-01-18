@@ -29,6 +29,8 @@ def BIC(data, data_fit):
         for (i,m) in enumerate(means):
             stds[i] = norm.fit(data[data_fit==m])[1]
             pis[i] = 1/np.sum(data_fit==m)
+            pis[i] = np.sum(data_fit==m)
+        pis /= N
         for x in data:
             L = 0
             for (j,m) in enumerate(means):
