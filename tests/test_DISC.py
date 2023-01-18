@@ -90,12 +90,21 @@ def test_kmeans_assign(true_CPs, data):
     assert np.all(counts==true_counts)
 
 @pytest.mark.parametrize("true_CPs, data", get_test_data(multiple_CPs))
-def test_compare_BIC(true_CPs, data):
+def test_compare_BIC_classification_error(true_CPs, data):
     data_fit, _ = detect_changepoints(data, crit_val, noise_sigma)
-    data += np.random.randn(np.size(data_fit))
+    data += np.random.randn(np.size(data_fit))  # This is needed to be able to fit a standard deviation when compution the BIC
     data_fit_bad1 = copy(data_fit)
     data_fit_bad1[5] = (data_fit_bad1[5]+1)%2
     data_fit_bad2 = copy(data_fit)
     data_fit_bad2[10] = (data_fit_bad2[10]+1)%2
     ind = compare_IC(data, np.vstack([data_fit, data_fit_bad1, data_fit_bad2]).T, IC="BIC")
+    assert ind==0
+
+@pytest.mark.parametrize("true_CPs, data", get_test_data(multiple_CPs))
+def test_compare_BIC_too_many_states(true_CPs, data):
+    data_fit, _ = detect_changepoints(data, crit_val, noise_sigma)
+    data += 0.01*np.random.randn(np.size(data_fit))  # This is needed to be able to fit a standard deviation when compution the BIC
+    too_many_states_fit = copy(data_fit)
+    too_many_states_fit[0:true_CPs[0]+1] = 0.99
+    ind = compare_IC(data, np.vstack([data_fit, too_many_states_fit]).T, IC="BIC")
     assert ind==0
