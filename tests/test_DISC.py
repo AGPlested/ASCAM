@@ -4,15 +4,16 @@ import pytest
 import numpy as np
 import scipy as sp
 
-from src.core.DISC.divisive_segmentation import (kmeans_assign,
-                                                 detect_changepoints)
 from src.core.DISC import (
         divisive_segmentation, merge_by_ward_distance,
         compare_IC, compute_emission_matrix,
         empirical_transition_matrix, viterbi_path,
         t_test_changepoint_detection, run_DISC,
-        BIC
+        BIC, agglomorative_clustering_fit,
         )
+from src.core.DISC.agglomerative_clustering import ( Ward_distances )
+from src.core.DISC.divisive_segmentation import (kmeans_assign,
+                                                 detect_changepoints)
 
 n_samples = 100
 confidence_level = 0.01
