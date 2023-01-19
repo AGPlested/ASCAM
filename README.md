@@ -17,6 +17,7 @@ If it is not the correct one install it in your conda environment using:
 
 Then navigate to the folder you downloaded from this page (`ASCAM-master`) and issue:
 `pip install -e .`
+Note: it might be necessary to install `numpy` separately before installing ASCAM.
 
 This installation makes a shell script that lets you launch ASCAM with the command:
 `ascam`
