@@ -204,13 +204,13 @@ def load_axo(filename):
 #         # assign the lists with data
 #         for i in range(n_lists):
 #             if "Ipatch" in names[i] or "trace" in names[i]:
-#                 current.append(np.array(listlist[i], dtype=np.float))
+#                 current.append(np.array(listlist[i], dtype=float))
 #             elif "10Vm" in names[i] or "command" in names[i]:
-#                 command_voltage.append(np.array(listlist[i], dtype=np.float))
+#                 command_voltage.append(np.array(listlist[i], dtype=float))
 #             elif "Piezo" in names[i] or "piezo" in names[i]:
-#                 piezo.append(np.array(listlist[i], dtype=np.float))
+#                 piezo.append(np.array(listlist[i], dtype=float))
 #             elif "Time" in names[i] or "time" in names[i]:
-#                 time = np.array(listlist[i], dtype=np.float)
+#                 time = np.array(listlist[i], dtype=float)
 
 #     names = ["Time [ms]"]
 #     if current:

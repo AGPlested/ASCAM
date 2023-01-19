@@ -150,7 +150,7 @@ class PlotFrame(QWidget):
 
     def update_episode_hist(self):
         heights, bins, = self.main.data.episode_hist()[:2]
-        heights = np.asarray(heights, dtype=np.float)
+        heights = np.asarray(heights, dtype=float)
         heights /= np.max(heights)
         heights *= -1
         self.episode_hist.setData(bins, heights)
@@ -159,7 +159,7 @@ class PlotFrame(QWidget):
         debug_logger.debug("drawing episode hist")
         pen = pg.mkPen(color="b")
         heights, bins, = self.main.data.episode_hist()[:2]
-        heights = np.asarray(heights, dtype=np.float)
+        heights = np.asarray(heights, dtype=float)
         heights /= np.max(heights)
         heights *= -1
         self.episode_hist = pg.PlotDataItem(bins, heights, stepMode=True, pen=pen)
@@ -176,7 +176,7 @@ class PlotFrame(QWidget):
         debug_logger.debug("drawing series hist")
         pen = pg.mkPen(color=(200, 50, 50))
         heights, bins, = self.main.data.series_hist()[:2]
-        heights = np.asarray(heights, dtype=np.float)
+        heights = np.asarray(heights, dtype=float)
         heights /= np.max(heights)
         heights *= -1  # this compensates the x-axis inversion created by rotating
         self.series_hist = pg.PlotDataItem(bins, heights, stepMode=True, pen=pen)
