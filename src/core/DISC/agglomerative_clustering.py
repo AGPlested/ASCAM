@@ -27,7 +27,7 @@ def Ward_distances(data_fit):
     for i in range(K):
         for j in range(i+1, K):
             ward_d[i,j] = (np.sqrt( 2*n[i]*n[j]/(n[i]+n[j]) )
-                           * np.sqrt((states[i]-states[j])**2)
+                           * np.abs(states[i]-states[j])
                            )
     return ward_d
 
