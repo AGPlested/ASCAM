@@ -106,5 +106,11 @@ def test_compare_BIC_too_many_states(true_CPs, data):
     data += 0.01*np.random.randn(np.size(data_fit))  # This is needed to be able to fit a standard deviation when compution the BIC
     too_many_states_fit = copy(data_fit)
     too_many_states_fit[0:true_CPs[0]+1] = 0.99
-    ind = compare_IC(data, np.vstack([data_fit, too_many_states_fit]).T, IC="BIC")
-    assert ind==0
+    too_many_states_fit1 = copy(data_fit)
+    too_many_states_fit1[true_CPs[0]+1:true_CPs[1]+1] = 0.01
+    ind0 = compare_IC(data, np.vstack([data_fit, too_many_states_fit,
+                                      too_many_states_fit1]).T, IC="BIC")
+    ind1 = compare_IC(data, np.vstack([too_many_states_fit, data_fit,
+                                       too_many_states_fit1]).T, IC="BIC")
+    assert ind0==0
+    assert ind1==1
