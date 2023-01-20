@@ -10,30 +10,38 @@ def BIC(data, data_fit):
     """
     Computes the Bayesion Information Criterion (BIC) of the model that
     produced the fit in `data_fit`.
-    Note: I believe there are some important factors missing from the
-      computation below, however this is how it is implmented in the
-      original version of DISC, so we will use this for now.
+    Input:
+        data - N×1 array containing the original observations
+        data_fit - N×1 array containing the an idealization fit of the data
+    Output:
+        float - value of the Bayesion Information Criterion for the model
+                that produced data_fit
+          OR negative infinity if `data` and `data_fit` are identical
     """
-    n_states = len(set(data_fit))
-    N = len(data)
-    n_cps = len(np.where(np.diff(data_fit)!=0)[0])
-    BIC = (n_cps+n_states)*np.log(N)
     if np.any(data!=data_fit):
+        n_states = len(set(data_fit))
+        N = len(data)
+        n_cps = len(np.where(np.diff(data_fit)!=0)[0])
+        BIC = (n_cps+n_states)*np.log(N)
         means = np.unique(data_fit)
         K = len(means)
         stds = np.zeros(K)
         pis = np.zeros(K)  # mixture coefficients
         for (i,m) in enumerate(means):
             stds[i] = norm.fit(data[data_fit==m])[1]
-            pis[i] = 1/np.sum(data_fit==m)
+            pis[i] = np.sum(data_fit==m)
+        pis /= N
         for x in data:
             L = 0
             for (j,m) in enumerate(means):
                 L += pis[j]*norm.pdf(x,m,stds[j])
             BIC -= 2*np.log(L)
-
-        # The BIC computation from the matlab code
+        # This part of the BIC computation differs from the implementation
+        # used by the authors of DISC, the matlab code translated to
+        # python would be:
         # BIC += N*np.log( np.sum((data-data_fit)**2/N) )
+    else:
+        BIC = -1*np.infty
     return BIC
 
 def compare_IC(data, fits, IC="BIC"):
@@ -47,10 +55,9 @@ def compare_IC(data, fits, IC="BIC"):
         data - N×1 array containing the original observations
         fits - N×k array containing k fits to the data
         IC - String specifying the IC to be used
-              - "BIC" for Bayesion Information Criterion
+             - "BIC" for Bayesion Information Criterion
     Output:
-        integer - 1 if `fit_1` is better or both are equal, 2 if `fit_2`
-                  is better
+        integer - index of the fit with the lowest IC value
     """
     IC_vals = np.zeros(np.shape(fits)[1])
     if IC == "BIC":

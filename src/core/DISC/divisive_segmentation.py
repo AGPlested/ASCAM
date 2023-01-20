@@ -27,16 +27,19 @@ def t_test_changepoint_detection(data, noise_std):
     total_sum = cum_sum[-1]
     # Drop first and last data points from the loop as in the original
     # author's code.
-    for n in range(2,N-1):
-        mu_1 = cum_sum[n] / n
-        mu_2 = (total_sum - cum_sum[n]) / (N-n)
-        t = abs((mu_2 - mu_1)) / noise_std / np.sqrt(1/n+1/(N-n))
+    for n in range(1, N-1):
+        # Note `n` is the index (i.e. 1 less than the ordinal number of
+        # the element), the number of elements summed by `cum_sum[n]` is
+        # thus n+1.
+        mu_1 = cum_sum[n] / (n+1)
+        mu_2 = (total_sum - cum_sum[n]) / (N-n-1)
+        t = abs((mu_2 - mu_1)) / noise_std / np.sqrt(1/n+1/(N-n-1))
         if t > T:
             T = t      # best T value so far
             CP = n     # Location of best T value
     return T, CP
 
-def detect_changpoints(data, critical_value, noise_std, min_seg_length=3):
+def detect_changepoints(data, critical_value, noise_std, min_seg_length=3):
     # Set a generous recursion limit to avoid hitting it when working with
     # very long traces with lots of changepoints.
     sys.setrecursionlimit(max(1000, round(len(data)/min_seg_length)))
@@ -51,7 +54,7 @@ def idealize_bisect(data, critical_value, noise_std, min_seg_length=3):
     # If t-statistic is significant bisect data at changepoint and
     # recursively look for changepoints in the resulting segments.
     if (cp is not None and t >= critical_value
-        and cp >= min_seg_length and len(data)-cp >= min_seg_length):
+        and cp+1 >= min_seg_length and len(data)-cp >= min_seg_length):
         # cp is the index of the last element of `data` belonging to the
         # segment. Since python indexing uses right-open intervals we need
         # to use cp+1 to capture the entire segment.
@@ -83,7 +86,7 @@ def changepoint_detection(data, confidence_level, min_seg_length=3):
     # Shuang et al., J. Phys Chem Letters, 2014, DOI: 10.1021/jz501435p.
     sorted_wavelet = np.sort(abs(np.diff(data) / 1.4))
     noise_std = sorted_wavelet[round(0.682 * (N-1))]
-    id_bisect, cps = detect_changpoints(data, critical_value=crit_val,
+    id_bisect, cps = detect_changepoints(data, critical_value=crit_val,
                                         noise_std=noise_std,
                                         min_seg_length=min_seg_length)
     return id_bisect, cps
@@ -115,8 +118,8 @@ def divisive_segmentation(data, confidence_level = 0.001,
     # The most common error in divSegment is that the first split (1
     # cluster to 2 clusters) is not accepted. Therefore we force the
     # split on that iteration to give the algorithm another try. If new
-    # clusters can still not be identifed, the alogorithm will terminate
-    # and return a fit of 1 cluster.his often
+    # clusters can still not be identifed, the algorithm will terminate
+    # and return a fit of 1 cluster.
     force_split = True
     N = len(data)  # number of observations
     # Create Centers and data_fit variables
