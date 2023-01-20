@@ -473,13 +473,13 @@ class Recording(dict):
         # episodes = np.array(self[datakey])[indices]
         for episode in episodes:
             n = str(episode.n_episode).zfill(fill_length)
-            export_dict["trace " + n] = episode.trace * CURRENT_UNIT_FACTORS[trace_unit]
+            export_dict["trace" + n] = episode.trace * CURRENT_UNIT_FACTORS[trace_unit]
             if save_piezo:
-                export_dict["piezo " + n] = (
+                export_dict["piezo" + n] = (
                     episode.piezo * VOLTAGE_UNIT_FACTORS[piezo_unit]
                 )
             if save_command:
-                export_dict["command " + n] = (
+                export_dict["command" + n] = (
                     episode.command * VOLTAGE_UNIT_FACTORS[command_unit]
                 )
         io.savemat(filepath, export_dict)
