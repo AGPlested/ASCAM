@@ -108,9 +108,26 @@ def test_compare_BIC_too_many_states(true_CPs, data):
     too_many_states_fit[0:true_CPs[0]+1] = 0.99
     too_many_states_fit1 = copy(data_fit)
     too_many_states_fit1[true_CPs[0]+1:true_CPs[1]+1] = 0.01
+    too_many_states_fit2 = copy(data_fit)
+    too_many_states_fit2[0:true_CPs[0]+1] = 0.9
+    too_many_states_fit2[true_CPs[0]+1:true_CPs[1]+1] = 0.1
     ind0 = compare_IC(data, np.vstack([data_fit, too_many_states_fit,
-                                      too_many_states_fit1]).T, IC="BIC")
+                                      too_many_states_fit1,
+                                       too_many_states_fit2]).T, IC="BIC")
     ind1 = compare_IC(data, np.vstack([too_many_states_fit, data_fit,
-                                       too_many_states_fit1]).T, IC="BIC")
+                                       too_many_states_fit1,
+                                       too_many_states_fit2]).T, IC="BIC")
+    ind2 = compare_IC(data, np.vstack([too_many_states_fit,
+                                       too_many_states_fit1,
+                                       data_fit,
+                                       too_many_states_fit2,
+                                       ]).T, IC="BIC")
+    ind3 = compare_IC(data, np.vstack([too_many_states_fit,
+                                       too_many_states_fit1,
+                                       too_many_states_fit2,
+                                       data_fit,
+                                       ]).T, IC="BIC")
     assert ind0==0
     assert ind1==1
+    assert ind2==2
+    assert ind3==3
