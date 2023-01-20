@@ -1,0 +1,12 @@
+## 0.1 - 0.2
+* Bump required python version from 3.7 to 3.10.
+* Restrict compatible versions of dependencies:
+  * pyqtgraph>=0.11.0,<=0.12.4
+  * PySide2==5.15.*
+  * numpy==1.24.*
+  * pandas==1.5.*
+  * scipy==1.10.*
+  * axographio==0.3.2
+  * pyobjc-framework-Cocoa==6.2.2;sys_platform=='Darwin'
+* Replaced calls to `np.int` and `np.float` with the built-in equivalent
+  `int` and `float`.
