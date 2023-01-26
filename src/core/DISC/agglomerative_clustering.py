@@ -72,6 +72,20 @@ def merge_by_ward_distance(data_fit):
         all_data_fits[:,fit_index] = new_data_fit
     return all_data_fits
 
+def merge_states(data_fit, state_1, state_2):
+    new_center = np.mean(
+            np.concatenate([data_fit[data_fit==state_1],
+                            data_fit[data_fit==state_2]])
+                         )
+    new_data_fit = copy(data_fit)
+    # find indices of clusters to be merged
+    new_c_ind = np.concatenate([np.where(data_fit==state_1),
+                                np.where(data_fit==state_2)],
+                               axis=1
+                               ).flatten()
+    new_data_fit[new_c_ind] = new_center
+    return new_data_fit
+
 def agglomorative_clustering_fit(data, data_fit, IC="BIC"):
     """
     Determine whether the idealization in `data_fit` can be improved by
