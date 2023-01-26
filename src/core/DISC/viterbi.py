@@ -4,11 +4,10 @@
 # matlab implementation at commit af19eae on https://github.com/ChandaLab/DISC/
 
 from copy import copy
+
 import numpy as np
 
-# Assuming the states are 1-dimensional. This will be true in practice.
-def normal_pdf(x, mu=0, sigma=1):
-    return np.exp(-0.5 * ((x-mu)/sigma)**2) / (np.sqrt(2*np.pi) * sigma)
+from .utils import normal_pdf
 
 def compute_emission_matrix(observations, components):
     """
