@@ -6,7 +6,7 @@
 import numpy as np
 from scipy.stats import norm
 
-def BIC(data, data_fit):
+def BIC_full(data, data_fit):
     """
     Computes the Bayesion Information Criterion (BIC) of the model that
     produced the fit in `data_fit`.
@@ -36,13 +36,41 @@ def BIC(data, data_fit):
             for (j,m) in enumerate(means):
                 L += pis[j]*norm.pdf(x,m,stds[j])
             BIC -= 2*np.log(L)
-        # This part of the BIC computation differs from the implementation
-        # used by the authors of DISC, the matlab code translated to
-        # python would be:
-        # BIC += N*np.log( np.sum((data-data_fit)**2/N) )
     else:
         BIC = -1*np.infty
     return BIC
+
+def BIC_approx(data, data_fit):
+    """
+    Computes the Bayesion Information Criterion (BIC) of the model that
+    produced the fit in `data_fit`.
+    This implementation differs from the one I would derive from the formula
+    given in the paper, it is however how it is implemented in the matlab code
+    by the DISC authors.
+    Input:
+        data - N×1 array containing the original observations
+        data_fit - N×1 array containing the an idealization fit of the data
+    Output:
+        float - value of the Bayesion Information Criterion for the model
+                that produced data_fit
+          OR negative infinity if `data` and `data_fit` are identical
+    """
+    if np.any(data!=data_fit):
+        n_states = len(set(data_fit))
+        N = len(data)
+        n_cps = len(np.where(np.diff(data_fit)!=0)[0])
+        BIC = (n_cps+n_states)*np.log(N)
+        BIC += N*np.log( np.sum((data-data_fit)**2/N) )
+    else:
+        BIC = -1*np.infty
+    return BIC
+
+
+def BIC(data, data_fit, implemention="approx"):
+    if implemention=="approx":
+        return BIC_approx(data, data_fit)
+    elif implemention=="full":
+        return BIC_full(data, data_fit)
 
 def compare_IC(data, fits, IC="BIC"):
     """
