@@ -4,13 +4,12 @@
 # matlab implementation at commit af19eae on https://github.com/ChandaLab/DISC/
 
 import numpy as np
-from scipy.stats import norm
 
 from .divisive_segmentation import divisive_segmentation
 from .agglomerative_clustering import (merge_by_ward_distance,
                                        agglomorative_clustering_fit)
 from .infomation_criteria import compare_IC
-from .viterbi import (viterbi_path,
+from .viterbi import (viterbi_path, viterbi_path_from_data,
                       compute_emission_matrix,
                       empirical_transition_matrix)
 
@@ -30,7 +29,7 @@ def run_DISC(data, confidence_level=0.05, min_seg_length=3,
     """
 
     # 1) Start with divisive segmentation.
-    data_fit, n_states = divisive_segmentation(
+    data_fit, _ = divisive_segmentation(
                                         data,
                                         confidence_level=confidence_level,
                                         min_seg_length=min_seg_length,
@@ -55,14 +54,4 @@ def run_DISC(data, confidence_level=0.05, min_seg_length=3,
     # Use empirical distribution of states as initial distribution for the
     # Viterbi algorithm. Compute best fit normal distribution for
     # emission matrix approximation.
-    states = np.unique(data_fit)
-    n_states = len(states)
-    components = np.zeros((3, n_states))
-    for (i,s) in enumerate(states):
-        state_indices = data_fit==s
-        components[0, i] = np.sum(state_indices)
-        components[1, i], components[2,i] = norm.fit(data[state_indices])
-    components[0, :] /= len(data)
-    EM = compute_emission_matrix(data, components)
-    TM = empirical_transition_matrix(data_fit)
-    return viterbi_path(components[0,:], TM, EM, state_vals=states)
+    return viterbi_path_from_data(data, data_fit)

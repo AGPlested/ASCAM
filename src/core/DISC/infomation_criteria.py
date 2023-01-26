@@ -67,7 +67,6 @@ def BIC_approx(data, data_fit):
         BIC = -1*np.infty
     return BIC
 
-
 def BIC(data, data_fit, implemention="approx"):
     if implemention=="approx":
         return BIC_approx(data, data_fit)

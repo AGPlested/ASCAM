@@ -6,6 +6,7 @@
 from copy import copy
 
 import numpy as np
+from scipy.stats import norm
 
 from .utils import normal_pdf
 
@@ -94,3 +95,23 @@ def viterbi_path(initial_dist, transition_matrix,
         for (i, s) in enumerate(state_vals):
             path[path==i] = s
     return path
+
+def viterbi_path_from_data(data, data_fit):
+    """
+    Run Viterbi algorithm to find best fit to the given number of
+    states and their amplitudes.
+    Use empirical distribution of states as initial distribution for the
+    Viterbi algorithm. Compute best fit normal distribution for
+    emission matrix approximation.
+    """
+    states = np.unique(data_fit)
+    n_states = len(states)
+    components = np.zeros((3, n_states))
+    for (i,s) in enumerate(states):
+        state_indices = data_fit==s
+        components[0, i] = np.sum(state_indices)
+        components[1, i], components[2,i] = norm.fit(data[state_indices])
+    components[0, :] /= len(data)
+    EM = compute_emission_matrix(data, components)
+    TM = empirical_transition_matrix(data_fit)
+    return viterbi_path(components[0,:], TM, EM, state_vals=states)
