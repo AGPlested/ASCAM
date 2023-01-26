@@ -6,6 +6,8 @@
 import numpy as np
 from scipy.stats import norm
 
+from .utils import normal_pdf
+
 def BIC_full(data, data_fit):
     """
     Computes the Bayesion Information Criterion (BIC) of the model that
@@ -34,7 +36,7 @@ def BIC_full(data, data_fit):
         for x in data:
             L = 0
             for (j,m) in enumerate(means):
-                L += pis[j]*norm.pdf(x,m,stds[j])
+                L += pis[j]*normal_pdf(x, mu=m, sigma=stds[j])
             BIC -= 2*np.log(L)
     else:
         BIC = -1*np.infty
