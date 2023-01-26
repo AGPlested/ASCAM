@@ -11,7 +11,8 @@ from src.core.DISC import (
         t_test_changepoint_detection, run_DISC,
         BIC, agglomorative_clustering_fit,
         )
-from src.core.DISC.agglomerative_clustering import ( Ward_distances )
+from src.core.DISC.agglomerative_clustering import (Ward_distances,
+                                                    merge_states)
 from src.core.DISC.divisive_segmentation import (kmeans_assign,
                                                  detect_changepoints)
 
@@ -104,25 +105,25 @@ def test_compare_BIC_classification_error(true_CPs, data):
 def test_compare_BIC_too_many_states(true_CPs, data):
     data_fit, _ = detect_changepoints(data, crit_val, noise_sigma)
     data += 0.01*np.random.randn(np.size(data_fit))  # This is needed to be able to fit a standard deviation when compution the BIC
-    too_many_states_fit = copy(data_fit)
-    too_many_states_fit[0:true_CPs[0]+1] = 0.99
+    over_fit = copy(data_fit)
+    over_fit[0:true_CPs[0]+1] = 0.99
     too_many_states_fit1 = copy(data_fit)
     too_many_states_fit1[true_CPs[0]+1:true_CPs[1]+1] = 0.01
     too_many_states_fit2 = copy(data_fit)
     too_many_states_fit2[0:true_CPs[0]+1] = 0.9
     too_many_states_fit2[true_CPs[0]+1:true_CPs[1]+1] = 0.1
-    ind0 = compare_IC(data, np.vstack([data_fit, too_many_states_fit,
-                                      too_many_states_fit1,
-                                       too_many_states_fit2]).T, IC="BIC")
-    ind1 = compare_IC(data, np.vstack([too_many_states_fit, data_fit,
+    ind0 = compare_IC(data, np.vstack([data_fit, over_fit,
                                        too_many_states_fit1,
                                        too_many_states_fit2]).T, IC="BIC")
-    ind2 = compare_IC(data, np.vstack([too_many_states_fit,
+    ind1 = compare_IC(data, np.vstack([over_fit, data_fit,
+                                       too_many_states_fit1,
+                                       too_many_states_fit2]).T, IC="BIC")
+    ind2 = compare_IC(data, np.vstack([over_fit,
                                        too_many_states_fit1,
                                        data_fit,
                                        too_many_states_fit2,
                                        ]).T, IC="BIC")
-    ind3 = compare_IC(data, np.vstack([too_many_states_fit,
+    ind3 = compare_IC(data, np.vstack([over_fit,
                                        too_many_states_fit1,
                                        too_many_states_fit2,
                                        data_fit,
@@ -131,3 +132,37 @@ def test_compare_BIC_too_many_states(true_CPs, data):
     assert ind1==1
     assert ind2==2
     assert ind3==3
+
+@pytest.mark.parametrize("true_CPs, data", get_test_data(multiple_CPs))
+def test_merge_states(true_CPs, data):
+    merged = merge_states(data, 0, 1)
+    assert np.all(merged == np.mean(data))
+
+@pytest.mark.parametrize("true_CPs, data", get_test_data(multiple_CPs))
+def test_merge_by_ward_distance(true_CPs, data):
+    data_fit, _ = detect_changepoints(data, crit_val, noise_sigma)
+    data += 0.01*np.random.randn(np.size(data_fit))  # This is needed to be able to fit a standard deviation when compution the BIC
+    over_fit = copy(data_fit)
+    over_fit[0:true_CPs[0]+1] = 0.9
+    over_fit[true_CPs[0]+1:true_CPs[1]+1] = 0.1
+    all_fits = merge_by_ward_distance(over_fit)
+    ind = compare_IC(data, all_fits, IC="BIC")
+    assert ind==1
+    assert np.shape(all_fits)[1] == len(np.unique(over_fit))
+
+@pytest.mark.parametrize("true_CPs, data", get_test_data(multiple_CPs))
+def test_agglomorative_clustering(true_CPs, data):
+    data_fit, _ = detect_changepoints(data, crit_val, noise_sigma)
+    data += 0.01*np.random.randn(np.size(data_fit))  # This is needed to be able to fit a standard deviation when compution the BIC
+    over_fit = copy(data_fit)
+    over_fit[0:true_CPs[0]+1] = 0.99
+    over_fit[true_CPs[0]+1:true_CPs[1]+1] = 0.01
+    ag_fit = agglomorative_clustering_fit(data, over_fit, IC="BIC")
+    correct_output = merge_states(over_fit, 0.99, 1)
+    correct_output = merge_states(correct_output, 0.01, 0)
+    # Check that it finds the correct number of states.
+    assert np.all(len(np.unique(ag_fit))==len(np.unique(data_fit)))
+    # We need to round the output because otherwise
+    # assert 0.004423076923076924 == 0.004423076923076923 (!)
+    # might occur.
+    assert np.all(np.around(ag_fit, decimals=10)==np.around(correct_output, decimals=10))
