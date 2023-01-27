@@ -9,7 +9,8 @@ from src.core.DISC import (
         compare_IC, compute_emission_matrix,
         empirical_transition_matrix, viterbi_path,
         t_test_changepoint_detection, run_DISC,
-        BIC, agglomorative_clustering_fit, normal_pdf
+        BIC, agglomorative_clustering_fit, normal_pdf,
+        sample_chain
         )
 from src.core.DISC.agglomerative_clustering import (Ward_distances,
                                                     merge_states)
@@ -169,3 +170,15 @@ params_normal_pdf_test = [(0,1), (-5,10), (-10,1), (0.001, 10), (0, 0.0001)]
 def test_normal_pdf(mean, std):
     x = np.arange(-2*std, 2*std, std/10)
     assert np.allclose(normal_pdf(x, mu=1, sigma=1), sp.stats.norm.pdf(x, 1, 1))
+
+test_transition_matrices = [np.array([[0.1, 0.9], [0.4, 0.6]]),
+                            np.array([[0.5, 0.5], [0.8, 0.2]]),
+                            np.array([[0.5, 0.5], [0.5, 0.5]]),
+                            ]
+@pytest.mark.parametrize("TM", test_transition_matrices)
+def test_empirical_transition_matrix(TM):
+    # Test whether the empirical transition matrix of the chain
+    # is within 10% of the true transition matrix.
+    chain = sample_chain(TM, 0, n=10000)
+    assert np.allclose(empirical_transition_matrix(chain), TM,
+                       rtol=0.1)
