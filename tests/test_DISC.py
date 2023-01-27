@@ -59,26 +59,26 @@ def test_t_test_changepoint_detection_no_noise(true_CP, data):
 @pytest.mark.parametrize("true_CP, data", get_test_data(CPs))
 def test_detect_changepoints_no_noise_1CP(true_CP, data):
     out, cps = detect_changepoints(data, crit_val, noise_sigma)
-    assert np.all(out==data)
+    assert np.allclose(out, data)
     assert np.all(cps==true_CP)
 
 # Test detect_changepoints function.
 @pytest.mark.parametrize("true_CP, data", get_test_data(too_short_CPs))
 def test_detect_changepoints_no_noise_1CP_too_short(true_CP, data):
     out, cps = detect_changepoints(data, crit_val, noise_sigma)
-    assert np.all(out==np.mean(data)*np.ones(n_samples))
+    assert np.allclose(out, np.mean(data))
     assert cps.size == 0  # I.e. no changepoints found.
 
 @pytest.mark.parametrize("true_CPs, data", get_test_data(multiple_CPs))
 def test_detect_changepoints_no_noise_multiple_CPs(true_CPs, data):
     out, cps = detect_changepoints(data, crit_val, noise_sigma)
     assert np.all(cps==true_CPs)
-    assert np.all(out==data)
+    assert np.allclose(out, data)
 
 @pytest.mark.parametrize("true_CPs, data", get_test_data(multiple_CPs_too_short))
 def test_detect_changepoints_no_noise_multiple_CPs_too_short(true_CPs, data):
     out, cps = detect_changepoints(data, crit_val, noise_sigma)
-    assert np.all(out==np.mean(data)*np.ones(n_samples))
+    assert np.allclose(out, np.mean(data))
     assert cps.size == 0  # I.e. no changepoints found.
 
 @pytest.mark.parametrize("true_CPs, data", get_test_data(multiple_CPs))
@@ -86,8 +86,8 @@ def test_kmeans_assign(true_CPs, data):
     centers = [0,1]
     true_counts = [np.sum(data==0), np.sum(data==1)]
     c, out, counts = kmeans_assign(data, centers)
-    assert np.all(c==centers)
-    assert np.all(out==data)
+    assert np.allclose(c, centers)
+    assert np.allclose(out, data)
     assert np.all(counts==true_counts)
 
 @pytest.mark.parametrize("true_CPs, data", get_test_data(multiple_CPs))
@@ -136,7 +136,7 @@ def test_compare_BIC_too_many_states(true_CPs, data):
 @pytest.mark.parametrize("true_CPs, data", get_test_data(multiple_CPs))
 def test_merge_states(true_CPs, data):
     merged = merge_states(data, 0, 1)
-    assert np.all(merged == np.mean(data))
+    assert np.allclose(merged, np.mean(data))
 
 @pytest.mark.parametrize("true_CPs, data", get_test_data(multiple_CPs))
 def test_merge_by_ward_distance(true_CPs, data):
@@ -162,7 +162,4 @@ def test_agglomorative_clustering(true_CPs, data):
     correct_output = merge_states(correct_output, 0.01, 0)
     # Check that it finds the correct number of states.
     assert np.all(len(np.unique(ag_fit))==len(np.unique(data_fit)))
-    # We need to round the output because otherwise
-    # assert 0.004423076923076924 == 0.004423076923076923 (!)
-    # might occur.
-    assert np.all(np.around(ag_fit, decimals=10)==np.around(correct_output, decimals=10))
+    assert np.allclose(correct_output, ag_fit)
