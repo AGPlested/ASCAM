@@ -9,7 +9,7 @@ from src.core.DISC import (
         compare_IC, compute_emission_matrix,
         empirical_transition_matrix, viterbi_path,
         t_test_changepoint_detection, run_DISC,
-        BIC, agglomorative_clustering_fit,
+        BIC, agglomorative_clustering_fit, normal_pdf
         )
 from src.core.DISC.agglomerative_clustering import (Ward_distances,
                                                     merge_states)
@@ -163,3 +163,9 @@ def test_agglomorative_clustering(true_CPs, data):
     # Check that it finds the correct number of states.
     assert np.all(len(np.unique(ag_fit))==len(np.unique(data_fit)))
     assert np.allclose(correct_output, ag_fit)
+
+params_normal_pdf_test = [(0,1), (-5,10), (-10,1), (0.001, 10), (0, 0.0001)]
+@pytest.mark.parametrize("mean, std", params_normal_pdf_test)
+def test_normal_pdf(mean, std):
+    x = np.arange(-2*std, 2*std, std/10)
+    assert np.allclose(normal_pdf(x, mu=1, sigma=1), sp.stats.norm.pdf(x, 1, 1))
