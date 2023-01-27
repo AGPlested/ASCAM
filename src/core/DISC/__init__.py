@@ -14,4 +14,4 @@ from .viterbi import (
         viterbi_path
         )
 from .DISC import run_DISC
-from .utils import normal_pdf
+from .utils import (normal_pdf, sample_chain)
