@@ -62,6 +62,19 @@ def merge_by_ward_distance(data_fit):
     return all_data_fits
 
 def merge_states(data_fit, state_1, state_2):
+    """
+    Merge two states in an idealization by assigning to each point belonging
+    to either of the two original states the weighted mean of the amplitudes
+    of the two states.
+    Input:
+        data_fit - N×1 array containing an idealization
+        state_1 - float describing the amplitude of the first state
+        state_2 - float describing the amplitude of the second state
+    Output:
+        N×1 array containing an idealization in which the points with values
+        `state_1` and `state_2` have been assigned the weighted mean of these
+        values.
+    """
     new_center = np.mean(
             np.concatenate([data_fit[data_fit==state_1],
                             data_fit[data_fit==state_2]])
