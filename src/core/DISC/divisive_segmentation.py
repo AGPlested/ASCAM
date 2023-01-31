@@ -115,7 +115,7 @@ def divisive_segmentation(data, confidence_level = 0.001,
                           min_seg_length = 3,
                           min_cluster_size = 3,
                           information_criterion = "BIC",
-                          BIC_method="full"):
+                          BIC_method="approx"):
     # The most common error in divSegment is that the first split (1
     # cluster to 2 clusters) is not accepted. Therefore we force the
     # split on that iteration to give the algorithm another try. If new
