@@ -33,7 +33,7 @@ def t_test_changepoint_detection(data, noise_std):
         # thus n+1.
         mu_1 = cum_sum[n] / (n+1)
         mu_2 = (total_sum - cum_sum[n]) / (N-n-1)
-        t = abs((mu_2 - mu_1)) / noise_std / np.sqrt(1/n+1/(N-n-1))
+        t = abs((mu_2 - mu_1)) / noise_std / np.sqrt(1/(n+1)+1/(N-n-1))
         if t > T:
             T = t      # best T value so far
             CP = n     # Location of best T value
