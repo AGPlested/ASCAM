@@ -67,13 +67,13 @@ def BIC_approx(data, data_fit):
         BIC = -1*np.infty
     return BIC
 
-def BIC(data, data_fit, implemention="approx"):
-    if implemention=="approx":
+def BIC(data, data_fit, BIC_method="full"):
+    if BIC_method=="approx":
         return BIC_approx(data, data_fit)
-    elif implemention=="full":
+    elif BIC_method=="full":
         return BIC_full(data, data_fit)
 
-def compare_IC(data, fits, IC="BIC"):
+def compare_IC(data, fits, IC="BIC", BIC_method="full"):
     """
     Determine whether `fit_1` or `fit_2` is a better fit for the data
     contained in `data` based on an Information Criterion (IC).
@@ -91,7 +91,7 @@ def compare_IC(data, fits, IC="BIC"):
     IC_vals = np.zeros(np.shape(fits)[1])
     if IC == "BIC":
         for (i,f) in enumerate(fits.T):
-            IC_vals[i] = BIC(data, f)
+            IC_vals[i] = BIC(data, f, BIC_method=BIC_method)
     else:
         raise Exception(f"Unknown information criterion: {IC}")
     return np.argmin(IC_vals)

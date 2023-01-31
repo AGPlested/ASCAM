@@ -88,7 +88,8 @@ def merge_states(data_fit, state_1, state_2):
     new_data_fit[new_c_ind] = new_center
     return new_data_fit
 
-def agglomorative_clustering_fit(data, data_fit, IC="BIC"):
+def agglomorative_clustering_fit(data, data_fit, IC="BIC",
+                                 BIC_method="full"):
     """
     Determine whether the idealization in `data_fit` can be improved by
     recursively merging states that are closest in Ward distance and
@@ -103,5 +104,5 @@ def agglomorative_clustering_fit(data, data_fit, IC="BIC"):
         N×1 array containing the best fit as measured by `IC`
     """
     all_data_fits = merge_by_ward_distance(data_fit)
-    best_fit_ind = compare_IC(data, all_data_fits, IC=IC)
+    best_fit_ind = compare_IC(data, all_data_fits, IC=IC, BIC_method=BIC_method)
     return all_data_fits[:, best_fit_ind]

@@ -114,7 +114,8 @@ def kmeans_assign(data, center_guesses, *args, **kwargs):
 def divisive_segmentation(data, confidence_level = 0.001,
                           min_seg_length = 3,
                           min_cluster_size = 3,
-                          information_criterion = "BIC"):
+                          information_criterion = "BIC",
+                          BIC_method="full"):
     # The most common error in divSegment is that the first split (1
     # cluster to 2 clusters) is not accepted. Therefore we force the
     # split on that iteration to give the algorithm another try. If new
@@ -164,7 +165,8 @@ def divisive_segmentation(data, confidence_level = 0.001,
                 best_fit = compare_IC(data[k_index],
                                       np.array([data_fit[k_index],
                                                   split_data_fit]).T,
-                                      information_criterion)
+                                      information_criterion,
+                                      BIC_method=BIC_method)
                 # Does the fit improve by splitting?
                 if best_fit == 1:
                     # Accept new clusters

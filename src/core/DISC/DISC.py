@@ -14,7 +14,8 @@ from .viterbi import (viterbi_path, viterbi_path_from_data,
                       empirical_transition_matrix)
 
 def run_DISC(data, confidence_level=0.05, min_seg_length=3,
-             min_cluster_size=3, IC_div_seg="BIC", IC_HAC="BIC"):
+             min_cluster_size=3, IC_div_seg="BIC", IC_HAC="BIC",
+             BIC_method="full"):
     """
     Input:
         data - observations to be idealized
@@ -34,7 +35,8 @@ def run_DISC(data, confidence_level=0.05, min_seg_length=3,
                                         confidence_level=confidence_level,
                                         min_seg_length=min_seg_length,
                                         min_cluster_size=min_cluster_size,
-                                        information_criterion=IC_div_seg
+                                        information_criterion=IC_div_seg,
+                                        BIC_method=BIC_method
                                         )
 
     # 2) Perform Hierarchical Agglomerative Clustering (HAC) by
@@ -43,7 +45,8 @@ def run_DISC(data, confidence_level=0.05, min_seg_length=3,
     # as measured by the given Information Criterion (IC)
     data_fit = agglomorative_clustering_fit(data, data_fit, IC=IC_HAC)
     all_data_fits = merge_by_ward_distance(data_fit)
-    best_fit_ind = compare_IC(data, all_data_fits, IC=IC_HAC)
+    best_fit_ind = compare_IC(data, all_data_fits, IC=IC_HAC,
+                              BIC_method=BIC_method)
     data_fit = all_data_fits[:, best_fit_ind]
     # At this point we could in the future include logic to return a
     # specific number of states (≤nuber of states found by divisive
