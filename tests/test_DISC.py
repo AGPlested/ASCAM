@@ -99,7 +99,7 @@ def test_compare_BIC_classification_error(true_CPs, data):
     data_fit_bad1[5] = (data_fit_bad1[5]+1)%2
     data_fit_bad2 = copy(data_fit)
     data_fit_bad2[10] = (data_fit_bad2[10]+1)%2
-    ind = compare_IC(data, np.vstack([data_fit, data_fit_bad1, data_fit_bad2]).T, IC="BIC")
+    ind = compare_IC(data, np.vstack([data_fit, data_fit_bad1, data_fit_bad2]).T, IC="BIC", BIC_method="approx")
     assert ind==0
 
 @pytest.mark.parametrize("true_CPs, data", get_test_data(multiple_CPs))
@@ -115,20 +115,20 @@ def test_compare_BIC_too_many_states(true_CPs, data):
     too_many_states_fit2[true_CPs[0]+1:true_CPs[1]+1] = 0.1
     ind0 = compare_IC(data, np.vstack([data_fit, over_fit,
                                        too_many_states_fit1,
-                                       too_many_states_fit2]).T, IC="BIC")
+                                       too_many_states_fit2]).T, IC="BIC", BIC_method="approx")
     ind1 = compare_IC(data, np.vstack([over_fit, data_fit,
                                        too_many_states_fit1,
-                                       too_many_states_fit2]).T, IC="BIC")
+                                       too_many_states_fit2]).T, IC="BIC", BIC_method="approx")
     ind2 = compare_IC(data, np.vstack([over_fit,
                                        too_many_states_fit1,
                                        data_fit,
                                        too_many_states_fit2,
-                                       ]).T, IC="BIC")
+                                       ]).T, IC="BIC", BIC_method="approx")
     ind3 = compare_IC(data, np.vstack([over_fit,
                                        too_many_states_fit1,
                                        too_many_states_fit2,
                                        data_fit,
-                                       ]).T, IC="BIC")
+                                       ]).T, IC="BIC", BIC_method="approx")
     assert ind0==0
     assert ind1==1
     assert ind2==2
@@ -147,7 +147,7 @@ def test_merge_by_ward_distance(true_CPs, data):
     over_fit[0:true_CPs[0]+1] = 0.9
     over_fit[true_CPs[0]+1:true_CPs[1]+1] = 0.1
     all_fits = merge_by_ward_distance(over_fit)
-    ind = compare_IC(data, all_fits, IC="BIC")
+    ind = compare_IC(data, all_fits, IC="BIC", BIC_method="approx")
     assert ind==1
     assert np.shape(all_fits)[1] == len(np.unique(over_fit))
 
