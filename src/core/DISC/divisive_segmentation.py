@@ -39,29 +39,34 @@ def t_test_changepoint_detection(data, noise_std):
             CP = n     # Location of best T value
     return T, CP
 
-def detect_changepoints(data, critical_value, noise_std, min_seg_length=3):
+def detect_changepoints(data, confidence_level=0.01, min_seg_length=3):
     # Set a generous recursion limit to avoid hitting it when working with
     # very long traces with lots of changepoints.
     sys.setrecursionlimit(max(1000, round(len(data)/min_seg_length)))
-    id_bisect = idealize_bisect(data, critical_value, noise_std,
-                           min_seg_length)
+    id_bisect = idealize_bisect(data, min_seg_length=min_seg_length,
+                                confidence_level=confidence_level)
     cps = np.where(np.diff(id_bisect)!=0)[0]
     return id_bisect, cps
 
-def idealize_bisect(data, critical_value, noise_std, min_seg_length=3):
+def idealize_bisect(data, confidence_level=0.01, min_seg_length=3):
+    N = len(data)
+    # Estimate standard deviation of noise in data.
+    # Based on the DISC code, they reference:
+    # Shuang et al., J. Phys Chem Letters, 2014, DOI: 10.1021/jz501435p.
+    sorted_wavelet = np.sort(abs(np.diff(data) / 1.4))
+    noise_std = sorted_wavelet[round(0.682 * (N-1))]
     # Find bisecting changepoint using t-test.
     t, cp = t_test_changepoint_detection(data, noise_std)
+    critical_value = sp.stats.t.ppf(q=1-confidence_level/2, df=N-1)
     # If t-statistic is significant bisect data at changepoint and
     # recursively look for changepoints in the resulting segments.
     if (cp is not None and t >= critical_value
-        and cp+1 >= min_seg_length and len(data)-cp-1 >= min_seg_length):
+        and cp+1 >= min_seg_length and N-cp-1 >= min_seg_length):
         # cp is the index of the last element of `data` belonging to the
         # segment. Since python indexing uses right-open intervals we need
         # to use cp+1 to capture the entire segment.
-        first_segment = idealize_bisect(data[:cp+1], critical_value,
-                                           noise_std)
-        second_segment = idealize_bisect(data[cp+1:], critical_value,
-                                           noise_std)
+        first_segment = idealize_bisect(data[:cp+1], confidence_level)
+        second_segment = idealize_bisect(data[cp+1:], confidence_level)
         out = np.concatenate((first_segment, second_segment))
     else:  # If t is not significant return data idealized to mean value.
         out = np.mean(data) * np.ones(len(data))
@@ -79,16 +84,8 @@ def changepoint_detection(data, confidence_level, min_seg_length=3):
             cps = 1×C array containing the indices of the changepoints,
                   where C is the number of changepoints
     """
-    N = len(data)
-    crit_val = sp.stats.t.ppf(q=1-confidence_level/2, df=N-1)
-    # Estimate standard deviation of noise in data.
-    # Based on the DISC code, they reference:
-    # Shuang et al., J. Phys Chem Letters, 2014, DOI: 10.1021/jz501435p.
-    sorted_wavelet = np.sort(abs(np.diff(data) / 1.4))
-    noise_std = sorted_wavelet[round(0.682 * (N-1))]
-    id_bisect, cps = detect_changepoints(data, critical_value=crit_val,
-                                        noise_std=noise_std,
-                                        min_seg_length=min_seg_length)
+    id_bisect, cps = detect_changepoints(data, min_seg_length=min_seg_length,
+                                         confidence_level=confidence_level)
     return id_bisect, cps
 
 def kmeans_assign(data, center_guesses, *args, **kwargs):
