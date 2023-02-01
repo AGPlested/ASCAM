@@ -158,13 +158,10 @@ def divisive_segmentation(data, confidence_level = 0.001,
                     center_guesses)
             # Were two clusters returned and both are larger than
             # min_cluster_size?
-            if (
-                len(split_centers) == 2
-                and np.all(counts >= min_cluster_size)
-               ):
+            if len(split_centers)==2 and np.all(counts>=min_cluster_size):
                 best_fit = compare_IC(data[k_index],
                                       np.array([data_fit[k_index],
-                                                  split_data_fit]).T,
+                                                split_data_fit]).T,
                                       information_criterion,
                                       BIC_method=BIC_method)
                 # Does the fit improve by splitting?
