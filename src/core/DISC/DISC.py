@@ -44,10 +44,6 @@ def run_DISC(data, confidence_level=0.05, min_seg_length=3,
     # between them. Then select the fit with the optimal number of clusters
     # as measured by the given Information Criterion (IC)
     data_fit = agglomorative_clustering_fit(data, data_fit, IC=IC_HAC)
-    all_data_fits = merge_by_ward_distance(data_fit)
-    best_fit_ind = compare_IC(data, all_data_fits, IC=IC_HAC,
-                              BIC_method=BIC_method)
-    data_fit = all_data_fits[:, best_fit_ind]
     # At this point we could in the future include logic to return a
     # specific number of states (≤nuber of states found by divisive
     # segmentation, or multiple fits.
