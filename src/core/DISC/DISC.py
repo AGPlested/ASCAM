@@ -1,4 +1,4 @@
-# All credit for the DISC algortihm belongs to the authors of
+# All credit for the DISC algorithm belongs to the authors of
 # White, D.S., Goldschen-Ohm, M.P., Goldsmith, R.H., Chanda, B. Top-down machine learning approach for high-throughput single-molecule analysis. Elife 2020, 9
 # The code in this module is based on their paper and partly on their
 # matlab implementation at commit af19eae on https://github.com/ChandaLab/DISC/
@@ -19,14 +19,14 @@ def run_DISC(data, confidence_level=0.05, min_seg_length=3,
     """
     Input:
         data - observations to be idealized
-        confidence_level - alpha value for t-test in changepoint detection
-        min_seg_length - minimum segment length in changepoint detection
+        confidence_level - alpha value for t-test in change point detection
+        min_seg_length - minimum segment length in change point detection
         min_cluster_size - minimum cluster size for k-mean clustering
         IC_div_seg - information criterion for divisive segmentation
-        IC_HAC - information criterion for agglomorative clustering
+        IC_HAC - information criterion for agglomerative clustering
     Returns:
         an idealization of the data to the most likely sequence as found
-        by the DISC algortihm
+        by the DISC algorithm
     """
 
     # 1) Start with divisive segmentation.
@@ -45,7 +45,7 @@ def run_DISC(data, confidence_level=0.05, min_seg_length=3,
     # as measured by the given Information Criterion (IC)
     data_fit = agglomorative_clustering_fit(data, data_fit, IC=IC_HAC)
     # At this point we could in the future include logic to return a
-    # specific number of states (≤nuber of states found by divisive
+    # specific number of states (≤number of states found by divisive
     # segmentation, or multiple fits.
 
     # 3) Run Viterbi algorithm to find best fit to the given number of

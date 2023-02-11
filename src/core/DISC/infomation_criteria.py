@@ -1,4 +1,4 @@
-# All credit for the DISC algortihm belongs to the authors of
+# All credit for the DISC algorithm belongs to the authors of
 # White, D.S., Goldschen-Ohm, M.P., Goldsmith, R.H., Chanda, B. Top-down machine learning approach for high-throughput single-molecule analysis. Elife 2020, 9
 # The code in this module is based on their paper and partly on their
 # matlab implementation at commit af19eae on https://github.com/ChandaLab/DISC/
@@ -10,13 +10,13 @@ from .utils import normal_pdf
 
 def BIC_full(data, data_fit):
     """
-    Computes the Bayesion Information Criterion (BIC) of the model that
+    Computes the Bayesian Information Criterion (BIC) of the model that
     produced the fit in `data_fit`.
     Input:
         data - N×1 array containing the original observations
-        data_fit - N×1 array containing the an idealization fit of the data
+        data_fit - N×1 array containing an idealization fit of the data
     Output:
-        float - value of the Bayesion Information Criterion for the model
+        float - value of the Bayesian Information Criterion for the model
                 that produced data_fit
           OR negative infinity if `data` and `data_fit` are identical
     """
@@ -44,16 +44,16 @@ def BIC_full(data, data_fit):
 
 def BIC_approx(data, data_fit):
     """
-    Computes the Bayesion Information Criterion (BIC) of the model that
+    Computes the Bayesian Information Criterion (BIC) of the model that
     produced the fit in `data_fit`.
     This implementation differs from the one I would derive from the formula
     given in the paper, it is however how it is implemented in the matlab code
     by the DISC authors.
     Input:
         data - N×1 array containing the original observations
-        data_fit - N×1 array containing the an idealization fit of the data
+        data_fit - N×1 array containing an idealization fit of the data
     Output:
-        float - value of the Bayesion Information Criterion for the model
+        float - value of the Bayesian Information Criterion for the model
                 that produced data_fit
           OR negative infinity if `data` and `data_fit` are identical
     """
@@ -77,14 +77,14 @@ def compare_IC(data, fits, IC="BIC", BIC_method="approx"):
     """
     Determine whether `fit_1` or `fit_2` is a better fit for the data
     contained in `data` based on an Information Criterion (IC).
-    -- For the time being the IC used will be the Bayesion Information
+    -- For the time being the IC used will be the Bayesian Information
        Criterion. This primarily a function to allow for easier
        implementation of other ICs in the future.
     Input:
         data - N×1 array containing the original observations
         fits - N×k array containing k fits to the data
         IC - String specifying the IC to be used
-             - "BIC" for Bayesion Information Criterion
+             - "BIC" for Bayesian Information Criterion
     Output:
         integer - index of the fit with the lowest IC value
     """

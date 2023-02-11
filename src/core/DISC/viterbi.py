@@ -1,4 +1,4 @@
-# All credit for the DISC algortihm belongs to the authors of
+# All credit for the DISC algorithm belongs to the authors of
 # White, D.S., Goldschen-Ohm, M.P., Goldsmith, R.H., Chanda, B. Top-down machine learning approach for high-throughput single-molecule analysis. Elife 2020, 9
 # The code in this module is based on their paper and partly on their
 # matlab implementation at commit af19eae on https://github.com/ChandaLab/DISC/
@@ -66,8 +66,8 @@ def viterbi_path(initial_dist, transition_matrix,
     predecessor = np.zeros((K,N), dtype=int)
     # scale = np.zeros(1,N)  # 1 / total probabilities of all states
     # the `scale` matrix can be used to calculate the log likelihood of
-    # the viterbi path
-    # Initalization: Determine the most likely state of data point 0
+    # the Viterbi path
+    # Initialization: Determine the most likely state of data point 0
     state_prob[:,0] = initial_dist * emission_matrix[:,0]
     # scale[0] = 0/sum(state_prob[:,0]);
     # normalize values to sum to 1

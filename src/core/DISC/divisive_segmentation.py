@@ -1,4 +1,4 @@
-# All credit for the DISC algortihm belongs to the authors of
+# All credit for the DISC algorithm belongs to the authors of
 # White, D.S., Goldschen-Ohm, M.P., Goldsmith, R.H., Chanda, B. Top-down machine learning approach for high-throughput single-molecule analysis. Elife 2020, 9
 # The code in this module is based on their paper and partly on their
 # matlab implementation at commit af19eae on https://github.com/ChandaLab/DISC/
@@ -21,7 +21,7 @@ def t_test_changepoint_detection(data, noise_std):
     """
     N = len(data)
     T = 0  # highest value of t-statistic
-    CP = None # index of current changepoint
+    CP = None # index of current change point
     # Speed up T-Test computations by computing all sums only once
     cum_sum = np.cumsum(data)
     total_sum = cum_sum[-1]
@@ -41,7 +41,7 @@ def t_test_changepoint_detection(data, noise_std):
 
 def detect_changepoints(data, critical_value, noise_std, min_seg_length=3):
     # Set a generous recursion limit to avoid hitting it when working with
-    # very long traces with lots of changepoints.
+    # very long traces with lots of change points.
     sys.setrecursionlimit(max(1000, round(len(data)/min_seg_length)))
     id_bisect = idealize_bisect(data, critical_value, noise_std,
                            min_seg_length)
@@ -49,10 +49,10 @@ def detect_changepoints(data, critical_value, noise_std, min_seg_length=3):
     return id_bisect, cps
 
 def idealize_bisect(data, critical_value, noise_std, min_seg_length=3):
-    # Find bisecting changepoint using t-test.
+    # Find bisecting change point using t-test.
     t, cp = t_test_changepoint_detection(data, noise_std)
-    # If t-statistic is significant bisect data at changepoint and
-    # recursively look for changepoints in the resulting segments.
+    # If t-statistic is significant bisect data at change point and
+    # recursively look for change points in the resulting segments.
     if (cp is not None and t >= critical_value
         and cp+1 >= min_seg_length and len(data)-cp-1 >= min_seg_length):
         # cp is the index of the last element of `data` belonging to the
@@ -74,10 +74,10 @@ def changepoint_detection(data, confidence_level, min_seg_length=3):
             confidence_level = float ∈(0,1), confidence value for t-test
         Output:
             id_bisect = 1×N array containing the idealization of the data
-                        achieved by recursive changepoint detection and
+                        achieved by recursive change point detection and
                         setting the discovered segments equal to their mean
-            cps = 1×C array containing the indices of the changepoints,
-                  where C is the number of changepoints
+            cps = 1×C array containing the indices of the change points,
+                  where C is the number of change points
     """
     N = len(data)
     crit_val = sp.stats.t.ppf(q=1-confidence_level/2, df=N-1)
@@ -93,7 +93,7 @@ def changepoint_detection(data, confidence_level, min_seg_length=3):
 
 def kmeans_assign(data, center_guesses, *args, **kwargs):
     """
-    Perform k-means clutering using the scipy kmeans function on the
+    Perform k-means clustering using the scipy kmeans function on the
     input data and return the centers and an array with each index
     assigned to the closest center. Also return an array with the numbers
     of elements assigned to each center.
@@ -119,7 +119,7 @@ def divisive_segmentation(data, confidence_level = 0.001,
     # The most common error in divSegment is that the first split (1
     # cluster to 2 clusters) is not accepted. Therefore we force the
     # split on that iteration to give the algorithm another try. If new
-    # clusters can still not be identifed, the algorithm will terminate
+    # clusters can still not be identified, the algorithm will terminate
     # and return a fit of 1 cluster.
     force_split = True
     N = len(data)  # number of observations
@@ -170,7 +170,7 @@ def divisive_segmentation(data, confidence_level = 0.001,
                     data_fit[k_index] = split_data_fit  # update data_fit
                     centers = np.unique(data_fit)  # update centers
                 # force the first split?
-                elif best_fit == 0 and k == 0 and force_split: # iter 1
+                elif best_fit == 0 and k == 0 and force_split: # on first iteration
                     force_split = False
                     data_fit[k_index] = split_data_fit  # update data_fit
                     centers = np.unique(data_fit)          # update centers
