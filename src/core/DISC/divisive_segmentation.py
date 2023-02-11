@@ -143,7 +143,7 @@ def divisive_segmentation(data, confidence_level = 0.001,
                 )
         # report unique amplitudes (segments) discovered
         segments = np.unique(change_point_data_fit)
-        # was at least one change-point (two-segments) returned?
+        # was at least one change-point (two segments) returned?
         if len(segments) > 1:
             # Make guesses for k-means of what two states might be by
             # taking  the 33 and 66 quantiles of the segment values. This
