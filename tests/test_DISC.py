@@ -4,6 +4,7 @@ import pytest
 import numpy as np
 import scipy as sp
 
+from src import core as ascam
 from src.core.DISC import (
         divisive_segmentation, merge_by_ward_distance,
         compare_IC, compute_emission_matrix,
@@ -34,6 +35,7 @@ multiple_CPs = [(8, 26, 68),
                      ]
 too_short_CPs = [0, 1, 98, 99]
 multiple_CPs_too_short = [(65, 67)]
+example_data_file = "data/GluA2_T1_SC-recording_40kHzSR.mat"
 
 def get_states(true_CP):
     return np.concatenate((np.ones(true_CP+1), np.zeros(n_samples-true_CP-1)))
@@ -182,3 +184,10 @@ def test_empirical_transition_matrix(TM):
     chain = sample_chain(TM, 0, n=10000)
     assert np.allclose(empirical_transition_matrix(chain), TM,
                        rtol=0.1)
+
+def test_on_real_data():
+    rec = ascam.Recording.from_file(example_data_file)
+    rec.baseline_correction()
+    rec.gauss_filter_series(1000)
+    ep = rec["BC_GFILTER1000_"][0]
+    run_DISC(ep.trace)
