@@ -20,5 +20,7 @@ PRECISIONS = {
     "int": 0,
 }
 
+ANALYSIS_FRAME_WIDTH = 250
+
 TEST_FILE_NAME = "181010007_max_bursts_conc.axgx"
 TEST_FILE_NAME = "GluA2_T1_SC-recording_40kHzSR.mat"

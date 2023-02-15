@@ -13,6 +13,7 @@ from PySide2.QtWidgets import (
 from ..gui import ExportFADialog
 from ..utils.widgets import EntryWidget, TableFrame
 from ..constants import CURRENT_UNIT_FACTORS
+from ..constants import CURRENT_UNIT_FACTORS, ANALYSIS_FRAME_WIDTH
 
 debug_logger = logging.getLogger("ascam.debug")
 
@@ -23,7 +24,7 @@ class DISCFrame(QWidget):
         self.main = main
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
-        self.setFixedWidth(250)
+        self.setFixedWidth(ANALYSIS_FRAME_WIDTH)
 
         self.create_widgets()
 

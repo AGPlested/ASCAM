@@ -21,7 +21,7 @@ from PySide2.QtWidgets import (
 
 from .io_widgets import ExportIdealizationDialog
 from ..utils import string_to_array, array_to_string, update_number_in_string
-from ..constants import TIME_UNIT_FACTORS, CURRENT_UNIT_FACTORS
+from ..constants import TIME_UNIT_FACTORS, CURRENT_UNIT_FACTORS, ANALYSIS_FRAME_WIDTH
 from ..core import IdealizationCache
 from ..utils.widgets import TextEdit, HistogramViewBox, EntryWidget, TableFrame
 
@@ -35,7 +35,7 @@ class IdealizationFrame(QWidget):
         self.main = main
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
-        self.setFixedWidth(250)
+        self.setFixedWidth(ANALYSIS_FRAME_WIDTH)
 
         self.main.plot_frame.tc_tracking = False
 

@@ -12,7 +12,7 @@ from PySide2.QtWidgets import (
 
 from ..gui import ExportFADialog
 from ..utils.widgets import EntryWidget, TableFrame
-from ..constants import CURRENT_UNIT_FACTORS
+from ..constants import CURRENT_UNIT_FACTORS, ANALYSIS_FRAME_WIDTH
 
 debug_logger = logging.getLogger("ascam.debug")
 
@@ -21,7 +21,7 @@ class FirstActivationFrame(EntryWidget):
     def __init__(self, main):
         super().__init__(main)
         self.main = main
-        self.setFixedWidth(250)
+        self.setFixedWidth(ANALYSIS_FRAME_WIDTH)
 
         self.main.plot_frame.plot_fa_threshold(0)
 
