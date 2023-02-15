@@ -73,6 +73,7 @@ class MainWindow(QMainWindow):
 
         self.analysis_menu = self.menuBar().addMenu("Analysis")
         self.analysis_menu.addAction("Idealize", self.launch_idealization)
+        self.analysis_menu.addAction("DISC", self.launch_DISC)
         self.analysis_menu.addAction("First Activation", self.launch_fa_analysis)
 
         self.plot_menu = self.menuBar().addMenu("Plots")
@@ -113,20 +114,25 @@ class MainWindow(QMainWindow):
             debug_logger.debug("Not saving to pickle - no filename given.")
 
     def launch_idealization(self):
-        self.close_fa_frame()
+        self.close_other_frames()
         self.tc_frame = IdealizationFrame(self)
         self.central_layout.addWidget(self.tc_frame, 1, 1)
 
+    def launch_DISC(self):
+        self.close_other_frames()
+        self.disc_frame = DISCFrame(self)
+        self.central_layout.addWidget(self.disc_frame, 1, 1)
+
     def launch_fa_analysis(self):
-        self.close_tc_frame()
+        self.close_other_frames()
         self.fa_frame = FirstActivationFrame(self)
         self.central_layout.addWidget(self.fa_frame, 1, 1)
 
-    def close_fa_frame(self):
+    def close_other_frames(self):
         if self.fa_frame is not None:
             self.fa_frame.clean_up_and_close()
-
-    def close_tc_frame(self):
+        if self.disc_frame is not None:
+            self.disc_frame.close_frame()
         if self.tc_frame is not None:
             self.tc_frame.close_frame()
 
