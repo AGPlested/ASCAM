@@ -34,8 +34,8 @@ class PlotFrame(QWidget):
         self.hist_x_range = None
         self.hist_y_range = None
 
-        self.tc_tracking = False
-        self.fa_tracking = False
+        self.tc_tracking = False  # Controls whether the cursor is being tracked for the threshold crossing parameters.
+        self.fa_tracking = False  # Controls whether the cursor is being tracked for the first activation parameters.
 
         self.init_plots()
         self.init_hist()
