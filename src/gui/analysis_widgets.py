@@ -241,7 +241,7 @@ class IdealizationTab(EntryWidget):
 
         self.drag_amp_toggle = QToolButton()
         self.drag_amp_toggle.setCheckable(True)
-        self.drag_amp_toggle.setText("Drag lines to change parameters")
+        self.drag_amp_toggle.setText("Drag lines to change\n parameters")
         self.drag_amp_toggle.setChecked(self.parent.parent.main.plot_frame.tc_tracking)
         self.drag_amp_toggle.clicked.connect(self.toggle_drag_params)
         self.add_row(self.drag_amp_toggle)
