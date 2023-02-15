@@ -568,3 +568,17 @@ class Histogram:
             brush=(0, 0, 255, 150),
         )
         self.histogram_frame.layout.addWidget(self.widget, self.row, self.col)
+class DISCFrame(QWidget):
+    def __init__(self, main):
+        super().__init__()
+
+        self.main = main
+        self.layout = QVBoxLayout()
+        self.setLayout(self.layout)
+        self.setFixedWidth(250)
+
+    def close_frame(self):
+        # self.main.ep_frame.ep_list.currentItemChanged.disconnect(self.on_episode_click)
+        self.main.disc_frame = None
+        self.main.plot_frame.update_plots()
+        self.close()

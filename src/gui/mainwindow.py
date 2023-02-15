@@ -19,6 +19,7 @@ from ..gui import (
     EpisodeFrame,
     IdealizationFrame,
     FirstActivationFrame,
+    DISCFrame,
 )
 from ..utils import parse_filename, clear_qt_layout
 from ..core import Recording
@@ -45,8 +46,9 @@ class MainWindow(QMainWindow):
         self.central_widget.setLayout(self.central_layout)
         self.setCentralWidget(self.central_widget)
 
-        self.fa_frame = None
-        self.tc_frame = None
+        self.fa_frame = None  # Placeholder for FirstActivationFrame.
+        self.tc_frame = None  # Placeholder for IdealizationFrame (the frame holding threshold crossing).
+        self.disc_frame = None  # Placeholder for DISCFrame.
 
         self.data = Recording()
 
