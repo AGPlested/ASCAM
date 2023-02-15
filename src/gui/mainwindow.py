@@ -46,9 +46,11 @@ class MainWindow(QMainWindow):
         self.central_widget.setLayout(self.central_layout)
         self.setCentralWidget(self.central_widget)
 
-        self.fa_frame = None  # Placeholder for FirstActivationFrame.
-        self.tc_frame = None  # Placeholder for IdealizationFrame (the frame holding threshold crossing).
-        self.disc_frame = None  # Placeholder for DISCFrame.
+        # Placeholders
+        self.fa_frame = None  # FirstActivationFrame.
+        self.tc_frame = None  # IdealizationFrame (the frame holding threshold crossing).
+        self.disc_frame = None  # DISCFrame.
+        self.filename = None
 
         self.data = Recording()
 
