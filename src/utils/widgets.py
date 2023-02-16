@@ -267,7 +267,7 @@ class VerticalContainerWidget(QWidget):
 
         self.create_widgets()
 
-    def create_widets(self):
+    def create_widgets(self):
         raise NotImplementedError
 
     def add_row(self, *items):

@@ -233,11 +233,11 @@ class Histogram:
         self.root_counts = root_counts
         self.trace_unit = trace_unit
 
-        self.widget = self.create_widget()
+        self.widget = self.create_widgets()
         self.row = None
         self.col = None
 
-    def create_widget(self):
+    def create_widgets(self):
         heights, bins = self.idealization_cache.dwell_time_hist(
             self.amp, self.n_bins, self.time_unit, self.log_times, self.root_counts
         )
