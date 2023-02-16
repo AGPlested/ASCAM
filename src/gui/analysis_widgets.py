@@ -14,6 +14,7 @@ from PySide2.QtWidgets import (
 )
 
 from .threshold_crossing_frame import ThresholdCrossingFrame
+from .DISC_frame import DISCFrame
 from .io_widgets import ExportIdealizationDialog
 from ..utils.widgets import HistogramViewBox
 from ..constants import ANALYSIS_FRAME_WIDTH
@@ -22,7 +23,7 @@ debug_logger = logging.getLogger("ascam.debug")
 
 
 class IdealizationFrame(QWidget):
-    def __init__(self, main):
+    def __init__(self, main, idealization_method="TC"):
         super().__init__()
 
         self.main = main
@@ -32,7 +33,7 @@ class IdealizationFrame(QWidget):
 
         self.main.plot_frame.tc_tracking = False
 
-        self.create_widgets()
+        self.create_widgets(idealization_method)
 
         self.main.ep_frame.ep_list.currentItemChanged.connect(self.on_episode_click)
 
@@ -40,8 +41,8 @@ class IdealizationFrame(QWidget):
     def current_tab(self):
         return self.tab_frame.currentWidget()
 
-    def create_widgets(self):
-        self.tab_frame = IdealizationTabFrame(self)
+    def create_widgets(self, idealization_method):
+        self.tab_frame = IdealizationTabFrame(self, idealization_method)
         self.layout.addWidget(self.tab_frame)
 
         self.events_button = QPushButton("Show Table of Events")
@@ -78,6 +79,7 @@ class IdealizationFrame(QWidget):
         self.main.ep_frame.ep_list.currentItemChanged.disconnect(self.on_episode_click)
         self.main.plot_frame.tc_tracking = False
         self.main.tc_frame = None
+        self.main.disc_frame = None
         self.main.plot_frame.update_plots()
         self.close()
 
@@ -124,12 +126,15 @@ class IdealizationFrame(QWidget):
 
 
 class IdealizationTabFrame(QTabWidget):
-    def __init__(self, parent):
+    def __init__(self, parent, idealization_method):
         super().__init__()
         # Parent is the IdealizationFrame.
         self.parent = parent
 
-        self.tabs = [ThresholdCrossingFrame(self)]
+        if idealization_method == "TC":
+            self.tabs = [ThresholdCrossingFrame(self)]
+        elif idealization_method == "DISC":
+            self.tabs = [DISCFrame(self, parent.main)]
         self.addTab(self.tabs[0], "1")
 
         self.new_tab_button = QToolButton()
