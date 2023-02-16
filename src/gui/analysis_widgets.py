@@ -14,7 +14,6 @@ from PySide2.QtWidgets import (
     QCheckBox,
     QLineEdit,
     QToolButton,
-    QTabBar,
     QPushButton,
     QLabel,
 )
