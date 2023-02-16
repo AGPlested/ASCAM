@@ -74,7 +74,7 @@ class MainWindow(QMainWindow):
         self.processing_menu.addAction("Filter", lambda: FilterFrame(self))
 
         self.analysis_menu = self.menuBar().addMenu("Analysis")
-        self.analysis_menu.addAction("Idealize", self.launch_idealization)
+        self.analysis_menu.addAction("Idealize", self.launch_threshold_crossing)
         self.analysis_menu.addAction("DISC", self.launch_DISC)
         self.analysis_menu.addAction("First Activation", self.launch_fa_analysis)
 
@@ -115,14 +115,14 @@ class MainWindow(QMainWindow):
         else:
             debug_logger.debug("Not saving to pickle - no filename given.")
 
-    def launch_idealization(self):
+    def launch_threshold_crossing(self):
         self.close_other_frames()
-        self.tc_frame = IdealizationFrame(self)
+        self.tc_frame = IdealizationFrame(self, "TC")
         self.central_layout.addWidget(self.tc_frame, 1, 1)
 
     def launch_DISC(self):
         self.close_other_frames()
-        self.disc_frame = DISCFrame(self)
+        self.disc_frame = IdealizationFrame(self, "DISC")
         self.central_layout.addWidget(self.disc_frame, 1, 1)
 
     def launch_fa_analysis(self):
