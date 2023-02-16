@@ -252,6 +252,11 @@ class TableModel(QtCore.QAbstractTableModel):
 
 
 class VerticalContainerWidget(QWidget):
+    """
+    Use this class to create a widget in which all the widgets are added
+    in rows which are then stacked vertically.
+    This class is meant to be subclassed.
+    """
     def __init__(self, parent):
         super().__init__()
         self.parent = parent
