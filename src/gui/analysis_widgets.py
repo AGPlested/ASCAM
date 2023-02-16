@@ -69,7 +69,7 @@ class IdealizationFrame(QWidget):
         self.idealize_episode()
 
     def close_tab(self):
-        if self.tab_frame.count() > 2:
+        if self.tab_frame.count() > 1:
             self.tab_frame.removeTab(self.tab_frame.currentIndex())
         else:
             self.close_frame()
