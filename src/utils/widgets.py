@@ -270,7 +270,7 @@ class VerticalContainerWidget(QWidget):
     def create_widgets(self):
         raise NotImplementedError
 
-    def add_row(self, *items):
+    def add_row(self, *items, **kwargs):
         row = QHBoxLayout()
         for item in items:
             if isinstance(item, QWidget):
@@ -279,6 +279,10 @@ class VerticalContainerWidget(QWidget):
                 row.addLayout(item)
             else:
                 raise TypeError(f"Cannot add {item} to a row layout.")
+        if "spacing" in kwargs:
+            row.setSpacing(kwargs["spacing"])
+        if "contents_margins" in kwargs:
+            row.setContentsMargins(*kwargs["contents_margins"])
         self.layout.addLayout(row)
 
 
