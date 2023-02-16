@@ -2,6 +2,7 @@ import logging
 
 import numpy as np
 from PySide2 import QtCore
+from PySide2.QtGui import QDoubleValidator
 from PySide2.QtWidgets import (
     QApplication,
     QCheckBox,
@@ -27,8 +28,8 @@ class ThresholdCrossingFrame(EntryWidget):
 
     def keyPressEvent(self, event):
         if event.key() in (QtCore.Qt.Key_Return, QtCore.Qt.Key_Enter):
-            if QApplication.focusWidget() == self.res_entry:
-                self.use_res.setChecked(True)
+            if QApplication.focusWidget() == self.resolution_entry:
+                self.use_resolution.setChecked(True)
             elif QApplication.focusWidget() == self.threshold_entry:
                 self.show_threshold_check.setChecked(True)
             elif QApplication.focusWidget() == self.intrp_entry:
@@ -70,12 +71,13 @@ class ThresholdCrossingFrame(EntryWidget):
         self.add_row(self.threshold_entry)
 
         res_label = QLabel("Resolution")
-        self.use_res = QCheckBox("Apply")
-        self.use_res.stateChanged.connect(self.toggle_resolution)
-        self.add_row(res_label, self.use_res)
+        self.use_resolution = QCheckBox("Apply")
+        self.use_resolution.stateChanged.connect(self.toggle_resolution)
+        self.add_row(res_label, self.use_resolution)
 
-        self.res_entry = QLineEdit(self)
-        self.add_row(self.res_entry, self.time_unit_entry)
+        self.resolution_entry = QLineEdit(self)
+        self.resolution_entry.setValidator(QDoubleValidator())
+        self.add_row(self.resolution_entry, self.time_unit_entry)
 
         intrp_label = QLabel("Interpolation")
         self.interpolate = QCheckBox("Apply")
@@ -83,6 +85,7 @@ class ThresholdCrossingFrame(EntryWidget):
         self.add_row(intrp_label, self.interpolate)
 
         self.intrp_entry = QLineEdit(self)
+        self.intrp_entry.setValidator(QDoubleValidator())
         self.add_row(self.intrp_entry)
 
         self.calc_button = QPushButton("Apply Threshold Crossing")
@@ -93,6 +96,9 @@ class ThresholdCrossingFrame(EntryWidget):
         self.get_params()
         self.idealize_episode()
         self.parent.parent.main.plot_frame.update_episode()
+
+    def on_episode_click(self, *args):
+        self.idealize_episode()
 
     def idealize_episode(self):
         self.idealization_cache.idealize_episode()
@@ -142,9 +148,9 @@ class ThresholdCrossingFrame(EntryWidget):
 
     def toggle_resolution(self, state):
         if not state:
-            self.res_entry.setEnabled(False)
+            self.resolution_entry.setEnabled(False)
         else:
-            self.res_entry.setEnabled(True)
+            self.resolution_entry.setEnabled(True)
 
     def toggle_auto_theta(self, state):
         # apparently state==2 if the box is checked and 0
@@ -157,7 +163,7 @@ class ThresholdCrossingFrame(EntryWidget):
     def get_params(self):
         amps = string_to_array(self.amp_entry.toPlainText())
         thresholds = string_to_array(self.threshold_entry.toPlainText())
-        res_string = self.res_entry.text()
+        res_string = self.resolution_entry.text()
         intrp_string = self.intrp_entry.text()
 
         if self.auto_thresholds.isChecked() or (
@@ -177,7 +183,7 @@ class ThresholdCrossingFrame(EntryWidget):
         thresholds /= trace_factor
         time_factor = TIME_UNIT_FACTORS[self.time_unit]
 
-        if res_string.strip() and self.use_res.isChecked():
+        if res_string.strip() and self.use_resolution.isChecked():
             resolution = float(res_string)
             resolution /= time_factor
         else:
