@@ -69,7 +69,7 @@ class IdealizationFrame(QWidget):
         self.layout.addStretch()
 
     def on_episode_click(self, item, *args):
-        self.idealize_episode()
+        self.current_tab.on_episode_click(item, *args)
 
     def close_tab(self):
         if self.tab_frame.count() > 1:
