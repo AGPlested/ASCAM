@@ -290,6 +290,7 @@ class EntryWidget(VerticalContainerWidget):
     def __init__(
         self,
         parent,
+        main=None,
         default_time_unit="ms",
         default_trace_unit="pA",
         default_piezo_unit="mV",
@@ -301,7 +302,7 @@ class EntryWidget(VerticalContainerWidget):
         self.default_piezo_unit = default_piezo_unit
         self.default_command_unit = default_command_unit
         self.create_unit_entry_widgets()
-        super().__init__(parent)
+        super().__init__(parent, main=main)
 
     def create_unit_entry_widgets(self):
         self.trace_unit_entry = QComboBox()
