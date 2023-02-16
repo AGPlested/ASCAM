@@ -229,7 +229,9 @@ class ThresholdCrossingFrame(EntryWidget):
         self.show_amp_check.setChecked(True)
         self.add_row(amp_label, self.show_amp_check)
 
-        self.neg_check = QCheckBox("Treat as negative")
+        self.neg_check = QToolButton()
+        self.neg_check.setText("-1×")
+        self.neg_check.setCheckable(True)
         self.add_row(self.neg_check, self.trace_unit_entry)
 
         self.amp_entry = TextEdit(self)
