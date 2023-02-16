@@ -6,6 +6,8 @@ from PySide2.QtWidgets import (
     QFileDialog,
     QDialog,
     QGridLayout,
+    QAction,
+    QMenu,
     QTabWidget,
     QWidget,
     QVBoxLayout,
@@ -139,7 +141,7 @@ class IdealizationTabFrame(QTabWidget):
 
         self.new_tab_button = QToolButton()
         self.new_tab_button.setText("+")
-        self.new_tab_button.clicked.connect(self.add_tab)
+        self.new_tab_button.clicked.connect(self.select_new_tab_type)
         self.setCornerWidget(self.new_tab_button)
 
         self.setTabsClosable(True)
@@ -147,10 +149,25 @@ class IdealizationTabFrame(QTabWidget):
 
         self.currentChanged.connect(self.switch_tab)
 
-    def add_tab(self):
+    def select_new_tab_type(self):
+        menu = QMenu(self)
+        add_tc_tab = QAction("Add TC Tab", self)
+        add_tc_tab.triggered.connect(lambda: self.add_tab(idealization_method="TC"))
+        menu.addAction(add_tc_tab)
+        add_disc_tab = QAction("Add DISC Tab", self)
+        menu.addAction(add_disc_tab)
+        add_disc_tab.triggered.connect(lambda: self.add_tab(idealization_method="DISC"))
+
+        # Show the context menu at the position of the add tab button
+        menu.exec_(self.new_tab_button.mapToGlobal(self.new_tab_button.rect().bottomRight()))
+
+    def add_tab(self, idealization_method="TC"):
         title = str(self.count()+1)
-        debug_logger.debug(f"adding new tab with number {title}")
-        tab = ThresholdCrossingFrame(self)
+        debug_logger.debug(f"adding new {idealization_method} tab with number {title}")
+        if idealization_method == "TC":
+            tab = ThresholdCrossingFrame(self)
+        elif idealization_method == "DISC":
+            tab = DISCFrame(self, self.parent.main)
         self.tabs.append(tab)
         ind = self.insertTab(self.count(), tab, title)
         self.setCurrentIndex(ind)
