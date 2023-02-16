@@ -50,10 +50,6 @@ class IdealizationFrame(QWidget):
         self.tab_frame = IdealizationTabFrame(self)
         self.layout.addWidget(self.tab_frame)
 
-        self.calc_button = QPushButton("Calculate idealization")
-        self.calc_button.clicked.connect(self.calculate_click)
-        self.layout.addWidget(self.calc_button)
-
         self.events_button = QPushButton("Show Table of Events")
         self.events_button.clicked.connect(self.create_event_frame)
         self.layout.addWidget(self.events_button)
@@ -109,16 +105,8 @@ class IdealizationFrame(QWidget):
 
     def export_idealization(self):
         self.get_params()
-        self.idealize_series()
+        self.current_tab.idealize_series()
         ExportIdealizationDialog(self.main, self.current_tab.idealization_cache)
-        # filename = QFileDialog.getSaveFileName(
-        #     self, dir=self.main.filename[:-4] + "_idealization.csv", filter="*.csv"
-        # )[0]
-        # self.current_tab.idealization_cache.export_idealization(
-        #     filename,
-        #     self.current_tab.time_unit,
-        #     self.current_tab.trace_unit,
-        # )
 
     def get_params(self):
         return self.current_tab.get_params()
@@ -131,11 +119,6 @@ class IdealizationFrame(QWidget):
     def time(self, n_episode=None):
         return self.current_tab.idealization_cache.time(n_episode)
 
-    def calculate_click(self):
-        self.get_params()
-        self.idealize_episode()
-        self.main.plot_frame.update_episode()
-
     def idealize_episode(self):
         self.current_tab.idealization_cache.idealize_episode()
 
@@ -143,35 +126,7 @@ class IdealizationFrame(QWidget):
         self.current_tab.idealization_cache.idealize_series()
 
     def track_cursor(self, y_pos):
-        """Track the position of the mouse cursor over the plot and if mouse 1
-        is pressed adjust the nearest threshold/amplitude line by dragging the
-        cursor."""
-
-        amps, thetas = self.get_params()[:2]
-        if thetas.size > 0:
-            tc_diff = np.min(np.abs(thetas - y_pos))
-        else:
-            tc_diff = np.inf
-        if amps.size > 0:
-            amp_diff = np.min(np.abs(amps - y_pos))
-        else:
-            amp_diff = np.inf
-
-        y_pos *= CURRENT_UNIT_FACTORS[self.current_tab.trace_unit]
-        if self.current_tab.neg_check.isChecked():
-            y_pos *= -1
-        if tc_diff < amp_diff and self.current_tab.show_threshold_check.isChecked():
-            new_str = update_number_in_string(
-                y_pos, self.current_tab.threshold_entry.toPlainText()
-            )
-            self.current_tab.threshold_entry.setPlainText(new_str)
-            self.current_tab.auto_thresholds.setChecked(False)
-        elif self.current_tab.show_amp_check.isChecked():
-            new_str = update_number_in_string(
-                y_pos, self.current_tab.amp_entry.toPlainText()
-            )
-            self.current_tab.amp_entry.setPlainText(new_str)
-        self.calculate_click()
+        self.current_tab.track_cursor(y_pos)
 
 
 class IdealizationTabFrame(QTabWidget):
@@ -219,7 +174,7 @@ class ThresholdCrossingFrame(EntryWidget):
                 self.show_threshold_check.setChecked(True)
             elif QApplication.focusWidget() == self.intrp_entry:
                 self.interpolate.setChecked(True)
-            self.parent.parent.calculate_click()
+            self.calculate_click()
         else:
             super().keyPressEvent(event)
 
@@ -270,6 +225,52 @@ class ThresholdCrossingFrame(EntryWidget):
 
         self.intrp_entry = QLineEdit(self)
         self.add_row(self.intrp_entry)
+
+        self.calc_button = QPushButton("Apply Threshold Crossing")
+        self.calc_button.clicked.connect(self.calculate_click)
+        self.layout.addWidget(self.calc_button)
+
+    def calculate_click(self):
+        self.get_params()
+        self.idealize_episode()
+        self.parent.parent.main.plot_frame.update_episode()
+
+    def idealize_episode(self):
+        self.idealization_cache.idealize_episode()
+
+    def idealize_series(self):
+        self.idealization_cache.idealize_series()
+
+    def track_cursor(self, y_pos):
+        """Track the position of the mouse cursor over the plot and if mouse 1
+        is pressed adjust the nearest threshold/amplitude line by dragging the
+        cursor."""
+
+        amps, thetas = self.get_params()[:2]
+        if thetas.size > 0:
+            tc_diff = np.min(np.abs(thetas - y_pos))
+        else:
+            tc_diff = np.inf
+        if amps.size > 0:
+            amp_diff = np.min(np.abs(amps - y_pos))
+        else:
+            amp_diff = np.inf
+
+        y_pos *= CURRENT_UNIT_FACTORS[self.trace_unit]
+        if self.neg_check.isChecked():
+            y_pos *= -1
+        if tc_diff < amp_diff and self.show_threshold_check.isChecked():
+            new_str = update_number_in_string(
+                y_pos, self.threshold_entry.toPlainText()
+            )
+            self.threshold_entry.setPlainText(new_str)
+            self.auto_thresholds.setChecked(False)
+        elif self.show_amp_check.isChecked():
+            new_str = update_number_in_string(
+                y_pos, self.amp_entry.toPlainText()
+            )
+            self.amp_entry.setPlainText(new_str)
+        self.calculate_click()
 
     def toggle_drag_params(self, checked):
         self.parent.parent.main.plot_frame.tc_tracking = checked
