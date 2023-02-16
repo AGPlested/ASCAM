@@ -178,9 +178,10 @@ class IdealizationFrame(QWidget):
 class IdealizationTabFrame(QTabWidget):
     def __init__(self, parent):
         super().__init__()
+        # Parent is the IdealizationFrame.
         self.parent = parent
 
-        self.tabs = [IdealizationTab(self)]
+        self.tabs = [ThresholdCrossingFrame(self)]
         self.addTab(self.tabs[0], "1")
 
         self.new_tab_button = QToolButton()
@@ -196,7 +197,7 @@ class IdealizationTabFrame(QTabWidget):
     def add_tab(self):
         title = str(self.count()+1)
         debug_logger.debug(f"adding new tab with number {title}")
-        tab = IdealizationTab(self)
+        tab = ThresholdCrossingFrame(self)
         self.tabs.append(tab)
         ind = self.insertTab(self.count(), tab, title)
         self.setCurrentIndex(ind)
@@ -205,8 +206,9 @@ class IdealizationTabFrame(QTabWidget):
         self.parent.idealize_episode()
 
 
-class IdealizationTab(EntryWidget):
+class ThresholdCrossingFrame(EntryWidget):
     def __init__(self, parent):
+        # Parent is the IdealizationTabFrame widget.
         super().__init__(parent)
         self.idealization_cache = None
 
