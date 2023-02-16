@@ -183,27 +183,22 @@ class IdealizationTabFrame(QTabWidget):
         self.tabs = [IdealizationTab(self)]
         self.addTab(self.tabs[0], "1")
 
-        self.insertTab(1, QWidget(), "")
-        self.new_button = QToolButton()
-        self.new_button.setText("+")
-        self.new_button.clicked.connect(self.add_tab)
-        self.tabBar().setTabButton(1, QTabBar.RightSide, self.new_button)
+        self.new_tab_button = QToolButton()
+        self.new_tab_button.setText("+")
+        self.new_tab_button.clicked.connect(self.add_tab)
+        self.setCornerWidget(self.new_tab_button)
 
         self.setTabsClosable(True)
-        self.tabBar().tabCloseRequested.connect(self.remove_tab)
+        self.tabBar().tabCloseRequested.connect(self.removeTab)
 
         self.currentChanged.connect(self.switch_tab)
 
-    def remove_tab(self, index):
-        if index != self.count() - 1:
-            self.removeTab(index)
-
     def add_tab(self):
-        title = str(self.count())
+        title = str(self.count()+1)
         debug_logger.debug(f"adding new tab with number {title}")
         tab = IdealizationTab(self)
         self.tabs.append(tab)
-        ind = self.insertTab(self.count() - 1, tab, title)
+        ind = self.insertTab(self.count(), tab, title)
         self.setCurrentIndex(ind)
 
     def switch_tab(self):
