@@ -257,9 +257,10 @@ class VerticalContainerWidget(QWidget):
     in rows which are then stacked vertically.
     This class is meant to be subclassed.
     """
-    def __init__(self, parent):
+    def __init__(self, parent, main=None):
         super().__init__()
         self.parent = parent
+        self.main = main
 
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
