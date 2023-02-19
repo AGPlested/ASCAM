@@ -116,7 +116,7 @@ class FirstActivationFrame(EntryWidget):
             ),
             header=[
                 "Episode Number",
-                f"First Activatime Time [self.time_unit]",
+                f"First Activatime Time [{self.time_unit}]",
                 f"Current [{self.trace_unit}]",
             ],
             trace_unit=self.trace_unit,
