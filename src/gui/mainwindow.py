@@ -100,8 +100,7 @@ class MainWindow(QMainWindow):
         self.create_widgets()
         self.filename = QFileDialog.getOpenFileName(self)[0]
         if self.filename:
-            self.close_tc_frame()
-            self.close_fa_frame()
+            self.close_other_frames()
             debug_logger.debug(f"filename is {self.filename}")
             _, _, _, filename_short = parse_filename(self.filename)
             OpenFileDialog(self, filename=filename_short)
