@@ -297,6 +297,7 @@ class EntryWidget(VerticalContainerWidget):
         default_command_unit="uV",
     ):
 
+        main = main or parent
         self.default_time_unit = default_time_unit
         self.default_trace_unit = default_trace_unit
         self.default_piezo_unit = default_piezo_unit
