@@ -117,6 +117,7 @@ class OpenFileEntryWidget(EntryWidget):
         self.dialog = dialog
         super().__init__(
             main,
+            main,
             default_time_unit="s",
             default_trace_unit="A",
             default_piezo_unit="V",
