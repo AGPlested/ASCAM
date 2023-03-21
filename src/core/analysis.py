@@ -1,6 +1,8 @@
 import logging
+from typing import List, Union
 
 import numpy as np
+from numpy.typing import NDArray
 from scipy.interpolate import CubicSpline as spCubicSpline
 
 from ..utils.tools import interval_selection, piezo_selection
@@ -11,8 +13,10 @@ debug_logger = logging.getLogger("ascam.debug")
 
 
 def interpolate(
-    signal, time, interpolation_factor
-):
+    signal: NDArray[np.floating],
+    time: NDArray[np.floating],
+    interpolation_factor: float
+) -> tuple[np.ndarray, NDArray[np.floating]]:
     """Interpolate the signal with a cubic spline."""
 
     spline = spCubicSpline(time, signal)
@@ -22,23 +26,27 @@ def interpolate(
     return spline(interpolation_time), interpolation_time
 
 
-def detect_first_activation(time: np.ndarray, signal: np.ndarray, threshold: float) -> float:
+def detect_first_activation(
+    time: np.ndarray,
+    signal: np.ndarray,
+    threshold: float
+) -> float:
     """Return the time where a signal first crosses below a threshold."""
     return time[np.argmax(signal < threshold)]
 
 
 def baseline_correction(
-    time,
-    signal,
-    sampling_rate,
-    intervals = None,
-    degree = 1,
-    method = "Polynomial",
-    piezo = None,
-    selection = "piezo",
-    active = False,
-    deviation = 0.05,
-):
+    time: np.ndarray,
+    signal: np.ndarray,
+    sampling_rate: float,
+    intervals: Union[List, List[List]] = [],
+    degree: int = 1,
+    method: str = "Polynomial",
+    piezo: NDArray = np.array([]),
+    selection: str = "piezo",
+    active: bool = False,
+    deviation: float = 0.05,
+) -> NDArray[np.floating]:
     """Perform polynomial/offset baseline correction on the given signal.
 
     Parameters:
@@ -72,4 +80,6 @@ def baseline_correction(
         for i in range(degree + 1):
             baseline += coeffs[i] * (time ** (degree - i))
         output = signal - baseline
+    else:
+        raise ValueError("Baseline correction method not recognized.")
     return output
