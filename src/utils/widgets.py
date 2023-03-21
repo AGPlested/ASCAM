@@ -26,15 +26,15 @@ debug_logger = logging.getLogger("ascam.debug")
 
 
 class TextEdit(QTextEdit):
-    def __init__(self, parent=None, *args, **kwargs):
+    def __init__(self, parent, *args, **kwargs):
         self.parent = parent  # this is the containing widget
         QTextEdit.__init__(self, *args, **kwargs)
         self.document().modificationChanged.connect(self.updateMaxHeight)
 
-    def updateMaxHeight(self, *args):
+    def updateMaxHeight(self, *_):
         # the +2 is a bit ugly, but it's there to avoid the appearance of
         # scrollbars when then widget is initialized
-        self.setMaximumHeight(self.document().size().height() + 2)
+        self.setMaximumHeight(int(self.document().size().height()) + 2)
 
     def resizeEvent(self, e):
         QTextEdit.resizeEvent(self, e)
@@ -50,18 +50,10 @@ class TextEdit(QTextEdit):
 class HistogramViewBox(pg.ViewBox):
     def __init__(
         self,
-        histogram=None,
-        histogram_frame=None,
-        n_bins=None,
-        amp=None,
-        time_unit="ms",
-        log_times=True,
-        root_counts=True,
+        histogram,
     ):
-        # self.setRectMode() # Set mouse mode to rect for convenient zooming
         super().__init__()
         self.histogram = histogram
-        self.histogram_frame = histogram_frame
         self.menu = None  # Override pyqtgraph ViewBoxMenu
         self.menu = self.get_menu()  # Create the menu
 
@@ -76,7 +68,7 @@ class HistogramViewBox(pg.ViewBox):
         menu.popup(QtCore.QPoint(pos.x(), pos.y()))
 
     def open_hist_config(self):
-        self.hist_config = EventHistConfig(self.histogram_frame, self.histogram)
+        self.hist_config = EventHistConfig(self.histogram)
         self.hist_config.show()
 
     def open_nbins_dialog(self):
@@ -143,10 +135,11 @@ class EventHistConfig(QDialog):
     """Configuration Dialog for the event histograms. The options in this dialog apply to all histogram.
     """
 
-    def __init__(self, histogram_frame=None, histogram=None):
+    def __init__(self,
+                 histogram):
         super().__init__()
         self.histogram = histogram
-        self.histogram_frame = histogram_frame
+        self.histogram = histogram
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
 
@@ -157,7 +150,7 @@ class EventHistConfig(QDialog):
         label = QLabel("Time Unit")
         row.addWidget(label)
         self.time_unit = QComboBox()
-        self.time_unit.addItems(TIME_UNIT_FACTORS.keys())
+        self.time_unit.addItems([str(k) for k in TIME_UNIT_FACTORS.keys()])
         self.time_unit.setCurrentText(self.histogram.time_unit)
         row.addWidget(self.time_unit)
         self.layout.addLayout(row)
@@ -188,10 +181,10 @@ class EventHistConfig(QDialog):
         self.layout.addLayout(row)
 
     def ok_click(self):
-        clear_qt_layout(self.histogram_frame.layout)
+        clear_qt_layout(self.histogram.layout)
 
-        n_bins = {h.amp: h.n_bins for h in self.histogram_frame.histograms}
-        self.histogram_frame.create_histograms(
+        n_bins = {h.amp: h.n_bins for h in self.histogram.histograms}
+        self.histogram.create_histograms(
             log_times=self.log_times.isChecked(),
             root_counts=self.root_counts.isChecked(),
             time_unit=self.time_unit.currentText(),
@@ -292,7 +285,7 @@ class EntryWidget(VerticalContainerWidget):
     def __init__(
         self,
         parent,
-        main=None,
+        main,
         default_time_unit="ms",
         default_trace_unit="pA",
         default_piezo_unit="mV",

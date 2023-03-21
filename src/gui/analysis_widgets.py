@@ -197,7 +197,7 @@ class HistogramFrame(QDialog):
     ):
         if n_bins is not None and len(n_bins) != len(self.amps):
             n_bins = None
-            debug_logger.debubg(
+            debug_logger.debug(
                 f"argument n_bins is being ignoroed because it is incorrect n_bins={n_bins}"
             )
         n_cols = np.round(np.sqrt(len(self.amps)))
@@ -207,7 +207,6 @@ class HistogramFrame(QDialog):
             debug_logger.debug(f"getting hist for {amp}")
             if n_bins is None:
                 histogram = Histogram(
-                    histogram_frame=self,
                     idealization_cache=self.parent.idealization_cache,
                     amp=amp,
                     log_times=log_times,
@@ -216,7 +215,6 @@ class HistogramFrame(QDialog):
                 )
             else:
                 histogram = Histogram(
-                    histogram_frame=self,
                     idealization_cache=self.parent.idealization_cache,
                     n_bins=n_bins[amp],
                     amp=amp,
@@ -237,8 +235,7 @@ class HistogramFrame(QDialog):
 class Histogram:
     def __init__(
         self,
-        histogram_frame=None,
-        idealization_cache=None,
+        idealization_cache,
         amp=None,
         n_bins=None,
         time_unit="ms",
@@ -246,7 +243,6 @@ class Histogram:
         root_counts=True,
         trace_unit="pA",
     ):
-        self.histogram_frame = histogram_frame
         self.idealization_cache = idealization_cache
         self.amp = amp
         self.n_bins = n_bins
@@ -256,8 +252,8 @@ class Histogram:
         self.trace_unit = trace_unit
 
         self.widget = self.create_widgets()
-        self.row = None
-        self.col = None
+        self.row = -1
+        self.col = -1
 
     def create_widgets(self):
         heights, bins = self.idealization_cache.dwell_time_hist(
@@ -266,10 +262,9 @@ class Histogram:
         self.n_bins = len(bins) - 1
         hist_viewbox = HistogramViewBox(
             histogram=self,
-            histogram_frame=self.histogram_frame,
-            amp=self.amp,
-            n_bins=self.n_bins,
-            time_unit=self.time_unit,
+            # amp=self.amp,
+            # n_bins=self.n_bins,
+            # time_unit=self.time_unit,
         )
         x_label = (
             f"Log10 Dwell Time [log({self.time_unit})]"
@@ -305,10 +300,9 @@ class Histogram:
         self.widget.deleteLater()
         hist_viewbox = HistogramViewBox(
             histogram=self,
-            histogram_frame=self.histogram_frame,
-            amp=self.amp,
-            n_bins=self.n_bins,
-            time_unit=self.time_unit,
+            # amp=self.amp,
+            # n_bins=self.n_bins,
+            # time_unit=self.time_unit,
         )
         x_label = (
             f"Log10 Dwell Time [log({self.time_unit})]"
@@ -331,4 +325,4 @@ class Histogram:
             fillOutline=True,
             brush=(0, 0, 255, 150),
         )
-        self.histogram_frame.layout.addWidget(self.widget, self.row, self.col)
+        # self.layout.addWidget(self.widget, self.row, self.col)
