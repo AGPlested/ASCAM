@@ -24,13 +24,8 @@ def interpolate(
     return spline(interpolation_time), interpolation_time
 
 
-
-
-def detect_first_activation(
-    time, signal, threshold
-):
+def detect_first_activation(time: np.ndarray, signal: np.ndarray, threshold: float) -> float:
     """Return the time where a signal first crosses below a threshold."""
-
     return time[np.argmax(signal < threshold)]
 
 
