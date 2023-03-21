@@ -1,7 +1,9 @@
 import logging
 
-from PySide2 import QtGui, QtCore
+from PySide2 import QtCore
 from PySide2.QtWidgets import (
+    QAction,
+    QMenu,
     QLayout,
     QWidget,
     QTextEdit,
@@ -83,18 +85,18 @@ class HistogramViewBox(pg.ViewBox):
 
     def get_menu(self):
         if self.menu is None:
-            self.menu = QtGui.QMenu()
+            self.menu = QMenu()
 
-            self.viewAll = QtGui.QAction("View All", self.menu)
+            self.viewAll = QAction("View All", self.menu)
             self.viewAll.triggered.connect(self.autoRange)
             self.menu.addAction(self.viewAll)
 
-            self.n_bins_dialog = QtGui.QAction("Number of Bins", self.menu)
+            self.n_bins_dialog = QAction("Number of Bins", self.menu)
             self.n_bins_dialog.triggered.connect(self.open_nbins_dialog)
             self.menu.addAction(self.n_bins_dialog)
 
             self.menu.addSeparator()
-            self.hist_config_item = QtGui.QAction("Configure Histogram", self.menu)
+            self.hist_config_item = QAction("Configure Histogram", self.menu)
             self.hist_config_item.triggered.connect(self.open_hist_config)
             self.menu.addAction(self.hist_config_item)
         return self.menu
