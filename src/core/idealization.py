@@ -1,7 +1,9 @@
+import warnings
+import copy
 import logging
 import numpy as np
 
-from .analysis import Idealizer
+from .analysis import interpolate
 from ..constants import CURRENT_UNIT_FACTORS, TIME_UNIT_FACTORS
 from ..utils import round_off_tables
 
