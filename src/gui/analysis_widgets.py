@@ -168,6 +168,8 @@ class IdealizationTabFrame(QTabWidget):
             tab = ThresholdCrossingFrame(self)
         elif idealization_method == "DISC":
             tab = DISCFrame(self, self.parent.main)
+        else:
+            raise ValueError("Unknown idealization method.")
         self.tabs.append(tab)
         ind = self.insertTab(self.count(), tab, title)
         self.setCurrentIndex(ind)
