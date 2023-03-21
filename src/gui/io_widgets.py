@@ -21,7 +21,7 @@ class BaseExportWidget(EntryWidget):
     def __init__(
         self,
         main,
-        dialog=None,
+        dialog,
         default_time_unit="s",
         default_trace_unit="A",
         default_piezo_unit="V",
@@ -31,7 +31,8 @@ class BaseExportWidget(EntryWidget):
         self.dialog = dialog
         self.create_selection_widgets()
         super().__init__(
-            main,
+            parent=main,
+            main=main,
             default_time_unit=default_time_unit,
             default_trace_unit=default_trace_unit,
             default_piezo_unit=default_piezo_unit,
@@ -82,7 +83,7 @@ class ExportFAWidget(BaseExportWidget):
         self.add_row(save_button, cancel_button)
 
     def save_click(self):
-        filename, filetye = QFileDialog.getSaveFileName(
+        filename, _ = QFileDialog.getSaveFileName(
             self,
             dir=self.main.filename[:-4] + "_first_activation",
             filter="Comma Separated Valued (*.csv)",
@@ -94,8 +95,8 @@ class ExportFAWidget(BaseExportWidget):
                 lists_to_save=[
                     item.text() for item in self.list_selection.selectedItems()
                 ],
-                time_unit=self.time_unit.currentText(),
-                trace_unit=self.trace_unit.currentText(),
+                time_unit=self.time_unit,
+                trace_unit=self.trace_unit,
             )
         self.close()
 
@@ -287,7 +288,7 @@ class ExportIdealizationWidget(BaseExportWidget):
         self.add_row(save_button, cancel_button)
 
     def save_click(self):
-        filename, filetye = QFileDialog.getSaveFileName(
+        filename, _ = QFileDialog.getSaveFileName(
             self, dir=self.main.filename[:-4], filter="CSV (*.csv)"
         )
         self.main.data.export_idealization(
