@@ -1,23 +1,16 @@
 import logging
 
-import numpy as np
 from PySide2 import QtCore
 from PySide2.QtGui import QDoubleValidator
 from PySide2.QtWidgets import (
     QFrame,
-    QApplication,
-    QCheckBox,
     QLineEdit,
-    QToolButton,
     QLabel,
-    QWidget,
-    QRadioButton,
     QLineEdit,
     QPushButton,
-    QVBoxLayout
 )
 
-from ..utils import string_to_array, array_to_string, update_number_in_string
+from ..utils import string_to_array, array_to_string
 from ..constants import TIME_UNIT_FACTORS, CURRENT_UNIT_FACTORS
 from ..core import IdealizationCache
 from ..utils.widgets import EntryWidget, VerticalContainerWidget
@@ -138,7 +131,7 @@ class DISCFrame(VerticalContainerWidget):
         self.idealize_episode()
         self.parent.parent.main.plot_frame.update_episode()
 
-    def on_episode_click(self, *args):
+    def on_episode_click(self, *_):
         self.idealize_episode()
 
     def idealize_episode(self):
@@ -150,8 +143,10 @@ class DISCFrame(VerticalContainerWidget):
         # self.idealization_cache.idealize_series()
 
     def close_frame(self):
-        self.main.disc_frame = None
-        self.main.plot_frame.update_plots()
+        if self.main is not None:
+            self.main.disc_frame = None
+            if self.main.plot_frame is not None:
+                self.main.plot_frame.update_plots()
         self.close()
 
 class DivSegFrame(EntryWidget):
@@ -170,11 +165,12 @@ class DivSegFrame(EntryWidget):
         self.change_point_button.clicked.connect(self.detect_change_points)
         self.layout.addWidget(self.change_point_button)
 
-        # create an integer input for the minimum segment length
-        self.min_seg_label = QLabel("min lengeth segments:")
+        # add and entry for minimum segment length
+        self.min_seg_label = QLabel("min segment length:")
         self.min_seg_entry = QLineEdit("3")
         self.min_seg_entry.setValidator(QIntValidator())
         self.add_row(self.min_seg_label, self.min_seg_entry)
+
 
         # add a button to run divisive segmentation
         self.div_seg_button = QPushButton("Divisive Segment")
