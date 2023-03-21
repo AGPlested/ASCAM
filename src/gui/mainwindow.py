@@ -137,7 +137,7 @@ class MainWindow(QMainWindow):
         if self.tc_frame is not None:
             self.tc_frame.close_frame()
 
-    def test_mode(self):
+    def load_example_data(self):
         path = os.path.split(
             os.path.split(os.path.dirname(os.path.abspath(__file__)))[0]
         )[
@@ -159,5 +159,4 @@ class MainWindow(QMainWindow):
         self.data.gauss_filter_series(1000)
         self.ep_frame.update_combo_box()
         self.plot_frame.plot_all()
-        self.launch_idealization()
-        self.tc_frame.current_tab.amp_entry.setPlainText("0 -.7 -1.2 -1.8 -2.2")
+        self.launch_DISC()
