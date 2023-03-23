@@ -215,7 +215,7 @@ class IdealizationCache:
         self,
         data,
         amplitudes,
-        thresholds=None,
+        thresholds=[],
         resolution=None,
         interpolation_factor=None,
     ):
@@ -228,8 +228,8 @@ class IdealizationCache:
 
     @property
     def ind_idealized(self):
-        """Return the set of numbers of the episodes in the currently selected series
-        that have been idealized with the current parameters."""
+        """Return the set of numbers of the episodes in the currently selected
+        series that have been idealized with the current parameters."""
         return {
             episode.n_episode
             for episode in self.data.series
@@ -240,11 +240,9 @@ class IdealizationCache:
         """Return the idealization of a given episode or idealize the episode and then return it."""
         if n_episode is None:
             n_episode = self.data.current_ep_ind
-        out = [
-            episode.idealization
-            for episode in self.data.series
-            if episode.n_episode == n_episode
-        ]
+        out = [episode.idealization
+               for episode in self.data.series
+               if episode.n_episode == n_episode ]
         if out:  # if an idealization exists return it
             return out[0]
         else:  # else idealize the episode and then return
