@@ -51,6 +51,8 @@ class Episode:
             self.command = command / VOLTAGE_UNIT_FACTORS[input_command_unit]
         else:
             self.command = None
+        if sampling_rate is not None:
+            self.sampling_rate = sampling_rate
 
         # results of analyses
         self.first_activation = None
