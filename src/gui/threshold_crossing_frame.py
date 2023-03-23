@@ -12,6 +12,7 @@ from PySide2.QtWidgets import (
     QLabel,
 )
 
+from .histogram_frame import HistogramFrame
 from ..utils import string_to_array, array_to_string, update_number_in_string
 from ..constants import TIME_UNIT_FACTORS, CURRENT_UNIT_FACTORS
 from ..core import IdealizationCache
