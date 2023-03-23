@@ -70,3 +70,33 @@ def test_extract_events(trace, events):
     print(out)
     print(events)
     assert np.all(out == events)
+
+def test_single_amplitude():
+    # Test case with only one amplitude
+    signal = np.random.rand(100)
+    amplitudes = np.array([1])
+    idealization = Idealizer.threshold_crossing(signal, amplitudes)
+    assert np.allclose(idealization, np.ones(100))
+
+def test_two_amplitudes():
+    # Test case with default thresholds
+    signal = np.random.rand(100)
+    amplitudes = np.array([0, 1])
+    idealization = Idealizer.threshold_crossing(signal, amplitudes)
+    assert np.all([np.isclose(i, 0) or np.isclose(i, 1) for i in idealization])
+
+def test_custom_thresholds():
+    # Test case with custom thresholds
+    signal = np.random.rand(100)
+    amplitudes = np.array([1, 2, 3])
+    thresholds = np.array([0.5, 1.8])
+    idealization = Idealizer.threshold_crossing(signal, amplitudes, thresholds)
+    assert np.all([np.isclose(i, 1) or np.isclose(i, 3) or np.isclose(i, 2) for i in idealization])
+
+def test_wrong_thresholds():
+    # Test case with wrong number of thresholds
+    signal = np.random.rand(100)
+    amplitudes = np.array([1, 2, 3])
+    thresholds = np.array([0.5, 0.8, 0.9])
+    with pytest.raises(ValueError):
+        Idealizer.threshold_crossing(signal, amplitudes, thresholds)
