@@ -78,7 +78,7 @@ class Recording(dict):
         else:
             raise ValueError(f"Cannot load from filetype {filetype}.")
 
-        recording.lists = {"All": (list(range(len(recording["raw_"]))), None)}
+        recording.episode_sets = {"All": (list(range(len(recording["raw_"]))), None)}
 
         return recording
 
@@ -100,77 +100,78 @@ class Recording(dict):
         # `lists` stores the indices of the episodes in the list in the first
         # element and the associated key as the second
         # lists[name] = ([inds], key)
-        self.lists = dict()
+        self.episode_sets = dict()
 
-    def select_episodes(self, datakey=None, lists=None):
+    def select_episodes(self, datakey=None, ep_sets=None):
         if datakey is None:
             datakey = self.current_datakey
-        if lists is None:
-            lists = ["All"]
+        if ep_sets is None:
+            ep_sets = ["All"]
         indices = list()
-        for listname in lists:
-            indices.extend(self.lists[listname][0])
+        for ep_set_name in ep_sets:
+            indices.extend(self.episode_sets[ep_set_name][0])
         indices = np.array(list(set(indices)))
         return np.array(self[datakey])[indices]
 
-    def episodes_in_lists(self, names):
-        """Return an array containing all the episodes in the lists `names`."""
+    def episodes_in_set(self, names):
+        """Return an array containing all the episodes in the episode sets
+        specified in `names`."""
         if isinstance(str, names):
             names = [names]
         indices = list()
-        for listname in names:
-            indices.extend(self.lists[listname][0])
+        for ep_set_name in names:
+            indices.extend(self.episode_sets[ep_set_name][0])
         # remove duplicate indices
         indices = np.array(list(set(indices)))
         debug_logger.debug(f"Selected episodes: {indices}")
         return np.array(self.series)[indices]
 
-    def index_is_in_list(self, index, listname):
-        return index in self.lists[listname][0]
+    def index_is_in_set(self, index, name):
+        return index in self.episode_sets[name][0]
 
-    def add_new_list(self, name, key):
-        self.parent.main.data.lists[name] = ([], key)
+    def add_new_set(self, name: str, key: str | None = None):
+        self.episode_sets[name] = ([], key)
         debug_logger.debug(
             f"added list '{name}' with key '{key}'\n"
-            "lists are now:\n"
-            f"{self.lists}"
+            f"lists are now:\n"
+            f"{self.episode_sets}"
         )
 
-    def add_episode_to_list(self, name, index):
-        self.lists[name][0].append(index)
+    def add_episode_to_set(self, name, index):
+        self.episode_sets[name][0].append(index)
         ana_logger.debug(
             f"added episode "
             f"{self.parent.main.data.series[index].n_episode} "
             f"to list {name}"
         )
 
-    def add_episodes_to_list(self, name, indices):
+    def add_episodes_to_set(self, name, indices):
         if isinstance(indices, int):
             indices = [indices]
         for i in indices:
-            self.add_episode_to_list(name, i)
+            self.add_episode_to_set(name, i)
 
-    def remove_episode_from_list(self, name, index):
-        self.lists[name][0].remove(index)
+    def remove_episode_from_set(self, name, index):
+        self.episode_sets[name][0].remove(index)
         ana_logger.debug(
             f"removed episode "
             f"{self.parent.main.data.series[index].n_episode} "
             f"from list {name}"
         )
 
-    def remove_episodes_from_list(self, name, indices):
+    def remove_episodes_from_set(self, name, indices):
         if isinstance(indices, int):
             indices = [indices]
         for i in indices:
-            self.remove_episode_from_list(name, i)
+            self.remove_episode_from_set(name, i)
 
     def index_to_episode_number(self, index):
         return self.parent.main.data.series[index].n_episode
 
     def get_episode_keys(self, index):
         assigned_keys = [
-            key for (eplist, key) in self.parent.main.data.lists.values()
-            if index in eplist and key is not None
+            key for (epset, key) in self.parent.main.data.lists.values()
+            if index in epset and key is not None
         ]
         return assigned_keys.sort()
 
@@ -461,7 +462,7 @@ class Recording(dict):
         if not filepath.endswith(".csv"):
             filepath += ".csv"
 
-        episodes = self.select_episodes(lists=lists_to_save)
+        episodes = self.select_episodes(ep_sets=lists_to_save)
 
         export_array = np.zeros(
             shape=(len(episodes) + 1, episodes[0].idealization.size)
