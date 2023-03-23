@@ -5,6 +5,7 @@ import pickle
 import numpy as np
 import pandas as pd
 
+
 from ..constants import CURRENT_UNIT_FACTORS, VOLTAGE_UNIT_FACTORS, TIME_UNIT_FACTORS
 from ..utils import (
     parse_filename,
@@ -415,7 +416,7 @@ class Recording(dict):
         export_array = np.zeros(
             shape=(len(episodes) + 1, episodes[0].idealization.size)
         )
-        export_array[0] = self.episode().id_time * TIME_UNIT_FACTORS[time_unit]
+        export_array[0] = episodes[0].id_time*TIME_UNIT_FACTORS[time_unit]
         for k, episode in enumerate(episodes):
             export_array[k + 1] = (
                 episode.idealization * CURRENT_UNIT_FACTORS[trace_unit]
@@ -507,15 +508,15 @@ class Recording(dict):
         if not filepath.endswith(".axgd"):
             filepath += ".axgd"
 
-        column_names = [f"time (s)"]
-
-        # to write to axgd we need a list as the second argument of the 'write'
-        # method, this elements in the lists will be the columns in data table
-        # the first column in this will be a list of episode numbers
-        data_list = [self.episode().time]
-
         # get the episodes we want to save
         episodes = self.select_episodes(datakey, lists_to_save)
+
+        # to write to axgd we need a list as the second argument of the 'write'
+        # method, the elements in the lists will be the columns in data table
+        # the first column will be a list of episode numbers
+
+        data_list = [episodes[0].time]
+        column_names = ["time (s)"]
 
         for episode in episodes:
             data_list.append(np.array(episode.trace))
@@ -526,7 +527,7 @@ class Recording(dict):
             if save_command:
                 column_names.append(f"command voltage (V) ep# {episode.n_episode}")
                 data_list.append(np.array(episode.command))
-        file = axographio.file_contents(column_names, data_list)
+        file = axographio.file_contents(column_names, data_list)  #pyright: ignore
         file.write(filepath)
 
     def create_first_activation_table(
