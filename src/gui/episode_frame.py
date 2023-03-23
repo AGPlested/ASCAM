@@ -134,8 +134,7 @@ class ListFrame(QWidget):
             assigned_keys.sort()
             s = ""
             for k in assigned_keys:
-                if k is not None:
-                    s += f"[{k}]"
+                s += f"[{k}]"
             n += s.rjust(20 - len(n), " ")
             self.parent.ep_list.item(index).setText(n)
             ana_logger.debug(
@@ -153,8 +152,7 @@ class ListFrame(QWidget):
             n = f"Episode {self.parent.main.data.series[index].n_episode} "
             s = ""
             for k in assigned_keys:
-                if k is not None:
-                    s += f"[{k}]"
+                s += f"[{k}]"
             n += s.rjust(20 - len(n), " ")
             self.parent.ep_list.item(index).setText(n)
             ana_logger.debug(
