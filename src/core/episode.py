@@ -1,4 +1,5 @@
 import numpy as np
+from numpy.typing import NDArray
 
 
 from ..utils import piezo_selection
@@ -11,16 +12,16 @@ from .idealization import Idealizer
 class Episode:
     def __init__(
         self,
-        time,
-        trace,
-        n_episode=0,
-        piezo=None,
-        command=None,
-        sampling_rate=4e4,
-        input_time_unit="s",
-        input_trace_unit="A",
-        input_piezo_unit="V",
-        input_command_unit="V",
+        time: NDArray[np.floating],
+        trace: NDArray[np.floating],
+        n_episode: int=0,
+        piezo: NDArray[np.floating]=None,
+        command: NDArray[np.floating]=None,
+        sampling_rate: float=None,
+        input_time_unit: str="s",
+        input_trace_unit: str="A",
+        input_piezo_unit: str="V",
+        input_command_unit: str="V",
     ):
         """Episode objects hold all the information about an epoch and
         should be used to store raw and manipulated data
