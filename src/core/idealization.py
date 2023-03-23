@@ -20,10 +20,34 @@ class Idealizer:
         cls,
         signal,
         time,
+        params=None,
+    ):
+        """Get idealization for single episode."""
+
+        if params["method"] == "TC":
+            idealization, time = cls.TC_idealize_episode(
+                signal,
+                time,
+                params["amplitudes"],
+                params["thresholds"],
+                params["resolution"],
+                params["interpolation_factor"],
+            )
+        elif params["method"] == "DISC":
+            raise NotImplementedError
+        else:
+            raise ValueError(f'Unknown idealization method {params["method"]}.')
+        return idealization, time
+
+    @classmethod
+    def TC_idealize_episode(
+        cls,
+        signal,
+        time,
         amplitudes,
-        thresholds = None,
-        resolution = None,
-        interpolation_factor = 1,
+        thresholds=None,
+        resolution=None,
+        interpolation_factor=1,
     ):
         """Get idealization for single episode."""
 
