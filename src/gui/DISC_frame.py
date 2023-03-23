@@ -11,7 +11,7 @@ from PySide2.QtWidgets import (
 )
 
 from ..utils import string_to_array, array_to_string
-from ..constants import TIME_UNIT_FACTORS, CURRENT_UNIT_FACTORS
+from ..constants import TIME_UNIT_FACTORS, AMPERE_UNIT_FACTORS
 from ..core import IdealizationCache
 from ..utils.widgets import EntryWidget, VerticalContainerWidget
 from PySide2.QtGui import QIntValidator
@@ -86,7 +86,7 @@ class DISCFrame(VerticalContainerWidget):
             amps *= -1
             thresholds *= -1
 
-        trace_factor = CURRENT_UNIT_FACTORS[self.trace_unit]
+        trace_factor = AMPERE_UNIT_FACTORS[self.trace_unit]
         amps /= trace_factor
         thresholds /= trace_factor
         time_factor = TIME_UNIT_FACTORS[self.time_unit]

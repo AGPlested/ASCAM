@@ -19,7 +19,7 @@ from PySide2.QtWidgets import (
 )
 import pyqtgraph as pg
 
-from ..constants import TIME_UNIT_FACTORS, VOLTAGE_UNIT_FACTORS, CURRENT_UNIT_FACTORS
+from ..constants import TIME_UNIT_FACTORS, VOLTAGE_UNIT_FACTORS, AMPERE_UNIT_FACTORS
 from ..utils import clear_qt_layout, get_dict_key_index
 
 debug_logger = logging.getLogger("ascam.debug")
@@ -301,9 +301,9 @@ class EntryWidget(VerticalContainerWidget):
 
     def create_unit_entry_widgets(self):
         self.trace_unit_entry = QComboBox()
-        self.trace_unit_entry.addItems(list(CURRENT_UNIT_FACTORS.keys()))
+        self.trace_unit_entry.addItems(list(AMPERE_UNIT_FACTORS.keys()))
         self.trace_unit_entry.setCurrentIndex(
-            get_dict_key_index(CURRENT_UNIT_FACTORS, self.default_trace_unit)
+            get_dict_key_index(AMPERE_UNIT_FACTORS, self.default_trace_unit)
         )
 
         self.piezo_unit_entry = QComboBox()

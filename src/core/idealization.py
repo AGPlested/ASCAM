@@ -4,7 +4,7 @@ import logging
 import numpy as np
 
 from .analysis import interpolate
-from ..constants import CURRENT_UNIT_FACTORS, TIME_UNIT_FACTORS
+from ..constants import AMPERE_UNIT_FACTORS, TIME_UNIT_FACTORS
 from ..utils import round_off_tables
 
 
@@ -294,7 +294,7 @@ class IdealizationCache:
                 (episode_number[:, np.newaxis], ep_events), axis=1
             )
             event_array = np.concatenate((event_array, ep_events), axis=0)
-        event_array[:, 1] *= CURRENT_UNIT_FACTORS[trace_unit]
+        event_array[:, 1] *= AMPERE_UNIT_FACTORS[trace_unit]
         event_array[:, 2:] *= TIME_UNIT_FACTORS[time_unit]
         return event_array
 
@@ -306,7 +306,7 @@ class IdealizationCache:
         # np.isclose works best on order of unity (with default tolerances
         # rather than figure out tolerances for e-12 multiply the
         # amp values by the expected units pA
-        factor = CURRENT_UNIT_FACTORS["pA"]
+        factor = AMPERE_UNIT_FACTORS["pA"]
         mask = np.isclose(
             np.asarray(events[:, 1], dtype=float) * factor, amp * factor
         )

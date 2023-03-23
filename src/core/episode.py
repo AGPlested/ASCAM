@@ -2,7 +2,7 @@ import numpy as np
 
 
 from ..utils import piezo_selection
-from ..constants import CURRENT_UNIT_FACTORS, VOLTAGE_UNIT_FACTORS, TIME_UNIT_FACTORS
+from ..constants import AMPERE_UNIT_FACTORS, VOLTAGE_UNIT_FACTORS, TIME_UNIT_FACTORS
 from .filtering import gaussian_filter, ChungKennedyFilter
 from .analysis import baseline_correction, detect_first_activation
 from .idealization import Idealizer
@@ -39,7 +39,7 @@ class Episode:
 
         # units when given input
         self.time = time / TIME_UNIT_FACTORS[input_time_unit]
-        self.trace = trace / CURRENT_UNIT_FACTORS[input_trace_unit]
+        self.trace = trace / AMPERE_UNIT_FACTORS[input_trace_unit]
         self._id_time = time / TIME_UNIT_FACTORS[input_time_unit]
 
         if piezo is not None:

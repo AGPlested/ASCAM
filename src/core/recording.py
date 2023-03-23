@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 
 
-from ..constants import CURRENT_UNIT_FACTORS, VOLTAGE_UNIT_FACTORS, TIME_UNIT_FACTORS
+from ..constants import AMPERE_UNIT_FACTORS, VOLTAGE_UNIT_FACTORS, TIME_UNIT_FACTORS
 from ..utils import (
     parse_filename,
     piezo_selection,
@@ -419,7 +419,7 @@ class Recording(dict):
         export_array[0] = episodes[0].id_time*TIME_UNIT_FACTORS[time_unit]
         for k, episode in enumerate(episodes):
             export_array[k + 1] = (
-                episode.idealization * CURRENT_UNIT_FACTORS[trace_unit]
+                episode.idealization * AMPERE_UNIT_FACTORS[trace_unit]
             )
         # note that we transpose the export array to export the matrix
         np.savetxt(
@@ -474,7 +474,7 @@ class Recording(dict):
         # episodes = np.array(self[datakey])[indices]
         for episode in episodes:
             n = str(episode.n_episode).zfill(fill_length)
-            export_dict["trace" + n] = episode.trace * CURRENT_UNIT_FACTORS[trace_unit]
+            export_dict["trace" + n] = episode.trace * AMPERE_UNIT_FACTORS[trace_unit]
             if save_piezo:
                 export_dict["piezo" + n] = (
                     episode.piezo * VOLTAGE_UNIT_FACTORS[piezo_unit]
@@ -543,7 +543,7 @@ class Recording(dict):
                     episode.n_episode,
                     episode.first_activation * TIME_UNIT_FACTORS[time_unit],
                     episode.first_activation_amplitude
-                    * CURRENT_UNIT_FACTORS[trace_unit],
+                    * AMPERE_UNIT_FACTORS[trace_unit],
                 )
                 for episode in self.select_episodes(datakey, lists_to_save)
             ]
