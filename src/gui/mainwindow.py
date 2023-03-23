@@ -19,7 +19,6 @@ from ..gui import (
     EpisodeFrame,
     IdealizationFrame,
     FirstActivationFrame,
-    DISCFrame,
 )
 from ..utils import parse_filename, clear_qt_layout
 from ..core import Recording
