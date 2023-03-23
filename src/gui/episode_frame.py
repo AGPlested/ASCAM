@@ -146,7 +146,7 @@ class EpisodeSetsFrame(QWidget):
         return [x for x in self.episode_sets if x.name == name][0]
 
     def add_to_set(self, name: str, index: int):
-        if self.main.data.index_is_in_set(index=index, name=name):
+        if not self.main.data.index_is_in_set(index=index, name=name):
             self.get_set(name).add_episode(index)
         else:
             self.get_set(name).remove_episode(index)

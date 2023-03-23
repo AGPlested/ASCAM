@@ -51,3 +51,8 @@ def test_create_new_set(qtbot, main, monkeypatch):
     assert main.ep_frame.episode_sets_frame.episode_sets[1].key == "a"
     assert main.ep_frame.episode_sets_frame.episode_sets[1].episodes == []
     assert main.data.episode_sets["SetName"] == ([], "a")
+
+def test_add_to_set(qtbot, main):
+    main.ep_frame.episode_sets_frame.add_to_set(name="SetName", index=0)
+    assert main.data.episode_sets["SetName"] == ([0], "a")
+    assert main.ep_frame.episode_sets_frame.episode_sets[0].episodes == [0]
