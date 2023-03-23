@@ -114,6 +114,7 @@ class Recording(dict):
         return np.array(self[datakey])[indices]
 
     def episodes_in_lists(self, names):
+        """Return an array containing all the episodes in the lists `names`."""
         if isinstance(str, names):
             names = [names]
         indices = list()
@@ -123,6 +124,55 @@ class Recording(dict):
         indices = np.array(list(set(indices)))
         debug_logger.debug(f"Selected episodes: {indices}")
         return np.array(self.series)[indices]
+
+    def index_is_in_list(self, index, listname):
+        return index in self.lists[listname][0]
+
+    def add_new_list(self, name, key):
+        self.parent.main.data.lists[name] = ([], key)
+        debug_logger.debug(
+            f"added list '{name}' with key '{key}'\n"
+            "lists are now:\n"
+            f"{self.lists}"
+        )
+
+    def add_episode_to_list(self, name, index):
+        self.lists[name][0].append(index)
+        ana_logger.debug(
+            f"added episode "
+            f"{self.parent.main.data.series[index].n_episode} "
+            f"to list {name}"
+        )
+
+    def add_episodes_to_list(self, name, indices):
+        if isinstance(indices, int):
+            indices = [indices]
+        for i in indices:
+            self.add_episode_to_list(name, i)
+
+    def remove_episode_from_list(self, name, index):
+        self.lists[name][0].remove(index)
+        ana_logger.debug(
+            f"removed episode "
+            f"{self.parent.main.data.series[index].n_episode} "
+            f"from list {name}"
+        )
+
+    def remove_episodes_from_list(self, name, indices):
+        if isinstance(indices, int):
+            indices = [indices]
+        for i in indices:
+            self.remove_episode_from_list(name, i)
+
+    def index_to_episode_number(self, index):
+        return self.parent.main.data.series[index].n_episode
+
+    def get_episode_keys(self, index):
+        assigned_keys = [
+            key for (eplist, key) in self.parent.main.data.lists.values()
+            if index in eplist and key is not None
+        ]
+        return assigned_keys.sort()
 
     @property
     def series(self):
