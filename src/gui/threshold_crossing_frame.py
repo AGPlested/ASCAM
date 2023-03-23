@@ -21,10 +21,9 @@ debug_logger = logging.getLogger("ascam.debug")
 
 
 class ThresholdCrossingFrame(EntryWidget):
-    def __init__(self, parent):
+    def __init__(self, parent, main):
         # Parent is the IdealizationTabFrame widget.
-        super().__init__(parent)
-        self.idealization_cache = None
+        super().__init__(parent=parent, main=main)
 
     def keyPressEvent(self, event):
         if event.key() in (QtCore.Qt.Key_Return, QtCore.Qt.Key_Enter):
@@ -97,7 +96,7 @@ class ThresholdCrossingFrame(EntryWidget):
         self.idealize_episode()
         self.parent.parent.main.plot_frame.update_episode()
 
-    def on_episode_click(self, *args):
+    def on_episode_click(self, *_):
         self.idealize_episode()
 
     def idealize_episode(self):
@@ -205,11 +204,7 @@ class ThresholdCrossingFrame(EntryWidget):
             try:
                 self.idealization_cache.clear_idealization()
             except AttributeError as e:
-                if "'IdealizationTab' object has no attribute 'idealization_cache'" in str(
-                    e
-                ) or "object has no attribute " in str(
-                    e
-                ):
+                if "no attribute 'idealization_cache'" in str(e):
                     pass
                 else:
                     raise AttributeError(e)
@@ -231,8 +226,9 @@ class ThresholdCrossingFrame(EntryWidget):
                 debug_logger.debug("interpolation factor has changed")
             else:
                 changed = False
-        except AttributeError:
-            pass
+        except AttributeError as e:
+            if  "no attribute 'idealization_cache'" not in str(e):
+                raise AttributeError(e)
         if changed:
             try:
                 debug_logger.debug("changing name of old histogram frame")

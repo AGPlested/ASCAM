@@ -19,7 +19,7 @@ debug_logger = logging.getLogger("ascam.debug")
 
 class FirstActivationFrame(EntryWidget):
     def __init__(self, main):
-        super().__init__(main)
+        super().__init__(parent=main, main=main)
         self.main = main
         self.setFixedWidth(ANALYSIS_FRAME_WIDTH)
 

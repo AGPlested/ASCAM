@@ -110,9 +110,11 @@ class IdealizationFrame(QWidget):
         return self.current_tab.get_params()
 
     def idealization(self, n_episode=None):
-        if self.current_tab.idealization_cache is not None:
+        try:
             return self.current_tab.idealization_cache.idealization(n_episode)
-        return None
+        except AttributeError as e:
+            if "no attribute 'idealization_cache'" in str(e):
+                return None
 
     def time(self, n_episode=None):
         return self.current_tab.idealization_cache.time(n_episode)
@@ -134,7 +136,9 @@ class IdealizationTabFrame(QTabWidget):
         self.parent = parent
 
         if idealization_method == "TC":
-            self.tabs = [ThresholdCrossingFrame(self)]
+            self.tabs = [ThresholdCrossingFrame(
+                parent=self,
+                main=parent.main,)]
         elif idealization_method == "DISC":
             self.tabs = [DISCFrame(self, parent.main)]
         self.addTab(self.tabs[0], "1")
@@ -165,7 +169,7 @@ class IdealizationTabFrame(QTabWidget):
         title = str(self.count()+1)
         debug_logger.debug(f"adding new {idealization_method} tab with number {title}")
         if idealization_method == "TC":
-            tab = ThresholdCrossingFrame(self)
+            tab = ThresholdCrossingFrame(self, self.parent.main)
         elif idealization_method == "DISC":
             tab = DISCFrame(self, self.parent.main)
         else:
