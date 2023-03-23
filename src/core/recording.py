@@ -141,7 +141,7 @@ class Recording(dict):
         self.episode_sets[name][0].append(index)
         ana_logger.debug(
             f"added episode "
-            f"{self.parent.main.data.series[index].n_episode} "
+            f"{self.series[index].n_episode} "
             f"to list {name}"
         )
 
@@ -155,7 +155,7 @@ class Recording(dict):
         self.episode_sets[name][0].remove(index)
         ana_logger.debug(
             f"removed episode "
-            f"{self.parent.main.data.series[index].n_episode} "
+            f"{self.series[index].n_episode} "
             f"from list {name}"
         )
 
@@ -166,14 +166,15 @@ class Recording(dict):
             self.remove_episode_from_set(name, i)
 
     def index_to_episode_number(self, index):
-        return self.parent.main.data.series[index].n_episode
+        return self.series[index].n_episode
 
-    def get_episode_keys(self, index):
+    def get_episode_keys(self, index) -> list:
         assigned_keys = [
-            key for (epset, key) in self.parent.main.data.lists.values()
+            key for (epset, key) in self.episode_sets.values()
             if index in epset and key is not None
         ]
-        return assigned_keys.sort()
+        assigned_keys.sort()
+        return assigned_keys
 
     @property
     def series(self):
