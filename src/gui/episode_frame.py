@@ -36,7 +36,7 @@ class EpisodeFrame(QWidget):
         self.keyPressed.connect(self.key_pressed)
 
     def create_widgets(self):
-        self.list_frame = ListFrame(self)
+        self.list_frame = ListFrame(parent=self, main=self.main)
         self.layout.addWidget(self.list_frame)
 
         self.series_selection = QComboBox()
@@ -45,7 +45,7 @@ class EpisodeFrame(QWidget):
         self.series_selection.currentTextChanged.connect(self.switch_series)
         self.layout.addWidget(self.series_selection)
 
-        self.ep_list = EpisodeList(self)
+        self.ep_list = EpisodeList(parent=self, main=self.main)
         self.layout.addWidget(self.ep_list)
 
     def switch_series(self, index):
@@ -96,9 +96,10 @@ class EpisodeFrame(QWidget):
 class ListFrame(QWidget):
     keyPressed = QtCore.Signal(str)
 
-    def __init__(self, parent, *args, **kwargs):
+    def __init__(self, parent, main, *args, **kwargs):
         super(ListFrame, self).__init__(*args, **kwargs)
         self.parent = parent
+        self.main = main
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
 
@@ -199,9 +200,10 @@ class EpisodeList(QListWidget):
 
     keyPressed = QtCore.Signal(str)
 
-    def __init__(self, parent, *args, **kwargs):
+    def __init__(self, parent, main, *args, **kwargs):
         super(EpisodeList, self).__init__(*args, **kwargs)
         self.parent = parent
+        self.main = main
         self.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Expanding)
         self.currentItemChanged.connect(
@@ -212,15 +214,15 @@ class EpisodeList(QListWidget):
     def on_item_click(self, item, _):
         debug_logger.debug(f"clicked new episode")
         ep_number = int(item.text().split()[1])
-        self.parent.main.data.current_ep_ind = ep_number
+        self.main.data.current_ep_ind = ep_number
 
     def populate(self):
         self.currentItemChanged.disconnect(self.on_item_click)
         self.clear()
-        if self.parent.main.data is not None:
+        if self.main.data is not None:
             debug_logger.debug("inserting data")
             self.addItems(
-                [f"Episode {e.n_episode}" for e in self.parent.main.data.series]
+                [f"Episode {e.n_episode}" for e in self.main.data.series]
             )
         self.setCurrentRow(0)
         self.currentItemChanged.connect(
