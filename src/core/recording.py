@@ -454,9 +454,9 @@ class Recording(dict):
         time_unit,
         trace_unit,
         amplitudes,
-        thresholds,
-        resolution,
-        interpolation_factor,
+        thresholds=None,
+        resolution=None,
+        interpolation_factor=None,
     ):
         debug_logger.debug(f"export_idealization")
 
@@ -474,17 +474,18 @@ class Recording(dict):
                 episode.idealization * AMPERE_UNIT_FACTORS[trace_unit]
             )
         # note that we transpose the export array to export the matrix
-        np.savetxt(
-            filepath,
-            export_array.T,
-            delimiter=",",
-            header=f"amplitudes = {amplitudes};"
-            f"thresholds = {thresholds};"
-            f"resolution = {resolution};"
-            f"interpolation_factor = {interpolation_factor}"
-            "\n Time, "
-            + ", ".join(["Episode number " + str(e.n_episode) for e in episodes]),
-        )
+
+        header=f"amplitudes = {amplitudes};"
+        if thresholds is not None:
+            header += f"thresholds = {thresholds};"
+        if resolution is not None:
+            header += f"resolution = {resolution};"
+        if interpolation_factor is not None:
+            header += f"interpolation_factor = {interpolation_factor};"
+        header += "\nTime, "
+        header += ", ".join(["Episode " + str(e.n_episode) for e in episodes])
+
+        np.savetxt(filepath, export_array.T, delimiter=",", header=header)
 
     def export_matlab(
         self,
