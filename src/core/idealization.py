@@ -20,23 +20,24 @@ class Idealizer:
         cls,
         signal,
         time,
+        method="TC",
         params=None,
     ):
         """Get idealization for single episode."""
 
-        if params["method"] == "TC":
+        if method == "TC":
             idealization, time = cls.TC_idealize_episode(
                 signal,
                 time,
                 params["amplitudes"],
-                params["thresholds"],
-                params["resolution"],
-                params["interpolation_factor"],
+                params.get("thresholds", None),
+                params.get("resolution", None),
+                params.get("interpolation_factor", 1),
             )
-        elif params["method"] == "DISC":
+        elif method == "DISC":
             raise NotImplementedError
         else:
-            raise ValueError(f'Unknown idealization method {params["method"]}.')
+            raise ValueError(f'Unknown idealization method {method}.')
         return idealization, time
 
     @classmethod
@@ -67,7 +68,7 @@ class Idealizer:
     def threshold_crossing(
         signal,
         amplitudes,
-        thresholds = None,
+        thresholds=None,
     ):
         """Perform a threshold-crossing idealization on the signal.
 
@@ -77,34 +78,32 @@ class Idealizer:
             thresholds - the thresholds above/below which signal is mapped
                 to an amplitude"""
 
-        amplitudes = copy.copy(
-            np.sort(amplitudes)
-        )  # sort amplitudes in descending order
+        # sort amplitudes in descending order
+        amplitudes = copy.copy(np.sort(amplitudes))
         amplitudes = amplitudes[::-1]
 
         # if thresholds are not or incorrectly supplied take midpoint between
         # amplitudes as thresholds
-        if thresholds is not None and (thresholds.size != amplitudes.size - 1):
-            warnings.warn(
+        if thresholds is None:
+            thresholds = (amplitudes[1:] + amplitudes[:-1]) / 2
+        elif (thresholds.size != amplitudes.size - 1):
+            raise ValueError(
                 f"Too many or too few thresholds given, there should be "
                 f"{amplitudes.size - 1} but there are {thresholds.size}.\n"
                 f"Thresholds = {thresholds}."
             )
 
-            thresholds = (amplitudes[1:] + amplitudes[:-1]) / 2
-
         # for convenience we include the trivial case of only 1 amplitude
         if amplitudes.size == 1:
-            idealization = np.ones(signal.size) * amplitudes
-        else:
-            idealization = np.zeros(len(signal))
-            # np.where returns a tuple containing array so we have to get the
-            # first element to get the indices
-            inds = np.where(signal > thresholds[0])[0]
-            idealization[inds] = amplitudes[0]
-            for thresh, amp in zip(thresholds, amplitudes[1:]):
-                inds = np.where(signal < thresh)[0]
-                idealization[inds] = amp
+            return np.ones(signal.size) * amplitudes
+        idealization = np.zeros(len(signal))
+        # np.where returns a tuple containing array so we have to get the
+        # first element to get the indices
+        inds = np.where(signal > thresholds[0])[0]
+        idealization[inds] = amplitudes[0]
+        for thresh, amp in zip(thresholds, amplitudes[1:]):
+            inds = np.where(signal < thresh)[0]
+            idealization[inds] = amp
 
         return idealization
 
@@ -214,13 +213,15 @@ class IdealizationCache:
     def __init__(
         self,
         data,
-        amplitudes,
+        method="TC",
+        amplitudes=None,
         thresholds=[],
         resolution=None,
         interpolation_factor=None,
     ):
         self.data = data
 
+        self.method = method
         self.amplitudes = amplitudes
         self.thresholds = thresholds
         self.resolution = resolution
@@ -277,6 +278,15 @@ class IdealizationCache:
                 episode.idealization = None
                 episode.id_time = None
 
+    @property
+    def params(self):
+        return {
+            "amplitudes": self.amplitudes,
+            "thresholds": self.thresholds,
+            "resolution": self.resolution,
+            "interpolation_factor": self.interpolation_factor,
+        }
+
     def idealize_episode(self, n_episode=None):
         if n_episode is None:
             n_episode = self.data.current_ep_ind
@@ -285,12 +295,7 @@ class IdealizationCache:
                 f"idealizing episode {n_episode} of "
                 f"series {self.data.current_datakey}"
             )
-            self.data.episode(n_episode).idealize(
-                self.amplitudes,
-                self.thresholds,
-                self.resolution,
-                self.interpolation_factor,
-            )
+            self.data.episode(n_episode).idealize(self.method, self.params)
 
         else:
             debug_logger.debug(f"episode number {n_episode} already idealized")

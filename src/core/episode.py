@@ -70,20 +70,9 @@ class Episode:
         # because manual marking can choose points that are not in the time array
         return self.trace[np.argmin(np.abs(self.time - self.first_activation))]
 
-    def idealize(
-        self, amplitudes, thresholds=None, resolution=None, interpolation_factor=1
-    ):
-        params = {"method": "TC", "amplitudes": amplitudes,
-                     "thresholds": thresholds, "resolution": resolution,
-                     "interpolation_factor": interpolation_factor}
-        if params["method"] == "TC":
-            self.TC_idealize(params)
-        else:
-            raise ValueError("Unknown idealization method")
-
-    def TC_idealize(self, params):
+    def idealize(self, method, params):
         self.idealization, self.id_time = Idealizer.idealize_episode(
-            self.trace, self.time, params=params)
+                self.trace, self.time, method=method, params=params)
 
     def gauss_filter_episode(self, filter_frequency=1e3, sampling_rate=4e4):
         """Replace the current trace of the episode by the gauss filtered

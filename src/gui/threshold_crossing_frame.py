@@ -210,7 +210,7 @@ class ThresholdCrossingFrame(EntryWidget):
                 else:
                     raise AttributeError(e)
             self.idealization_cache = IdealizationCache(
-                self.parent.parent.main.data, amps, thresholds, resolution, intrp_factor
+                self.parent.parent.main.data, "TC", amps, thresholds, resolution, intrp_factor
             )
         return amps, thresholds, resolution, intrp_factor
 
