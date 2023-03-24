@@ -272,7 +272,7 @@ class Recording(dict):
 
         fdatakey = f"GFILTER{filter_freq}_"
         if self.current_datakey == "raw_":
-            # if its the first operation drop the 'raw-'
+            # if its the first operation drop the 'raw_'
             new_datakey = fdatakey
         else:
             # if operations have been done before combine the names
