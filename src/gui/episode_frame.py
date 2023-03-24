@@ -83,7 +83,7 @@ class EpisodeFrame(QWidget):
         self.keyPressed.emit(event.text())
 
     def key_pressed(self, key):
-        assigned_keys = [key for (_, key) in self.main.data.lists.values()]
+        assigned_keys = [key for (_, key) in self.main.data.episode_sets.values()]
         if key in assigned_keys:
             for ep_set in self.episode_sets_frame.episode_sets:
                 if key == ep_set.key:
