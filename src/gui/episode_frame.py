@@ -95,7 +95,6 @@ class EpisodeFrame(QWidget):
 class EpisodeSet():
     def __init__(self, main, name: str, key: str | None=None):
         self.main = main
-        # self.selected = False
         main.data.add_new_set(name, key)
         self.name = name
         self.key = key
@@ -128,7 +127,6 @@ class EpisodeSetsFrame(QWidget):
         self.new_set("All")
 
         self.new_button = QPushButton("New List")
-        # self.new_button.clicked.connect(self.create_dialog)
         self.new_button.clicked.connect(self.new_set_button)
         self.layout.addWidget(self.new_button)
 
