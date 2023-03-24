@@ -1,29 +1,7 @@
-import os
-
-import pytest
 from pytestqt import qtbot
-from unittest.mock import MagicMock
-from PySide2.QtWidgets import QApplication
 from PySide2.QtCore import Qt
 
 from src.gui.episode_frame import EpisodeFrame, NewSetDialog
-from src.gui.mainwindow import MainWindow
-from src.core import Recording
-from src.constants import TEST_FILE_NAME
-
-@pytest.fixture(scope="class")
-def recording():
-    path = os.path.split( os.path.dirname(os.path.abspath(__file__)) )[0]
-    path = os.path.join(path, "data")
-    TEST_FILE = os.path.join(path, TEST_FILE_NAME)
-    return Recording.from_file(TEST_FILE, 4e4)
-
-@pytest.fixture(scope="class")
-def main(recording):
-    QApplication([])
-    main_window = MainWindow(screen_resolution=(1920, 1080))
-    main_window.data = recording
-    return main_window
 
 class TestEpisodeFrame():
     # Note these tests alter the class scoped fixtures main and recording
@@ -94,3 +72,40 @@ class TestEpisodeFrame():
         qtbot.keyClick(main.ep_frame.ep_list, "a")
         assert main.ep_frame.episode_sets_frame.episode_sets[1].episodes == [0]
         assert main.data.episode_sets["SetName"] == ([0], "a")
+
+
+# # def test_switch_series(qtbot):
+# #     # Create a mock main window object
+# #     class MainWindow:
+# #         def __init__(self):
+# #             self.data = {'key1': {}, 'key2': {}}
+
+# #     main_window = MainWindow()
+# #     episode_frame = EpisodeFrame(main_window)
+
+# #     # Set up the necessary mocks
+# #     tc_frame_mock = MagicMock()
+# #     main_window.tc_frame = tc_frame_mock
+
+# #     # Call the method with a valid series key
+# #     episode_frame.switch_series('key2')
+
+# #     # Check that the current_datakey attribute was set correctly
+# #     assert main_window.data['current_datakey'] == 'key2'
+
+# #     # Check that the tc_frame methods were called
+# #     tc_frame_mock.get_params.assert_called_once()
+# #     tc_frame_mock.idealize_episode.assert_called_once()
+
+# #     # Reset the mocks
+# #     tc_frame_mock.reset_mock()
+
+# #     # Call the method with an invalid series key
+# #     episode_frame.switch_series('invalid_key')
+
+# #     # Check that the current_datakey attribute was not changed
+# #     assert main_window.data['current_datakey'] == 'key2'
+
+# #     # Check that the tc_frame methods were not called
+# #     tc_frame_mock.get_params.assert_not_called()
+# #     tc_frame_mock.idealize_episode.assert_not_called()
