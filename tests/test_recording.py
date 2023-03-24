@@ -1,5 +1,7 @@
-import pytest
 import os
+
+import pytest
+import tempfile
 import numpy as np
 
 from src.core import Recording
@@ -67,6 +69,7 @@ class TestRecording():
 
     def test_export_idealization(self, recording, tmp_path):
         # Test exporting idealization to a CSV file
+        #TODO add tempfile here to read the file and check the contents are correct
         params = {"amplitudes": np.array([0, -1, -1.4, -2])}
         for ep in recording.series:
             ep.idealize(method="TC", params=params)
@@ -110,6 +113,35 @@ class TestRecording():
         # persisting.
         assert np.allclose(data[:, 1], recording.episode().idealization)
 
+    @pytest.fixture(scope="class")
+    def mat_save_file(self):
+        _, temp_file_name = tempfile.mkstemp()
+        return temp_file_name+".mat"
+
+    def test_export_matlab_all_raw_data(self, recording, tmp_path, mat_save_file):
+        # Test exporting a recording to a MATLAB file
+        recording.export_matlab(
+            filepath=os.path.join(tmp_path, mat_save_file),
+            datakey="raw_",
+            lists_to_save=["All"],
+            save_piezo=True,
+            save_command=True,
+        )
+        assert os.path.exists(os.path.join(tmp_path, mat_save_file))
+
+    def test_load_exported_matlab_all_raw_data(self, recording, tmp_path, mat_save_file):
+        # Test loading a recording from a MATLAB file
+        assert os.path.exists(os.path.join(tmp_path, mat_save_file))
+        loaded_recording = Recording._load_from_matlab(
+                        Recording(os.path.join(tmp_path, mat_save_file)),
+                                                       trace_input_unit="A",
+                                                       piezo_input_unit="V",
+                                                       command_input_unit="V",
+                                                       time_input_unit="s")
+        assert np.allclose(recording["raw_"][0].trace, loaded_recording["raw_"][0].trace)
+        assert np.allclose(recording["raw_"][0].piezo, loaded_recording["raw_"][0].piezo)
+        assert np.allclose(recording["raw_"][0].command, loaded_recording["raw_"][0].command)
+
 
     #TODO: Write these tests
     # def test_CK_filter_series(self, recording):
@@ -118,6 +150,10 @@ class TestRecording():
     # def test_detect_fa(self, recording):
     # def test_series_hist(self, recording):
     # def test_episode_hist(self, recording):
+    # def test_load_from_axograph(self, recording):
+    # def test_save_to_pickle(self, recording):
+    # def test_save_to_axograph(self, recording):
+    # def test_load_from_pickle(self, recording):
 
 # def test_save_to_pickle():
 #     # Test saving and loading a Recording object to/from a pickle file
