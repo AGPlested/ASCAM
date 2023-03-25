@@ -67,9 +67,7 @@ def test_extract_events_with_resolution(resolution, trace):
 @pytest.mark.parametrize("trace, events", test_traces)
 def test_extract_events(trace, events):
     out = Idealizer.extract_events(trace, np.arange(len(trace)))
-    print(out)
-    print(events)
-    assert np.all(out == events)
+    assert np.allclose(out, events)
 
 def test_single_amplitude():
     # Test case with only one amplitude
@@ -100,3 +98,37 @@ def test_wrong_thresholds():
     thresholds = np.array([0.5, 0.8, 0.9])
     with pytest.raises(ValueError):
         Idealizer.threshold_crossing(signal, amplitudes, thresholds)
+
+@pytest.fixture
+def correct_amplitudes():
+    return np.array(range(0,5))
+
+@pytest.mark.true_signal(n_samples=100)
+@pytest.mark.capped_noisy_signal(noise_limit=0.49, n_samples=100)
+def test_threshold_crossing(signal_trunc_noise, correct_amplitudes,
+                             true_signal):
+    # Test case with default thresholds
+    idealization = Idealizer.threshold_crossing(signal_trunc_noise, correct_amplitudes)
+    assert np.allclose(idealization, true_signal)
+
+@pytest.mark.true_signal(n_samples=100)
+@pytest.mark.time(n_samples=100)
+@pytest.mark.capped_noisy_signal(noise_limit=0.49, n_samples=100)
+def test_idealize_episode_TC(signal_trunc_noise, correct_amplitudes,
+                             time, true_signal):
+    # Test case with default thresholds
+    idealization, _ = Idealizer.TC_idealize_episode(signal_trunc_noise, time,
+                                                 correct_amplitudes)
+    assert np.allclose(idealization, true_signal)
+
+@pytest.mark.true_signal(n_samples=100)
+@pytest.mark.time(n_samples=100)
+@pytest.mark.capped_noisy_signal(noise_limit=0.49, n_samples=100)
+def test_idealize_episode_with_method_TC(signal_trunc_noise, correct_amplitudes,
+                             time, true_signal):
+    params = {"amplitudes": correct_amplitudes}
+    idealization, _ = Idealizer.idealize_episode(signal_trunc_noise,
+                                              time, method="TC",
+                                              params=params
+                                              )
+    assert np.allclose(idealization, true_signal)

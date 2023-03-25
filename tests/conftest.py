@@ -4,9 +4,11 @@ import pytest
 import tempfile
 import numpy as np
 from PySide2.QtWidgets import QApplication
+from scipy.stats import truncnorm
 
 from src.core import Recording
 from src.constants import TEST_FILE_NAME
+from src.core.DISC import sample_chain
 from src.gui.mainwindow import MainWindow
 
 
@@ -51,3 +53,41 @@ def mat_save_file():
     _, temp_file_name = tempfile.mkstemp()
     return temp_file_name+".mat"
 
+@pytest.fixture(scope="class")
+def TM():
+    """This is the transition matrix used in the example data.
+    The values are based on private correspondance with chatgpt."""
+    return np.array([[0.0, 0.59, 0.22, 0.11, 0.08],
+              [0.03, 0.0, 0.67, 0.15, 0.15],
+              [0.07, 0.16, 0.0, 0.63, 0.14],
+              [0.03, 0.15, 0.18, 0.0, 0.64],
+              [0.11, 0.11, 0.11, 0.11, 0.56]])
+
+@pytest.fixture(scope="class")
+def true_signal(TM, request):
+    n_samples = request.keywords.get("n_samples", 10)
+    np.random.seed(0)
+    initial_state = 4  # start at closed state
+    return sample_chain(TM, initial_state, n_samples)
+
+@pytest.fixture(scope="class")
+def time(request):
+    sampling_rate = request.keywords.get("sampling_rate", 4e4)
+    n_samples = request.keywords.get("n_samples", 10)
+    return np.arange(n_samples)/sampling_rate
+
+@pytest.fixture(scope="class")
+def signal_trunc_noise(true_signal, request):
+    """Return a noisy signal with noise following a truncated normal
+    distribution. The noise should be set to be less than the smallest
+    difference between a state in the true signal (integer valued in
+    steps of 1) and a threshold.
+    Use by adding the decorator
+    @pytest.mark.signal_trunc_noise(noise_limit=0.49)
+    to the test function and then pass signal_trunc_noise as an
+    argument to the function.
+    """
+    noise_limit = request.keywords.get("noise_limit", 0.49)
+    np.random.seed(1)
+    return true_signal + truncnorm.rvs(-noise_limit, noise_limit,
+                                       size=true_signal.shape)

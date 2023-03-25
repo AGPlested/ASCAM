@@ -52,9 +52,6 @@ class Idealizer:
     ):
         """Get idealization for single episode."""
 
-        if thresholds is None or thresholds.size != amplitudes.size - 1:
-            thresholds = (amplitudes[1:] + amplitudes[:-1]) / 2
-
         if interpolation_factor != 1:
             signal, time = interpolate(signal, time, interpolation_factor)
 
@@ -66,10 +63,10 @@ class Idealizer:
 
     @staticmethod
     def threshold_crossing(
-        signal,
-        amplitudes,
-        thresholds=None,
-    ):
+            signal: np.ndarray,
+            amplitudes: np.ndarray,
+            thresholds: np.ndarray | None=None,
+    ) -> np.ndarray:
         """Perform a threshold-crossing idealization on the signal.
 
         Arguments:
@@ -82,8 +79,7 @@ class Idealizer:
         amplitudes = copy.copy(np.sort(amplitudes))
         amplitudes = amplitudes[::-1]
 
-        # if thresholds are not or incorrectly supplied take midpoint between
-        # amplitudes as thresholds
+        # if thresholds are not given use the midpoints between the amplitudes as thresholds
         if thresholds is None:
             thresholds = (amplitudes[1:] + amplitudes[:-1]) / 2
         elif (thresholds.size != amplitudes.size - 1):
@@ -97,7 +93,7 @@ class Idealizer:
         if amplitudes.size == 1:
             return np.ones(signal.size) * amplitudes
         idealization = np.zeros(len(signal))
-        # np.where returns a tuple containing array so we have to get the
+        # np.where returns a tuple containing the array so we have to get the
         # first element to get the indices
         inds = np.where(signal > thresholds[0])[0]
         idealization[inds] = amplitudes[0]
