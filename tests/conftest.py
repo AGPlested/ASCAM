@@ -63,21 +63,21 @@ def TM():
               [0.03, 0.15, 0.18, 0.0, 0.64],
               [0.11, 0.11, 0.11, 0.11, 0.56]])
 
-@pytest.fixture(scope="class")
-def true_signal(TM, request):
-    n_samples = request.keywords.get("n_samples", 10)
-    np.random.seed(0)
-    initial_state = 4  # start at closed state
-    return sample_chain(TM, initial_state, n_samples)
+@pytest.fixture()
+def true_signal(TM):
+    def _f(n_samples=100):
+        np.random.seed(0)
+        return sample_chain(TM, 4, n_samples)
+    return _f
 
-@pytest.fixture(scope="class")
-def time(request):
-    sampling_rate = request.keywords.get("sampling_rate", 4e4)
-    n_samples = request.keywords.get("n_samples", 10)
-    return np.arange(n_samples)/sampling_rate
+@pytest.fixture()
+def time():
+    def _f(sampling_rate=4e4, n_samples=100):
+        return np.arange(n_samples)/sampling_rate
+    return _f
 
-@pytest.fixture(scope="class")
-def signal_trunc_noise(true_signal, request):
+@pytest.fixture()
+def signal_trunc_noise(true_signal):
     """Return a noisy signal with noise following a truncated normal
     distribution. The noise should be set to be less than the smallest
     difference between a state in the true signal (integer valued in
@@ -87,7 +87,8 @@ def signal_trunc_noise(true_signal, request):
     to the test function and then pass signal_trunc_noise as an
     argument to the function.
     """
-    noise_limit = request.keywords.get("noise_limit", 0.49)
-    np.random.seed(1)
-    return true_signal + truncnorm.rvs(-noise_limit, noise_limit,
-                                       size=true_signal.shape)
+    def _f(noise_limit=0.49, n=100):
+        np.random.seed(1)
+        return true_signal(n) + truncnorm.rvs(-noise_limit, noise_limit,
+                                           size=true_signal(n).shape)
+    return _f
