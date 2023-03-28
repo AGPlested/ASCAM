@@ -7,13 +7,13 @@ from .divisive_segmentation import divisive_segmentation
 from .agglomerative_clustering import agglomorative_clustering_fit
 from .viterbi import viterbi_path_from_data
 
-def run_DISC(data, confidence_level=0.05, min_seg_length=3,
+def run_DISC(data, alpha=0.05, min_seg_length=3,
              min_cluster_size=3, IC_div_seg="BIC", IC_HAC="BIC",
              BIC_method="full"):
     """
     Input:
         data - observations to be idealized
-        confidence_level - alpha value for t-test in change point detection
+        alpha - alpha value for t-test in change point detection
         min_seg_length - minimum segment length in change point detection
         min_cluster_size - minimum cluster size for k-mean clustering
         IC_div_seg - information criterion for divisive segmentation
@@ -26,7 +26,7 @@ def run_DISC(data, confidence_level=0.05, min_seg_length=3,
     # 1) Start with divisive segmentation.
     data_fit, _ = divisive_segmentation(
                                         data,
-                                        confidence_level=confidence_level,
+                                        alpha=alpha,
                                         min_seg_length=min_seg_length,
                                         min_cluster_size=min_cluster_size,
                                         information_criterion=IC_div_seg,

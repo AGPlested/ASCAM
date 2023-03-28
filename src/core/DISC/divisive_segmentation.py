@@ -67,11 +67,11 @@ def idealize_bisect(data, critical_value, noise_std, min_seg_length=3):
         out = np.mean(data) * np.ones(len(data))
     return out
 
-def changepoint_detection(data, confidence_level, min_seg_length=3):
+def changepoint_detection(data, alpha, min_seg_length=3):
     """
         Input:
             data = 1×N array of data in which to look for a change point
-            confidence_level = float ∈(0,1), confidence value for t-test
+            alpha = float ∈(0,1), alpha value for t-test
         Output:
             id_bisect = 1×N array containing the idealization of the data
                         achieved by recursive change point detection and
@@ -80,7 +80,7 @@ def changepoint_detection(data, confidence_level, min_seg_length=3):
                   where C is the number of change points
     """
     N = len(data)
-    crit_val = sp.stats.t.ppf(q=1-confidence_level/2, df=N-1)
+    crit_val = sp.stats.t.ppf(q=1-alpha/2, df=N-1)
     # Estimate standard deviation of noise in data.
     # Based on the DISC code, they reference:
     # Shuang et al., J. Phys Chem Letters, 2014, DOI: 10.1021/jz501435p.
@@ -111,7 +111,7 @@ def kmeans_assign(data, center_guesses, *args, **kwargs):
         counts[k] = np.sum(inds==k)
     return centers, assigned, counts
 
-def divisive_segmentation(data, confidence_level = 0.001,
+def divisive_segmentation(data, alpha = 0.001,
                           min_seg_length = 3,
                           min_cluster_size = 3,
                           information_criterion = "BIC",
@@ -138,7 +138,7 @@ def divisive_segmentation(data, confidence_level = 0.001,
         # identify the change points in the current cluster
         change_point_data_fit, _ = changepoint_detection(
                 data[k_index],
-                confidence_level=confidence_level,
+                alpha=alpha,
                 min_seg_length=min_seg_length
                 )
         # report unique amplitudes (segments) discovered

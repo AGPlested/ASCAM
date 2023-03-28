@@ -19,8 +19,8 @@ from src.core.DISC.divisive_segmentation import (kmeans_assign,
                                                  detect_changepoints)
 
 n_samples = 100
-confidence_level = 0.01
-crit_val = sp.stats.t.ppf(q=1-confidence_level/2, df=n_samples-1)
+alpha = 0.01
+crit_val = sp.stats.t.ppf(q=1-alpha/2, df=n_samples-1)
 noise_sigma = np.sqrt(0.1)
 # Edge cases for detecting a CP using t-test are the second and second to last elements because the first and last are excluded in the detection.
 CPs_with_edge_cases = [1, 2, 10, 13, 21, 29, 81, 89, 96, 8, 26, 68, 36, 59, 70, 31, 67, 85, 25, 53, 61, 98]
