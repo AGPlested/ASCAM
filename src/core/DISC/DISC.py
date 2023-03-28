@@ -3,13 +3,15 @@
 # The code in this module is based on their paper and partly on their
 # matlab implementation at commit af19eae on https://github.com/ChandaLab/DISC/
 
+import numpy as np
+
 from .divisive_segmentation import divisive_segmentation
 from .agglomerative_clustering import agglomorative_clustering_fit
 from .viterbi import viterbi_path_from_data
 
-def run_DISC(data, alpha=0.05, min_seg_length=3,
-             min_cluster_size=3, IC_div_seg="BIC", IC_HAC="BIC",
-             BIC_method="full"):
+def run_DISC(data, alpha: float=0.05, min_seg_length: int=3,
+             min_cluster_size: int=3, IC_div_seg: str="BIC", IC_HAC: str="BIC",
+             BIC_method: str="full") -> np.ndarray:
     """
     Input:
         data - observations to be idealized
