@@ -139,6 +139,16 @@ class Episode:
         if tracestd > stdthreshold:
             self.suspiciousSTD = True
 
+    def filter_by_piezo(self, deviation=0.05, active=True):
+        """Get the active piezo voltage of the episode."""
+
+        if self.piezo is None:
+            raise ValueError("No piezo data available")
+        return piezo_selection(self.time, self.piezo,
+                               self.trace, active=active,
+                               deviation=deviation
+                               )
+
     def get_command_stats(self):
         """Get the mean and standard deviation of the command voltage of the
         episode."""
