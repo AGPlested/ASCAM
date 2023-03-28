@@ -3,15 +3,9 @@
 # The code in this module is based on their paper and partly on their
 # matlab implementation at commit af19eae on https://github.com/ChandaLab/DISC/
 
-import numpy as np
-
 from .divisive_segmentation import divisive_segmentation
-from .agglomerative_clustering import (merge_by_ward_distance,
-                                       agglomorative_clustering_fit)
-from .infomation_criteria import compare_IC
-from .viterbi import (viterbi_path, viterbi_path_from_data,
-                      compute_emission_matrix,
-                      empirical_transition_matrix)
+from .agglomerative_clustering import agglomorative_clustering_fit
+from .viterbi import viterbi_path_from_data
 
 def run_DISC(data, confidence_level=0.05, min_seg_length=3,
              min_cluster_size=3, IC_div_seg="BIC", IC_HAC="BIC",

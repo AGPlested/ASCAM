@@ -3,8 +3,6 @@
 # The code in this module is based on their paper and partly on their
 # matlab implementation at commit af19eae on https://github.com/ChandaLab/DISC/
 
-from copy import copy
-
 import numpy as np
 from scipy.stats import norm
 
