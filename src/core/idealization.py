@@ -3,8 +3,6 @@ import copy
 import logging
 import numpy as np
 
-from .episode import Episode
-from .recording import Recording
 from .analysis import interpolate
 from .DISC import run_DISC
 from ..constants import AMPERE_UNIT_FACTORS, TIME_UNIT_FACTORS
@@ -47,7 +45,7 @@ class Idealizer:
     def DISC_idealize_trace(
         cls,
         trace:np.ndarray,
-        alpha:float=0.05,
+        alpha:float=0.001,
         min_seg_length:int=3,
         min_cluster_size:int=3,
         IC_div_seg:str="BIC",
@@ -61,8 +59,8 @@ class Idealizer:
     @classmethod
     def DISC_idealize_episode(
         cls,
-        episode:Episode,
-        alpha:float=0.05,
+        episode,
+        alpha:float=0.001,
         min_seg_length:int=3,
         min_cluster_size:int=3,
         IC_div_seg:str="BIC",
@@ -86,9 +84,9 @@ class Idealizer:
     @classmethod
     def DISC_idealize_recording(
         cls,
-        recording:Recording,
+        recording,
         datakey:str=None,
-        alpha:float=0.05,
+        alpha:float=0.001,
         min_seg_length:int=3,
         min_cluster_size:int=3,
         IC_div_seg:str="BIC",
