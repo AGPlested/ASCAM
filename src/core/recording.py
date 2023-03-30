@@ -168,7 +168,7 @@ class Recording(dict):
     def index_to_episode_number(self, index):
         return self.series[index].n_episode
 
-    def get_episode_keys(self, index) -> list:
+    def get_episode_set_keys(self, index) -> list:
         assigned_keys = [
             key for (epset, key) in self.episode_sets.values()
             if index in epset and key is not None
@@ -180,6 +180,33 @@ class Recording(dict):
     def series(self):
         return self[self.current_datakey]
 
+    def series_by_datakey(self, datakey):
+        return self[datakey]
+
+    def concatenated_series_by_datakey(self, datakey):
+        tmp_datakey = self.current_datakey
+        self.current_datakey = datakey
+        series = self.concatenated_series
+        self.current_datakey = tmp_datakey
+        return series
+
+    @property
+    def concatenated_series(self):
+        """Return an Episode object whose data is the concatenation of all
+        episodes in the current series."""
+        trace = np.concatenate([ep.trace for ep in self.series])
+        if self.has_piezo:
+            piezo = np.concatenate([ep.piezo for ep in self.series])
+        else:
+            piezo = None
+        if self.has_command:
+            command = np.concatenate([ep.command for ep in self.series])
+        else:
+            command = None
+        time_offsets = np.concatenate(( [0], np.cumsum([ep.t[-1] for ep in self.series[:-1]]) ))
+        time = np.concatenate([ep.t + offset for ep, offset in zip(self.series, time_offsets)])
+        return Episode(time, trace, piezo=piezo, command=command, sampling_rate=self.episode().sampling_rate)
+
     def episode(self, n_episode=None):
         if n_episode is None:
             n_episode = self.current_ep_ind
@@ -187,9 +214,9 @@ class Recording(dict):
         if out:
             return out[0]
         else:
-            debug_logger.warning(
-                f"tried to get episode with index {self.current_ep_ind} but it "
-                "doesn't exist"
+            raise ValueError(
+                f"Tried to get episode with index {self.current_ep_ind} but it "
+                "doesn't exist."
             )
 
     def next_episode_ind(self):
