@@ -177,13 +177,19 @@ test_transition_matrices = [np.array([[0.1, 0.9], [0.4, 0.6]]),
                             np.array([[0.5, 0.5], [0.8, 0.2]]),
                             np.array([[0.5, 0.5], [0.5, 0.5]]),
                             ]
-@pytest.mark.parametrize("TM", test_transition_matrices)
-def test_empirical_transition_matrix(TM):
+@pytest.mark.parametrize("transition_matrix", test_transition_matrices)
+def test_empirical_transition_matrix_2x2(transition_matrix):
     # Test whether the empirical transition matrix of the chain
     # is within 10% of the true transition matrix.
-    chain = sample_chain(TM, 0, n=10000)
-    assert np.allclose(empirical_transition_matrix(chain), TM,
+    chain = sample_chain(transition_matrix, 0, n=10000)
+    assert np.allclose(empirical_transition_matrix(chain), transition_matrix,
                        rtol=0.1)
+
+def test_empirical_transition_matrix_5x5(TM):
+    # Test whether the empirical transition matrix of the chain
+    # is within 10% of the true transition matrix.
+    chain = sample_chain(TM, 0, n=100000)
+    assert np.allclose(empirical_transition_matrix(chain), TM, rtol=0.1)
 
 # def test_on_real_data():
 #     rec = ascam.Recording.from_file(example_data_file)
