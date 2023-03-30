@@ -4,17 +4,15 @@ import pytest
 import numpy as np
 import scipy as sp
 
-from src import core as ascam
+from .conftest import get_test_data
+
+# from src import core as ascam
 from src.core.DISC import (
-        divisive_segmentation, merge_by_ward_distance,
-        compare_IC, compute_emission_matrix,
-        empirical_transition_matrix, viterbi_path,
-        t_test_changepoint_detection, run_DISC,
-        BIC, agglomorative_clustering_fit, normal_pdf,
+        merge_by_ward_distance, compare_IC, empirical_transition_matrix,
+        t_test_changepoint_detection, agglomorative_clustering_fit, normal_pdf,
         sample_chain
         )
-from src.core.DISC.agglomerative_clustering import (Ward_distances,
-                                                    merge_states)
+from src.core.DISC.agglomerative_clustering import merge_states
 from src.core.DISC.divisive_segmentation import (kmeans_assign,
                                                  detect_changepoints)
 
@@ -37,21 +35,6 @@ too_short_CPs = [0, 1, 98, 99]
 multiple_CPs_too_short = [(65, 67)]
 example_data_file = "data/GluA2_T1_SC-recording_40kHzSR.mat"
 
-def get_states(true_CP):
-    return np.concatenate((np.ones(true_CP+1), np.zeros(n_samples-true_CP-1)))
-
-def get_test_data(CPs):
-    if type(CPs[0]) == int:
-        out = [(cp, get_states(cp)) for cp in CPs]
-    else:
-        out = []
-        for cps in CPs:
-            data = np.ones(n_samples)
-            for cp in cps:
-                data[cp+1:-1] = (data[cp]+1)%2
-            data[-1] = data[-2]
-            out.append((cps, data))
-    return out
 
 @pytest.mark.parametrize("true_CP, data", get_test_data(CPs_with_edge_cases))
 def test_t_test_changepoint_detection_no_noise(true_CP, data):

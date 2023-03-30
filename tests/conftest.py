@@ -1,7 +1,6 @@
 import os
 
 import pytest
-import tempfile
 import numpy as np
 from PySide2.QtWidgets import QApplication
 from scipy.stats import truncnorm
@@ -56,7 +55,7 @@ def csv_data():
 @pytest.fixture(scope="class")
 def TM():
     """This is the transition matrix used in the example data.
-    The values are based on private correspondance with chatgpt."""
+    The values are based on private correspondence with chatgpt."""
     return np.array([[0.0, 0.59, 0.22, 0.11, 0.08],
               [0.03, 0.0, 0.67, 0.15, 0.15],
               [0.07, 0.16, 0.0, 0.63, 0.14],
@@ -92,3 +91,23 @@ def signal_trunc_noise(true_signal):
         return true_signal(n) + truncnorm.rvs(-noise_limit, noise_limit,
                                            size=true_signal(n).shape)
     return _f
+
+def get_states(true_CP, n_samples=100):
+    """Get a vector that is 1 for the first `true_CP` samples and 0 for the rest."""
+    return np.concatenate((np.ones(true_CP+1), np.zeros(n_samples-true_CP-1)))
+
+def get_test_data(CPs, n_samples=100):
+    """Given a vector of changepoints or a list of such vectors return a list of
+    tuples (cps, data) where cps is the changepoints and data is the signal.
+    The signal has two states 1 and 0."""
+    if type(CPs[0]) == int:
+        out = [(cp, get_states(cp)) for cp in CPs]
+    else:
+        out = []
+        for cps in CPs:
+            data = np.ones(n_samples)
+            for cp in cps:
+                data[cp+1:-1] = (data[cp]+1)%2
+            data[-1] = data[-2]
+            out.append((cps, data))
+    return out
