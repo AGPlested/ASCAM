@@ -170,8 +170,8 @@ def test_agglomorative_clustering(true_CPs, data):
 params_normal_pdf_test = [(0,1), (-5,10), (-10,1), (0.001, 10), (0, 0.0001)]
 @pytest.mark.parametrize("mean, std", params_normal_pdf_test)
 def test_normal_pdf(mean, std):
-    x = np.arange(-2*std, 2*std, std/10)
-    assert np.allclose(normal_pdf(x, mu=1, sigma=1), sp.stats.norm.pdf(x, 1, 1))
+    x = np.arange(-2*std, 2*std, std/10) + mean
+    assert np.allclose(normal_pdf(x, mu=mean, sigma=std), sp.stats.norm.pdf(x, mean, std))
 
 test_transition_matrices = [np.array([[0.1, 0.9], [0.4, 0.6]]),
                             np.array([[0.5, 0.5], [0.8, 0.2]]),
