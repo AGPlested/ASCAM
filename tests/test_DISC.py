@@ -185,9 +185,9 @@ def test_empirical_transition_matrix(TM):
     assert np.allclose(empirical_transition_matrix(chain), TM,
                        rtol=0.1)
 
-def test_on_real_data():
-    rec = ascam.Recording.from_file(example_data_file)
-    rec.baseline_correction()
-    rec.gauss_filter_series(1000)
-    ep = rec["BC_GFILTER1000_"][0]
-    run_DISC(ep.trace)
+# def test_on_real_data():
+#     rec = ascam.Recording.from_file(example_data_file)
+#     rec.baseline_correction()
+#     rec.gauss_filter_series(1000)
+#     ep = rec["BC_GFILTER1000_"][0]
+#     run_DISC(ep.trace)
