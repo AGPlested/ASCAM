@@ -4,6 +4,7 @@ import logging
 import numpy as np
 
 from .analysis import interpolate
+from .DISC import run_DISC
 from ..constants import AMPERE_UNIT_FACTORS, TIME_UNIT_FACTORS
 from ..utils import round_off_tables
 
@@ -39,6 +40,53 @@ class Idealizer:
         else:
             raise ValueError(f'Unknown idealization method {method}.')
         return idealization, time
+
+    @classmethod
+    def DISC_idealize_episode(
+        cls,
+        episode,
+        alpha=0.05,
+        min_seg_length=3,
+        min_cluster_size=3,
+        IC_div_seg="BIC",
+        IC_HAC="BIC",
+        BIC_method="full",
+        piezo_selection=True,
+        deviation=0.05,
+        active_piezo=True,
+    ):
+        """Run DISC idealization on single episode."""
+        if piezo_selection:
+            signal = episode.filter_by_piezo(deviation=deviation, active=active_piezo)
+        else:
+            signal = episode.trace
+        return run_DISC(signal, alpha, min_seg_length, min_cluster_size, IC_div_seg,
+                  IC_HAC, BIC_method)
+
+    @classmethod
+    def DISC_idealize_recording(
+        cls,
+        recording,
+        datakey=None,
+        alpha=0.05,
+        min_seg_length=3,
+        min_cluster_size=3,
+        IC_div_seg="BIC",
+        IC_HAC="BIC",
+        BIC_method="full",
+        piezo_selection=True,
+        deviation=0.05,
+        active_piezo=True,
+    ):
+        """Run DISC idealization on recording."""
+        if datakey is None or datakey == recording.current_datakey:
+            data = recording.concatenated_series
+        elif datakey in recording.keys():
+            data = recording.get_concatenated_data(datakey)
+        else:
+            raise ValueError(f'Unknown datakey {datakey}.')
+        cls.DISC_idealize_episode(data, alpha, min_seg_length, min_cluster_size, IC_div_seg,
+                    IC_HAC, BIC_method, piezo_selection, deviation, active_piezo)
 
     @classmethod
     def TC_idealize_episode(
