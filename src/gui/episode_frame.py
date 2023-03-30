@@ -153,7 +153,7 @@ class EpisodeSetsFrame(QWidget):
     def updatet_episode_name(self, index: int):
         """Updates the name of the episode at position `index` to include the
         correct keys."""
-        assigned_keys = self.main.data.get_episode_keys(index)
+        assigned_keys = self.main.data.get_episode_set_keys(index)
         ep_display_name = f"Episode {self.main.data.series[index].n_episode} "
         s = "".join([f"[{k}]" for k in assigned_keys])
         ep_display_name += s.rjust(20 - len(ep_display_name), " ")
