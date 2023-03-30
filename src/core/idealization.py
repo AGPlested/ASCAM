@@ -3,6 +3,8 @@ import copy
 import logging
 import numpy as np
 
+from .episode import Episode
+from .recording import Recording
 from .analysis import interpolate
 from .DISC import run_DISC
 from ..constants import AMPERE_UNIT_FACTORS, TIME_UNIT_FACTORS
@@ -42,41 +44,59 @@ class Idealizer:
         return idealization, time
 
     @classmethod
+    def DISC_idealize_trace(
+        cls,
+        trace:np.ndarray,
+        alpha:float=0.05,
+        min_seg_length:int=3,
+        min_cluster_size:int=3,
+        IC_div_seg:str="BIC",
+        IC_HAC:str="BIC",
+        BIC_method:str="full",
+    ):
+        """Run DISC idealization on a trace."""
+        return run_DISC(trace, alpha, min_seg_length, min_cluster_size,
+                        IC_div_seg, IC_HAC, BIC_method)
+
+    @classmethod
     def DISC_idealize_episode(
         cls,
-        episode,
-        alpha=0.05,
-        min_seg_length=3,
-        min_cluster_size=3,
-        IC_div_seg="BIC",
-        IC_HAC="BIC",
-        BIC_method="full",
-        piezo_selection=True,
-        deviation=0.05,
-        active_piezo=True,
+        episode:Episode,
+        alpha:float=0.05,
+        min_seg_length:int=3,
+        min_cluster_size:int=3,
+        IC_div_seg:str="BIC",
+        IC_HAC:str="BIC",
+        BIC_method:str="full",
+        piezo_selection:bool=True,
+        deviation:float=0.05,
+        active_piezo:bool=True,
     ):
         """Run DISC idealization on single episode."""
         if piezo_selection:
-            signal = episode.filter_by_piezo(deviation=deviation, active=active_piezo)
+            signal = episode.filter_by_piezo(deviation=deviation,
+                                             active=active_piezo)
         else:
             signal = episode.trace
-        return run_DISC(signal, alpha, min_seg_length, min_cluster_size, IC_div_seg,
-                  IC_HAC, BIC_method)
+        return cls.DISC_idealize_trace(signal, alpha, min_seg_length,
+                                       min_cluster_size, IC_div_seg, IC_HAC,
+                                       BIC_method
+                                       )
 
     @classmethod
     def DISC_idealize_recording(
         cls,
-        recording,
-        datakey=None,
-        alpha=0.05,
-        min_seg_length=3,
-        min_cluster_size=3,
-        IC_div_seg="BIC",
-        IC_HAC="BIC",
-        BIC_method="full",
-        piezo_selection=True,
-        deviation=0.05,
-        active_piezo=True,
+        recording:Recording,
+        datakey:str=None,
+        alpha:float=0.05,
+        min_seg_length:int=3,
+        min_cluster_size:int=3,
+        IC_div_seg:str="BIC",
+        IC_HAC:str="BIC",
+        BIC_method:str="full",
+        piezo_selection:bool=True,
+        deviation:float=0.05,
+        active_piezo:bool=True,
     ):
         """Run DISC idealization on recording."""
         if datakey is None or datakey == recording.current_datakey:
