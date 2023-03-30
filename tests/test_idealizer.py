@@ -136,3 +136,26 @@ def test_idealize_episode_with_method_TC(signal_trunc_noise, correct_amplitudes,
                                                  params=params
                                                  )
     assert np.allclose(idealization, true_signal())
+
+
+def test_idealize_episode_DISC(signal_trunc_noise, true_signal):
+    idealization = Idealizer.DISC_idealize_trace(signal_trunc_noise(),
+                                                    alpha=0.001,
+                                                    min_seg_length=3,
+                                                    min_cluster_size=3,
+                                                    IC_div_seg="BIC",
+                                                    IC_HAC="BIC",
+                                                    BIC_method="full",
+                                                    )
+    assert np.allclose(idealization, true_signal())
+
+
+# def test_idealize_episode_with_method_DISC(signal_trunc_noise, correct_amplitudes,
+#                                          time, true_signal):
+#     params = {"alpha" : 0.05, "min_seg_length" : 3, "min_cluster_size" : 3,
+#               "IC_div_seg" : "BIC", "IC_HAC" : "BIC", "BIC_method" : "full", }
+#     idealization, _ = Idealizer.idealize_episode(signal_trunc_noise(),
+#                                                  time(), method="DISC",
+#                                                  params=params
+#                                                  )
+#     assert np.allclose(idealization, true_signal())
