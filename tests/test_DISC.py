@@ -33,41 +33,40 @@ multiple_CPs = [(8, 26, 68),
                      ]
 too_short_CPs = [0, 1, 98, 99]
 multiple_CPs_too_short = [(65, 67)]
-example_data_file = "data/GluA2_T1_SC-recording_40kHzSR.mat"
 
 
-@pytest.mark.parametrize("true_CP, data", get_test_data(CPs_with_edge_cases))
+@pytest.mark.parametrize("true_CP, data", get_test_data(CPs_with_edge_cases, n_samples))
 def test_t_test_changepoint_detection_no_noise(true_CP, data):
     _, CP = t_test_changepoint_detection(data, noise_sigma)
     assert true_CP==CP
 
 # Test detect_changepoints function.
-@pytest.mark.parametrize("true_CP, data", get_test_data(CPs))
+@pytest.mark.parametrize("true_CP, data", get_test_data(CPs, n_samples))
 def test_detect_changepoints_no_noise_1CP(true_CP, data):
     out, cps = detect_changepoints(data, crit_val, noise_sigma)
     assert np.allclose(out, data)
     assert np.all(cps==true_CP)
 
 # Test detect_changepoints function.
-@pytest.mark.parametrize("true_CP, data", get_test_data(too_short_CPs))
+@pytest.mark.parametrize("true_CP, data", get_test_data(too_short_CPs, n_samples))
 def test_detect_changepoints_no_noise_1CP_too_short(true_CP, data):
     out, cps = detect_changepoints(data, crit_val, noise_sigma)
     assert np.allclose(out, np.mean(data))
     assert cps.size == 0  # I.e. no changepoints found.
 
-@pytest.mark.parametrize("true_CPs, data", get_test_data(multiple_CPs))
+@pytest.mark.parametrize("true_CPs, data", get_test_data(multiple_CPs, n_samples))
 def test_detect_changepoints_no_noise_multiple_CPs(true_CPs, data):
     out, cps = detect_changepoints(data, crit_val, noise_sigma)
     assert np.all(cps==true_CPs)
     assert np.allclose(out, data)
 
-@pytest.mark.parametrize("true_CPs, data", get_test_data(multiple_CPs_too_short))
+@pytest.mark.parametrize("true_CPs, data", get_test_data(multiple_CPs_too_short, n_samples))
 def test_detect_changepoints_no_noise_multiple_CPs_too_short(true_CPs, data):
     out, cps = detect_changepoints(data, crit_val, noise_sigma)
     assert np.allclose(out, np.mean(data))
     assert cps.size == 0  # I.e. no changepoints found.
 
-@pytest.mark.parametrize("true_CPs, data", get_test_data(multiple_CPs))
+@pytest.mark.parametrize("true_CPs, data", get_test_data(multiple_CPs, n_samples))
 def test_kmeans_assign(true_CPs, data):
     centers = [0,1]
     true_counts = [np.sum(data==0), np.sum(data==1)]
@@ -76,7 +75,7 @@ def test_kmeans_assign(true_CPs, data):
     assert np.allclose(out, data)
     assert np.all(counts==true_counts)
 
-@pytest.mark.parametrize("true_CPs, data", get_test_data(multiple_CPs))
+@pytest.mark.parametrize("true_CPs, data", get_test_data(multiple_CPs, n_samples))
 def test_compare_BIC_classification_error(true_CPs, data):
     data_fit, _ = detect_changepoints(data, crit_val, noise_sigma)
     data += np.random.randn(np.size(data_fit))  # This is needed to be able to fit a standard deviation when compution the BIC
@@ -87,7 +86,7 @@ def test_compare_BIC_classification_error(true_CPs, data):
     ind = compare_IC(data, np.vstack([data_fit, data_fit_bad1, data_fit_bad2]).T, IC="BIC", BIC_method="approx")
     assert ind==0
 
-@pytest.mark.parametrize("true_CPs, data", get_test_data(multiple_CPs))
+@pytest.mark.parametrize("true_CPs, data", get_test_data(multiple_CPs, n_samples))
 def test_compare_BIC_too_many_states(true_CPs, data):
     data_fit, _ = detect_changepoints(data, crit_val, noise_sigma)
     data += 0.01*np.random.randn(np.size(data_fit))  # This is needed to be able to fit a standard deviation when compution the BIC
@@ -119,12 +118,12 @@ def test_compare_BIC_too_many_states(true_CPs, data):
     assert ind2==2
     assert ind3==3
 
-@pytest.mark.parametrize("true_CPs, data", get_test_data(multiple_CPs))
+@pytest.mark.parametrize("true_CPs, data", get_test_data(multiple_CPs, n_samples))
 def test_merge_states(true_CPs, data):
     merged = merge_states(data, 0, 1)
     assert np.allclose(merged, np.mean(data))
 
-@pytest.mark.parametrize("true_CPs, data", get_test_data(multiple_CPs))
+@pytest.mark.parametrize("true_CPs, data", get_test_data(multiple_CPs, n_samples))
 def test_merge_by_ward_distance(true_CPs, data):
     data_fit, _ = detect_changepoints(data, crit_val, noise_sigma)
     data += 0.01*np.random.randn(np.size(data_fit))  # This is needed to be able to fit a standard deviation when compution the BIC
@@ -136,7 +135,7 @@ def test_merge_by_ward_distance(true_CPs, data):
     assert ind==1
     assert np.shape(all_fits)[1] == len(np.unique(over_fit))
 
-@pytest.mark.parametrize("true_CPs, data", get_test_data(multiple_CPs))
+@pytest.mark.parametrize("true_CPs, data", get_test_data(multiple_CPs, n_samples))
 def test_agglomorative_clustering(true_CPs, data):
     data_fit, _ = detect_changepoints(data, crit_val, noise_sigma)
     data += 0.01*np.random.randn(np.size(data_fit))  # This is needed to be able to fit a standard deviation when compution the BIC
@@ -174,8 +173,8 @@ def test_empirical_transition_matrix_5x5(TM):
     chain = sample_chain(TM, 0, n=100000)
     assert np.allclose(empirical_transition_matrix(chain), TM, rtol=0.1)
 
-# def test_on_real_data():
-#     rec = ascam.Recording.from_file(example_data_file)
+# def test_on_real_data(path_to_ascam_file):
+#     rec = ascam.Recording.from_file(path_to_ascam_file)
 #     rec.baseline_correction()
 #     rec.gauss_filter_series(1000)
 #     ep = rec["BC_GFILTER1000_"][0]
