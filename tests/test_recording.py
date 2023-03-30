@@ -1,9 +1,10 @@
 import os
+import tempfile
 
 import numpy as np
 
 from src.core import Recording
-from src.core.filtering import gaussian_filter, ChungKennedyFilter
+from src.core.filtering import gaussian_filter
 from src.core.analysis import baseline_correction
 
 class TestRecording():
@@ -88,8 +89,10 @@ class TestRecording():
         # persisting.
         assert np.allclose(data[:, 1], recording.episode().idealization)
 
-    def test_export_matlab_all_raw_data(self, recording, tmp_path, mat_save_file):
+    def test_export_matlab_all_raw_data(self, recording, tmp_path):
         # Test exporting a recording to a MATLAB file
+        _, temp_file_name = tempfile.mkstemp()
+        mat_save_file = temp_file_name+".mat"
         recording.export_matlab(
             filepath=os.path.join(tmp_path, mat_save_file),
             datakey="raw_",
