@@ -10,7 +10,7 @@ class TestRecording():
     def test_load_from_matlab(self, recording):
         assert isinstance(recording, Recording)
 
-    def test_data_key_initialization(self, recording):
+    def test_datakey_initialization(self, recording):
         assert recording.current_datakey == "raw_"
 
     def test_episode_list_initialization(self, recording):
