@@ -27,16 +27,11 @@ class Idealizer:
         """Get idealization for single episode."""
 
         if method == "TC":
-            idealization, time = cls.TC_idealize_episode(
-                signal,
-                time,
-                params["amplitudes"],
-                params.get("thresholds", None),
-                params.get("resolution", None),
-                params.get("interpolation_factor", 1),
-            )
+            idealization, time = cls.TC_idealize_trace(
+                signal, time, **params,)
         elif method == "DISC":
-            raise NotImplementedError
+            time, idealization = cls.DISC_idealize_trace(
+                signal, time, **params,)
         else:
             raise ValueError(f'Unknown idealization method {method}.')
         return idealization, time
@@ -45,6 +40,7 @@ class Idealizer:
     def DISC_idealize_trace(
         cls,
         trace:np.ndarray,
+        time:np.ndarray,
         alpha:float=0.001,
         min_seg_length:int=3,
         min_cluster_size:int=3,
@@ -53,7 +49,7 @@ class Idealizer:
         BIC_method:str="full",
     ):
         """Run DISC idealization on a trace."""
-        return run_DISC(trace, alpha, min_seg_length, min_cluster_size,
+        return time, run_DISC(trace, alpha, min_seg_length, min_cluster_size,
                         IC_div_seg, IC_HAC, BIC_method)
 
     @classmethod
@@ -77,10 +73,10 @@ class Idealizer:
         else:
             signal = episode.trace
             time = episode.time
-        return time, cls.DISC_idealize_trace(signal, alpha, min_seg_length,
+        return cls.DISC_idealize_trace(signal, time, alpha, min_seg_length,
                                         min_cluster_size, IC_div_seg, IC_HAC,
                                         BIC_method
-                                        ),
+                                        )
 
     @classmethod
     def DISC_idealize_recording(
@@ -134,7 +130,7 @@ class Idealizer:
     #     return idealization, time
 
     @classmethod
-    def TC_idealize_episode(
+    def TC_idealize_trace(
         cls,
         signal,
         time,

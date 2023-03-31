@@ -120,15 +120,15 @@ def test_threshold_crossing(signal_trunc_noise, correct_amplitudes, true_signal)
     assert np.allclose(idealization, true_signal())
 
 
-def test_idealize_episode_TC(signal_trunc_noise, correct_amplitudes,
+def test_idealize_trace_TC(signal_trunc_noise, correct_amplitudes,
                              time, true_signal):
     # Test case with default thresholds
-    idealization, _ = Idealizer.TC_idealize_episode(signal_trunc_noise(), time(),
+    idealization, _ = Idealizer.TC_idealize_trace(signal_trunc_noise(), time(),
                                                     correct_amplitudes)
     assert np.allclose(idealization, true_signal())
 
 
-def test_idealize_episode_with_method_TC(signal_trunc_noise, correct_amplitudes,
+def test_idealize_trace_with_method_TC(signal_trunc_noise, correct_amplitudes,
                                          time, true_signal):
     params = {"amplitudes": correct_amplitudes}
     idealization, _ = Idealizer.idealize_trace(signal_trunc_noise(),
@@ -139,11 +139,12 @@ def test_idealize_episode_with_method_TC(signal_trunc_noise, correct_amplitudes,
 
 BIC_methods_values = ["full", "approx"]
 @pytest.mark.parametrize("BIC_method", BIC_methods_values)
-def test_idealize_trace_DISC(signal_trunc_noise, BIC_method):
+def test_idealize_trace_DISC(signal_trunc_noise, BIC_method, time):
     """Since DISC output is harder to predict we only check if the
     output is of the correct shape."""
-    idealization = Idealizer.DISC_idealize_trace(signal_trunc_noise(),
+    _, idealization = Idealizer.DISC_idealize_trace(signal_trunc_noise(), time,
                                                 BIC_method=BIC_method)
+    assert isinstance(idealization, np.ndarray)
     assert idealization.shape == signal_trunc_noise().shape
 
 pieze_selection_values = [True, False]
@@ -174,15 +175,17 @@ def test_idealize_recording_DISC(recording, datakey):
             datakey=datakey).filter_by_piezo(deviation=deviation)
     else:
         _, conc_trace = recording.concatenated_series.filter_by_piezo(deviation=deviation)
+    assert isinstance(idealization, np.ndarray)
+    assert isinstance(conc_trace, np.ndarray)
     assert idealization.shape == conc_trace.shape
 
 
-# def test_idealize_episode_with_method_DISC(signal_trunc_noise, correct_amplitudes,
-#                                          time, true_signal):
-#     params = {"alpha" : 0.05, "min_seg_length" : 3, "min_cluster_size" : 3,
-#               "IC_div_seg" : "BIC", "IC_HAC" : "BIC", "BIC_method" : "full", }
-#     idealization, _ = Idealizer.idealize_episode(signal_trunc_noise(),
-#                                                  time(), method="DISC",
-#                                                  params=params
-#                                                  )
-#     assert np.allclose(idealization, true_signal())
+def test_idealize_trace_with_method_DISC(signal_trunc_noise, correct_amplitudes,
+                                         time, true_signal):
+    params = {"alpha" : 0.05, "min_seg_length" : 3, "min_cluster_size" : 3,
+              "IC_div_seg" : "BIC", "IC_HAC" : "BIC", "BIC_method" : "full", }
+    idealization, _ = Idealizer.idealize_trace(signal_trunc_noise(),
+                                                 time(), method="DISC",
+                                                 params=params
+                                                 )
+    assert idealization.shape == true_signal().shape
