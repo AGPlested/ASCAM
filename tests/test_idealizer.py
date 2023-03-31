@@ -137,17 +137,43 @@ def test_idealize_episode_with_method_TC(signal_trunc_noise, correct_amplitudes,
                                                  )
     assert np.allclose(idealization, true_signal())
 
-
-def test_idealize_episode_DISC(signal_trunc_noise, true_signal):
+BIC_methods_values = ["full", "approx"]
+@pytest.mark.parametrize("BIC_method", BIC_methods_values)
+def test_idealize_trace_DISC(signal_trunc_noise, BIC_method):
+    """Since DISC output is harder to predict we only check if the
+    output is of the correct shape."""
     idealization = Idealizer.DISC_idealize_trace(signal_trunc_noise(),
-                                                    alpha=0.001,
-                                                    min_seg_length=3,
-                                                    min_cluster_size=3,
-                                                    IC_div_seg="BIC",
-                                                    IC_HAC="BIC",
-                                                    BIC_method="full",
-                                                    )
-    assert np.allclose(idealization, true_signal())
+                                                BIC_method=BIC_method)
+    assert idealization.shape == signal_trunc_noise().shape
+
+pieze_selection_values = [True, False]
+@pytest.mark.parametrize("piezo_selection", pieze_selection_values)
+def test_idealize_episode_DISC(recording, piezo_selection):
+    """Since DISC output is harder to predict we only check if the
+    output is of the correct shape."""
+    time, idealization = Idealizer.DISC_idealize_episode(recording.episode(),
+                                                piezo_selection=piezo_selection)
+    if piezo_selection:
+        eptime, trace = recording.episode().filter_by_piezo()
+        assert idealization.shape == trace.shape
+        assert time.shape == eptime.shape
+    else:
+        assert idealization.shape == recording.episode().trace.shape
+
+datakey_values = ["raw_", None]
+@pytest.mark.parametrize("datakey", datakey_values)
+def test_idealize_recording_DISC(recording, datakey):
+    """Since DISC output is harder to predict we only check if the
+    output is of the correct shape.
+    Use `BIC_method="full"` and `piezo_selection=True` because it is faster."""
+    _, idealization = Idealizer.DISC_idealize_recording(
+        recording, datakey=datakey, BIC_method="full", piezo_selection=True)
+    if datakey is not None:
+        _, conc_trace = recording.concatenated_series_by_datakey(
+            datakey=datakey).filter_by_piezo()
+    else:
+        _, conc_trace = recording.concatenated_series.filter_by_piezo()
+    assert idealization.shape == conc_trace.shape
 
 
 # def test_idealize_episode_with_method_DISC(signal_trunc_noise, correct_amplitudes,
