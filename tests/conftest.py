@@ -56,11 +56,12 @@ def csv_data():
 def TM():
     """This is the transition matrix used in the example data.
     The values are based on private correspondence with chatgpt."""
-    return np.array([[0.0, 0.59, 0.22, 0.11, 0.08],
-              [0.03, 0.0, 0.67, 0.15, 0.15],
-              [0.07, 0.16, 0.0, 0.63, 0.14],
-              [0.03, 0.15, 0.18, 0.0, 0.64],
-              [0.11, 0.11, 0.11, 0.11, 0.56]])
+
+    return np.array([[0.7, 0.1, 0.1, 0.05, 0.05],
+                     [0.1, 0.7, 0.1, 0.05, 0.05],
+                     [0.1, 0.1, 0.7, 0.05, 0.05],
+                     [0.05, 0.05, 0.05, 0.7, 0.15],
+                     [0.05, 0.05, 0.05, 0.15, 0.7]])
 
 @pytest.fixture()
 def true_signal(TM):
