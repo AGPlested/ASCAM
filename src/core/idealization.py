@@ -107,6 +107,32 @@ class Idealizer:
         return cls.DISC_idealize_episode(data, alpha, min_seg_length, min_cluster_size, IC_div_seg,
                     IC_HAC, BIC_method, piezo_selection, deviation, active_piezo)
 
+
+
+    #TODO: rename TC idealization to align with DISC method naming,
+    # ie idealize_trace for the current method and idealize_episode
+    # should actually take an episode object as argument
+    # @classmethod
+    # def TC_idealize_trace(
+    #     cls,
+    #     signal,
+    #     time,
+    #     amplitudes,
+    #     thresholds=None,
+    #     resolution=None,
+    #     interpolation_factor=1,
+    # ):
+    #     """Get idealization for single episode."""
+
+    #     if interpolation_factor != 1:
+    #         signal, time = interpolate(signal, time, interpolation_factor)
+
+    #     idealization = cls.threshold_crossing(signal, amplitudes, thresholds)
+
+    #     if resolution is not None:
+    #         idealization = cls.apply_resolution(idealization, time, resolution)
+    #     return idealization, time
+
     @classmethod
     def TC_idealize_episode(
         cls,
