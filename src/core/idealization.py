@@ -66,33 +66,34 @@ class Idealizer:
         IC_div_seg:str="BIC",
         IC_HAC:str="BIC",
         BIC_method:str="full",
-        piezo_selection:bool=True,
+        piezo_selection:bool=False,
         deviation:float=0.05,
         active_piezo:bool=True,
     ):
         """Run DISC idealization on single episode."""
         if piezo_selection:
-            signal = episode.filter_by_piezo(deviation=deviation,
+            time, signal = episode.filter_by_piezo(deviation=deviation,
                                              active=active_piezo)
         else:
             signal = episode.trace
-        return cls.DISC_idealize_trace(signal, alpha, min_seg_length,
-                                       min_cluster_size, IC_div_seg, IC_HAC,
-                                       BIC_method
-                                       )
+            time = episode.time
+        return time, cls.DISC_idealize_trace(signal, alpha, min_seg_length,
+                                        min_cluster_size, IC_div_seg, IC_HAC,
+                                        BIC_method
+                                        ),
 
     @classmethod
     def DISC_idealize_recording(
         cls,
         recording,
-        datakey:str=None,
+        datakey:str|None=None,
         alpha:float=0.001,
         min_seg_length:int=3,
         min_cluster_size:int=3,
         IC_div_seg:str="BIC",
         IC_HAC:str="BIC",
         BIC_method:str="full",
-        piezo_selection:bool=True,
+        piezo_selection:bool=False,
         deviation:float=0.05,
         active_piezo:bool=True,
     ):
@@ -100,10 +101,10 @@ class Idealizer:
         if datakey is None or datakey == recording.current_datakey:
             data = recording.concatenated_series
         elif datakey in recording.keys():
-            data = recording.get_concatenated_data(datakey)
+            data = recording.concatenated_series_by_datakey(datakey)
         else:
             raise ValueError(f'Unknown datakey {datakey}.')
-        cls.DISC_idealize_episode(data, alpha, min_seg_length, min_cluster_size, IC_div_seg,
+        return cls.DISC_idealize_episode(data, alpha, min_seg_length, min_cluster_size, IC_div_seg,
                     IC_HAC, BIC_method, piezo_selection, deviation, active_piezo)
 
     @classmethod
