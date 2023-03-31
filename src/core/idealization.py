@@ -17,7 +17,7 @@ class Idealizer:
     """Container object for the different idealization functions."""
 
     @classmethod
-    def idealize_episode(
+    def idealize_trace(
         cls,
         signal,
         time,

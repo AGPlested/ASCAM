@@ -131,7 +131,7 @@ def test_idealize_episode_TC(signal_trunc_noise, correct_amplitudes,
 def test_idealize_episode_with_method_TC(signal_trunc_noise, correct_amplitudes,
                                          time, true_signal):
     params = {"amplitudes": correct_amplitudes}
-    idealization, _ = Idealizer.idealize_episode(signal_trunc_noise(),
+    idealization, _ = Idealizer.idealize_trace(signal_trunc_noise(),
                                                  time(), method="TC",
                                                  params=params
                                                  )

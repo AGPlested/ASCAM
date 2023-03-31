@@ -71,7 +71,7 @@ class Episode:
         return self.trace[np.argmin(np.abs(self.time - self.first_activation))]
 
     def idealize(self, method, params):
-        self.idealization, self.id_time = Idealizer.idealize_episode(
+        self.idealization, self.id_time = Idealizer.idealize_trace(
                 self.trace, self.time, method=method, params=params)
 
     def gauss_filter_episode(self, filter_frequency=1e3, sampling_rate=4e4):
