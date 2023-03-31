@@ -1,5 +1,4 @@
 import os
-import tempfile
 
 import numpy as np
 
@@ -89,10 +88,8 @@ class TestRecording():
         # persisting.
         assert np.allclose(data[:, 1], recording.episode().idealization)
 
-    def test_export_matlab_all_raw_data(self, recording, tmp_path):
+    def test_export_matlab_all_raw_data(self, recording, tmp_path, mat_save_file):
         # Test exporting a recording to a MATLAB file
-        _, temp_file_name = tempfile.mkstemp()
-        mat_save_file = temp_file_name+".mat"
         recording.export_matlab(
             filepath=os.path.join(tmp_path, mat_save_file),
             datakey="raw_",

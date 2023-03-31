@@ -1,4 +1,5 @@
 import os
+import tempfile
 
 import pytest
 import numpy as np
@@ -47,10 +48,10 @@ def csv_data():
     data = np.loadtxt(filepath, skiprows=1, delimiter=",")
     return header, data
 
-# @pytest.fixture(scope="class")
-# def mat_save_file():
-#     _, temp_file_name = tempfile.mkstemp()
-#     return temp_file_name+".mat"
+@pytest.fixture(scope="class")
+def mat_save_file():
+    _, temp_file_name = tempfile.mkstemp()
+    return temp_file_name+".mat"
 
 @pytest.fixture(scope="class")
 def TM():
