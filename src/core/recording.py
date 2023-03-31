@@ -184,6 +184,8 @@ class Recording(dict):
         return self[datakey]
 
     def concatenated_series_by_datakey(self, datakey):
+        if datakey not in self.keys():
+            raise ValueError(f"Datakey {datakey} not found in recording.")
         tmp_datakey = self.current_datakey
         self.current_datakey = datakey
         series = self.concatenated_series
@@ -203,8 +205,8 @@ class Recording(dict):
             command = np.concatenate([ep.command for ep in self.series])
         else:
             command = None
-        time_offsets = np.concatenate(( [0], np.cumsum([ep.t[-1] for ep in self.series[:-1]]) ))
-        time = np.concatenate([ep.t + offset for ep, offset in zip(self.series, time_offsets)])
+        time_offsets = np.concatenate(( [0], np.cumsum([ep.time[-1] for ep in self.series[:-1]]) ))
+        time = np.concatenate([ep.time + offset for ep, offset in zip(self.series, time_offsets)])
         return Episode(time, trace, piezo=piezo, command=command, sampling_rate=self.episode().sampling_rate)
 
     def episode(self, n_episode=None):
