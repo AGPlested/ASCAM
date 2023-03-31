@@ -166,13 +166,14 @@ def test_idealize_recording_DISC(recording, datakey):
     """Since DISC output is harder to predict we only check if the
     output is of the correct shape.
     Use `BIC_method="full"` and `piezo_selection=True` because it is faster."""
+    deviation = 0.0001  # by making this very small we select less data and speed up the test
     _, idealization = Idealizer.DISC_idealize_recording(
-        recording, datakey=datakey, BIC_method="full", piezo_selection=True)
+        recording, datakey=datakey, BIC_method="full", piezo_selection=True, deviation=deviation)
     if datakey is not None:
         _, conc_trace = recording.concatenated_series_by_datakey(
-            datakey=datakey).filter_by_piezo()
+            datakey=datakey).filter_by_piezo(deviation=deviation)
     else:
-        _, conc_trace = recording.concatenated_series.filter_by_piezo()
+        _, conc_trace = recording.concatenated_series.filter_by_piezo(deviation=deviation)
     assert idealization.shape == conc_trace.shape
 
 
