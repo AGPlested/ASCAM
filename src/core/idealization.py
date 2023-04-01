@@ -298,15 +298,29 @@ class IdealizationCache:
         amplitudes=None,
         thresholds=[],
         resolution=None,
-        interpolation_factor=None,
+        interpolation_factor=1,
+        alpha=0.001,
+        min_seg_length=3,
+        min_cluster_size=3,
+        IC_div_seg="BIC",
+        IC_HAC="BIC",
+        BIC_method="full",
     ):
-        self.data = data
+        self.data = data  # Recording object
 
         self.method = method
-        self.amplitudes = amplitudes
-        self.thresholds = thresholds
-        self.resolution = resolution
-        self.interpolation_factor = interpolation_factor
+        if method == "TC":
+            self.amplitudes = amplitudes
+            self.thresholds = thresholds
+            self.resolution = resolution
+            self.interpolation_factor = interpolation_factor
+        elif method == "DISC":
+            self.alpha = alpha
+            self.min_seg_length = min_seg_length
+            self.min_cluster_size = min_cluster_size
+            self.IC_div_seg = IC_div_seg
+            self.IC_HAC = IC_HAC
+            self.BIC_method = BIC_method
 
     @property
     def ind_idealized(self):
@@ -361,12 +375,22 @@ class IdealizationCache:
 
     @property
     def params(self):
-        return {
-            "amplitudes": self.amplitudes,
-            "thresholds": self.thresholds,
-            "resolution": self.resolution,
-            "interpolation_factor": self.interpolation_factor,
-        }
+        if self.method == "TC":
+            return {
+                "amplitudes": self.amplitudes,
+                "thresholds": self.thresholds,
+                "resolution": self.resolution,
+                "interpolation_factor": self.interpolation_factor,
+            }
+        elif self.method == "DISC":
+            return {
+                    "alpha": self.alpha,
+                    "min_seg_length": self.min_seg_length,
+                    "min_cluster_size": self.min_cluster_size,
+                    "IC_div_seg": self.IC_div_seg,
+                    "IC_HAC": self.IC_HAC,
+                    "BIC_method": self.BIC_method,
+                    }
 
     def idealize_episode(self, n_episode=None):
         if n_episode is None:
@@ -376,8 +400,8 @@ class IdealizationCache:
                 f"idealizing episode {n_episode} of "
                 f"series {self.data.current_datakey}"
             )
+            # Idealizer.idealize_trace(self.data.episode(n_episode), self.method, self.params)
             self.data.episode(n_episode).idealize(self.method, self.params)
-
         else:
             debug_logger.debug(f"episode number {n_episode} already idealized")
 
