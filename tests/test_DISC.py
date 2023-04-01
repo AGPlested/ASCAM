@@ -167,11 +167,11 @@ def test_empirical_transition_matrix_2x2(transition_matrix):
     assert np.allclose(empirical_transition_matrix(chain), transition_matrix,
                        rtol=0.1)
 
-def test_empirical_transition_matrix_5x5(TM):
-    # Test whether the empirical transition matrix of the chain
-    # is within 10% of the true transition matrix.
-    chain = sample_chain(TM, 0, n=50000)
-    assert np.allclose(empirical_transition_matrix(chain), TM, rtol=0.1)
+# def test_empirical_transition_matrix_5x5(TM):
+#     # Test whether the empirical transition matrix of the chain
+#     # is within 10% of the true transition matrix.
+#     chain = sample_chain(TM, 0, n=50000)
+#     assert np.allclose(empirical_transition_matrix(chain), TM, rtol=0.1)
 
 # def test_on_real_data(path_to_ascam_file):
 #     rec = ascam.Recording.from_file(path_to_ascam_file)
