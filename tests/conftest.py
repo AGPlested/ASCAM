@@ -13,13 +13,6 @@ from src.gui.mainwindow import MainWindow
 
 
 @pytest.fixture(scope="class")
-def recording():
-    path = os.path.split( os.path.dirname(os.path.abspath(__file__)) )[0]
-    path = os.path.join(path, "data")
-    TEST_FILE = os.path.join(path, TEST_FILE_NAME)
-    return Recording.from_file(TEST_FILE, 4e4)
-
-@pytest.fixture(scope="class")
 def main(recording):
     QApplication([])
     main_window = MainWindow(screen_resolution=(1920, 1080))
@@ -32,8 +25,10 @@ def path_to_ascam_file(*args):
 
 @pytest.fixture(scope="class")
 def recording():
-    """Note: This fixture is only run once for all tests in this class.
-    It can therefore be modified by the tests and their order might be important."""
+    """Note: This fixture is only run once for all tests in a class.
+    It can therefore be modified by the tests and their order might be important.
+    This fixture is overwritte in the test_idealization_cache.py module. If you
+    make any changes here check if they should be applied there as well"""
     TEST_FILE = path_to_ascam_file("data", TEST_FILE_NAME)
     return Recording.from_file(TEST_FILE, 4e4)
 
