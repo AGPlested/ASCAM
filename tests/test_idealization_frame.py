@@ -75,9 +75,17 @@ class TestThresholdCrossingFrame():
             qtbot.mouseClick(tc_frame.calc_button, Qt.LeftButton)
         tc_frame.main.plot_frame.update_episode.assert_called_once()
 
+    def test_amp_unit_change(self, tc_frame):
+        assert tc_frame.trace_unit_entry.currentText() == "pA"
+        assert tc_frame.trace_unit == "pA"
+        tc_frame.trace_unit_entry.setCurrentText("mA")
+        assert tc_frame.trace_unit_entry.currentText() == "mA"
+        assert tc_frame.trace_unit == "mA"
+
+
     #TODO:
-    # test changing amplitude unit
-    # test entering amplitude values
+    # test entering amplitude values, using int and float and separated by
+    #   commas and spaces
     # test thresholds are updated when amplitude values are changed and
     #   when auto threshold is checked
     # test entering resolution values
