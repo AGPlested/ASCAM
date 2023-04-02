@@ -4,6 +4,7 @@ import tempfile
 import pytest
 import numpy as np
 from PySide2.QtWidgets import QApplication
+from PySide2.QtCore import Qt
 from scipy.stats import truncnorm
 
 from src.core import Recording
@@ -108,3 +109,10 @@ def get_test_data(CPs, n_samples=100):
             data[-1] = data[-2]
             out.append((cps, data))
     return out
+
+def clear_text_edit(qtbot, text_edit):
+    """Clear a text edit widget by selecting all text and pressing backspace."""
+    qtbot.mouseClick(text_edit, Qt.LeftButton)
+    qtbot.keyPress(text_edit, Qt.Key_A, Qt.ControlModifier)
+    qtbot.keyPress(text_edit, Qt.Key_Backspace)
+
