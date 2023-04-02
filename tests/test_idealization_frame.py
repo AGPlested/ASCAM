@@ -10,7 +10,7 @@ from src.gui.threshold_crossing_frame import ThresholdCrossingFrame
 from unittest.mock import MagicMock, patch
 
 @pytest.fixture(scope="module", autouse=True)
-def mock_other_classes():
+def mock_other_idealization_cache():
     with patch.object(IdealizationCache,
                       "idealize_episode",
                       new=MagicMock(return_value="IdealizationCache.idealize_episode called")
@@ -30,16 +30,12 @@ def main(main_window, mock_plot_frame):
     main_window.plot_frame.tc_tracking = False
     return main_window
 
-@pytest.fixture(scope="class")
-def id_cache():
-    id_cache = MagicMock()
-    return id_cache
-
 class TestThresholdCrossingFrame():
     # Note these tests alter the class scoped fixtures main and recording
     # so they must be run in order!
     # Tests that have side effects should have a docstring.
     def test_create_idealization_frame(self, main):
+        """Creates the IdealizationFrame object."""
         main.id_frame = IdealizationFrame(main, idealization_method="TC")
         assert isinstance(main.id_frame, IdealizationFrame)
 
@@ -56,10 +52,10 @@ class TestThresholdCrossingFrame():
         return main.id_frame.tab_frame.tabs[0]
 
     def test_neg_check(self, tc_frame, qtbot):
+        """Toggle on the negative amplitude checkbox."""
         assert not tc_frame.neg_check.isChecked()  # Initially unchecked
         qtbot.mouseClick(tc_frame.neg_check, Qt.LeftButton)
         assert tc_frame.neg_check.isChecked()  # Checked after click
-    #TODO: test amplitude values are multiplied by -1 is neg check is on
 
     def test_drag_amp_toggle(self, tc_frame, qtbot):
         assert not tc_frame.drag_amp_toggle.isChecked()  # Initially checked
@@ -67,13 +63,16 @@ class TestThresholdCrossingFrame():
         qtbot.mouseClick(tc_frame.drag_amp_toggle, Qt.LeftButton)
         assert tc_frame.drag_amp_toggle.isChecked()  # Unchecked after click
         assert tc_frame.main.plot_frame.tc_tracking
+        tc_frame.drag_amp_toggle.setChecked(False)  # Reset for other tests
+        assert not tc_frame.drag_amp_toggle.isChecked()
+        assert not tc_frame.main.plot_frame.tc_tracking
 
     def test_calculate_click(self, tc_frame, qtbot):
-        print(type(tc_frame.main.plot_frame.update_episode))
         tc_frame.main.plot_frame.update_episode.reset_mock()
         with qtbot.waitSignal(tc_frame.calc_button.clicked):
             qtbot.mouseClick(tc_frame.calc_button, Qt.LeftButton)
         tc_frame.main.plot_frame.update_episode.assert_called_once()
+        tc_frame.idealization_cache.idealize_episode.assert_called_once()
 
     def test_amp_unit_change(self, tc_frame):
         assert tc_frame.trace_unit_entry.currentText() == "pA"
@@ -81,6 +80,8 @@ class TestThresholdCrossingFrame():
         tc_frame.trace_unit_entry.setCurrentText("mA")
         assert tc_frame.trace_unit_entry.currentText() == "mA"
         assert tc_frame.trace_unit == "mA"
+        tc_frame.trace_unit_entry.setCurrentText("pA")  # Reset for other tests
+        assert tc_frame.trace_unit == "pA"
 
 
     #TODO:
@@ -91,6 +92,8 @@ class TestThresholdCrossingFrame():
     # test entering resolution values
     # test entering threshold values
     # test entering interpolation values
+    # test get_params
+    # test params_changed function
     # test showing table of events
     # test showing dwell time histogram
     # test exporting events
