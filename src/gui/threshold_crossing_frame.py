@@ -101,10 +101,10 @@ class ThresholdCrossingFrame(EntryWidget):
         self.idealize_episode()
 
     def idealize_episode(self):
-        self.idealization_cache.idealize_episode(method="TC")
+        self.idealization_cache.idealize_episode()
 
     def idealize_series(self):
-        self.idealization_cache.idealize_series(method="TC")
+        self.idealization_cache.idealize_series()
 
     def track_cursor(self, y_pos):
         """Track the position of the mouse cursor over the plot and if mouse 1
