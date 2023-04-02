@@ -1,12 +1,14 @@
 import pytest
 from pytestqt import qtbot  # pyright: reportMissingImports=false
 from PySide2.QtCore import Qt
+from unittest.mock import MagicMock, patch
 
+from .conftest import clear_text_edit
+from src.constants import DEFAULT_DISC_ALPHA
 from src.core import IdealizationCache
 from src.gui.DISC_frame import DISCFrame
 from src.gui.idealization_frame import (IdealizationFrame,
                                         IdealizationTabFrame)
-from unittest.mock import MagicMock, patch
 
 @pytest.fixture(scope="module", autouse=True)
 def mock_other_idealization_cache():
@@ -19,14 +21,12 @@ def mock_other_idealization_cache():
 @pytest.fixture(scope="class")
 def mock_plot_frame():
     plot_frame = MagicMock()
-    plot_frame.tc_tracking = False
     plot_frame.update_episode = MagicMock(return_value="PlotFrame.update_episode called")
     return plot_frame
 
 @pytest.fixture(scope="class")
 def main(main_window, mock_plot_frame):
     main_window.plot_frame = mock_plot_frame
-    main_window.plot_frame.tc_tracking = False
     return main_window
 
 class TestDISCFrame():
@@ -43,18 +43,32 @@ class TestDISCFrame():
 
     def test_tc_frame_created(self, main):
         assert len(main.id_frame.tab_frame.tabs) == 1
-        assert isinstance(main.id_frame.tab_frame.tabs[0],
-                          DISCFrame)
+        assert isinstance(main.id_frame.tab_frame.tabs[0], DISCFrame)
 
     @pytest.fixture
     def disc_frame(self, main):
         return main.id_frame.tab_frame.tabs[0]
 
-#     def test_neg_check(self, tc_frame, qtbot):
-#         """Toggle on the negative amplitude checkbox."""
-#         assert not tc_frame.neg_check.isChecked()  # Initially unchecked
-#         qtbot.mouseClick(tc_frame.neg_check, Qt.LeftButton)
-#         assert tc_frame.neg_check.isChecked()  # Checked after click
+    def test_BIC_method_buttons(self, disc_frame, qtbot):
+        """Toggle on the negative amplitude checkbox."""
+        assert disc_frame.approx_BIC_button.isChecked()
+        assert not disc_frame.full_BIC_button.isChecked()
+        qtbot.mouseClick(disc_frame.full_BIC_button, Qt.LeftButton)
+        assert not disc_frame.approx_BIC_button.isChecked()
+        assert disc_frame.full_BIC_button.isChecked()
+        qtbot.mouseClick(disc_frame.full_BIC_button, Qt.LeftButton)
+        assert disc_frame.approx_BIC_button.isChecked()
+        assert not disc_frame.full_BIC_button.isChecked()
+
+    def test_enter_alpha_value(self, disc_frame, qtbot):
+        """Enter a value in the alpha text box."""
+        assert disc_frame.divseg_frame.alpha_entry.text() == str(DEFAULT_DISC_ALPHA)
+        clear_text_edit(qtbot, disc_frame.divseg_frame.alpha_entry)
+        qtbot.keyClicks(disc_frame.divseg_frame.alpha_entry, "0.01")
+        assert disc_frame.divseg_frame.alpha_entry.text() == "0.01"
+        clear_text_edit(qtbot, disc_frame.divseg_frame.alpha_entry)
+        qtbot.keyClicks(disc_frame.divseg_frame.alpha_entry, str(DEFAULT_DISC_ALPHA))
+        assert disc_frame.divseg_frame.alpha_entry.text() == str(DEFAULT_DISC_ALPHA)
 
 #     def test_drag_amp_toggle(self, tc_frame, qtbot):
 #         assert not tc_frame.drag_amp_toggle.isChecked()  # Initially checked
