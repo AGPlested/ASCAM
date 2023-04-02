@@ -55,7 +55,7 @@ class ThresholdCrossingFrame(EntryWidget):
         self.drag_amp_toggle = QToolButton()
         self.drag_amp_toggle.setCheckable(True)
         self.drag_amp_toggle.setText("Drag lines to change\n parameters")
-        self.drag_amp_toggle.setChecked(self.parent.parent.main.plot_frame.tc_tracking)
+        self.drag_amp_toggle.setChecked(self.main.plot_frame.tc_tracking)
         self.drag_amp_toggle.clicked.connect(self.toggle_drag_params)
         self.add_row(self.drag_amp_toggle)
 
@@ -95,16 +95,16 @@ class ThresholdCrossingFrame(EntryWidget):
     def calculate_click(self):
         self.get_params()
         self.idealize_episode()
-        self.parent.parent.main.plot_frame.update_episode()
+        self.main.plot_frame.update_episode()
 
     def on_episode_click(self, *_):
         self.idealize_episode()
 
     def idealize_episode(self):
-        self.idealization_cache.idealize_episode()
+        self.idealization_cache.idealize_episode(method="TC")
 
     def idealize_series(self):
-        self.idealization_cache.idealize_series()
+        self.idealization_cache.idealize_series(method="TC")
 
     def track_cursor(self, y_pos):
         """Track the position of the mouse cursor over the plot and if mouse 1
@@ -138,7 +138,7 @@ class ThresholdCrossingFrame(EntryWidget):
         self.calculate_click()
 
     def toggle_drag_params(self, checked):
-        self.parent.parent.main.plot_frame.tc_tracking = checked
+        self.main.plot_frame.tc_tracking = checked
 
     def toggle_interpolation(self, state):
         if not state:
@@ -210,7 +210,7 @@ class ThresholdCrossingFrame(EntryWidget):
                 else:
                     raise AttributeError(e)
             self.idealization_cache = IdealizationCache(
-                self.parent.parent.main.data, "TC", amps, thresholds, resolution, intrp_factor
+                self.main.data, "TC", amps, thresholds, resolution, intrp_factor
             )
         return amps, thresholds, resolution, intrp_factor
 

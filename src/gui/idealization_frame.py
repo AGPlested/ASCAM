@@ -39,7 +39,8 @@ class IdealizationFrame(QWidget):
         return self.tab_frame.currentWidget()
 
     def create_widgets(self, idealization_method):
-        self.tab_frame = IdealizationTabFrame(self, idealization_method)
+        self.tab_frame = IdealizationTabFrame(self, self.main,
+                                              idealization_method)
         self.layout.addWidget(self.tab_frame)
 
         self.events_button = QPushButton("Show Table of Events")
@@ -125,17 +126,18 @@ class IdealizationFrame(QWidget):
 
 
 class IdealizationTabFrame(QTabWidget):
-    def __init__(self, parent, idealization_method):
+    def __init__(self, parent, main, idealization_method):
         super().__init__()
         # Parent is the IdealizationFrame.
         self.parent = parent
+        self.main = main
 
         if idealization_method == "TC":
             self.tabs = [ThresholdCrossingFrame(
                 parent=self,
-                main=parent.main,)]
+                main=self.main,)]
         elif idealization_method == "DISC":
-            self.tabs = [DISCFrame(self, parent.main)]
+            self.tabs = [DISCFrame(self, self.main)]
         self.addTab(self.tabs[0], "1")
 
         self.new_tab_button = QToolButton()
@@ -164,9 +166,9 @@ class IdealizationTabFrame(QTabWidget):
         title = str(self.count()+1)
         debug_logger.debug(f"adding new {idealization_method} tab with number {title}")
         if idealization_method == "TC":
-            tab = ThresholdCrossingFrame(self, self.parent.main)
+            tab = ThresholdCrossingFrame(self, self.main)
         elif idealization_method == "DISC":
-            tab = DISCFrame(self, self.parent.main)
+            tab = DISCFrame(self, self.main)
         else:
             raise ValueError("Unknown idealization method.")
         self.tabs.append(tab)
