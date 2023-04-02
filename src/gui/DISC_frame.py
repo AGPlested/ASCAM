@@ -16,9 +16,6 @@ from ..core import IdealizationCache
 from ..utils.widgets import EntryWidget, VerticalContainerWidget
 from PySide2.QtGui import QIntValidator
 
-#import QFrame from pyside2
-
-# import QDoubleValidator from pyside2
 
 debug_logger = logging.getLogger("ascam.debug")
 
@@ -40,21 +37,20 @@ class DISCFrame(VerticalContainerWidget):
         # add a label "BIC implmentation"
         self.bic_method_label = QLabel("BIC implmentation")
         self.add_row(self.bic_method_label)
-        # add two buttons
-        self.button1 = QPushButton("approx")
-        self.button2 = QPushButton("full")
+        self.approx_BIC_button = QPushButton("approx")
+        self.full_BIC_button = QPushButton("full")
         # make the buttons checkable
-        self.button1.setCheckable(True)
-        self.button2.setCheckable(True)
+        self.approx_BIC_button.setCheckable(True)
+        self.full_BIC_button.setCheckable(True)
         # check button 1
-        self.button1.setChecked(True)
-        self.add_row(self.button1, self.button2, spacing=0,
+        self.approx_BIC_button.setChecked(True)
+        self.add_row(self.approx_BIC_button, self.full_BIC_button, spacing=0,
                      contents_margins=(0, 0, 0, 0))
         # checking one button unchecks the other
-        self.button1.clicked.connect(
-                lambda: self.button2.setChecked(not self.button1.isChecked()))
-        self.button2.clicked.connect(
-                lambda: self.button1.setChecked(not self.button2.isChecked()))
+        self.approx_BIC_button.clicked.connect(
+                lambda: self.full_BIC_button.setChecked(not self.approx_BIC_button.isChecked()))
+        self.full_BIC_button.clicked.connect(
+                lambda: self.approx_BIC_button.setChecked(not self.full_BIC_button.isChecked()))
 
         self.divseg_frame = DivSegFrame(self, self.main)
         self.add_row(self.divseg_frame)
