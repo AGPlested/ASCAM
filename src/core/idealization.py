@@ -165,7 +165,7 @@ class Idealizer:
         amplitudes = amplitudes[::-1]
 
         # if thresholds are not given use the midpoints between the amplitudes as thresholds
-        if thresholds is None:
+        if thresholds is None or len(thresholds) == 0:
             thresholds = (amplitudes[1:] + amplitudes[:-1]) / 2
         elif (thresholds.size != amplitudes.size - 1):
             raise ValueError(
