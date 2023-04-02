@@ -13,7 +13,7 @@ from src.gui.mainwindow import MainWindow
 
 
 @pytest.fixture(scope="class")
-def main(recording):
+def main_window(recording):
     QApplication([])
     main_window = MainWindow(screen_resolution=(1920, 1080))
     main_window.data = recording

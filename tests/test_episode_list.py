@@ -1,7 +1,12 @@
+import pytest
 from pytestqt import qtbot
 from PySide2.QtCore import Qt
 
 from src.gui.episode_frame import EpisodeFrame, NewSetDialog
+
+@pytest.fixture(scope="class")
+def main(main_window):
+    return main_window
 
 class TestEpisodeFrame():
     # Note these tests alter the class scoped fixtures main and recording
