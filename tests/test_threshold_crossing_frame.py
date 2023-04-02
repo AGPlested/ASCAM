@@ -3,7 +3,6 @@ from pytestqt import qtbot  # pyright: reportMissingImports=false
 from PySide2.QtCore import Qt
 
 from src.core import IdealizationCache
-from src.gui.plot_frame import PlotFrame
 from src.gui.idealization_frame import (IdealizationFrame,
                                         IdealizationTabFrame)
 from src.gui.threshold_crossing_frame import ThresholdCrossingFrame
@@ -63,7 +62,7 @@ class TestThresholdCrossingFrame():
         qtbot.mouseClick(tc_frame.drag_amp_toggle, Qt.LeftButton)
         assert tc_frame.drag_amp_toggle.isChecked()  # Unchecked after click
         assert tc_frame.main.plot_frame.tc_tracking
-        tc_frame.drag_amp_toggle.setChecked(False)  # Reset for other tests
+        qtbot.mouseClick(tc_frame.drag_amp_toggle, Qt.LeftButton)
         assert not tc_frame.drag_amp_toggle.isChecked()
         assert not tc_frame.main.plot_frame.tc_tracking
 
