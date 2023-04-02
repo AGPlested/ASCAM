@@ -11,7 +11,7 @@ from PySide2.QtWidgets import (
 )
 
 from ..utils import string_to_array, array_to_string
-from ..constants import TIME_UNIT_FACTORS, AMPERE_UNIT_FACTORS
+from ..constants import DEFAULT_DISC_ALPHA, TIME_UNIT_FACTORS, AMPERE_UNIT_FACTORS
 from ..core import IdealizationCache
 from ..utils.widgets import EntryWidget, VerticalContainerWidget
 from PySide2.QtGui import QIntValidator
@@ -152,7 +152,7 @@ class DivSegFrame(EntryWidget):
     def create_widgets(self):
         # create a numerical input for the alpha value
         self.alpha_label = QLabel("t-test α=")
-        self.alpha_entry = QLineEdit("0.001")
+        self.alpha_entry = QLineEdit(str(DEFAULT_DISC_ALPHA))
         self.alpha_entry.setValidator(QDoubleValidator())
         self.add_row(self.alpha_label, self.alpha_entry)
 
