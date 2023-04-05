@@ -68,7 +68,9 @@ class IdealizationFrame(QWidget):
         self.current_tab.on_episode_click(item, *args)
 
     def close_tab(self):
+        debug_logger.debug("Closing tab.")
         if self.tab_frame.count() > 1:
+            debug_logger.debug("Closing IdealizationFrame.")
             self.tab_frame.removeTab(self.tab_frame.currentIndex())
         else:
             self.close_frame()
@@ -133,9 +135,7 @@ class IdealizationTabFrame(QTabWidget):
         self.main = main
 
         if idealization_method == "TC":
-            self.tabs = [ThresholdCrossingFrame(
-                parent=self,
-                main=self.main,)]
+            self.tabs = [ThresholdCrossingFrame(self, self.main)]
         elif idealization_method == "DISC":
             self.tabs = [DISCFrame(self, self.main)]
         self.addTab(self.tabs[0], "1")
@@ -146,7 +146,7 @@ class IdealizationTabFrame(QTabWidget):
         self.setCornerWidget(self.new_tab_button)
 
         self.setTabsClosable(True)
-        self.tabBar().tabCloseRequested.connect(self.removeTab)
+        self.tabBar().tabCloseRequested.connect(self.parent.close_tab)
 
         self.currentChanged.connect(self.switch_tab)
 
@@ -176,5 +176,8 @@ class IdealizationTabFrame(QTabWidget):
         self.setCurrentIndex(ind)
 
     def switch_tab(self):
-        self.parent.idealize_episode()
-
+        try:
+            self.parent.idealize_episode()
+        except AttributeError as e:
+            debug_logger.debug("No idealization cache yet."
+                               f"{e}")
