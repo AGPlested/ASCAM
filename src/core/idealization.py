@@ -36,8 +36,26 @@ class Idealizer:
         return idealization, time
 
     @classmethod
-    def DISC_idealize_trace(
+    def idealize_episode(
         cls,
+        episode,
+        method="TC",
+        params=None,
+    ):
+        """Get idealization for single episode."""
+
+        if params.get("piezo_selection", False):
+            time, signal = episode.filter_by_piezo(
+                deviation=params.get("deviation"),
+                active=params.get("active_piezo", True)
+                )
+        else:
+            signal = episode.trace
+            time = episode.time
+        return cls.idealize_trace(signal, time, method, params)
+
+    @staticmethod
+    def DISC_idealize_trace(
         trace:np.ndarray,
         time:np.ndarray,
         alpha:float=0.001,
@@ -46,6 +64,7 @@ class Idealizer:
         IC_div_seg:str="BIC",
         IC_HAC:str="BIC",
         BIC_method:str="full",
+        **kwargs,
     ):
         """Run DISC idealization on a trace."""
         return time, run_DISC(trace, alpha, min_seg_length, min_cluster_size,
@@ -66,16 +85,13 @@ class Idealizer:
         active_piezo:bool=True,
     ):
         """Run DISC idealization on single episode."""
-        if piezo_selection:
-            time, signal = episode.filter_by_piezo(deviation=deviation,
-                                             active=active_piezo)
-        else:
-            signal = episode.trace
-            time = episode.time
-        return cls.DISC_idealize_trace(signal, time, alpha, min_seg_length,
-                                        min_cluster_size, IC_div_seg, IC_HAC,
-                                        BIC_method
-                                        )
+        return cls.idealize_episode(episode, "DISC", {
+            "alpha": alpha, "min_seg_length": min_seg_length,
+            "min_cluster_size": min_cluster_size, "IC_div_seg": IC_div_seg,
+            "IC_HAC": IC_HAC, "BIC_method": BIC_method,
+            "piezo_selection": piezo_selection, "deviation": deviation,
+            "active_piezo": active_piezo,
+        })
 
     @classmethod
     def DISC_idealize_recording(
@@ -115,15 +131,12 @@ class Idealizer:
         active_piezo:bool=True
     ):
         """Get idealization for single episode."""
-        if piezo_selection:
-            time, signal = episode.filter_by_piezo(deviation=deviation,
-                                             active=active_piezo)
-        else:
-            signal = episode.trace
-            time = episode.time
-        return cls.TC_idealize_trace(signal, time, amplitudes, thresholds,
-                                     resolution, interpolation_factor)
-
+        return cls.idealize_episode(episode, "TC", {
+            "amplitudes": amplitudes, "thresholds": thresholds,
+            "resolution": resolution, "interpolation_factor": interpolation_factor,
+            "piezo_selection": piezo_selection, "deviation": deviation,
+            "active_piezo": active_piezo,
+        })
 
     @classmethod
     def TC_idealize_trace(
