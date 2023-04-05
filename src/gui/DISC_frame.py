@@ -23,6 +23,7 @@ debug_logger = logging.getLogger("ascam.debug")
 class DISCFrame(VerticalContainerWidget):
     def __init__(self, parent, main):
         super().__init__(parent, main)
+        self.idealization_cache = None
 
     def keyPressEvent(self, event):
         if event.key() in (QtCore.Qt.Key_Return, QtCore.Qt.Key_Enter):
@@ -101,18 +102,16 @@ class DISCFrame(VerticalContainerWidget):
             piezo_selection = False
             deviation = None
 
-        try:
+        if self.idealization_cache is not None:
             changed = self.idealization_cache.check_params_changed(
+                BIC_method=BIC_method,
                 alpha=alpha,
                 min_seg_length=min_seg_length,
                 min_cluster_size=min_cluster_size,
                 piezo_selection=piezo_selection,
                 deviation=deviation)
-        except AttributeError as e:
-            if ("'DISCFrame' object has no attribute 'idealization_cache'" in str(e)):
-                changed = True
-            else:
-                raise AttributeError(e)
+        else:
+            changed = True
         debug_logger.debug(f"Parameters changed: {changed}")
         if changed:
             debug_logger.debug(
@@ -123,13 +122,8 @@ class DISCFrame(VerticalContainerWidget):
                 f"\t piezo_selection: {piezo_selection}\n"
                 f"\t deviation: {deviation}"
             )
-            try:
+            if self.idealization_cache is not None:
                 self.idealization_cache.clear_idealization()
-            except AttributeError as e:
-                if ("'DISCFrame' object has no attribute 'idealization_cache'" in str(e)):
-                    pass
-                else:
-                    raise AttributeError(e)
             self.idealization_cache = IdealizationCache(
                 self.main.data, method="DISC", alpha=alpha,
                 BIC_method=BIC_method,
@@ -145,7 +139,8 @@ class DISCFrame(VerticalContainerWidget):
         self.main.plot_frame.update_episode()
 
     def on_episode_click(self, *_):
-        self.idealize_episode()
+        if self.idealization_cache is not None:
+            self.idealize_episode()
 
     def idealize_episode(self):
         self.idealization_cache.idealize_episode()
@@ -198,11 +193,11 @@ class ACFrame(EntryWidget):
         super().__init__(parent, main)
 
     def create_widgets(self):
-        self.ac_label = QLabel("Agglomerative clustering")
-        self.layout.addWidget(self.ac_label)
+        # self.ac_label = QLabel("Agglomerative clustering")
+        # self.layout.addWidget(self.ac_label)
 
         # add entry for min cluster size
-        self.min_cluster_label = QLabel("min cluster size:")
+        self.min_cluster_label = QLabel("AC cluster size:")
         self.min_cluster_entry = QLineEdit("3")
         self.min_cluster_entry.setValidator(QIntValidator())
         self.add_row(self.min_cluster_label, self.min_cluster_entry)
