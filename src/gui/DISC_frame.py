@@ -61,8 +61,6 @@ class DISCFrame(VerticalContainerWidget):
         self.ac_frame = ACFrame(self, self.main)
         self.add_row(self.ac_frame)
         self.add_row(separator)
-        self.viterbi_frame = ViterbiFrame(self, self.main)
-        self.add_row(self.viterbi_frame)
 
         # add button that can be toggled for using piezo selection or not
         self.use_piezo_button = QPushButton("Use piezo selection")
@@ -143,18 +141,16 @@ class DISCFrame(VerticalContainerWidget):
     def calculate_click(self):
         self.get_params()
         self.idealize_episode()
-        self.parent.parent.main.plot_frame.update_episode()
+        self.main.plot_frame.update_episode()
 
     def on_episode_click(self, *_):
         self.idealize_episode()
 
     def idealize_episode(self):
-        pass
-        # self.idealization_cache.idealize_episode()
+        self.idealization_cache.idealize_episode()
 
     def idealize_series(self):
-        pass
-        # self.idealization_cache.idealize_series()
+        self.idealization_cache.idealize_series()
 
     def close_frame(self):
         if self.main is not None:
@@ -174,10 +170,10 @@ class DivSegFrame(EntryWidget):
         self.alpha_entry.setValidator(QDoubleValidator())
         self.add_row(self.alpha_label, self.alpha_entry)
 
-        # add a button to run change point detection
-        self.change_point_button = QPushButton("Detect Change Points")
-        self.change_point_button.clicked.connect(self.detect_change_points)
-        self.layout.addWidget(self.change_point_button)
+        # # add a button to run change point detection
+        # self.change_point_button = QPushButton("Detect Change Points")
+        # self.change_point_button.clicked.connect(self.detect_change_points)
+        # self.layout.addWidget(self.change_point_button)
 
         # add and entry for minimum segment length
         self.min_seg_label = QLabel("min segment length:")
@@ -185,14 +181,13 @@ class DivSegFrame(EntryWidget):
         self.min_seg_entry.setValidator(QIntValidator())
         self.add_row(self.min_seg_label, self.min_seg_entry)
 
+        # # add a button to run divisive segmentation
+        # self.div_seg_button = QPushButton("Divisive Segmentation")
+        # self.div_seg_button.clicked.connect(self.div_seg)
+        # self.layout.addWidget(self.div_seg_button)
 
-        # add a button to run divisive segmentation
-        self.div_seg_button = QPushButton("Divisive Segment")
-        self.div_seg_button.clicked.connect(self.div_seg)
-        self.layout.addWidget(self.div_seg_button)
-
-    def detect_change_points(self):
-        raise NotImplementedError
+    # def detect_change_points(self):
+    #     raise NotImplementedError
 
     def div_seg(self):
         raise NotImplementedError
@@ -211,32 +206,32 @@ class ACFrame(EntryWidget):
         self.min_cluster_entry.setValidator(QIntValidator())
         self.add_row(self.min_cluster_label, self.min_cluster_entry)
 
-        # add entry for desired number of clusters
-        self.num_states_label = QLabel("max num states:")
-        self.num_states_entry = QLineEdit("3")
-        self.num_states_entry.setValidator(QIntValidator())
-        self.add_row(self.num_states_label, self.num_states_entry)
+        # # add entry for desired number of clusters
+        # self.num_states_label = QLabel("max num states:")
+        # self.num_states_entry = QLineEdit("3")
+        # self.num_states_entry.setValidator(QIntValidator())
+        # self.add_row(self.num_states_label, self.num_states_entry)
 
-        # add a button to run agglomerative clustering
-        self.ac_button = QPushButton("Run Agglomerative Clustering")
-        self.ac_button.clicked.connect(self.run_ac)
-        self.layout.addWidget(self.ac_button)
+        # # add a button to run agglomerative clustering
+        # self.ac_button = QPushButton("Agglomerative Clustering")
+        # self.ac_button.clicked.connect(self.run_ac)
+        # self.layout.addWidget(self.ac_button)
 
     def run_ac(self):
         raise NotImplementedError
 
-class ViterbiFrame(EntryWidget):
-    def __init__(self, parent, main):
-        super().__init__(parent, main)
+# class ViterbiFrame(EntryWidget):
+#     def __init__(self, parent, main):
+#         super().__init__(parent, main)
 
-    def create_widgets(self):
-        self.viterbi_label = QLabel("viterbi")
-        self.layout.addWidget(self.viterbi_label)
+#     def create_widgets(self):
+#         self.viterbi_label = QLabel("viterbi")
+#         self.layout.addWidget(self.viterbi_label)
 
-        # add a button to run viterbi
-        self.viterbi_button = QPushButton("Run Viterbi")
-        self.viterbi_button.clicked.connect(self.run_viterbi)
-        self.layout.addWidget(self.viterbi_button)
+#         # add a button to run viterbi
+#         self.viterbi_button = QPushButton("Run Viterbi")
+#         self.viterbi_button.clicked.connect(self.run_viterbi)
+#         self.layout.addWidget(self.viterbi_button)
 
-    def run_viterbi(self):
-        raise NotImplementedError
+#     def run_viterbi(self):
+#         raise NotImplementedError
