@@ -25,6 +25,7 @@ class ThresholdCrossingFrame(EntryWidget):
     def __init__(self, parent, main):
         # Parent is the IdealizationTabFrame widget.
         super().__init__(parent=parent, main=main)
+        self.idealization_cache = None
 
     def keyPressEvent(self, event):
         if event.key() in (QtCore.Qt.Key_Return, QtCore.Qt.Key_Enter):
@@ -98,7 +99,8 @@ class ThresholdCrossingFrame(EntryWidget):
         self.main.plot_frame.update_episode()
 
     def on_episode_click(self, *_):
-        self.idealize_episode()
+        if self.idealization_cache is not None:
+            self.idealize_episode()
 
     def idealize_episode(self):
         self.idealization_cache.idealize_episode()
