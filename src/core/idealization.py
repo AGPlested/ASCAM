@@ -318,6 +318,9 @@ class IdealizationCache:
         IC_div_seg="BIC",
         IC_HAC="BIC",
         BIC_method="full",
+        piezo_selection=False,
+        deviation=0.05,
+        piezo_active=True,
     ):
         self.data = data  # Recording object
 
@@ -334,6 +337,9 @@ class IdealizationCache:
             self.IC_div_seg = IC_div_seg
             self.IC_HAC = IC_HAC
             self.BIC_method = BIC_method
+            self.piezo_selection = piezo_selection
+            self.deviation = deviation
+            self.piezo_active = piezo_active
 
     @property
     def ind_idealized(self):
@@ -403,6 +409,9 @@ class IdealizationCache:
                     "IC_div_seg": self.IC_div_seg,
                     "IC_HAC": self.IC_HAC,
                     "BIC_method": self.BIC_method,
+                    "piezo_selection": self.piezo_selection,
+                    "deviation": self.deviation,
+                    "piezo_active": self.piezo_active,
                     }
 
     def idealize_episode(self, n_episode=None):
