@@ -113,14 +113,15 @@ class DISCFrame(VerticalContainerWidget):
                 changed = True
             else:
                 raise AttributeError(e)
+        debug_logger.debug(f"Parameters changed: {changed}")
         if changed:
             debug_logger.debug(
-                f"creating new idealization cache for\n"
-                f"alpha: {alpha}\n"
-                f"min_seg_length: {min_seg_length}\n"
-                f"min_cluster_size: {min_cluster_size}\n"
-                f"piezo_selection: {piezo_selection}\n"
-                f"deviation: {deviation}"
+                f"Creating new idealization cache for\n"
+                f"\t alpha: {alpha}\n"
+                f"\t min_seg_length: {min_seg_length}\n"
+                f"\t min_cluster_size: {min_cluster_size}\n"
+                f"\t piezo_selection: {piezo_selection}\n"
+                f"\t deviation: {deviation}"
             )
             try:
                 self.idealization_cache.clear_idealization()
