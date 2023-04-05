@@ -64,63 +64,81 @@ class DISCFrame(VerticalContainerWidget):
         self.viterbi_frame = ViterbiFrame(self, self.main)
         self.add_row(self.viterbi_frame)
 
+        # add button that can be toggled for using piezo selection or not
+        self.use_piezo_button = QPushButton("Use piezo selection")
+        self.use_piezo_button.setCheckable(True)
+        self.use_piezo_button.setChecked(True)
+        # add text entry for deviation from max piezo voltage
+        self.piezo_deviation_entry = QLineEdit()
+        self.piezo_deviation_entry.setValidator(QDoubleValidator())
+        self.piezo_deviation_entry.setText("0.05")
+        # add label
+        self.piezo_deviation_label = QLabel("Deviation:")
+        self.add_row(self.use_piezo_button)
+        self.add_row(self.piezo_deviation_label, self.piezo_deviation_entry)
+        # if data has no piezo, disable piezo selection
+        if not self.main.data.has_piezo:
+            self.use_piezo_button.setEnabled(False)
+            self.piezo_deviation_entry.setEnabled(False)
+            self.piezo_deviation_label.setEnabled(False)
+            debug_logger.info("No piezo data found, disabling piezo selection")
+
+        # add run disc button
+        self.run_disc_button = QPushButton("Run DISC")
+        self.add_row(self.run_disc_button)
+        self.run_disc_button.clicked.connect(self.calculate_click)
+
+        # self.viterbi_frame = ViterbiFrame(self, self.main)
+        # self.add_row(self.viterbi_frame)
+
     def get_params(self):
-        amps = string_to_array(self.amp_entry.toPlainText())
-        thresholds = string_to_array(self.threshold_entry.toPlainText())
-        res_string = self.resolution_entry.text()
-        intrp_string = self.intrp_entry.text()
-
-        if self.auto_thresholds.isChecked() or (
-            thresholds is None or thresholds.size != amps.size - 1
-        ):
-            thresholds = (amps[1:] + amps[:-1]) / 2
-            self.threshold_entry.setText(array_to_string(thresholds))
-            self.auto_thresholds.setChecked(True)
-            self.threshold_entry.setEnabled(False)
-
-        if self.neg_check.isChecked():
-            amps *= -1
-            thresholds *= -1
-
-        trace_factor = AMPERE_UNIT_FACTORS[self.trace_unit]
-        amps /= trace_factor
-        thresholds /= trace_factor
-        time_factor = TIME_UNIT_FACTORS[self.time_unit]
-
-        if res_string.strip() and self.use_resolution.isChecked():
-            resolution = float(res_string)
-            resolution /= time_factor
+        BIC_method = "approx" if self.approx_BIC_button.isChecked() else "full"
+        alpha = float(self.divseg_frame.alpha_entry.text())
+        min_seg_length = int(self.divseg_frame.min_seg_entry.text())
+        min_cluster_size = int(self.ac_frame.min_cluster_entry.text())
+        if self.main.data.has_piezo:
+            piezo_selection = self.use_piezo_button.isChecked()
+            deviation = float(self.piezo_deviation_entry.text())
         else:
-            resolution = None
+            piezo_selection = False
+            deviation = None
 
-        if intrp_string.strip() and self.interpolate.isChecked():
-            intrp_factor = int(intrp_string)
-        else:
-            intrp_factor = 1
-
-        if self.check_params_changed(amps, thresholds, resolution, intrp_factor):
+        try:
+            changed = self.idealization_cache.check_params_changed(
+                alpha=alpha,
+                min_seg_length=min_seg_length,
+                min_cluster_size=min_cluster_size,
+                piezo_selection=piezo_selection,
+                deviation=deviation)
+        except AttributeError as e:
+            if ("'DISCFrame' object has no attribute 'idealization_cache'" in str(e)):
+                changed = True
+            else:
+                raise AttributeError(e)
+        if changed:
             debug_logger.debug(
                 f"creating new idealization cache for\n"
-                f"amp = {amps} \n"
-                f"thresholds = {thresholds}\n"
-                f"resolution = {res_string}\n"
-                f"interpolation = {intrp_string}"
+                f"alpha: {alpha}\n"
+                f"min_seg_length: {min_seg_length}\n"
+                f"min_cluster_size: {min_cluster_size}\n"
+                f"piezo_selection: {piezo_selection}\n"
+                f"deviation: {deviation}"
             )
             try:
                 self.idealization_cache.clear_idealization()
             except AttributeError as e:
-                if "'IdealizationTab' object has no attribute 'idealization_cache'" in str(
-                    e
-                ) or "object has no attribute " in str(
-                    e
-                ):
+                if ("'DISCFrame' object has no attribute 'idealization_cache'" in str(e)):
                     pass
                 else:
                     raise AttributeError(e)
             self.idealization_cache = IdealizationCache(
-                self.parent.parent.main.data, amps, thresholds, resolution, intrp_factor
+                self.main.data, method="DISC", alpha=alpha,
+                BIC_method=BIC_method,
+                min_seg_length=min_seg_length,
+                min_cluster_size=min_cluster_size,
+                piezo_selection=piezo_selection, deviation=deviation
             )
-        return amps, thresholds, resolution, intrp_factor
+        return alpha, min_seg_length, min_cluster_size, piezo_selection, deviation
 
     def calculate_click(self):
         self.get_params()
