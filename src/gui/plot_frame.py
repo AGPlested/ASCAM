@@ -200,7 +200,9 @@ class PlotFrame(QWidget):
                 self.main.id_frame.time(), self.main.id_frame.idealization(), pen=id_pen
             )
         except AttributeError as e:
-            if "'NoneType' object has no attribute 'time'" in str(e):
+            if ("'NoneType' object has no attribute 'time'" in str(e)
+                or "'ThresholdCrossingFrame' object has no attribute 'idealization_cache'" in str(e)
+                ):
                 pass
             else:
                 raise e
