@@ -47,8 +47,7 @@ class MainWindow(QMainWindow):
 
         # Placeholders
         self.fa_frame = None  # FirstActivationFrame.
-        self.tc_frame = None  # IdealizationFrame (the frame holding threshold crossing).
-        self.disc_frame = None  # DISCFrame.
+        self.id_frame = None  # IdealizationFrame
         self.filename = None
 
         self.data = Recording()
@@ -114,14 +113,24 @@ class MainWindow(QMainWindow):
             debug_logger.debug("Not saving to pickle - no filename given.")
 
     def launch_threshold_crossing(self):
-        self.close_other_frames()
-        self.tc_frame = IdealizationFrame(self, "TC")
-        self.central_layout.addWidget(self.tc_frame, 1, 1)
+        debug_logger.debug("launching threshold crossing idealization")
+        if self.id_frame is None:
+            self.close_other_frames()
+            self.id_frame = IdealizationFrame(self, "TC")
+            self.central_layout.addWidget(self.id_frame, 1, 1)
+        else:
+            debug_logger.debug("IdealizationFrame already exists, adding TC tab.")
+            self.id_frame.tab_frame.add_tab(idealization_method="TC")
 
     def launch_DISC(self):
-        self.close_other_frames()
-        self.disc_frame = IdealizationFrame(self, "DISC")
-        self.central_layout.addWidget(self.disc_frame, 1, 1)
+        debug_logger.debug("launching DISC idealization")
+        if self.id_frame is None:
+            self.close_other_frames()
+            self.id_frame = IdealizationFrame(self, "DISC")
+            self.central_layout.addWidget(self.id_frame, 1, 1)
+        else:
+            debug_logger.debug("IdealizationFrame already exists, adding DISC tab.")
+            self.id_frame.tab_frame.add_tab(idealization_method="DISC")
 
     def launch_fa_analysis(self):
         self.close_other_frames()
@@ -131,10 +140,8 @@ class MainWindow(QMainWindow):
     def close_other_frames(self):
         if self.fa_frame is not None:
             self.fa_frame.clean_up_and_close()
-        if self.disc_frame is not None:
-            self.disc_frame.close_frame()
-        if self.tc_frame is not None:
-            self.tc_frame.close_frame()
+        if self.id_frame is not None:
+            self.id_frame.close_frame()
 
     def load_example_data(self):
         path = os.path.split(

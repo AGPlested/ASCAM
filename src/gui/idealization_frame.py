@@ -78,7 +78,7 @@ class IdealizationFrame(QWidget):
     def close_frame(self):
         self.main.ep_frame.ep_list.currentItemChanged.disconnect(self.on_episode_click)
         self.main.plot_frame.tc_tracking = False
-        self.main.tc_frame = None
+        self.main.id_frame = None
         self.main.disc_frame = None
         self.main.plot_frame.update_plots()
         self.close()
