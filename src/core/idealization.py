@@ -415,12 +415,11 @@ class IdealizationCache:
                     }
 
     def check_params_changed(self, **new_params):
-        changed = True
+        changed = False
         for key, value in new_params.items():
             if getattr(self, key) != value:
                 debug_logger.debug(f"{key} has changed")
-            else:
-                changed = False
+                changed = True
         return changed
 
     def idealize_episode(self, n_episode=None):
