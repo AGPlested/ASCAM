@@ -67,11 +67,11 @@ class IdealizationFrame(QWidget):
     def on_episode_click(self, item, *args):
         self.current_tab.on_episode_click(item, *args)
 
-    def close_tab(self):
+    def close_tab(self, tab_index):
         debug_logger.debug("Closing tab.")
         if self.tab_frame.count() > 1:
             debug_logger.debug("Closing IdealizationFrame.")
-            self.tab_frame.removeTab(self.tab_frame.currentIndex())
+            self.tab_frame.removeTab(tab_index)
         else:
             self.close_frame()
 
