@@ -3,6 +3,8 @@ import logging
 from PySide2 import QtCore
 from PySide2.QtGui import QDoubleValidator
 from PySide2.QtWidgets import (
+    QSpacerItem,
+    QSizePolicy,
     QFrame,
     QLineEdit,
     QLabel,
@@ -89,6 +91,10 @@ class DISCFrame(VerticalContainerWidget):
 
         # self.viterbi_frame = ViterbiFrame(self, self.main)
         # self.add_row(self.viterbi_frame)
+
+        spacer = QSpacerItem(40, 20, vData=QSizePolicy.Expanding)
+        self.layout.addItem(spacer)
+
 
     def get_params(self):
         BIC_method = "approx" if self.approx_BIC_button.isChecked() else "full"
