@@ -322,15 +322,6 @@ class IdealizationCache:
         deviation=0.05,
         piezo_active=True,
     ):
-        debug_logger.debug(
-            f"Creating new idealization cache for\n"
-            f"\t alpha: {alpha}\n"
-            f"\t min_seg_length: {min_seg_length}\n"
-            f"\t min_cluster_size: {min_cluster_size}\n"
-            f"\t piezo_selection: {piezo_selection}\n"
-            f"\t deviation: {deviation}"
-        )
-
         self.data = data  # Recording object
 
         self.method = method
@@ -349,6 +340,13 @@ class IdealizationCache:
             self.piezo_selection = piezo_selection
             self.deviation = deviation
             self.piezo_active = piezo_active
+
+        log_string = ""
+        for k, v in self.params.items():
+            log_string += f"\t{k}: {v}\n"
+
+        debug_logger.debug(f"Creating new idealization cache for\n"+log_string)
+
 
     @property
     def ind_idealized(self):
