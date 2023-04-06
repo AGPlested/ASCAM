@@ -183,11 +183,10 @@ class ThresholdCrossingFrame(EntryWidget):
         trace_factor = AMPERE_UNIT_FACTORS[self.trace_unit]
         amps /= trace_factor
         thresholds /= trace_factor
-        time_factor = TIME_UNIT_FACTORS[self.time_unit]
 
         if res_string.strip() and self.use_resolution.isChecked():
             resolution = float(res_string)
-            resolution /= time_factor
+            resolution /= TIME_UNIT_FACTORS[self.time_unit]
         else:
             resolution = None
 
