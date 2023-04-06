@@ -13,9 +13,14 @@ from src.core.DISC import sample_chain
 from src.gui.mainwindow import MainWindow
 
 
+@pytest.fixture(scope="session")
+def test_app():
+    app = QApplication([])
+    yield app
+    app.quit()
+
 @pytest.fixture(scope="class")
-def main_window(recording):
-    QApplication([])
+def main_window(test_app, recording):
     main_window = MainWindow(screen_resolution=(1920, 1080))
     main_window.data = recording
     return main_window
