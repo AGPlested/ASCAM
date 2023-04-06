@@ -322,6 +322,15 @@ class IdealizationCache:
         deviation=0.05,
         piezo_active=True,
     ):
+        debug_logger.debug(
+            f"Creating new idealization cache for\n"
+            f"\t alpha: {alpha}\n"
+            f"\t min_seg_length: {min_seg_length}\n"
+            f"\t min_cluster_size: {min_cluster_size}\n"
+            f"\t piezo_selection: {piezo_selection}\n"
+            f"\t deviation: {deviation}"
+        )
+
         self.data = data  # Recording object
 
         self.method = method

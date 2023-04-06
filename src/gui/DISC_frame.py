@@ -120,14 +120,6 @@ class DISCFrame(VerticalContainerWidget):
             changed = True
         debug_logger.debug(f"Parameters changed: {changed}")
         if changed:
-            debug_logger.debug(
-                f"Creating new idealization cache for\n"
-                f"\t alpha: {alpha}\n"
-                f"\t min_seg_length: {min_seg_length}\n"
-                f"\t min_cluster_size: {min_cluster_size}\n"
-                f"\t piezo_selection: {piezo_selection}\n"
-                f"\t deviation: {deviation}"
-            )
             if self.idealization_cache is not None:
                 self.idealization_cache.clear_idealization()
             self.idealization_cache = IdealizationCache(
