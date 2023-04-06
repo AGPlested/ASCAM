@@ -118,7 +118,6 @@ class DISCFrame(VerticalContainerWidget):
                 deviation=deviation)
         else:
             changed = True
-        debug_logger.debug(f"Parameters changed: {changed}")
         if changed:
             if self.idealization_cache is not None:
                 self.idealization_cache.clear_idealization()

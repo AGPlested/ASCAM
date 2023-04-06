@@ -195,21 +195,16 @@ class ThresholdCrossingFrame(EntryWidget):
         else:
             intrp_factor = 1
 
-        if self.check_params_changed(amps, thresholds, resolution, intrp_factor):
-            debug_logger.debug(
-                f"creating new idealization cache for\n"
-                f"amp = {amps} \n"
-                f"thresholds = {thresholds}\n"
-                f"resolution = {res_string}\n"
-                f"interpolation = {intrp_string}"
-            )
-            try:
+        if self.idealization_cache is not None:
+            changed = self.idealization_cache.check_params_changed(
+                    amps=amps, thresholds=thresholds, resolution=resolution,
+                    intrp_factor=intrp_factor
+                )
+        else:
+            changed = True
+        if changed:
+            if self.idealization_cache is not None:
                 self.idealization_cache.clear_idealization()
-            except AttributeError as e:
-                if "no attribute 'idealization_cache'" in str(e):
-                    pass
-                else:
-                    raise AttributeError(e)
             self.idealization_cache = IdealizationCache(
                 self.main.data, "TC", amps, thresholds, resolution, intrp_factor
             )
