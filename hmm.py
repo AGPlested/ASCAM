@@ -9,6 +9,7 @@ from sklearn.preprocessing import StandardScaler
 
 from src.utils import piezo_selection
 from src import core as ascam
+from src.core.idealization import Idealizer
 
 TESTFILE = "data/GluA2_T1_SC-recording_40kHzSR.mat"
 
@@ -67,13 +68,48 @@ model.fit(all_eps.reshape(-1, 1))
 
 i = 0
 
-plt.plot(time, xs[i], label="data")
-plt.plot(time, infer(xs[i].reshape(-1,1), model), label="data")
+plt.plot(time, xs[i])
+plt.plot(time, infer(xs[i].reshape(-1,1), model))
 plt.show()
 i+=1
 
+# generate plots
 for i in range(10):
     plt.clf()
-    plt.plot(time, xs[i], label="data")
-    plt.plot(time, infer(xs[i].reshape(-1,1), model), label="data")
+    plt.plot(time, xs[i])
+    plt.plot(time, infer(xs[i].reshape(-1,1), model))
     plt.savefig(f"hmmplots/ep_{i}.png")
+
+# generate plots with resolution applied
+for i in range(10):
+    plt.clf()
+    plt.plot(time, xs[i])
+    x = infer(xs[i].reshape(-1,1), model).reshape(-1)
+    x = Idealizer.apply_resolution(x, time, 5e-5)
+    plt.plot(time, x)
+    plt.savefig(f"hmmplots/ep_{i}_with_resolution.png")
+
+
+# try without giving amps
+# first time I tried this it found two states on the baseline noise
+n_hidden_states = 6
+var_mean_model = hmm.GaussianHMM(
+    n_components=n_hidden_states,
+    n_iter=10,
+    init_params="tcm",
+)
+initial_state_probs = np.zeros(n_hidden_states)
+initial_state_probs[0] = 1
+var_mean_model.startprob_ = initial_state_probs
+var_mean_model.fit(all_eps.reshape(-1, 1))
+
+i = 0
+
+for i in range(10, 15):
+    plt.plot(time, xs[i])
+    # plt.plot(time, infer(xs[i].reshape(-1,1), var_mean_model))
+    x = infer(xs[i].reshape(-1,1), model).reshape(-1)
+    x = Idealizer.apply_resolution(x, time, 5e-5)
+    plt.plot(time, x)
+    plt.show()
+
