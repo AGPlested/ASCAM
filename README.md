@@ -17,7 +17,10 @@ If it is not the correct one install it in your conda environment using:
 
 Then navigate to the folder you downloaded from this page (`ASCAM-master`) and issue:
 `pip install -e .`
-Note: it might be necessary to install `numpy` separately before installing ASCAM.
+Note: it might be necessary to install `numpy` separately before installing ASCAM (in this case, try `conda install numpy`).
+
+Note2: On Windows, at time of writing, you need Microsoft C++ build tools 14.0 
+https://visualstudio.microsoft.com/visual-cpp-build-tools/ and TICK THE BOX!
 
 This installation makes a shell script that lets you launch ASCAM with the command:
 `ascam`
