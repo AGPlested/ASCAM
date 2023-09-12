@@ -206,6 +206,44 @@ def detect_first_activation(
     return time[np.argmax(signal < threshold)]
 
 
+def detect_first_events(
+        time, signal, threshold, piezo, idealization, states
+):
+    """Return the first activation time and first event at each state.
+    first_activation: float
+    first_events: 2xnstates matrix with start time and duration of the first
+    event in each state.
+    """
+
+    first_activation = time[np.argmax(signal < threshold)]
+    piezo_time, _ = piezo_selection(time, piezo, signal)
+
+    events_list = Idealizer.extract_events(idealization, time)
+    first_events = np.zeros((2, len(states)))
+    for i, state in enumerate(states):
+        if any(events_list[:, 0] == state):
+            event_ids = np.where(events_list[:, 0] == state)[0]
+            j = 0
+            # We skip events before first activation time and before piezo
+            while (
+                    events_list[event_ids[j], 2] < piezo_time[0] and
+                    events_list[event_ids[j], 2] < first_activation
+            ):
+                j += 1
+            event_id = event_ids[j]
+            event_start = events_list[event_id, 2]
+            event_duration = events_list[event_id, 1]
+            first_events[:, i] = [
+                event_start, event_duration
+            ]
+        else:
+            # If there are no events at the state fill with -1
+            first_events[:, i] = [
+                -1, -1
+            ]
+    return first_activation, first_events
+
+
 def baseline_correction(
     time,
     signal,
