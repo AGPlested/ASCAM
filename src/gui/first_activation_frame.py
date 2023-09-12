@@ -32,7 +32,6 @@ class FirstActivationFrame(EntryWidget):
         )
 
         self.threshold = 0
-        self.set_threshold()
         self.find_first_events = False
 
     @property
