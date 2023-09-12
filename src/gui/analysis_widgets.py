@@ -59,10 +59,6 @@ class IdealizationFrame(QWidget):
         self.events_button.clicked.connect(self.create_event_frame)
         self.layout.addWidget(self.events_button)
 
-        self.first_events_button = QPushButton("Table of First Activation Events")
-        self.first_events_button.clicked.connect(self.create_first_event_frame)
-        self.layout.addWidget(self.first_events_button)
-
         self.hist_button = QPushButton("Show Dwell Time Histogram")
         self.hist_button.clicked.connect(self.create_histogram_frame)
         self.layout.addWidget(self.hist_button)
@@ -70,10 +66,6 @@ class IdealizationFrame(QWidget):
         self.export_events_button = QPushButton("Export Table of Events")
         self.export_events_button.clicked.connect(self.export_events)
         self.layout.addWidget(self.export_events_button)
-
-        self.export_first_events_button = QPushButton("Export First Events")
-        self.export_first_events_button.clicked.connect(self.export_first_events)
-        self.layout.addWidget(self.export_first_events_button)
 
         self.export_idealization_button = QPushButton("Export Idealization")
         self.export_idealization_button.clicked.connect(self.export_idealization)
@@ -106,9 +98,6 @@ class IdealizationFrame(QWidget):
     def create_event_frame(self):
         self.current_tab.create_event_frame()
 
-    def create_first_event_frame(self):
-        self.current_tab.create_first_event_frame()
-
     def export_events(self):
         self.get_params()
         self.current_tab.idealization_cache.get_events()
@@ -116,15 +105,6 @@ class IdealizationFrame(QWidget):
             self, dir=self.main.filename[:-4] + "_events.csv", filter="*.csv"
         )[0]
         self.current_tab.idealization_cache.export_events(
-            filename, self.current_tab.time_unit, self.current_tab.trace_unit
-        )
-
-    def export_first_events(self):
-        filename = QFileDialog.getSaveFileName(
-            self, dir=self.main.filename[:-4] + "_firstActivationEvents.csv",
-            filter="*.csv"
-        )[0]
-        self.current_tab.idealization_cache.export_first_events(
             filename, self.current_tab.time_unit, self.current_tab.trace_unit
         )
 
@@ -425,27 +405,6 @@ class IdealizationTab(EntryWidget):
                 f"Duration [{self.time_unit}]",
                 f"t_start [{self.time_unit}]",
                 f"t_stop [{self.time_unit}]",
-            ],
-            title=f"Amp={params[0]}; Thresh={params[1]}; Res={params[2]}; Intrp={params[3]}",
-            trace_unit=self.trace_unit,
-            time_unit=self.time_unit,
-        )
-
-    def create_first_event_frame(self):
-        params = self.get_params()
-        self.first_event_table_frame = TableFrame(
-            self,
-            data=self.idealization_cache.get_first_events(
-                trace_unit=self.trace_unit, time_unit=self.time_unit
-            ),
-            header=[
-                "Episode Number",
-                f"Time of First Activation [{self.time_unit}]",
-                f"Amplitude of First Activation [{self.trace_unit}]",
-                f"Amplitude of First Event [{self.trace_unit}]",
-                f"Duration [{self.time_unit}]",
-                f"t_start  [{self.time_unit}]",
-                f"t_stop  [{self.time_unit}]",
             ],
             title=f"Amp={params[0]}; Thresh={params[1]}; Res={params[2]}; Intrp={params[3]}",
             trace_unit=self.trace_unit,

@@ -122,22 +122,6 @@ class IdealizationCache:
         event_array[:, 2:] *= TIME_UNIT_FACTORS[time_unit]
         return event_array
 
-    def get_first_events(self, time_unit="s", trace_unit="A"):
-        threshold = self.thresholds[0]
-        self.data.detect_fa(threshold)
-        first_activations = self.data.create_first_activation_table()
-        events = self.get_events(
-            time_unit, trace_unit
-        )
-        data = []
-        for activation in first_activations:
-            events_in_episode = events[events[:, 0] == activation[0]]
-            first_event = events_in_episode[
-                np.argmax(events_in_episode[:, 1] < threshold)
-            ]
-            data.append(np.concatenate((activation, first_event[1:]), axis=0))
-        return np.array(data)
-
     def dwell_time_hist(
         self, amp, n_bins=None, time_unit="ms", log_times=True, root_counts=True
     ):
@@ -200,20 +184,3 @@ class IdealizationCache:
         with open(filepath, "w") as f:
             f.write(params)
         export_array.to_csv(filepath, mode="a")
-
-    def export_first_events(self, filepath, time_unit="us", trace_unit="pA"):
-        import pandas as pd
-        if not filepath.endswith(".csv"):
-            filepath += ".csv"
-        header = [
-            "Episode Number",
-            f"Time of First Activation [{time_unit}]",
-            f"Amplitude of First Activation [{trace_unit}]",
-            f"Amplitude of First Event [{trace_unit}]",
-            f"Duration [{time_unit}]",
-            f"t_start  [{time_unit}]",
-            f"t_stop  [{time_unit}]",
-        ]
-        data = self.get_first_events(time_unit=time_unit, trace_unit=trace_unit)
-        exportdf = pd.DataFrame(data, columns=header)
-        exportdf.to_csv(filepath)
