@@ -272,7 +272,7 @@ class Recording(dict):
         """Apply first event detection to all episodes in the selected series"""
 
         [
-            episode.detect_first_activation(threshold)
+            episode.detect_first_activation_episode(threshold)
             for episode in self.series
             if not episode.manual_first_activation
         ]
