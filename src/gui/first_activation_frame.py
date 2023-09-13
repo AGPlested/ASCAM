@@ -124,7 +124,7 @@ class FirstActivationFrame(EntryWidget):
         ExportFEDialog(self.main)
 
     def show_first_activation_table(self):
-        debug_logger.debug("creating fist activation table")
+        debug_logger.debug("creating first activation table")
         self.main.data.detect_fa(self.threshold)
 
         self.table_frame = TableFrame(
@@ -134,7 +134,7 @@ class FirstActivationFrame(EntryWidget):
             ),
             header=[
                 "Episode Number",
-                f"First Activatime Time [{self.time_unit}]",
+                f"First Activation Time [{self.time_unit}]",
                 f"Current [{self.trace_unit}]",
             ],
             trace_unit=self.trace_unit,
