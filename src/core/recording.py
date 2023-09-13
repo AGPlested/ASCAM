@@ -282,7 +282,6 @@ class Recording(dict):
         states_in_episodes = [
             np.unique(episode.idealization) for episode in self.series
         ]
-        assert not all(states_in_episodes == np.array([None])), "No idealization found"
         states = np.unique(np.hstack(states_in_episodes))
         states.sort()
         states = states[::-1]
