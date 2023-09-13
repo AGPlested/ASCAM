@@ -149,7 +149,7 @@ class FirstActivationFrame(EntryWidget):
         table_data = self.main.data.create_first_event_table(
                 time_unit=self.time_unit,
             )
-        header = ["Episode Number"]
+        header = ["Episode Number", "First state"]
         for i in range(int(len(table_data)/2)):
             header.append(f"S{i}-start [{self.time_unit}]")
             header.append(f"S{i}-duration [{self.time_unit}]")

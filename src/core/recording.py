@@ -578,7 +578,8 @@ class Recording(dict):
             first_events = first_events_matrix.reshape(
                 first_events_matrix.size, order="F"
             ) * TIME_UNIT_FACTORS[time_unit]
-            data = (episode.n_episode, ) + tuple(first_events)
+            idx_first_event = np.argmin(first_events[::2])
+            data = (episode.n_episode, ) + (f"{idx_first_event}",) + tuple(first_events)
             table_rows.append(data)
         return np.array(table_rows).astype(object)
 
@@ -618,9 +619,9 @@ class Recording(dict):
         export_array = self.create_first_event_table(
             datakey, time_unit, lists_to_save
         )
-        header = ["Episode Number"]
+        header = ["Episode Number", "First state visited"]
         # per state 2 columns + episode number
-        for i in range(int((export_array.shape[1]-1)/2)):
+        for i in range(int((export_array.shape[1]-2)/2)):
             header.append(f"S{i}-start [{time_unit}]")
             header.append(f"S{i}-duration [{time_unit}]")
         export_array_df = pd.DataFrame(export_array, columns=header)
