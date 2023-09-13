@@ -230,6 +230,10 @@ def detect_first_events(
                     events_list[event_ids[j], 2] < first_activation
             ):
                 j += 1
+                if j >= len(event_ids):
+                    # none of the events are after piezo & first activation
+                    first_events[:, i] = [-1, -1]
+                    break
             event_id = event_ids[j]
             event_start = events_list[event_id, 2]
             event_duration = events_list[event_id, 1]
@@ -238,9 +242,7 @@ def detect_first_events(
             ]
         else:
             # If there are no events at the state fill with -1
-            first_events[:, i] = [
-                -1, -1
-            ]
+            first_events[:, i] = [-1, -1]
     return first_activation, first_events
 
 
