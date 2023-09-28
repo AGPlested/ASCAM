@@ -161,8 +161,8 @@ class Episode:
 
     def detect_first_events_episode(self, threshold, states):
         """Detect the first activation in the episode."""
-        deneme = detect_first_events(
+        first_activation, first_events = detect_first_events(
             self.time, self.trace, threshold, self.piezo, self.idealization, states
         )
-        self.first_activation = deneme[0]
-        self.first_events = deneme[1]
+        self.first_activation = first_activation
+        self.first_events = first_events
