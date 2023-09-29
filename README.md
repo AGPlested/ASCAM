@@ -43,3 +43,22 @@ There is an example raw data file of an AMPA receptor single channel patch in th
 You can remove the baseline, filter, and idealise data, or find the time of the first actvation. You can also page through episodes and mark them for later analysis or to be excluded from analysis.
 
 ![macOS Screenshot](cuteSCAM.png)
+
+## Quick guide to ASCAM
+
+* Load file by `File > Open file` from the menu bar and selecting the recording using the file browser. `.mat` and `.axgx` or `.axgd` files should open without a problem.
+* Baseline correction: `Processing > Baseline correction` from the menu bar
+    * You can choose between *methods* `Polynomial` or `Offset` to fit the baseline to a polynomial with a chosen degree or subtract a constant, respectively.
+    * The *selection* allows you to put in where the baseline is. This can be *intervals* that you type in or determined by *piezo* trace automatically.
+        * If you choose *piezo* and *active* is unchecked, the baseline is set to the time when the piezo voltage deviates from 0 by more than *deviation* percent.
+        * If you choose *piezo* and *active* is checked, the baseline is set to the time when the piezo voltage is different from maximum piezo voltage by more than *deviation* percent.
+        * If you choose *intervals* you can put in the start and end times of baseline interval. This needs to be formatted like a python list such as `[0, 15]`.
+* Filter: `Processing > Filter` and choose between Gauss filter and Chung-Kennedy filter (Chung and Kennedy 1991). In both cases you need to alter needed parameters (corner frequency for Gauss and weights etc. for CK)
+* Idealization: `Analysis > Idealize` for finding an idealization using threshold crossing method.
+    * You need to put in the *amplitudes* separated by spaces and without any brackets, such as `0 0.7 1.2 1.8 2.2` (pA) for the sample data. You can also drag the drawn lines for the amplitude to adjust them.
+    * Thresholds can be put in manually in *thresholds* or auto generated and set to the midpoint between each two amplitudes.
+    * If you want to apply a resolution to remove shorter events, you can put in a resolution
+    * You can also *interpolate* the signal with a cubic spline with an interpolation factor you choose. 
+    * After clicking `Calculate idealization` you can show or export event table, or export the idealization. 
+* First Activation Threshold: `Analysis > First Activation`. You can type the first activation threshold or make it *draggable* to adjust the line drawn on the trace and click `Set threshold`.
+    * You can alternatively go through the episodes to mark the point of first activation manually.
