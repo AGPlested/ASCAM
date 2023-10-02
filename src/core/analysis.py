@@ -219,30 +219,20 @@ def detect_first_events(
     piezo_time, _ = piezo_selection(time, piezo, signal)
 
     events_list = Idealizer.extract_events(idealization, time)
-    first_events = np.zeros((2, len(states)))
+    first_events = -np.ones((2, len(states)+1))
+    exit_time = max(piezo_time[0], first_activation)
+    # We skip events before first activation time and before piezo
+    events_list = events_list[events_list[:,2] > exit_time,:]
     for i, state in enumerate(states):
-        if any(events_list[:, 0] == state):
-            event_ids = np.where(events_list[:, 0] == state)[0]
-            j = 0
-            # We skip events before first activation time and before piezo
-            while (
-                    events_list[event_ids[j], 2] < piezo_time[0] and
-                    events_list[event_ids[j], 2] < first_activation
-            ):
-                j += 1
-                if j >= len(event_ids):
-                    # none of the events are after piezo & first activation
-                    first_events[:, i] = [-1, -1]
-                    break
-            event_id = event_ids[j]
-            event_start = events_list[event_id, 2]
-            event_duration = events_list[event_id, 1]
-            first_events[:, i] = [
-                event_start, event_duration
-            ]
+        event_ids = np.where(events_list[:, 0] == state)[0]
+        if any(event_ids):
+            event_id = min(event_ids)
         else:
-            # If there are no events at the state fill with -1
-            first_events[:, i] = [-1, -1]
+            continue
+        event_start = events_list[event_id, 2]
+        event_duration = events_list[event_id, 1]
+        first_events[:, i] = [ event_start, event_duration ]
+    first_events[first_events == -1] = None
     return first_activation, first_events
 
 
