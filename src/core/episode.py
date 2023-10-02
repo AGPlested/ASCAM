@@ -154,12 +154,12 @@ class Episode:
             mean = std = np.nan
         return mean, std
 
-    def detect_first_activation_episode(self, threshold):
+    def detect_first_activation(self, threshold):
         self.first_activation = detect_first_activation(
             self.time, self.trace, threshold
         )
 
-    def detect_first_events_episode(self, threshold, states):
+    def detect_first_events(self, threshold, states):
         """Detect the first activation in the episode."""
         first_activation, first_events = detect_first_events(
             self.time, self.trace, threshold, self.piezo, self.idealization, states
