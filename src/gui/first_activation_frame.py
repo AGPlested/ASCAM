@@ -33,6 +33,7 @@ class FirstActivationFrame(EntryWidget):
 
         self.threshold = 0
         self.find_first_events = False
+        self.set_threshold()
 
     @property
     def marking_indicator(self):
