@@ -286,7 +286,7 @@ class Recording(dict):
         states.sort()
         states = states[::-1]
         first_events_list = []
-        for i, episode in enumerate(self.series):
+        for episode in self.series:
             first_events = episode.detect_first_events_episode(threshold, states)
             first_events_list.append(first_events)
         return np.hstack(first_events_list)
