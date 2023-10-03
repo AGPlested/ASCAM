@@ -219,13 +219,13 @@ def detect_first_events(
     piezo_time, _ = piezo_selection(time, piezo, signal)
 
     events_list = Idealizer.extract_events(idealization, time)
-    first_events = -np.ones((2, len(states)+1))
+    first_events = -np.ones((2, len(states)))
     exit_time = max(piezo_time[0], first_activation)
     # We skip events before first activation time and before piezo
-    events_list = events_list[events_list[:,2] > exit_time,:]
+    events_list = events_list[events_list[:, 2] >= exit_time, :]
     for i, state in enumerate(states):
         event_ids = np.where(events_list[:, 0] == state)[0]
-        if any(event_ids):
+        if len(event_ids) > 0:
             event_id = min(event_ids)
         else:
             continue
