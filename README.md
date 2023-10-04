@@ -62,3 +62,8 @@ You can remove the baseline, filter, and idealise data, or find the time of the 
     * After clicking `Calculate idealization` you can show or export event table, or export the idealization. 
 * First Activation Threshold: `Analysis > First Activation`. You can type the first activation threshold or make it *draggable* to adjust the line drawn on the trace and click `Set threshold`.
     * You can alternatively go through the episodes to mark the point of first activation manually.
+    * If you have idealized the data, you can extract the first activation events using `First events table`. This gives a summary of first opening (or closure) for each level, that happens after the piezo signal and first activation time. The resulting table shows:
+        * to which level was the first opening
+        * For each level "Si" (i = 0,1,2,3.. where 0 usually corresponds to the shut state) 
+            * the start time of the first event at the level
+            * the duration of the first event at each level
