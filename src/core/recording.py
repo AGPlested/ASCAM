@@ -277,6 +277,20 @@ class Recording(dict):
             if not episode.manual_first_activation
         ]
 
+    def get_first_events(self, threshold):
+        # Finding all states in the data
+        states_in_episodes = [
+            np.unique(episode.idealization) for episode in self.series
+        ]
+        states = np.unique(np.hstack(states_in_episodes))
+        states.sort()
+        states = states[::-1]
+        first_events_list = []
+        for episode in self.series:
+            first_events = episode.detect_first_events(threshold, states)
+            first_events_list.append(first_events)
+        return np.hstack(first_events_list)
+
     def series_hist(
         self,
         active=True,
@@ -549,6 +563,25 @@ class Recording(dict):
         )
         return export_array.astype(object)
 
+    def create_first_event_table(
+            self, datakey=None, time_unit="ms", lists_to_save=None
+    ):
+        if datakey is None:
+            datakey = self.current_datakey
+        debug_logger.debug(f"first_events for series {datakey}")
+
+        table_rows = []
+        for episode in self.select_episodes(datakey, lists_to_save):
+            first_events_matrix = episode.first_events
+            # Reshaping 2xnstates matrix into an array, column first
+            first_events = first_events_matrix.reshape(
+                first_events_matrix.size, order="F"
+            ) * TIME_UNIT_FACTORS[time_unit]
+            idx_first_event = np.argmin(first_events[::2])
+            data = (episode.n_episode, ) + (f"{idx_first_event}",) + tuple(first_events)
+            table_rows.append(data)
+        return np.array(table_rows).astype(object)
+
     def export_first_activation(
         self,
         filepath,
@@ -572,6 +605,30 @@ class Recording(dict):
         if not filepath.endswith(".csv"):
             filepath += ".csv"
         export_array.to_csv(filepath)
+
+    def export_first_events(
+        self,
+        filepath,
+        datakey=None,
+        time_unit="ms",
+        lists_to_save=None,
+        trace_unit="pA",
+    ):
+        """Export csv file of first event start times and durations at each state."""
+        export_array = self.create_first_event_table(
+            datakey, time_unit, lists_to_save
+        )
+        header = ["Episode Number", "First state visited"]
+        # per state 2 columns + episode number
+        for i in range(int((export_array.shape[1]-2)/2)):
+            header.append(f"S{i}-start [{time_unit}]")
+            header.append(f"S{i}-duration [{time_unit}]")
+        export_array_df = pd.DataFrame(export_array, columns=header)
+        # truncate floats for duration and timestamps to 1 micro second
+        export_df = round_off_tables(export_array_df, ["int", time_unit, trace_unit])
+        if not filepath.endswith(".csv"):
+            filepath += ".csv"
+        export_df.to_csv(filepath)
 
     @staticmethod
     def _load_from_axo(
