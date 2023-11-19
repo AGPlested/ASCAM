@@ -1,4 +1,3 @@
-from PySide2.QtGui import QDoubleValidator
 from PySide2.QtWidgets import (
     QLineEdit,
     QDialog,
@@ -21,7 +20,7 @@ class BaseExportWidget(EntryWidget):
     def __init__(
         self,
         main,
-        dialog,
+        dialog=None,
         default_time_unit="s",
         default_trace_unit="A",
         default_piezo_unit="V",
@@ -31,8 +30,7 @@ class BaseExportWidget(EntryWidget):
         self.dialog = dialog
         self.create_selection_widgets()
         super().__init__(
-            parent=main,
-            main=main,
+            main,
             default_time_unit=default_time_unit,
             default_trace_unit=default_trace_unit,
             default_piezo_unit=default_piezo_unit,
@@ -45,10 +43,10 @@ class BaseExportWidget(EntryWidget):
         self.series_selection.setCurrentText(self.main.data.current_datakey)
 
         self.list_selection = QListWidget()
-        self.list_selection.addItems(list(self.main.data.episode_sets.keys()))
+        self.list_selection.addItems(list(self.main.data.lists.keys()))
         self.list_selection.setSelectionMode(QAbstractItemView.MultiSelection)
         self.list_selection.setCurrentRow(0)
-        self.list_selection.setFixedHeight(18 * len(list(self.main.data.episode_sets.keys())))
+        self.list_selection.setFixedHeight(18 * len(list(self.main.data.lists.keys())))
 
 
 class ExportFADialog(QDialog):
@@ -83,7 +81,7 @@ class ExportFAWidget(BaseExportWidget):
         self.add_row(save_button, cancel_button)
 
     def save_click(self):
-        filename, _ = QFileDialog.getSaveFileName(
+        filename, filetye = QFileDialog.getSaveFileName(
             self,
             dir=self.main.filename[:-4] + "_first_activation",
             filter="Comma Separated Valued (*.csv)",
@@ -95,8 +93,8 @@ class ExportFAWidget(BaseExportWidget):
                 lists_to_save=[
                     item.text() for item in self.list_selection.selectedItems()
                 ],
-                time_unit=self.time_unit,
-                trace_unit=self.trace_unit,
+                time_unit=self.time_unit.currentText(),
+                trace_unit=self.trace_unit.currentText(),
             )
         self.close()
 
@@ -168,8 +166,7 @@ class OpenFileEntryWidget(EntryWidget):
         self.filename = filename
         self.dialog = dialog
         super().__init__(
-            parent=main,
-            main=main,
+            main,
             default_time_unit="s",
             default_trace_unit="A",
             default_piezo_unit="V",
@@ -183,7 +180,6 @@ class OpenFileEntryWidget(EntryWidget):
 
         sampling_label = QLabel("Sampling rate [Hz]")
         self.sampling_entry = QLineEdit("40000")
-        self.sampling_entry.setValidator(QDoubleValidator())
         self.add_row(sampling_label, self.sampling_entry)
 
         t_unit_label = QLabel("Time unit")
@@ -217,7 +213,7 @@ class OpenFileEntryWidget(EntryWidget):
     def ok_clicked(self):
         self.main.data = Recording.from_file(
             filename=self.main.filename,
-            sampling_rate=float(self.sampling_entry.text()),
+            sampling_rate=self.sampling_entry.text(),
             time_input_unit=self.time_unit,
             trace_input_unit=self.trace_unit,
             piezo_input_unit=self.piezo_unit,
@@ -338,7 +334,7 @@ class ExportIdealizationWidget(BaseExportWidget):
         self.add_row(save_button, cancel_button)
 
     def save_click(self):
-        filename, _ = QFileDialog.getSaveFileName(
+        filename, filetye = QFileDialog.getSaveFileName(
             self, dir=self.main.filename[:-4], filter="CSV (*.csv)"
         )
         self.main.data.export_idealization(

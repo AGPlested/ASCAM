@@ -45,10 +45,8 @@ class MainWindow(QMainWindow):
         self.central_widget.setLayout(self.central_layout)
         self.setCentralWidget(self.central_widget)
 
-        # Placeholders
-        self.fa_frame = None  # FirstActivationFrame.
-        self.id_frame = None  # IdealizationFrame
-        self.filename = None
+        self.fa_frame = None
+        self.tc_frame = None
 
         self.data = Recording()
 
@@ -72,8 +70,7 @@ class MainWindow(QMainWindow):
         self.processing_menu.addAction("Filter", lambda: FilterFrame(self))
 
         self.analysis_menu = self.menuBar().addMenu("Analysis")
-        self.analysis_menu.addAction("Idealize", self.launch_threshold_crossing)
-        self.analysis_menu.addAction("DISC", self.launch_DISC)
+        self.analysis_menu.addAction("Idealize", self.launch_idealization)
         self.analysis_menu.addAction("First Activation", self.launch_fa_analysis)
 
         self.plot_menu = self.menuBar().addMenu("Plots")
@@ -98,7 +95,8 @@ class MainWindow(QMainWindow):
         self.create_widgets()
         self.filename = QFileDialog.getOpenFileName(self)[0]
         if self.filename:
-            self.close_other_frames()
+            self.close_tc_frame()
+            self.close_fa_frame()
             debug_logger.debug(f"filename is {self.filename}")
             _, _, _, filename_short = parse_filename(self.filename)
             OpenFileDialog(self, filename=filename_short)
@@ -112,38 +110,25 @@ class MainWindow(QMainWindow):
         else:
             debug_logger.debug("Not saving to pickle - no filename given.")
 
-    def launch_threshold_crossing(self):
-        debug_logger.debug("launching threshold crossing idealization")
-        if self.id_frame is None:
-            self.close_other_frames()
-            self.id_frame = IdealizationFrame(self, "TC")
-            self.central_layout.addWidget(self.id_frame, 1, 1)
-        else:
-            debug_logger.debug("IdealizationFrame already exists, adding TC tab.")
-            self.id_frame.tab_frame.add_tab(idealization_method="TC")
-
-    def launch_DISC(self):
-        debug_logger.debug("launching DISC idealization")
-        if self.id_frame is None:
-            self.close_other_frames()
-            self.id_frame = IdealizationFrame(self, "DISC")
-            self.central_layout.addWidget(self.id_frame, 1, 1)
-        else:
-            debug_logger.debug("IdealizationFrame already exists, adding DISC tab.")
-            self.id_frame.tab_frame.add_tab(idealization_method="DISC")
+    def launch_idealization(self):
+        self.close_fa_frame()
+        self.tc_frame = IdealizationFrame(self)
+        self.central_layout.addWidget(self.tc_frame, 1, 1)
 
     def launch_fa_analysis(self):
-        self.close_other_frames()
+        self.close_tc_frame()
         self.fa_frame = FirstActivationFrame(self)
         self.central_layout.addWidget(self.fa_frame, 1, 1)
 
-    def close_other_frames(self):
+    def close_fa_frame(self):
         if self.fa_frame is not None:
             self.fa_frame.clean_up_and_close()
-        if self.id_frame is not None:
-            self.id_frame.close_frame()
 
-    def load_example_data(self):
+    def close_tc_frame(self):
+        if self.tc_frame is not None:
+            self.tc_frame.close_frame()
+
+    def test_mode(self):
         path = os.path.split(
             os.path.split(os.path.dirname(os.path.abspath(__file__)))[0]
         )[
@@ -165,4 +150,5 @@ class MainWindow(QMainWindow):
         self.data.gauss_filter_series(1000)
         self.ep_frame.update_combo_box()
         self.plot_frame.plot_all()
-        self.launch_DISC()
+        self.launch_idealization()
+        self.tc_frame.current_tab.amp_entry.setPlainText("0 -.7 -1.2 -1.8 -2.2")

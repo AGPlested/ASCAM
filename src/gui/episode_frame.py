@@ -36,8 +36,8 @@ class EpisodeFrame(QWidget):
         self.keyPressed.connect(self.key_pressed)
 
     def create_widgets(self):
-        self.episode_sets_frame = EpisodeSetsFrame(parent=self, main=self.main)
-        self.layout.addWidget(self.episode_sets_frame)
+        self.list_frame = ListFrame(self)
+        self.layout.addWidget(self.list_frame)
 
         self.series_selection = QComboBox()
         self.series_selection.setDuplicatesEnabled(False)
@@ -45,7 +45,7 @@ class EpisodeFrame(QWidget):
         self.series_selection.currentTextChanged.connect(self.switch_series)
         self.layout.addWidget(self.series_selection)
 
-        self.ep_list = EpisodeList(parent=self, main=self.main)
+        self.ep_list = EpisodeList(self)
         self.layout.addWidget(self.ep_list)
 
     def switch_series(self, index):
@@ -83,81 +83,83 @@ class EpisodeFrame(QWidget):
         self.keyPressed.emit(event.text())
 
     def key_pressed(self, key):
-        assigned_keys = [key for (_, key) in self.main.data.episode_sets.values()]
+        assigned_keys = [x[1] for x in self.main.data.lists.values()]
         if key in assigned_keys:
-            for ep_set in self.episode_sets_frame.episode_sets:
-                if key == ep_set.key:
+            for l in self.list_frame.lists:
+                if f"[{key}]" in l.text():
+                    name = l.text().split()[0]
                     for item in self.ep_list.selectedItems():
                         index = self.ep_list.row(item)
-                        self.episode_sets_frame.add_to_set(ep_set.name, index)
+                        self.list_frame.add_to_list(name, key, index)
 
 
-class EpisodeSet():
-    def __init__(self, main, name: str, key: str | None=None):
-        self.main = main
-        main.data.add_new_set(name, key)
-        self.name = name
-        self.key = key
-        self.label = f"{name} [{key}]" if key is not None else name
-        self.check_box = QCheckBox(self.label)
-        self.check_box.setChecked(True)
-
-    def add_episode(self, index):
-        self.main.data.add_episodes_to_set(self.name, index)
-
-    def remove_episode(self, index):
-        self.main.data.remove_episode_from_set(self.name, index)
-
-    @property
-    def episodes(self):
-        return self.main.data.episode_sets[self.name][0]
-
-
-class EpisodeSetsFrame(QWidget):
+class ListFrame(QWidget):
     keyPressed = QtCore.Signal(str)
 
-    def __init__(self, parent, main, *args, **kwargs):
-        super(EpisodeSetsFrame, self).__init__(*args, **kwargs)
+    def __init__(self, parent, *args, **kwargs):
+        super(ListFrame, self).__init__(*args, **kwargs)
         self.parent = parent
-        self.main = main
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
 
-        self.episode_sets = []
-        self.new_set("All")
+        self.lists = []
+        self.new_list("All")
 
         self.new_button = QPushButton("New List")
-        self.new_button.clicked.connect(self.new_set_button)
+        self.new_button.clicked.connect(self.create_dialog)
         self.layout.addWidget(self.new_button)
 
-    def new_set_button(self):
-        name, key = NewSetDialog.get_new_set(self)
-        self.new_set(name, key)
+    def new_list(self, name, key=None):
+        label = f"{name} [{key}]" if key is not None else name
+        check_box = QCheckBox(label)
+        check_box.setChecked(True)
+        self.lists.append(check_box)
+        self.layout.insertWidget(0, check_box)
+        self.parent.main.data.lists[name] = ([], key)
+        debug_logger.debug(
+            f"added list '{name}' with key '{key}'\n"
+            "lists are now:\n"
+            f"{self.parent.main.data.lists}"
+        )
 
-    def new_set(self, name: str, key=None):
-        new_set = EpisodeSet(self.main, name, key)
-        self.episode_sets.append(new_set)
-        self.layout.insertWidget(0, new_set.check_box)
-        self.main.data.add_new_set(name, key)
-
-    def get_set(self, name: str) -> EpisodeSet:
-        return [x for x in self.episode_sets if x.name == name][0]
-
-    def add_to_set(self, name: str, index: int):
-        if not self.main.data.index_is_in_set(index=index, name=name):
-            self.get_set(name).add_episode(index)
+    def add_to_list(self, name, key, index):
+        if index not in self.parent.main.data.lists[name][0]:
+            self.parent.main.data.lists[name][0].append(index)
+            assigned_keys = [
+                x[1]
+                for x in self.parent.main.data.lists.values()
+                if index in x[0] and x[1] is not None
+            ]
+            n = f"Episode {self.parent.main.data.series[index].n_episode} "
+            assigned_keys.sort()
+            s = ""
+            for k in assigned_keys:
+                if k is not None:
+                    s += f"[{k}]"
+            n += s.rjust(20 - len(n), " ")
+            self.parent.ep_list.item(index).setText(n)
+            ana_logger.debug(
+                f"added episode {self.parent.main.data.series[index].n_episode} to list {name}"
+            )
         else:
-            self.get_set(name).remove_episode(index)
-        self.updatet_episode_name(index)
-
-    def updatet_episode_name(self, index: int):
-        """Updates the name of the episode at position `index` to include the
-        correct keys."""
-        assigned_keys = self.main.data.get_episode_set_keys(index)
-        ep_display_name = f"Episode {self.main.data.series[index].n_episode} "
-        s = "".join([f"[{k}]" for k in assigned_keys])
-        ep_display_name += s.rjust(20 - len(ep_display_name), " ")
-        self.parent.ep_list.item(index).setText(ep_display_name)
+            self.parent.main.data.lists[name][0].remove(index)
+            n = self.parent.ep_list.item(index).text()
+            assigned_keys = [
+                x[1]
+                for x in self.parent.main.data.lists.values()
+                if index in x[0] and x[1] is not None
+            ]
+            assigned_keys.sort()
+            n = f"Episode {self.parent.main.data.series[index].n_episode} "
+            s = ""
+            for k in assigned_keys:
+                if k is not None:
+                    s += f"[{k}]"
+            n += s.rjust(20 - len(n), " ")
+            self.parent.ep_list.item(index).setText(n)
+            ana_logger.debug(
+                f"removed episode {self.parent.main.data.series[index].n_episode} from list {name}"
+            )
 
     def create_dialog(self):
         self.dialog = QDialog()
@@ -182,46 +184,15 @@ class EpisodeSetsFrame(QWidget):
         layout.addWidget(cancel_button, 2, 1)
         self.dialog.exec_()
 
+    def ok_clicked(self):
+        self.new_list(self.name_entry.text(), self.key_entry.text())
+        self.dialog.close()
+
     def keyPressEvent(self, event):
         if event.text().isalpha():
             event.ignore()
         else:
             super().keyPressEvent(event)
-
-
-class NewSetDialog(QDialog):
-   def __init__(self, parent):
-       self.parent = parent
-       self.setWindowTitle("Add List")
-       layout = QGridLayout()
-       self.setLayout(layout)
-
-       layout.addWidget(QLabel("Name:"), 0, 0)
-       name_entry = QLineEdit()
-       layout.addWidget(name_entry, 0, 1)
-       layout.addWidget(QLabel("Key:"), 1, 0)
-       key_entry = QLineEdit()
-       key_entry.setMaxLength(1)
-       layout.addWidget(key_entry, 1, 1)
-
-       ok_button = QPushButton("OK")
-       ok_button.clicked.connect(self.ok_clicked)
-       layout.addWidget(ok_button, 2, 0)
-
-       cancel_button = QPushButton("Cancel")
-       cancel_button.clicked.connect(self.close)
-       layout.addWidget(cancel_button, 2, 1)
-       self.exec_()
-
-   def ok_clicked(self):
-       self.parent.new_set(self.name_entry.text(), self.key_entry.text())
-       self.close()
-
-   @classmethod
-   def get_new_set(cls, parent):
-       dialog = cls(parent)
-       dialog.exec_()
-       return dialog.name, dialog.key
 
 
 class EpisodeList(QListWidget):
@@ -230,10 +201,9 @@ class EpisodeList(QListWidget):
 
     keyPressed = QtCore.Signal(str)
 
-    def __init__(self, parent, main, *args, **kwargs):
+    def __init__(self, parent, *args, **kwargs):
         super(EpisodeList, self).__init__(*args, **kwargs)
         self.parent = parent
-        self.main = main
         self.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Expanding)
         self.currentItemChanged.connect(
@@ -244,15 +214,15 @@ class EpisodeList(QListWidget):
     def on_item_click(self, item, _):
         debug_logger.debug(f"clicked new episode")
         ep_number = int(item.text().split()[1])
-        self.main.data.current_ep_ind = ep_number
+        self.parent.main.data.current_ep_ind = ep_number
 
     def populate(self):
         self.currentItemChanged.disconnect(self.on_item_click)
         self.clear()
-        if self.main.data is not None:
+        if self.parent.main.data is not None:
             debug_logger.debug("inserting data")
             self.addItems(
-                [f"Episode {e.n_episode}" for e in self.main.data.series]
+                [f"Episode {e.n_episode}" for e in self.parent.main.data.series]
             )
         self.setCurrentRow(0)
         self.currentItemChanged.connect(
