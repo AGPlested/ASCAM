@@ -34,8 +34,8 @@ class PlotFrame(QWidget):
         self.hist_x_range = None
         self.hist_y_range = None
 
-        self.tc_tracking = False
-        self.fa_tracking = False
+        self.tc_tracking = False  # Controls whether the cursor is being tracked for the threshold crossing parameters.
+        self.fa_tracking = False  # Controls whether the cursor is being tracked for the first activation parameters.
 
         self.init_plots()
         self.init_hist()
@@ -194,14 +194,18 @@ class PlotFrame(QWidget):
         self.trace_line = self.trace_plot.plot(
             self.main.data.episode().time, self.main.data.episode().trace, pen=pen
         )
-        if (
-            self.main.tc_frame is not None
-            and self.main.tc_frame.idealization() is not None
-        ):
+        try:
             id_pen = pg.mkPen(color=ORANGE)
             self.trace_plot.plot(
-                self.main.tc_frame.time(), self.main.tc_frame.idealization(), pen=id_pen
+                self.main.id_frame.time(), self.main.id_frame.idealization(), pen=id_pen
             )
+        except AttributeError as e:
+            if ("'NoneType' object has no attribute 'time'" in str(e)
+                or "'ThresholdCrossingFrame' object has no attribute 'idealization_cache'" in str(e)
+                ):
+                pass
+            else:
+                raise e
         if self.show_command:
             self.command_plot.plot(
                 self.main.data.episode().time, self.main.data.episode().command, pen=pen

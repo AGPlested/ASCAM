@@ -5,7 +5,8 @@ import pickle
 import numpy as np
 import pandas as pd
 
-from ..constants import CURRENT_UNIT_FACTORS, VOLTAGE_UNIT_FACTORS, TIME_UNIT_FACTORS
+
+from ..constants import AMPERE_UNIT_FACTORS, VOLTAGE_UNIT_FACTORS, TIME_UNIT_FACTORS
 from ..utils import (
     parse_filename,
     piezo_selection,
@@ -77,7 +78,7 @@ class Recording(dict):
         else:
             raise ValueError(f"Cannot load from filetype {filetype}.")
 
-        recording.lists = {"All": (list(range(len(recording["raw_"]))), None)}
+        recording.episode_sets = {"All": (list(range(len(recording["raw_"]))), None)}
 
         return recording
 
@@ -99,33 +100,114 @@ class Recording(dict):
         # `lists` stores the indices of the episodes in the list in the first
         # element and the associated key as the second
         # lists[name] = ([inds], key)
-        self.lists = dict()
+        self.episode_sets = dict()
 
-    def select_episodes(self, datakey=None, lists=None):
+    def select_episodes(self, datakey=None, ep_sets=None):
         if datakey is None:
             datakey = self.current_datakey
-        if lists is None:
-            lists = ["All"]
+        if ep_sets is None:
+            ep_sets = ["All"]
         indices = list()
-        for listname in lists:
-            indices.extend(self.lists[listname][0])
+        for ep_set_name in ep_sets:
+            indices.extend(self.episode_sets[ep_set_name][0])
         indices = np.array(list(set(indices)))
         return np.array(self[datakey])[indices]
 
-    def episodes_in_lists(self, names):
+    def episodes_in_set(self, names):
+        """Return an array containing all the episodes in the episode sets
+        specified in `names`."""
         if isinstance(str, names):
             names = [names]
         indices = list()
-        for listname in names:
-            indices.extend(self.lists[listname][0])
+        for ep_set_name in names:
+            indices.extend(self.episode_sets[ep_set_name][0])
         # remove duplicate indices
         indices = np.array(list(set(indices)))
         debug_logger.debug(f"Selected episodes: {indices}")
         return np.array(self.series)[indices]
 
+    def index_is_in_set(self, index, name):
+        return index in self.episode_sets[name][0]
+
+    def add_new_set(self, name: str, key: str | None = None):
+        self.episode_sets[name] = ([], key)
+        debug_logger.debug(
+            f"added list '{name}' with key '{key}'\n"
+            f"lists are now:\n"
+            f"{self.episode_sets}"
+        )
+
+    def add_episode_to_set(self, name, index):
+        self.episode_sets[name][0].append(index)
+        ana_logger.debug(
+            f"added episode "
+            f"{self.series[index].n_episode} "
+            f"to list {name}"
+        )
+
+    def add_episodes_to_set(self, name, indices):
+        if isinstance(indices, int):
+            indices = [indices]
+        for i in indices:
+            self.add_episode_to_set(name, i)
+
+    def remove_episode_from_set(self, name, index):
+        self.episode_sets[name][0].remove(index)
+        ana_logger.debug(
+            f"removed episode "
+            f"{self.series[index].n_episode} "
+            f"from list {name}"
+        )
+
+    def remove_episodes_from_set(self, name, indices):
+        if isinstance(indices, int):
+            indices = [indices]
+        for i in indices:
+            self.remove_episode_from_set(name, i)
+
+    def index_to_episode_number(self, index):
+        return self.series[index].n_episode
+
+    def get_episode_set_keys(self, index) -> list:
+        assigned_keys = [
+            key for (epset, key) in self.episode_sets.values()
+            if index in epset and key is not None
+        ]
+        assigned_keys.sort()
+        return assigned_keys
+
     @property
     def series(self):
         return self[self.current_datakey]
+
+    def series_by_datakey(self, datakey):
+        return self[datakey]
+
+    def concatenated_series_by_datakey(self, datakey):
+        if datakey not in self.keys():
+            raise ValueError(f"Datakey {datakey} not found in recording.")
+        tmp_datakey = self.current_datakey
+        self.current_datakey = datakey
+        series = self.concatenated_series
+        self.current_datakey = tmp_datakey
+        return series
+
+    @property
+    def concatenated_series(self):
+        """Return an Episode object whose data is the concatenation of all
+        episodes in the current series."""
+        trace = np.concatenate([ep.trace for ep in self.series])
+        if self.has_piezo:
+            piezo = np.concatenate([ep.piezo for ep in self.series])
+        else:
+            piezo = None
+        if self.has_command:
+            command = np.concatenate([ep.command for ep in self.series])
+        else:
+            command = None
+        time_offsets = np.concatenate(( [0], np.cumsum([ep.time[-1] for ep in self.series[:-1]]) ))
+        time = np.concatenate([ep.time + offset for ep, offset in zip(self.series, time_offsets)])
+        return Episode(time, trace, piezo=piezo, command=command, sampling_rate=self.episode().sampling_rate)
 
     def episode(self, n_episode=None):
         if n_episode is None:
@@ -134,9 +216,9 @@ class Recording(dict):
         if out:
             return out[0]
         else:
-            debug_logger.warning(
-                f"tried to get episode with index {self.current_ep_ind} but it "
-                "doesn't exist"
+            raise ValueError(
+                f"Tried to get episode with index {self.current_ep_ind} but it "
+                "doesn't exist."
             )
 
     def next_episode_ind(self):
@@ -219,7 +301,7 @@ class Recording(dict):
 
         fdatakey = f"GFILTER{filter_freq}_"
         if self.current_datakey == "raw_":
-            # if its the first operation drop the 'raw-'
+            # if its the first operation drop the 'raw_'
             new_datakey = fdatakey
         else:
             # if operations have been done before combine the names
@@ -415,37 +497,38 @@ class Recording(dict):
         time_unit,
         trace_unit,
         amplitudes,
-        thresholds,
-        resolution,
-        interpolation_factor,
+        thresholds=None,
+        resolution=None,
+        interpolation_factor=None,
     ):
         debug_logger.debug(f"export_idealization")
 
         if not filepath.endswith(".csv"):
             filepath += ".csv"
 
-        episodes = self.select_episodes(lists=lists_to_save)
+        episodes = self.select_episodes(ep_sets=lists_to_save)
 
         export_array = np.zeros(
             shape=(len(episodes) + 1, episodes[0].idealization.size)
         )
-        export_array[0] = self.episode().id_time * TIME_UNIT_FACTORS[time_unit]
+        export_array[0] = episodes[0].id_time*TIME_UNIT_FACTORS[time_unit]
         for k, episode in enumerate(episodes):
             export_array[k + 1] = (
-                episode.idealization * CURRENT_UNIT_FACTORS[trace_unit]
+                episode.idealization * AMPERE_UNIT_FACTORS[trace_unit]
             )
         # note that we transpose the export array to export the matrix
-        np.savetxt(
-            filepath,
-            export_array.T,
-            delimiter=",",
-            header=f"amplitudes = {amplitudes};"
-            f"thresholds = {thresholds};"
-            f"resolution = {resolution};"
-            f"interpolation_factor = {interpolation_factor}"
-            "\n Time, "
-            + ", ".join(["Episode number " + str(e.n_episode) for e in episodes]),
-        )
+
+        header=f"amplitudes = {amplitudes};"
+        if thresholds is not None:
+            header += f"thresholds = {thresholds};"
+        if resolution is not None:
+            header += f"resolution = {resolution};"
+        if interpolation_factor is not None:
+            header += f"interpolation_factor = {interpolation_factor};"
+        header += "\nTime, "
+        header += ", ".join(["Episode " + str(e.n_episode) for e in episodes])
+
+        np.savetxt(filepath, export_array.T, delimiter=",", header=header)
 
     def export_matlab(
         self,
@@ -487,7 +570,7 @@ class Recording(dict):
         # episodes = np.array(self[datakey])[indices]
         for episode in episodes:
             n = str(episode.n_episode).zfill(fill_length)
-            export_dict["trace" + n] = episode.trace * CURRENT_UNIT_FACTORS[trace_unit]
+            export_dict["trace" + n] = episode.trace * AMPERE_UNIT_FACTORS[trace_unit]
             if save_piezo:
                 export_dict["piezo" + n] = (
                     episode.piezo * VOLTAGE_UNIT_FACTORS[piezo_unit]
@@ -521,15 +604,15 @@ class Recording(dict):
         if not filepath.endswith(".axgd"):
             filepath += ".axgd"
 
-        column_names = [f"time (s)"]
-
-        # to write to axgd we need a list as the second argument of the 'write'
-        # method, this elements in the lists will be the columns in data table
-        # the first column in this will be a list of episode numbers
-        data_list = [self.episode().time]
-
         # get the episodes we want to save
         episodes = self.select_episodes(datakey, lists_to_save)
+
+        # to write to axgd we need a list as the second argument of the 'write'
+        # method, the elements in the lists will be the columns in data table
+        # the first column will be a list of episode numbers
+
+        data_list = [episodes[0].time]
+        column_names = ["time (s)"]
 
         for episode in episodes:
             data_list.append(np.array(episode.trace))
@@ -540,7 +623,7 @@ class Recording(dict):
             if save_command:
                 column_names.append(f"command voltage (V) ep# {episode.n_episode}")
                 data_list.append(np.array(episode.command))
-        file = axographio.file_contents(column_names, data_list)
+        file = axographio.file_contents(column_names, data_list)  #pyright: ignore
         file.write(filepath)
 
     def create_first_activation_table(
@@ -556,7 +639,7 @@ class Recording(dict):
                     episode.n_episode,
                     episode.first_activation * TIME_UNIT_FACTORS[time_unit],
                     episode.first_activation_amplitude
-                    * CURRENT_UNIT_FACTORS[trace_unit],
+                    * AMPERE_UNIT_FACTORS[trace_unit],
                 )
                 for episode in self.select_episodes(datakey, lists_to_save)
             ]

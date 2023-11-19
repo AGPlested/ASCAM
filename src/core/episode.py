@@ -1,25 +1,31 @@
-import numpy as np
+import logging
 
+import numpy as np
+from numpy.typing import NDArray
 
 from ..utils import piezo_selection
-from ..constants import CURRENT_UNIT_FACTORS, VOLTAGE_UNIT_FACTORS, TIME_UNIT_FACTORS
+from ..constants import AMPERE_UNIT_FACTORS, VOLTAGE_UNIT_FACTORS, TIME_UNIT_FACTORS
 from .filtering import gaussian_filter, ChungKennedyFilter
-from .analysis import baseline_correction, detect_first_activation, Idealizer, detect_first_events
+from .analysis import baseline_correction, detect_first_activation, detect_first_events
+from .idealization import Idealizer
+
+debug_logger = logging.getLogger("ascam.debug")
+ana_logger = logging.getLogger("ascam.analysis")
 
 
 class Episode:
     def __init__(
         self,
-        time,
-        trace,
-        n_episode=0,
-        piezo=None,
-        command=None,
-        sampling_rate=4e4,
-        input_time_unit="s",
-        input_trace_unit="A",
-        input_piezo_unit="V",
-        input_command_unit="V",
+        time: NDArray[np.floating],
+        trace: NDArray[np.floating],
+        n_episode: int=0,
+        piezo: NDArray[np.floating]=None,
+        command: NDArray[np.floating]=None,
+        sampling_rate: float=None,
+        input_time_unit: str="s",
+        input_trace_unit: str="A",
+        input_piezo_unit: str="V",
+        input_command_unit: str="V",
     ):
         """Episode objects hold all the information about an epoch and
         should be used to store raw and manipulated data
@@ -38,7 +44,7 @@ class Episode:
 
         # units when given input
         self.time = time / TIME_UNIT_FACTORS[input_time_unit]
-        self.trace = trace / CURRENT_UNIT_FACTORS[input_trace_unit]
+        self.trace = trace / AMPERE_UNIT_FACTORS[input_trace_unit]
         self._id_time = time / TIME_UNIT_FACTORS[input_time_unit]
 
         if piezo is not None:
@@ -49,6 +55,8 @@ class Episode:
             self.command = command / VOLTAGE_UNIT_FACTORS[input_command_unit]
         else:
             self.command = None
+        if sampling_rate is not None:
+            self.sampling_rate = sampling_rate
 
         # results of analyses
         self.first_activation = None
@@ -66,17 +74,12 @@ class Episode:
         # because manual marking can choose points that are not in the time array
         return self.trace[np.argmin(np.abs(self.time - self.first_activation))]
 
-    def idealize(
-        self, amplitudes, thresholds=None, resolution=None, interpolation_factor=1
-    ):
-        self.idealization, self.id_time = Idealizer.idealize_episode(
-            self.trace,
-            self.time,
-            amplitudes,
-            thresholds,
-            resolution,
-            interpolation_factor,
-        )
+    def idealize(self, method, params):
+        debug_logger.debug(f"Idealizing episode {self.n_episode} "
+                           f"with method {method}")
+        self.idealization, self.id_time = Idealizer.idealize_episode(self,
+                                                                    method=method,
+                                                                    params=params)
 
     def gauss_filter_episode(self, filter_frequency=1e3, sampling_rate=4e4):
         """Replace the current trace of the episode by the gauss filtered
@@ -142,6 +145,16 @@ class Episode:
         tracestd = np.std(trace)
         if tracestd > stdthreshold:
             self.suspiciousSTD = True
+
+    def filter_by_piezo(self, deviation=0.05, active=True):
+        """Get the active piezo voltage of the episode."""
+
+        if self.piezo is None:
+            raise ValueError("No piezo data available")
+        return piezo_selection(self.time, self.piezo,
+                               self.trace, active=active,
+                               deviation=deviation
+                               )
 
     def get_command_stats(self):
         """Get the mean and standard deviation of the command voltage of the
