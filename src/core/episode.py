@@ -6,9 +6,7 @@ from numpy.typing import NDArray
 from ..utils import piezo_selection
 from ..constants import AMPERE_UNIT_FACTORS, VOLTAGE_UNIT_FACTORS, TIME_UNIT_FACTORS
 from .filtering import gaussian_filter, ChungKennedyFilter
-from .analysis import baseline_correction, detect_first_activation
-from .idealization import Idealizer
-
+from .analysis import baseline_correction, detect_first_activation, Idealizer, detect_first_events
 
 debug_logger = logging.getLogger("ascam.debug")
 ana_logger = logging.getLogger("ascam.analysis")
@@ -169,8 +167,14 @@ class Episode:
         return mean, std
 
     def detect_first_activation(self, threshold):
-        """Detect the first activation in the episode."""
-
         self.first_activation = detect_first_activation(
             self.time, self.trace, threshold
         )
+
+    def detect_first_events(self, threshold, states):
+        """Detect the first activation in the episode."""
+        first_activation, first_events = detect_first_events(
+            self.time, self.trace, threshold, self.piezo, self.idealization, states
+        )
+        self.first_activation = first_activation
+        self.first_events = first_events
