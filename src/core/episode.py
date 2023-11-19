@@ -6,7 +6,8 @@ from numpy.typing import NDArray
 from ..utils import piezo_selection
 from ..constants import AMPERE_UNIT_FACTORS, VOLTAGE_UNIT_FACTORS, TIME_UNIT_FACTORS
 from .filtering import gaussian_filter, ChungKennedyFilter
-from .analysis import baseline_correction, detect_first_activation, Idealizer, detect_first_events
+from .analysis import baseline_correction, detect_first_activation, detect_first_events
+from .idealization import Idealizer
 
 debug_logger = logging.getLogger("ascam.debug")
 ana_logger = logging.getLogger("ascam.analysis")
