@@ -12,16 +12,16 @@ from PySide2.QtWidgets import (
 
 from ..gui.io_widgets import ExportFADialog, ExportFEDialog
 from ..utils.widgets import EntryWidget, TableFrame
-from ..constants import AMPERE_UNIT_FACTORS, ANALYSIS_FRAME_WIDTH
+from ..constants import CURRENT_UNIT_FACTORS
 
 debug_logger = logging.getLogger("ascam.debug")
 
 
 class FirstActivationFrame(EntryWidget):
     def __init__(self, main):
-        super().__init__(parent=main, main=main)
+        super().__init__(main)
         self.main = main
-        self.setFixedWidth(ANALYSIS_FRAME_WIDTH)
+        self.setFixedWidth(250)
 
         self.main.plot_frame.plot_fa_threshold(0)
 
@@ -46,12 +46,12 @@ class FirstActivationFrame(EntryWidget):
     @property
     def threshold(self):
         thresh = float(self.threshold_entry.text())
-        return thresh / AMPERE_UNIT_FACTORS[self.trace_unit]
+        return thresh / CURRENT_UNIT_FACTORS[self.trace_unit]
 
     @threshold.setter
     def threshold(self, val):
         self.threshold_entry.setText(
-            f"{val * AMPERE_UNIT_FACTORS[self.trace_unit]:.3f}"
+            f"{val * CURRENT_UNIT_FACTORS[self.trace_unit]:.3f}"
         )
 
     def create_widgets(self):
@@ -59,7 +59,7 @@ class FirstActivationFrame(EntryWidget):
         self.add_row(self.drag_threshold_button)
 
         self.trace_unit_entry = QComboBox()
-        self.trace_unit_entry.addItems(list(AMPERE_UNIT_FACTORS.keys()))
+        self.trace_unit_entry.addItems(list(CURRENT_UNIT_FACTORS.keys()))
         self.trace_unit_entry.setCurrentIndex(1)
         self.threshold_entry = QLineEdit()
         self.threshold_entry.setText("0")

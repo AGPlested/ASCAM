@@ -12,13 +12,15 @@ import getopt
 from PySide2.QtWidgets import QApplication
 try :
     from .gui.mainwindow import MainWindow
+    
 except:
     from src.gui.mainwindow import MainWindow
+    
 try :
     from .utils import initialize_logger
-except:
+except :
     from src.utils import initialize_logger
-
+    
 if platform.system() == 'Darwin':
     os.environ['QT_MAC_WANTS_LAYER'] = '1'
 
@@ -40,7 +42,7 @@ def parse_options():
     logdir = "./ASCAM_logfiles"
     test = False
     try:
-        options, _ = getopt.getopt(
+        options, args = getopt.getopt(
             sys.argv[1:], "dsl:th", ["loglevel=", "logdir=", "help", "test"]
         )
     except getopt.GetoptError as err:
@@ -106,16 +108,15 @@ def main():
     logging.info(pip_freeze)
 
     app = QApplication([])
-    screen_resolution = (1920, 1080)  # assume HD display
     for screen in app.screens():
-        if screen.geometry().topLeft() != (0, 0):
+        if (0, 0) != screen.geometry().topLeft():
             screen_resolution = screen.size().toTuple()
     main_window = MainWindow(screen_resolution=screen_resolution)
     main_window.show()
     if test:
-        main_window.load_example_data()
+        main_window.test_mode()
     sys.exit(app.exec_())
-
+    
 if __name__ == "__main__":
     # Change menubar name from 'python' to 'SAFT' on macOS
     # from https://stackoverflow.com/questions/5047734/
@@ -131,5 +132,5 @@ if __name__ == "__main__":
                     app_info['CFBundleName'] = app_name.upper() # ensure text is in upper case.
         except ImportError:
             print ("Failed to import NSBundle, couldn't change menubar name." )
-
+        
     main()

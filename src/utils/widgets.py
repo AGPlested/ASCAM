@@ -1,9 +1,7 @@
 import logging
 
-from PySide2 import QtCore
+from PySide2 import QtGui, QtCore
 from PySide2.QtWidgets import (
-    QAction,
-    QMenu,
     QLayout,
     QWidget,
     QTextEdit,
@@ -19,22 +17,22 @@ from PySide2.QtWidgets import (
 )
 import pyqtgraph as pg
 
-from ..constants import TIME_UNIT_FACTORS, VOLTAGE_UNIT_FACTORS, AMPERE_UNIT_FACTORS
+from ..constants import TIME_UNIT_FACTORS, VOLTAGE_UNIT_FACTORS, CURRENT_UNIT_FACTORS
 from ..utils import clear_qt_layout, get_dict_key_index
 
 debug_logger = logging.getLogger("ascam.debug")
 
 
 class TextEdit(QTextEdit):
-    def __init__(self, parent, *args, **kwargs):
+    def __init__(self, parent=None, *args, **kwargs):
         self.parent = parent  # this is the containing widget
         QTextEdit.__init__(self, *args, **kwargs)
         self.document().modificationChanged.connect(self.updateMaxHeight)
 
-    def updateMaxHeight(self, *_):
+    def updateMaxHeight(self, *args):
         # the +2 is a bit ugly, but it's there to avoid the appearance of
         # scrollbars when then widget is initialized
-        self.setMaximumHeight(int(self.document().size().height()) + 2)
+        self.setMaximumHeight(self.document().size().height() + 2)
 
     def resizeEvent(self, e):
         QTextEdit.resizeEvent(self, e)
@@ -50,10 +48,18 @@ class TextEdit(QTextEdit):
 class HistogramViewBox(pg.ViewBox):
     def __init__(
         self,
-        histogram,
+        histogram=None,
+        histogram_frame=None,
+        n_bins=None,
+        amp=None,
+        time_unit="ms",
+        log_times=True,
+        root_counts=True,
     ):
+        # self.setRectMode() # Set mouse mode to rect for convenient zooming
         super().__init__()
         self.histogram = histogram
+        self.histogram_frame = histogram_frame
         self.menu = None  # Override pyqtgraph ViewBoxMenu
         self.menu = self.get_menu()  # Create the menu
 
@@ -68,7 +74,7 @@ class HistogramViewBox(pg.ViewBox):
         menu.popup(QtCore.QPoint(pos.x(), pos.y()))
 
     def open_hist_config(self):
-        self.hist_config = EventHistConfig(self.histogram)
+        self.hist_config = EventHistConfig(self.histogram_frame, self.histogram)
         self.hist_config.show()
 
     def open_nbins_dialog(self):
@@ -77,18 +83,18 @@ class HistogramViewBox(pg.ViewBox):
 
     def get_menu(self):
         if self.menu is None:
-            self.menu = QMenu()
+            self.menu = QtGui.QMenu()
 
-            self.viewAll = QAction("View All", self.menu)
+            self.viewAll = QtGui.QAction("View All", self.menu)
             self.viewAll.triggered.connect(self.autoRange)
             self.menu.addAction(self.viewAll)
 
-            self.n_bins_dialog = QAction("Number of Bins", self.menu)
+            self.n_bins_dialog = QtGui.QAction("Number of Bins", self.menu)
             self.n_bins_dialog.triggered.connect(self.open_nbins_dialog)
             self.menu.addAction(self.n_bins_dialog)
 
             self.menu.addSeparator()
-            self.hist_config_item = QAction("Configure Histogram", self.menu)
+            self.hist_config_item = QtGui.QAction("Configure Histogram", self.menu)
             self.hist_config_item.triggered.connect(self.open_hist_config)
             self.menu.addAction(self.hist_config_item)
         return self.menu
@@ -135,11 +141,10 @@ class EventHistConfig(QDialog):
     """Configuration Dialog for the event histograms. The options in this dialog apply to all histogram.
     """
 
-    def __init__(self,
-                 histogram):
+    def __init__(self, histogram_frame=None, histogram=None):
         super().__init__()
         self.histogram = histogram
-        self.histogram = histogram
+        self.histogram_frame = histogram_frame
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
 
@@ -150,7 +155,7 @@ class EventHistConfig(QDialog):
         label = QLabel("Time Unit")
         row.addWidget(label)
         self.time_unit = QComboBox()
-        self.time_unit.addItems([str(k) for k in TIME_UNIT_FACTORS.keys()])
+        self.time_unit.addItems(TIME_UNIT_FACTORS.keys())
         self.time_unit.setCurrentText(self.histogram.time_unit)
         row.addWidget(self.time_unit)
         self.layout.addLayout(row)
@@ -181,10 +186,10 @@ class EventHistConfig(QDialog):
         self.layout.addLayout(row)
 
     def ok_click(self):
-        clear_qt_layout(self.histogram.layout)
+        clear_qt_layout(self.histogram_frame.layout)
 
-        n_bins = {h.amp: h.n_bins for h in self.histogram.histograms}
-        self.histogram.create_histograms(
+        n_bins = {h.amp: h.n_bins for h in self.histogram_frame.histograms}
+        self.histogram_frame.create_histograms(
             log_times=self.log_times.isChecked(),
             root_counts=self.root_counts.isChecked(),
             time_unit=self.time_unit.currentText(),
@@ -247,25 +252,19 @@ class TableModel(QtCore.QAbstractTableModel):
 
 
 class VerticalContainerWidget(QWidget):
-    """
-    Use this class to create a widget in which all the widgets are added
-    in rows which are then stacked vertically.
-    This class is meant to be subclassed.
-    """
-    def __init__(self, parent, main=None):
+    def __init__(self, parent):
         super().__init__()
         self.parent = parent
-        self.main = main
 
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
 
         self.create_widgets()
 
-    def create_widgets(self):
+    def create_widets(self):
         raise NotImplementedError
 
-    def add_row(self, *items, **kwargs):
+    def add_row(self, *items):
         row = QHBoxLayout()
         for item in items:
             if isinstance(item, QWidget):
@@ -274,10 +273,6 @@ class VerticalContainerWidget(QWidget):
                 row.addLayout(item)
             else:
                 raise TypeError(f"Cannot add {item} to a row layout.")
-        if "spacing" in kwargs:
-            row.setSpacing(kwargs["spacing"])
-        if "contents_margins" in kwargs:
-            row.setContentsMargins(*kwargs["contents_margins"])
         self.layout.addLayout(row)
 
 
@@ -285,7 +280,6 @@ class EntryWidget(VerticalContainerWidget):
     def __init__(
         self,
         parent,
-        main,
         default_time_unit="ms",
         default_trace_unit="pA",
         default_piezo_unit="mV",
@@ -297,13 +291,13 @@ class EntryWidget(VerticalContainerWidget):
         self.default_piezo_unit = default_piezo_unit
         self.default_command_unit = default_command_unit
         self.create_unit_entry_widgets()
-        super().__init__(parent, main=main)
+        super().__init__(parent)
 
     def create_unit_entry_widgets(self):
         self.trace_unit_entry = QComboBox()
-        self.trace_unit_entry.addItems(list(AMPERE_UNIT_FACTORS.keys()))
+        self.trace_unit_entry.addItems(list(CURRENT_UNIT_FACTORS.keys()))
         self.trace_unit_entry.setCurrentIndex(
-            get_dict_key_index(AMPERE_UNIT_FACTORS, self.default_trace_unit)
+            get_dict_key_index(CURRENT_UNIT_FACTORS, self.default_trace_unit)
         )
 
         self.piezo_unit_entry = QComboBox()
