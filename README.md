@@ -52,7 +52,7 @@ You can remove the baseline, filter, and idealise data, or find the time of the 
     * The `selection` allows you to put in where the baseline is. This can be `intervals` that you type in or determined by piezo trace automatically.
         * If you choose `piezo` and `active` is unchecked, the baseline is set to the time when the piezo voltage deviates from 0 by more than `deviation` percent.
         * If you choose `piezo` and `active` is checked, the baseline is set to the time when the piezo voltage is different from maximum piezo voltage by more than `deviation` percent.
-        * If you choose `intervals` you can put in the start and end times of baseline interval. This needs to be formatted like a python list such as `[0, 15]`.
+        * If you choose `intervals` you can put in the start and end times of baseline interval. This needs to be formatted like a python list such as `[0, 15]` or multiple lists like `[0, 15],[90, 100]` if you want to use multiple intervals.
 * Filter: `Processing > Filter` and choose between Gauss filter and Chung-Kennedy filter (Chung and Kennedy 1991). In both cases you need to alter needed parameters (corner frequency for Gauss and weights etc. for CK)
 * Idealization: `Analysis > Idealize` for finding an idealization using threshold crossing method.
     * You need to put in the `amplitudes` separated by spaces and without any brackets, such as `0 0.7 1.2 1.8 2.2` (pA) for the sample data. You can also drag the drawn lines for the amplitude to adjust them.
@@ -67,3 +67,7 @@ You can remove the baseline, filter, and idealise data, or find the time of the 
         * For each level "Si" (i = 0,1,2,3.. where 0 usually corresponds to the shut state) 
             * the start time of the first event at the level
             * the duration of the first event at each level
+* Lists: You can make multiple lists of selected episodes. 
+    * To do this you need to define a `New List` which prompts you to define a `Key` (a single keystroke) and a `Name` you want to call your list. 
+    * You can populate your list of episodes by going through the episodes in the list on the right panel and pressing the selected `Key`. An episode can belong to multiple lists.
+    * If you want, you can export the data in order to save your selections. The export dialog gives you the option to select which lists of episodes should be exported.
