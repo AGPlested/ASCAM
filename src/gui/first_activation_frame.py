@@ -5,7 +5,7 @@ import pyqtgraph as pg
 from PySide2 import QtCore
 from PySide2.QtWidgets import (
     QLabel,
-    QComboBox
+    QComboBox,
     QWidget,      #added by subsets revision
     QVBoxLayout,  #added by subsets revision
     QHBoxLayout,  #added by subsets revision
