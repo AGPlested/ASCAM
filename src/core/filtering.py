@@ -36,7 +36,7 @@ def gaussian_window(filter_frequency, sampling_rate=4e4):
     sigma = 0.1325 / filter_frequency
 
     if sigma >= 0.62:  # filter as normal
-        n = np.int(4 * sigma)
+        n = int(4 * sigma)
         non_neg_ind_coefficients = np.zeros(n + 1)
         for index in range(n + 1):
             non_neg_ind_coefficients[index] = (
@@ -77,7 +77,7 @@ class ChungKennedyFilter:
         """Chung-Kennedy filter.
 
             Parameters:
-            window_lengths [list of positive ints] - a list containing the 
+            window_lengths [list of positive ints] - a list containing the
                 desired widths of the forward and backward predictors
 
             weight_exponent [positive float] - the exponent governing the
@@ -90,8 +90,8 @@ class ChungKennedyFilter:
             apriori_b_weights [list of positive floats] - apriori confidence in
                 the different backward predictors, 'pi_i' in the paper
 
-            boundary_mode [string] - how to deal with boundary effects either 
-                'increasing' which will calculate predictions with increasing 
+            boundary_mode [string] - how to deal with boundary effects either
+                'increasing' which will calculate predictions with increasing
                 window widths or 'padded' which will pad the signal with 0s
                 at the edges
 

@@ -1,6 +1,6 @@
 import logging
 
-from PySide2 import QtCore, QtGui
+from PySide2 import QtCore
 from PySide2.QtWidgets import (
     QWidget,
     QListWidget,
@@ -13,6 +13,7 @@ from PySide2.QtWidgets import (
     QPushButton,
     QGridLayout,
     QComboBox,
+    QAbstractItemView,
 )
 
 
@@ -305,7 +306,7 @@ class EpisodeList(QListWidget):
     def __init__(self, parent, *args, **kwargs):
         super(EpisodeList, self).__init__(*args, **kwargs)
         self.parent = parent
-        self.setSelectionMode(QtGui.QAbstractItemView.ExtendedSelection)
+        self.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Expanding)
         self.currentItemChanged.connect(
             self.on_item_click, type=QtCore.Qt.DirectConnection

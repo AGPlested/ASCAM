@@ -1,30 +1,25 @@
 import logging
 
-<<<<<<< HEAD
-=======
 import pyqtgraph as pg
->>>>>>> subsets
+
 from PySide2 import QtCore
 from PySide2.QtWidgets import (
     QLabel,
-    QComboBox,
-<<<<<<< HEAD
-=======
-    QWidget,
-    QVBoxLayout,
-    QHBoxLayout,
->>>>>>> subsets
+    QComboBox
+    QWidget,      #added by subsets revision
+    QVBoxLayout,  #added by subsets revision
+    QHBoxLayout,  #added by subsets revision
     QCheckBox,
     QLineEdit,
     QToolButton,
     QPushButton,
 )
 
-from ..gui import ExportFADialog
-<<<<<<< HEAD
-=======
+
+#from ..gui import ExportFADialog            #vague?
 from ..utils import round_off_tables
->>>>>>> subsets
+from ..gui.io_widgets import ExportFADialog, ExportFEDialog
+
 from ..utils.widgets import EntryWidget, TableFrame
 from ..constants import CURRENT_UNIT_FACTORS
 
@@ -46,6 +41,7 @@ class FirstActivationFrame(EntryWidget):
         )
 
         self.threshold = 0
+        self.find_first_events = False
         self.set_threshold()
 
     @property
@@ -85,6 +81,12 @@ class FirstActivationFrame(EntryWidget):
             self.trace_unit_entry, self.threshold_entry, self.drag_threshold_button
         )
 
+        self.first_events_toggle = QToolButton()
+        self.first_events_toggle.setCheckable(True)
+        self.first_events_toggle.setText("Find first events")
+        self.first_events_toggle.toggled.connect(self.toggle_first_events)
+        self.add_row(self.first_events_toggle)
+
         self.threshold_button = QPushButton("Set threshold")
         self.threshold_button.clicked.connect(self.set_threshold)
         self.add_row(self.threshold_button)
@@ -105,9 +107,17 @@ class FirstActivationFrame(EntryWidget):
         show_table_button.clicked.connect(self.show_first_activation_table)
         self.add_row(show_table_button)
 
+        show_event_table_button = QPushButton("Show First Event Table")
+        show_event_table_button.clicked.connect(self.show_first_event_table)
+        self.add_row(show_event_table_button)
+
         export_button = QPushButton("Export First Activation Table")
         export_button.clicked.connect(self.export_first_activation)
         self.add_row(export_button)
+
+        export_first_events_button = QPushButton("Export First Events Table")
+        export_first_events_button.clicked.connect(self.export_first_events)
+        self.add_row(export_first_events_button)
 
         cancel_button = QPushButton("Cancel")
         cancel_button.clicked.connect(self.click_cancel)
@@ -119,8 +129,12 @@ class FirstActivationFrame(EntryWidget):
         self.main.data.detect_fa(self.threshold)
         ExportFADialog(self.main)
 
+    def export_first_events(self):
+        self.main.data.get_first_events(self.threshold)
+        ExportFEDialog(self.main)
+
     def show_first_activation_table(self):
-        debug_logger.debug("creating fist activation table")
+        debug_logger.debug("creating first activation table")
         self.main.data.detect_fa(self.threshold)
 
         self.table_frame = TableFrame(
@@ -130,13 +144,32 @@ class FirstActivationFrame(EntryWidget):
             ),
             header=[
                 "Episode Number",
-                f"First Activatime Time [self.time_unit]",
+                f"First Activation Time [{self.time_unit}]",
                 f"Current [{self.trace_unit}]",
             ],
             trace_unit=self.trace_unit,
             time_unit=self.time_unit,
             title=f"First activations in {self.main.data.current_datakey}",
             width=400,
+        )
+
+    def show_first_event_table(self):
+        debug_logger.debug("Creating first event table")
+        self.main.data.get_first_events(self.threshold)
+        table_data = self.main.data.create_first_event_table(
+                time_unit=self.time_unit,
+            )
+        header = ["Episode Number", "First state"]
+        for i in range(int(len(table_data)/2)):
+            header.append(f"S{i}-start [{self.time_unit}]")
+            header.append(f"S{i}-duration [{self.time_unit}]")
+        self.fe_table_frame = TableFrame(
+            self,
+            data=table_data,
+            header=header,
+            time_unit=self.time_unit,
+            title=f"First events of each state",
+            width=1000,
         )
 
     def on_episode_click(self, item, *args):
@@ -227,13 +260,19 @@ class FirstActivationFrame(EntryWidget):
                 self.click_auto_jump
             )
 
+    def toggle_first_events(self):
+        self.find_first_events = not self.find_first_events
+
     def click_auto_jump(self):
         debug_logger.debug("auto jumping to next episode")
         self.main.ep_frame.ep_list.setCurrentRow(self.main.data.next_episode_ind())
         self.main.plot_frame.draw_fa_marking_indicator()
 
     def set_threshold(self):
-        self.main.data.detect_fa(self.threshold)
+        if self.find_first_events:
+            self.main.data.get_first_events(self.threshold)
+        else:
+            self.main.data.detect_fa(self.threshold)
         self.main.plot_frame.plot_fa_line()
         self.main.plot_frame.plot_fa_threshold(self.threshold)
 

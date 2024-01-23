@@ -1,4 +1,3 @@
-from PySide2 import QtGui
 from PySide2.QtWidgets import (
     QLineEdit,
     QDialog,
@@ -9,9 +8,7 @@ from PySide2.QtWidgets import (
     QLabel,
     QFileDialog,
     QVBoxLayout,
-
-    ###QHBoxLayout,
-
+    QAbstractItemView,
 )
 
 
@@ -51,7 +48,7 @@ class BaseExportWidget(EntryWidget):
 
         self.list_selection = QListWidget()
         self.list_selection.addItems(list(self.main.data.lists.keys()))
-        self.list_selection.setSelectionMode(QtGui.QAbstractItemView.MultiSelection)
+        self.list_selection.setSelectionMode(QAbstractItemView.MultiSelection)
         self.list_selection.setCurrentRow(0)
         self.list_selection.setFixedHeight(18 * len(list(self.main.data.lists.keys())))
 
@@ -102,6 +99,56 @@ class ExportFAWidget(BaseExportWidget):
                 ],
                 time_unit=self.time_unit.currentText(),
                 trace_unit=self.trace_unit.currentText(),
+            )
+        self.close()
+
+
+class ExportFEDialog(QDialog):
+    def __init__(self, main):
+        super().__init__()
+        self.layout = QVBoxLayout()
+        self.setLayout(self.layout)
+        self.layout.addWidget(ExportFEWidget(main, self))
+
+        self.exec_()
+
+
+class ExportFEWidget(BaseExportWidget):
+    def __init__(self, main, dialog):
+        self.main = main
+        super().__init__(main, dialog)
+
+    def create_widgets(self):
+        self.add_row(self.series_selection)
+
+        self.add_row(QLabel("Lists to export:"))
+        self.add_row(self.list_selection)
+
+        self.add_row(QLabel("Time Unit:"), self.time_unit_entry)
+
+        self.add_row(QLabel("Current Unit:"), self.trace_unit_entry)
+
+        save_button = QPushButton("Save")
+        save_button.clicked.connect(self.save_click)
+        cancel_button = QPushButton("Cancel")
+        cancel_button.clicked.connect(self.dialog.close)
+        self.add_row(save_button, cancel_button)
+
+    def save_click(self):
+        filename, filetye = QFileDialog.getSaveFileName(
+            self,
+            dir=self.main.filename[:-4] + "_first_events",
+            filter="Comma Separated Valued (*.csv)",
+        )
+        if filename:
+            self.main.data.export_first_events(
+                filepath=filename,
+                datakey=self.series_selection.currentText(),
+                lists_to_save=[
+                    item.text() for item in self.list_selection.selectedItems()
+                ],
+                time_unit=self.time_unit,
+                trace_unit=self.trace_unit,
             )
         self.close()
 
