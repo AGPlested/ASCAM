@@ -5,30 +5,25 @@ import pyqtgraph as pg
 from PySide2 import QtCore
 from PySide2.QtWidgets import (
     QApplication,
-<<<<<<< HEAD
-    QFileDialog,
-    QDialog,
-=======
+
     QSizePolicy,
     QComboBox,
     QFileDialog,
     QDialog,
     QTableView,
->>>>>>> subsets
+
     QGridLayout,
     QTabWidget,
     QWidget,
     QVBoxLayout,
-<<<<<<< HEAD
-=======
     QHBoxLayout,
->>>>>>> subsets
+
     QCheckBox,
     QLineEdit,
     QToolButton,
     QTabBar,
     QPushButton,
-    QLabel,
+    QLabel
 )
 
 from .io_widgets import ExportIdealizationDialog
@@ -66,13 +61,11 @@ class IdealizationFrame(QWidget):
         self.calc_button = QPushButton("Calculate idealization")
         self.calc_button.clicked.connect(self.calculate_click)
         self.layout.addWidget(self.calc_button)
-<<<<<<< HEAD
-=======
         
         self.calc_subset_button = QPushButton("Calculate idealization for subset")
         self.calc_subset_button.clicked.connect(self.calculate_subset_click)
         self.layout.addWidget(self.calc_subset_button)
->>>>>>> subsets
+
 
         self.events_button = QPushButton("Show Table of Events")
         self.events_button.clicked.connect(self.create_event_frame)
@@ -151,21 +144,21 @@ class IdealizationFrame(QWidget):
     def time(self, n_episode=None):
         return self.current_tab.idealization_cache.time(n_episode)
 
-<<<<<<< HEAD
-=======
     def calculate_subset_click(self):
         self.get_params()
         ### ask which subsets are checked
         selected_subsets,_ = self.main.ep_frame.subset_frame.subsets_check()
-        episodes = self.main.data.episodes_in_subsets(selected_subsets)
-        for ep in episodes:
-            print (f"Idealizing episode {ep.n_episode}")
-            self.main.data.current_ep_ind = ep.n_episode
-            self.idealize_episode()
-            self.main.plot_frame.update_episode()
-          
-
->>>>>>> subsets
+        if selected_subsets:
+            episodes = self.main.data.episodes_in_subsets(selected_subsets)
+            for ep in episodes:
+                print (f"Idealizing episode {ep.n_episode}")
+                self.main.data.current_ep_ind = ep.n_episode
+                self.idealize_episode()
+                self.main.plot_frame.update_episode()
+        
+        else:
+            print (f"No subsets were selected, nothing to do.")
+        
     def calculate_click(self):
         self.get_params()
         self.idealize_episode()

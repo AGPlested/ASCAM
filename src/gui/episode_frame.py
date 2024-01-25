@@ -36,17 +36,13 @@ class EpisodeFrame(QWidget):
         self.keyPressed.connect(self.key_pressed)
 
     def create_widgets(self):
-<<<<<<< HEAD
-        self.list_frame = ListFrame(self)
-        self.layout.addWidget(self.list_frame)
 
-=======
         self.subset_frame = SubsetFrame(self)
         self.layout.addWidget(self.subset_frame)
 
             
         ### this box selects which series (according to processing)
->>>>>>> subsets
+
         self.series_selection = QComboBox()
         self.series_selection.setDuplicatesEnabled(False)
         self.series_selection.addItems(list(self.main.data.keys()))
@@ -91,29 +87,16 @@ class EpisodeFrame(QWidget):
         self.keyPressed.emit(event.text())
 
     def key_pressed(self, key):
-<<<<<<< HEAD
-        assigned_keys = [x[1] for x in self.main.data.lists.values()]
-        if key in assigned_keys:
-            for l in self.list_frame.lists:
-=======
+
         assigned_keys = [x[1] for x in self.main.data.subsets.values()]
         if key in assigned_keys:
             for l in self.subset_frame.subsets:
->>>>>>> subsets
+
                 if f"[{key}]" in l.text():
                     name = l.text().split()[0]
                     for item in self.ep_list.selectedItems():
                         index = self.ep_list.row(item)
-<<<<<<< HEAD
-                        self.list_frame.add_to_list(name, key, index)
 
-
-class ListFrame(QWidget):
-    keyPressed = QtCore.Signal(str)
-
-    def __init__(self, parent, *args, **kwargs):
-        super(ListFrame, self).__init__(*args, **kwargs)
-=======
                         self.subset_frame.add_to_subset(name, key, index)
 
 
@@ -122,39 +105,11 @@ class SubsetFrame(QWidget):
 
     def __init__(self, parent, *args, **kwargs):
         super(SubsetFrame, self).__init__(*args, **kwargs)
->>>>>>> subsets
+
         self.parent = parent
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
 
-<<<<<<< HEAD
-        self.lists = []
-        self.new_list("All")
-
-        self.new_button = QPushButton("New List")
-        self.new_button.clicked.connect(self.create_dialog)
-        self.layout.addWidget(self.new_button)
-
-    def new_list(self, name, key=None):
-        label = f"{name} [{key}]" if key is not None else name
-        check_box = QCheckBox(label)
-        check_box.setChecked(True)
-        self.lists.append(check_box)
-        self.layout.insertWidget(0, check_box)
-        self.parent.main.data.lists[name] = ([], key)
-        debug_logger.debug(
-            f"added list '{name}' with key '{key}'\n"
-            "lists are now:\n"
-            f"{self.parent.main.data.lists}"
-        )
-
-    def add_to_list(self, name, key, index):
-        if index not in self.parent.main.data.lists[name][0]:
-            self.parent.main.data.lists[name][0].append(index)
-            assigned_keys = [
-                x[1]
-                for x in self.parent.main.data.lists.values()
-=======
         self.subsets = []
         self.new_subset("All", checked_state=True)
 
@@ -206,7 +161,7 @@ class SubsetFrame(QWidget):
             assigned_keys = [
                 x[1]
                 for x in self.parent.main.data.subsets.values()
->>>>>>> subsets
+
                 if index in x[0] and x[1] is not None
             ]
             n = f"Episode {self.parent.main.data.series[index].n_episode} "
@@ -218,25 +173,16 @@ class SubsetFrame(QWidget):
             n += s.rjust(20 - len(n), " ")
             self.parent.ep_list.item(index).setText(n)
             ana_logger.debug(
-<<<<<<< HEAD
-                f"added episode {self.parent.main.data.series[index].n_episode} to list {name}"
-            )
-        else:
-            self.parent.main.data.lists[name][0].remove(index)
-            n = self.parent.ep_list.item(index).text()
-            assigned_keys = [
-                x[1]
-                for x in self.parent.main.data.lists.values()
-=======
+
                 f"added episode {self.parent.main.data.series[index].n_episode} to subset {name}"
             )
         else:
             self.parent.main.data.subsets[name][0].remove(index)
-            n = self.parent.ep_list.item(index).text()
+            #n = self.parent.ep_list.item(index).text()             as Ece said, this is overwritten immediately below without being used. 
             assigned_keys = [
                 x[1]
                 for x in self.parent.main.data.subsets.values()
->>>>>>> subsets
+
                 if index in x[0] and x[1] is not None
             ]
             assigned_keys.sort()
@@ -248,20 +194,16 @@ class SubsetFrame(QWidget):
             n += s.rjust(20 - len(n), " ")
             self.parent.ep_list.item(index).setText(n)
             ana_logger.debug(
-<<<<<<< HEAD
-                f"removed episode {self.parent.main.data.series[index].n_episode} from list {name}"
-=======
+
                 f"removed episode {self.parent.main.data.series[index].n_episode} from subset {name}"
->>>>>>> subsets
+
             )
 
     def create_dialog(self):
         self.dialog = QDialog()
-<<<<<<< HEAD
-        self.dialog.setWindowTitle("Add List")
-=======
+
         self.dialog.setWindowTitle("Add subset")
->>>>>>> subsets
+
         layout = QGridLayout()
         self.dialog.setLayout(layout)
 
@@ -283,11 +225,9 @@ class SubsetFrame(QWidget):
         self.dialog.exec_()
 
     def ok_clicked(self):
-<<<<<<< HEAD
-        self.new_list(self.name_entry.text(), self.key_entry.text())
-=======
+
         self.new_subset(self.name_entry.text(), self.key_entry.text())
->>>>>>> subsets
+
         self.dialog.close()
 
     def keyPressEvent(self, event):
@@ -322,12 +262,7 @@ class EpisodeList(QListWidget):
         self.currentItemChanged.disconnect(self.on_item_click)
         self.clear()
         if self.parent.main.data is not None:
-<<<<<<< HEAD
-            debug_logger.debug("inserting data")
-            self.addItems(
-                [f"Episode {e.n_episode}" for e in self.parent.main.data.series]
-            )
-=======
+
             selected_subsets,_ = self.parent.subset_frame.subsets_check()
             episodes = self.parent.main.data.episodes_in_subsets(selected_subsets)
             if episodes is not None:
@@ -335,7 +270,7 @@ class EpisodeList(QListWidget):
                 self.addItems(
                     [f"Episode {e.n_episode}" for e in episodes]
                 )
->>>>>>> subsets
+
         self.setCurrentRow(0)
         self.currentItemChanged.connect(
             self.on_item_click, type=QtCore.Qt.DirectConnection

@@ -123,7 +123,7 @@ class Recording(dict):
             indices.extend(self.subsets[subsetname][0])
         # remove duplicate indices
         indices = np.array(list(set(indices)))
-        print (indices)
+        #print (indices)
         debug_logger.debug(f"Selected episodes: {indices}")
         if  indices != []:
             return np.array(self.series)[indices]
