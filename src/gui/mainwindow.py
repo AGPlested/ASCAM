@@ -1,7 +1,10 @@
 import logging
 import os
 
+
+from PySide2.QtCore import Qt
 from PySide2.QtWidgets import (
+    QDockWidget,
     QGridLayout,
     QWidget,
     QMainWindow,
@@ -10,7 +13,9 @@ from PySide2.QtWidgets import (
     QSizePolicy,
 )
 
+# removed ExportFADialog here, not sure if that's OK
 from ..gui import (
+
     ExportDialog,
     OpenFileDialog,
     FilterFrame,
