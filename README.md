@@ -1,3 +1,6 @@
+> [!NOTE]
+> Questions or comments are welcome but should be submitted as github issues, not emailed.
+
 # ASCAM - Advanced Single Channel Analysis for Mac and more
 
 ASCAM can be used to browse, organize and analyze episodic recordings of single ion channel currents.
@@ -19,7 +22,7 @@ Then navigate to the folder you downloaded from this page (`ASCAM-master`) and i
 `pip install -e .`
 Note: it might be necessary to install `numpy` separately before installing ASCAM (in this case, try `conda install numpy`).
 
-Note2: On Windows, at time of writing, you need Microsoft C++ build tools 14.0 
+Note2: On Windows, at time of writing, you need Microsoft C++ build tools 14.0
 https://visualstudio.microsoft.com/visual-cpp-build-tools/ and TICK THE BOX!
 
 This installation makes a shell script that lets you launch ASCAM with the command:
@@ -58,16 +61,16 @@ You can remove the baseline, filter, and idealise data, or find the time of the 
     * You need to put in the `amplitudes` separated by spaces and without any brackets, such as `0 0.7 1.2 1.8 2.2` (pA) for the sample data. You can also drag the drawn lines for the amplitude to adjust them.
     * Thresholds can be put in manually in `thresholds` or auto generated and set to the midpoint between each two amplitudes.
     * If you want to apply a `resolution` to remove shorter events, you can put in a resolution
-    * You can also `interpolate` the signal with a cubic spline with an interpolation factor you choose. 
-    * After clicking `Calculate idealization` you can show or export event table, or export the idealization. 
+    * You can also `interpolate` the signal with a cubic spline with an interpolation factor you choose.
+    * After clicking `Calculate idealization` you can show or export event table, or export the idealization.
 * First Activation Threshold: `Analysis > First Activation`. You can type the first activation threshold or make it *draggable* to adjust the line drawn on the trace and click `Set threshold`.
     * You can alternatively go through the episodes to mark the point of first activation manually.
     * If you have idealized the data, you can extract the first activation events using `First events table`. This gives a summary of first opening (or closure) for each level, that happens after the piezo signal and first activation time. The resulting table shows:
         * to which level was the first opening
-        * For each level "Si" (i = 0,1,2,3.. where 0 usually corresponds to the shut state) 
+        * For each level "Si" (i = 0,1,2,3.. where 0 usually corresponds to the shut state)
             * the start time of the first event at the level
             * the duration of the first event at each level
-* Lists: You can make multiple lists of selected episodes. 
-    * To do this you need to define a `New List` which prompts you to define a `Key` (a single keystroke) and a `Name` you want to call your list. 
+* Lists: You can make multiple lists of selected episodes.
+    * To do this you need to define a `New List` which prompts you to define a `Key` (a single keystroke) and a `Name` you want to call your list.
     * You can populate your list of episodes by going through the episodes in the list on the right panel and pressing the selected `Key`. An episode can belong to multiple lists.
     * If you want, you can export the data in order to save your selections. The export dialog gives you the option to select which lists of episodes should be exported.
