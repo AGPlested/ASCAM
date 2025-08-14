@@ -1,16 +1,25 @@
 import logging
 
+import pyqtgraph as pg
+
 from PySide2 import QtCore
 from PySide2.QtWidgets import (
     QLabel,
     QComboBox,
+    QWidget,      #added by subsets revision
+    QVBoxLayout,  #added by subsets revision
+    QHBoxLayout,  #added by subsets revision
     QCheckBox,
     QLineEdit,
     QToolButton,
     QPushButton,
 )
 
+
+#from ..gui import ExportFADialog            #vague?
+from ..utils import round_off_tables
 from ..gui.io_widgets import ExportFADialog, ExportFEDialog
+
 from ..utils.widgets import EntryWidget, TableFrame
 from ..constants import CURRENT_UNIT_FACTORS
 

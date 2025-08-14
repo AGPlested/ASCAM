@@ -35,10 +35,12 @@ For launch options:
 If you also issue `conda install python.app` in your new environment then you can have a well-behaved Mac GUI with the following command from the parent directory of ASCAM:
 `pythonw /ASCAM/src/ascam.py`
 
-20-03-01: Note, with the migration to Qt, some problems may be encountered on the Mac if you already have installations of Qt4+. A fresh environment (e.g. can help.
-21-05-25: Update to Big Sur - Pyqtgraph and PyQt need Python 3.8, PySide2 5.15 and the command export QT_MAC_WANTS_LAYER=1 must be issued in the Terminal.
 
+20-03-01: With the migration to Qt, some problems may be encountered on the Mac if you already have installations of Qt4+. A fresh environment can help.
 
+21-05-25: Running under macOS Big Sur - Pyqtgraph and PyQt need Python 3.8, PySide2 5.15 and the command `export QT_MAC_WANTS_LAYER=1` must be issued in the Terminal. 
+
+## Running ASCAM
 Note: Tables in axograph and matlab have named columns ASCAM uses these names to determine what data is dealing with. Therefore the column containing the recorded current should contain either "current", "trace" or "Ipatch", the name of the column holding the recorded piezo voltage should contain the string "piezo" and the name of the command voltage column should contain "command".
 
 There is an example raw data file of an AMPA receptor single channel patch in the ASCAM/data folder. This recording was sampled at 40 kHz.
