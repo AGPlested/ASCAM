@@ -2,8 +2,14 @@
 
 ASCAM can be used to browse, organize and analyze episodic recordings of single ion channel currents.
 
+## Changes Sept 2026
+PySide2 no longer works in Tahoe. So the code was minimally modified to run under PySide6 (QAction has moved to QTGui)
+PyQtGraph 0.14 is now used, needed some cleanup.
+Axographio needs delicate treatment (see below) and latest Clang (in XCode 27) is still a bit fragile at the time of GoldenGate release.
+All other packages were allowed to upgrade to arbitrarily modern versions
+
 ## Installation
-This version is for macOS Tahoe. Use another branch for older machines.
+This version works for macOS Sequoia and Tahoe. Might work for Big Sur as well. Use another branch for older machines. Installation on Linux/Windows is not tested. 
 
 A straightforward installation can be achieved by first installing miniconda.
 
