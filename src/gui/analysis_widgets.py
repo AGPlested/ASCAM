@@ -2,8 +2,8 @@ import logging
 
 import numpy as np
 import pyqtgraph as pg
-from PySide2 import QtCore
-from PySide2.QtWidgets import (
+from PySide6 import QtCore
+from PySide6.QtWidgets import (
     QApplication,
 
     QSizePolicy,

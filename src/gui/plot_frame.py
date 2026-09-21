@@ -1,7 +1,7 @@
 import logging
 
-from PySide2 import QtCore
-from PySide2.QtWidgets import QWidget, QGridLayout
+from PySide6 import QtCore
+from PySide6.QtWidgets import QWidget, QGridLayout
 import numpy as np
 import pyqtgraph as pg
 
@@ -164,7 +164,7 @@ class PlotFrame(QWidget):
         heights *= -1
         self.episode_hist = pg.PlotDataItem(bins, heights, stepMode=True, pen=pen)
         self.hist.addItem(self.episode_hist)  # ignoreBounds=True?
-        self.episode_hist.rotate(90)
+        self.episode_hist.setRotation(90)
         y_max = self.hist.getAxis("bottom").range
         if self.hist_y_range is not None:
             y_max = self.hist_y_range[1]
@@ -181,7 +181,7 @@ class PlotFrame(QWidget):
         heights *= -1  # this compensates the x-axis inversion created by rotating
         self.series_hist = pg.PlotDataItem(bins, heights, stepMode=True, pen=pen)
         self.hist.addItem(self.series_hist)
-        self.series_hist.rotate(90)
+        self.series_hist.setRotation(90)
         self.hist_y_range = self.hist.getAxis("bottom").range
         self.hist_x_range = self.hist.getAxis("right").range
         self.hist.getAxis("bottom").setRange(0, self.hist_y_range[1])

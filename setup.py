@@ -18,15 +18,18 @@ setup(
     author="Nikolai Zaki",
     author_email="kol@posteo.de",
     packages=find_packages(where=here),
-    python_requires="==3.10.*",
+    python_requires=">=3.10",
     install_requires=[
-        "pyqtgraph>=0.11.0,<=0.12.4",
-        "PySide2==5.15.2.1",
-        "numpy==1.24.*",
-        "pandas==1.5.*",
-        "scipy==1.10.*",
+        "pyqtgraph>=0.14",
+        #"PySide2==5.15.2.1", ### Swap this back in for systems without pyside6 compatibility  
+	"PySide6",
+        "numpy",
+        "pandas",
+        "scipy",
         "axographio==0.3.2",
         "pyobjc-framework-Cocoa==6.2.2;sys_platform=='Darwin'",
+	"cython",
+	"setuptools<=80.10.2"
     ],
     entry_points={"console_scripts": ["ascam=src.ascam:main"]},
 )

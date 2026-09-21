@@ -2,14 +2,16 @@ import logging
 import os
 
 
-from PySide2.QtCore import Qt
-from PySide2.QtWidgets import (
+from PySide6.QtCore import Qt
+
+#moved on upgrade to PySide6
+from PySide6.QtGui import QAction
+from PySide6.QtWidgets import (
     QDockWidget,
     QGridLayout,
     QWidget,
     QMainWindow,
     QFileDialog,
-    QAction,
     QSizePolicy,
 )
 

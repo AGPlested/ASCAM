@@ -125,7 +125,7 @@ class Recording(dict):
         indices = np.array(list(set(indices)))
         #print (indices)
         debug_logger.debug(f"Selected episodes: {indices}")
-        if  indices != []:
+        if  indices.size > 0:
             return np.array(self.series)[indices]
         else:
             return None
