@@ -3,24 +3,32 @@
 ASCAM can be used to browse, organize and analyze episodic recordings of single ion channel currents.
 
 ## Installation
-A straightforward installation can be achieved by first installing Anaconda or miniconda. At the time of writing, a working version for Mac is https://repo.anaconda.com/archive/Anaconda3-5.3.0-MacOSX-x86_64.pkg
+This version is for macOS Tahoe. Use another branch for older machines.
 
-After successful installation of Anaconda, if you have Git installed, you can clone the ASCAM directory from Github onto your machine with the following command in the Terminal:
-`git clone https://github.com/AGPlested/ASCAM`
+A straightforward installation can be achieved by first installing miniconda.
 
-We recommend to use a clean environment. This can be achieved by installing miniconda and creating an environment called e.g. ASCAM. Note, with Big Sur, some adjustments are needed.
+We recommend to use a clean environment. This can be achieved by installing miniconda and creating an environment called e.g. ASCAM. 
+
+You can choose either Python 3.10 (the simplest) or Python 3.14 (the latest):
+
+For Python 3.10 use the following command:
 `conda create --name ASCAM python=3.10 && conda activate ASCAM`
 
-By default conda does not install its own version of `pip`. (You can check which version is being used with `pip --version`.)
-If it is not the correct one install it in your conda environment using:
-`conda install pip`
+Now comes the tricky part. We need to build the axographio package for loading and saving data. 
+For this, you need a full version of the Apple XCode suite. The Command Line Tools are (at the moment) not enough. 
+
+Download XCode from the AppStore (you will need to use an AppleID, can be very frustrating). 
+
+You also need Numpy and Cython to build axographio
+
+`pip install numpy`
+`pip install cython`
+
+Then you should be able to build axograph with the following command: 
+`pip install axographio --no-build-isolation`
 
 Then navigate to the folder you downloaded from this page (`ASCAM-master`) and issue:
 `pip install -e .`
-Note: it might be necessary to install `numpy` separately before installing ASCAM (in this case, try `conda install numpy`).
-
-Note2: On Windows, at time of writing, you need Microsoft C++ build tools 14.0 
-https://visualstudio.microsoft.com/visual-cpp-build-tools/ and TICK THE BOX!
 
 This installation makes a shell script that lets you launch ASCAM with the command:
 `ascam`
@@ -28,14 +36,12 @@ This installation makes a shell script that lets you launch ASCAM with the comma
 For launch options:
 `ascam --help`
 
+If you want to use Python 3.14, you will need to downgrade setuptools before building axographio with the following statement:
+`pip install "setuptools<=80.10.2"`
+
 ### Further installation notes
 If you also issue `conda install python.app` in your new environment then you can have a well-behaved Mac GUI with the following command from the parent directory of ASCAM:
 `pythonw /ASCAM/src/ascam.py`
-
-
-20-03-01: With the migration to Qt, some problems may be encountered on the Mac if you already have installations of Qt4+. A fresh environment can help.
-
-21-05-25: Running under macOS Big Sur - Pyqtgraph and PyQt need Python 3.8, PySide2 5.15 and the command `export QT_MAC_WANTS_LAYER=1` must be issued in the Terminal. 
 
 ## Running ASCAM
 Note: Tables in axograph and matlab have named columns ASCAM uses these names to determine what data is dealing with. Therefore the column containing the recorded current should contain either "current", "trace" or "Ipatch", the name of the column holding the recorded piezo voltage should contain the string "piezo" and the name of the command voltage column should contain "command".
