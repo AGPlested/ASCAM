@@ -9,41 +9,52 @@ Axographio needs delicate treatment (see below) and latest Clang (in XCode 27) i
 All other packages were allowed to upgrade to arbitrarily modern versions
 
 ## Installation
-This version works for macOS Sequoia and Tahoe. Might work for Big Sur as well. Use another branch for older machines. Installation on Linux/Windows is not tested. 
+This version works for macOS Sequoia, Tahoe and Golden Gate. Might work for Big Sur as well. Use another branch for older machines. Installation on Linux/Windows is not tested. 
 
 A straightforward installation can be achieved by first installing miniconda.
 
 We recommend to use a clean environment. This can be achieved by installing miniconda and creating an environment called e.g. ASCAM. 
 
-You can choose either Python 3.10 (the simplest) or Python 3.14 (the latest):
+You can choose either Python 3.10 (the simplest) or Python 3.14 (the latest, needed for Golden Gate):
 
 For Python 3.10 use the following command:
+
 `conda create --name ASCAM python=3.10 && conda activate ASCAM`
 
-Now comes the tricky part. We need to build the axographio package for loading and saving data. 
+For Python 3.14 (you must on Golden Gate) use the following command:
+
+`conda create --name ASCAM python=3.14 && conda activate ASCAM`
+
+Now comes the tricky part. We need to build the axographio package for loading and saving data from source.
+ 
 For this, you need a full version of the Apple XCode suite. The Command Line Tools are (at the moment) not enough. 
 
 Download XCode from the AppStore (you will need to use an AppleID, can be very frustrating). 
 
 You also need Numpy and Cython to build axographio
 
-`pip install numpy`
-`pip install cython`
+`pip install numpy cython`
+
+If you are using Python 3.14, you will need to downgrade setuptools before building axographio with the following command:
+
+`pip install "setuptools<=80.10.2"`
 
 Then you should be able to build axograph with the following command: 
+
 `pip install axographio --no-build-isolation`
 
 Then navigate to the folder you downloaded from this page (`ASCAM-master`) and issue:
+
 `pip install -e .`
 
 This installation makes a shell script that lets you launch ASCAM with the command:
+
 `ascam`
 
 For launch options:
+
 `ascam --help`
 
-If you want to use Python 3.14, you will need to downgrade setuptools before building axographio with the following statement:
-`pip install "setuptools<=80.10.2"`
 
 ### Further installation notes
 If you also issue `conda install python.app` in your new environment then you can have a well-behaved Mac GUI with the following command from the parent directory of ASCAM:
