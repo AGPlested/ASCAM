@@ -1,6 +1,9 @@
 from scipy import io
 import os
 import json
+import pickle
+from ..utils.tools import parse_filename
+
 
 
 def save_metadata(data, filename):
@@ -96,8 +99,10 @@ def save_data(data, filename="", filetype="mat", save_piezo=True, save_command=T
             save_piezo=save_piezo,
             save_command=save_command,
         )
+
     # elif filetype == "pkl":
     #     return_status = save_pickle(data=data, filepath=filepath)
+
     else:
         print('Can only save as ".mat"!')
 

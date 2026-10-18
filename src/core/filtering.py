@@ -1,3 +1,4 @@
+#import logging
 import numpy as np
 
 
@@ -190,7 +191,7 @@ class ChungKennedyFilter:
         else:
             raise ValueError(
                 f"Mode {self.mode} is an unknown method for dealing\
-								with edges"
+                with edges"
             )
         return backward_prediction
 

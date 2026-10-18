@@ -21,8 +21,7 @@ try :
 except :
     from src.utils import initialize_logger
     
-if platform.system() == 'Darwin':
-    os.environ['QT_MAC_WANTS_LAYER'] = '1'
+
 
 debug_logger = logging.getLogger("ascam.debug")
 
@@ -97,6 +96,30 @@ def get_version():
 
 
 def main():
+    ## the following could be a separate function
+    if sys.platform.startswith('darwin'):
+        #Do macos stuff - without this, no window will be spawned
+        os.environ['QT_MAC_WANTS_LAYER'] = '1'
+        
+        # Change menubar name from 'python' to 'ASCAM' on macOS
+        # this only works in pythonw - use after conda install python.app
+        # from https://stackoverflow.com/questions/5047734/
+        # Python 3: pyobjc-framework-Cocoa is needed
+        try:
+            from Foundation import NSBundle
+            bundle = NSBundle.mainBundle()
+            if bundle:
+                app_name = os.path.splitext(os.path.basename(sys.argv[0]))[0]
+                app_info = bundle.localizedInfoDictionary() or bundle.infoDictionary()
+                if app_info:
+                    app_info['CFBundleName'] = app_name.upper() # ensure text is in upper case.
+        
+        except ImportError:
+            print ("Failed to import NSBundle, couldn't change menubar name." )
+    
+        #print (os.environ)
+       
+    
     silent, logdir, test, debug = parse_options()
 
     initialize_logger(logdir, silent, debug)
@@ -118,19 +141,5 @@ def main():
     sys.exit(app.exec_())
     
 if __name__ == "__main__":
-    # Change menubar name from 'python' to 'SAFT' on macOS
-    # from https://stackoverflow.com/questions/5047734/
-    if sys.platform.startswith('darwin'):
-    # Python 3: pyobjc-framework-Cocoa is needed
-        try:
-            from Foundation import NSBundle
-            bundle = NSBundle.mainBundle()
-            if bundle:
-                app_name = os.path.splitext(os.path.basename(sys.argv[0]))[0]
-                app_info = bundle.localizedInfoDictionary() or bundle.infoDictionary()
-                if app_info:
-                    app_info['CFBundleName'] = app_name.upper() # ensure text is in upper case.
-        except ImportError:
-            print ("Failed to import NSBundle, couldn't change menubar name." )
-        
+   
     main()
